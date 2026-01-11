@@ -17,6 +17,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.util.tunables.LoggedTunableNumber;
@@ -50,22 +51,19 @@ public class Module {
 
     private final ModuleIO io;
     private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
-    private final int index;
+    private final String name;
 
     private final Alert driveDisconnectedAlert;
     private final Alert turnDisconnectedAlert;
     private final Alert turnEncoderDisconnectedAlert;
     private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
 
-    public Module(ModuleIO io, int index) {
+    public Module(ModuleIO io, String name) {
+        this.name = name;
         this.io = io;
-        this.index = index;
-        driveDisconnectedAlert =
-                new Alert("Disconnected drive motor on module " + Integer.toString(index) + ".", AlertType.kError);
-        turnDisconnectedAlert =
-                new Alert("Disconnected turn motor on module " + Integer.toString(index) + ".", AlertType.kError);
-        turnEncoderDisconnectedAlert =
-                new Alert("Disconnected turn encoder on module " + Integer.toString(index) + ".", AlertType.kError);
+        driveDisconnectedAlert = new Alert("Disconnected drive motor on module " + name + ".", AlertType.kError);
+        turnDisconnectedAlert = new Alert("Disconnected turn motor on module " + name + ".", AlertType.kError);
+        turnEncoderDisconnectedAlert = new Alert("Disconnected turn encoder on module " + name + ".", AlertType.kError);
     }
 
     public void periodic() {
@@ -78,7 +76,7 @@ public class Module {
         }
 
         io.updateInputs(inputs);
-        Logger.processInputs("Drive/Module" + Integer.toString(index), inputs);
+        Logger.processInputs("Drive/Module" + name, inputs);
 
         // Calculate positions for odometry
         int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
@@ -110,6 +108,18 @@ public class Module {
     public void runCharacterization(double output) {
         io.setDriveOpenLoop(output);
         io.setTurnPosition(new Rotation2d());
+    }
+
+    /** Characterize robot angular motion. */
+    public void runAngularCharacterization(double output) {
+        io.setDriveOpenLoop(output);
+        io.setTurnPosition(Rotation2d.fromDegrees(switch(name) {
+            case "FrontLeft" -> 135.0;
+            case "FrontRight" -> 45.0;
+            case "BackLeft" -> -135.0;
+            case "BackRight" -> -45.0;
+            default -> 0.0;
+        }));
     }
 
     /** Disables all outputs to motors. */
@@ -161,5 +171,14 @@ public class Module {
     /** Returns the module velocity in rotations/sec (Phoenix native units). */
     public double getFFCharacterizationVelocity() {
         return Units.radiansToRotations(inputs.driveVelocityRadPerSec);
+    }
+
+    /** Sets the current limit on the drive motor temporarily for slip current measurement. */
+    public void setSlipMeasurementCurrentLimit(Current limit) {
+        io.setSlipMeasurementCurrentLimit(limit);
+    }
+    /** Returns the drive motor current draw in amps. */
+    public double getSlipMeasurementCurrent() {
+        return inputs.driveCurrentAmps;
     }
 }

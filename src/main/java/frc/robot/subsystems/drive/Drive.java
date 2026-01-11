@@ -39,6 +39,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -123,10 +124,10 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
             Consumer<Pose2d> resetSimulationPoseCallBack) {
         this.gyroIO = gyroIO;
         this.resetSimulationPoseCallBack = resetSimulationPoseCallBack;
-        modules[0] = new Module(flModuleIO, 0);
-        modules[1] = new Module(frModuleIO, 1);
-        modules[2] = new Module(blModuleIO, 2);
-        modules[3] = new Module(brModuleIO, 3);
+        modules[0] = new Module(flModuleIO, "FrontLeft");
+        modules[1] = new Module(frModuleIO, "FrontRight");
+        modules[2] = new Module(blModuleIO, "BackLeft");
+        modules[3] = new Module(brModuleIO, "BackRight");
 
         // Usage reporting for swerve template
         HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
@@ -241,15 +242,48 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
 
     /** Runs the drive in a straight line with the specified drive output. */
     public void runCharacterization(double output) {
-        for(int i = 0; i < 4; i++) {
-            modules[i].runCharacterization(output);
-        }
+        for(int i = 0; i < 4; i++) modules[i].runCharacterization(output);
+    }
+    /** Runs a particular module in a straight line with the specified drive output. */
+    public void runCharacterization(int module, double output) {
+        modules[module].runCharacterization(output);
     }
 
     /** Runs the drive to rotate with the specified drive output for angular system identification. */
     public void runAngularCharacterization(double output) {
-        throw new UnsupportedOperationException("you didn't write this code yet silly");
-        // for(int i = 0; i < 4; i++) modules[i].runAngularCharacterization(output);
+        for(int i = 0; i < 4; i++) modules[i].runAngularCharacterization(output);
+    }
+
+    /** Sets the current limit on the drive motors temporarily for slip current measurement. */
+    public void setSlipMeasurementCurrentLimit(Current limit) {
+        for(int i = 0; i < 4; i++) modules[i].setSlipMeasurementCurrentLimit(limit);
+    }
+    /** Returns the drive motor current draw of a particular module in amps. */
+    public double getSlipMeasurementCurrent(int module) {
+        return modules[module].getSlipMeasurementCurrent();
+    }
+
+    /** Returns the position of each module in radians. */
+    public double[] getWheelRadiusCharacterizationPositions() {
+        double[] values = new double[4];
+        for (int i = 0; i < 4; i++) {
+            values[i] = modules[i].getWheelRadiusCharacterizationPosition();
+        }
+        return values;
+    }
+    
+    /** Returns the drive motor position of a particular module in radians. */
+    public double getSlipMeasurementPosition(int module) {
+        return modules[module].getWheelRadiusCharacterizationPosition();
+    }
+
+    /** Returns the average velocity of the modules in rotations/sec (Phoenix native units). */
+    public double getFFCharacterizationVelocity() {
+        double output = 0.0;
+        for (int i = 0; i < 4; i++) {
+            output += modules[i].getFFCharacterizationVelocity() / 4.0;
+        }
+        return output;
     }
 
     /** Stops the drive. */
@@ -303,24 +337,6 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
     private ChassisSpeeds getChassisSpeeds() {
         return kinematics.toChassisSpeeds(getModuleStates());
-    }
-
-    /** Returns the position of each module in radians. */
-    public double[] getWheelRadiusCharacterizationPositions() {
-        double[] values = new double[4];
-        for (int i = 0; i < 4; i++) {
-            values[i] = modules[i].getWheelRadiusCharacterizationPosition();
-        }
-        return values;
-    }
-
-    /** Returns the average velocity of the modules in rotations/sec (Phoenix native units). */
-    public double getFFCharacterizationVelocity() {
-        double output = 0.0;
-        for (int i = 0; i < 4; i++) {
-            output += modules[i].getFFCharacterizationVelocity() / 4.0;
-        }
-        return output;
     }
 
     /** Returns the current odometry pose. */

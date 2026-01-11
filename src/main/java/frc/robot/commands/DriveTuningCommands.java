@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Kilogram;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Volts;
@@ -275,9 +276,8 @@ public class DriveTuningCommands {
 
         Command command = Commands.sequence( //
             Commands.runOnce(() -> {
-                throw new UnsupportedOperationException("you didn't implement this, silly");
                 // Temporarily increase the drive current limit
-                drive.setSlipMeasurementCurrentLimit(currentLimitForSlipMeasurement);
+                drive.setSlipMeasurementCurrentLimit(Amps.of(currentLimitForSlipMeasurement));
                 for(int i = 0; i < 4; i++) {
                     moduleResults[i] = new SlipCurrentModuleResult();
                 }
@@ -351,37 +351,35 @@ public class DriveTuningCommands {
         Container<Double> startPosition = new Container<Double>(0.);
 
         return Commands.sequence(Commands.runOnce(() -> {
-            throw new UnsupportedOperationException("you didn't implement this, silly");
-            // currentSamples.clear();
-            // startPosition.value = drive.getSlipMeasurementPosition(module);
-            // timer.restart();
+            currentSamples.clear();
+            startPosition.value = drive.getSlipMeasurementPosition(module);
+            timer.restart();
         }),
 
             // Accelerate and gather data
             Commands.run(() -> {
                 double voltage = Math.min(12., timer.get() * SLIP_RAMP_RATE + SLIP_START_VOLTAGE);
-                // drive.runCharacterization(module, voltage);
+                drive.runCharacterization(module, voltage);
 
-                // currentSamples.add(drive.getSlipMeasurementCurrent(module));
+                currentSamples.add(drive.getSlipMeasurementCurrent(module));
             }).until(() -> {
                 if(timer.get() * SLIP_RAMP_RATE + SLIP_START_VOLTAGE > 12.) {
                     System.out.println("Slip current measurement capped at 12 volts. This probably isn't correct.");
                     return true; // Stop if we hit the voltage limit
                 }
 
-                // double distanceTraveled = Math.abs(drive.getSlipMeasurementPosition(module) - startPosition.value);
-                // return distanceTraveled > SLIP_TRAVEL_AMOUNT;
-                return false;
+                double distanceTraveled = Math.abs(drive.getSlipMeasurementPosition(module) - startPosition.value);
+                return distanceTraveled > SLIP_TRAVEL_AMOUNT;
             }),
 
             // Take a few samples behind when we stopped and print the result
             Commands.runOnce(() -> {
-                // drive.runCharacterization(module, 0.0);
+                drive.runCharacterization(module, 0.0);
 
-                // moduleResult.slipCurrent = currentSamples.get(currentSamples.size() - 4);
-                // moduleResult.slipVoltage = timer.get() * SLIP_RAMP_RATE + SLIP_START_VOLTAGE;
+                moduleResult.slipCurrent = currentSamples.get(currentSamples.size() - 4);
+                moduleResult.slipVoltage = timer.get() * SLIP_RAMP_RATE + SLIP_START_VOLTAGE;
 
-                // System.out.println("Module " + module + " slip current measured.");
+                System.out.println("Module " + module + " slip current measured.");
             }));
     }
 

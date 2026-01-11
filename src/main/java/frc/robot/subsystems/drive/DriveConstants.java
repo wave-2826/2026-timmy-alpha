@@ -34,7 +34,7 @@ public class DriveConstants {
         public final boolean invertEncoder;
 
         public SwerveModuleConfig(
-            int steerId, int driveId, int encoderId,
+            int driveId, int steerId, int encoderId,
             Angle encoderOffset, Distance xPosition, Distance yPosition,
             boolean invertSide) {
             this.steerMotorId = steerId;
