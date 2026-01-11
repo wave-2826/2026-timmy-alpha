@@ -1,16 +1,3 @@
-// Copyright 2021-2024 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-
 package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -93,14 +80,38 @@ public class Module {
         turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
     }
 
+    private record OptimizePair(SwerveModuleState state, double acceleration) {}
+    /**
+     * Optimize the module state and 
+     * @param currentAngle
+     * @param accelerationMps2
+     * @return
+     */
+    private OptimizePair optimizeState(SwerveModuleState state, Rotation2d currentAngle, double accelerationMps2) {
+        var delta = state.angle.minus(currentAngle);
+        if(Math.abs(delta.getDegrees()) > 90.0) {
+            state.speedMetersPerSecond *= -1;
+            state.angle = state.angle.rotateBy(Rotation2d.kPi);
+            accelerationMps2 *= -1;
+        }
+        return new OptimizePair(state, accelerationMps2);
+    }
+
     /** Runs the module with the specified setpoint state. Mutates the state to optimize it. */
-    public void runSetpoint(SwerveModuleState state) {
+    public void runSetpoint(SwerveModuleState state, double accelerationMps2) {
         // Optimize velocity setpoint
-        state.optimize(getAngle());
+        var pair = optimizeState(state, getAngle(), accelerationMps2);
+        state = pair.state;
+        accelerationMps2 = pair.acceleration;
+
         state.cosineScale(inputs.turnAbsolutePosition);
 
         // Apply setpoints
-        io.setDriveVelocity(state.speedMetersPerSecond / DriveConstants.wheelRadius.in(Meters));
+        // TODO: Tuning toggle to disable drive wheels
+        io.setDriveVelocity(
+            state.speedMetersPerSecond / DriveConstants.wheelRadius.in(Meters),
+            accelerationMps2 / DriveConstants.wheelRadius.in(Meters)
+        );
         io.setTurnPosition(state.angle);
     }
 

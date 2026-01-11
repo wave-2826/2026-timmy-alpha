@@ -1,16 +1,3 @@
-// Copyright 2021-2024 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -35,6 +22,7 @@ import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.rlog.RLOGServer;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.littletonrobotics.urcl.URCL;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to each mode, as
@@ -117,7 +105,7 @@ public class Robot extends LoggedRobot {
         if (Constants.useSuperDangerousRTThreadPriority) Logger.addDataReceiver(new ThreadPriorityDummyLogReceiver());
 
         // Initialize URCL
-        // Logger.registerURCL(URCL.startExternal());
+        Logger.registerURCL(URCL.startExternal());
 
         // Start AdvantageKit logger
         Logger.start();

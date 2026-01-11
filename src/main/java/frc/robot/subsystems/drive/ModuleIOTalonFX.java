@@ -90,7 +90,7 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         turnCurrent = turnTalon.getStatorCurrent();
 
         // Configure periodic frames
-        BaseStatusSignal.setUpdateFrequencyForAll(Drive.ODOMETRY_FREQUENCY, turnAbsolutePosition, drivePosition);
+        BaseStatusSignal.setUpdateFrequencyForAll(DriveConstants.odometryFrequency, turnAbsolutePosition, drivePosition);
         BaseStatusSignal.setUpdateFrequencyForAll(
                 50.0, driveVelocity, driveAppliedVolts, driveCurrent, turnVelocity, turnAppliedVolts, turnCurrent);
         ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon);
@@ -180,12 +180,17 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
     }
 
     @Override
-    public void setDriveVelocity(double wheelVelocityRadPerSec) {
+    public void setDriveVelocity(double wheelVelocityRadPerSec, double accelerationRadPerSec2) {
         double motorVelocityRotPerSec = Units.radiansToRotations(wheelVelocityRadPerSec) * constants.DriveMotorGearRatio;
+        double motorAccelerationRotPerSec2 = Units.radiansToRotations(accelerationRadPerSec2) * constants.DriveMotorGearRatio;
         driveTalon.setControl(
             switch (constants.DriveMotorClosedLoopOutput) {
-                case Voltage -> velocityVoltageRequest.withVelocity(motorVelocityRotPerSec);
-                case TorqueCurrentFOC -> velocityTorqueCurrentRequest.withVelocity(motorVelocityRotPerSec);
+                case Voltage -> velocityVoltageRequest
+                    .withVelocity(motorVelocityRotPerSec)
+                    .withAcceleration(motorAccelerationRotPerSec2);
+                case TorqueCurrentFOC -> velocityTorqueCurrentRequest
+                    .withVelocity(motorVelocityRotPerSec)
+                    .withAcceleration(motorAccelerationRotPerSec2);
             });
     }
 

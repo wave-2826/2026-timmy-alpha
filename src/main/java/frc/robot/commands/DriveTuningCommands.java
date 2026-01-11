@@ -31,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.Container;
@@ -206,6 +207,7 @@ public class DriveTuningCommands {
     public static Command wheelRadiusCharacterization(Drive drive) {
         SlewRateLimiter limiter = new SlewRateLimiter(WHEEL_RADIUS_RAMP_RATE);
         WheelRadiusCharacterizationState state = new WheelRadiusCharacterizationState();
+        RobotState robotState = RobotState.getInstance();
 
         return Commands.parallel(
             // Drive control sequence
@@ -229,13 +231,13 @@ public class DriveTuningCommands {
                 // Record starting measurement
                 Commands.runOnce(() -> {
                     state.positions = drive.getWheelRadiusCharacterizationPositions();
-                    state.lastAngle = drive.getRotation();
+                    state.lastAngle = robotState.getRotation();
                     state.gyroDelta = 0.0;
                 }),
 
                 // Update gyro delta
                 Commands.run(() -> {
-                    var rotation = drive.getRotation();
+                    var rotation = robotState.getRotation();
                     state.gyroDelta += Math.abs(rotation.minus(state.lastAngle).getRadians());
                     state.lastAngle = rotation;
                 })

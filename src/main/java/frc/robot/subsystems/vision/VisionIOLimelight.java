@@ -1,16 +1,3 @@
-// Copyright 2021-2025 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.geometry.Pose3d;
@@ -39,6 +26,8 @@ public class VisionIOLimelight implements VisionIO {
     private final DoubleArraySubscriber megatag1Subscriber;
     private final DoubleArraySubscriber megatag2Subscriber;
 
+    private final String name;
+
     /**
      * Creates a new VisionIOLimelight.
      *
@@ -46,6 +35,8 @@ public class VisionIOLimelight implements VisionIO {
      * @param rotationSupplier Supplier for the current estimated rotation, used for MegaTag 2.
      */
     public VisionIOLimelight(String name, Supplier<Rotation2d> rotationSupplier) {
+        this.name = name;
+
         var table = NetworkTableInstance.getDefault().getTable(name);
         this.rotationSupplier = rotationSupplier;
         orientationPublisher =
@@ -92,10 +83,7 @@ public class VisionIOLimelight implements VisionIO {
                     (int) rawSample.value[7],
 
                     // Average tag distance
-                    rawSample.value[9],
-
-                    // Observation type
-                    PoseObservationType.MEGATAG_1));
+                    rawSample.value[9]));
         }
         for (var rawSample : megatag2Subscriber.readQueue()) {
             if (rawSample.value.length == 0) continue;
@@ -116,23 +104,13 @@ public class VisionIOLimelight implements VisionIO {
                     (int) rawSample.value[7],
 
                     // Average tag distance
-                    rawSample.value[9],
-
-                    // Observation type
-                    PoseObservationType.MEGATAG_2));
+                    rawSample.value[9]));
         }
 
         // Save pose observations to inputs object
         inputs.poseObservations = new PoseObservation[poseObservations.size()];
         for (int i = 0; i < poseObservations.size(); i++) {
             inputs.poseObservations[i] = poseObservations.get(i);
-        }
-
-        // Save tag IDs to inputs objects
-        inputs.tagIds = new int[tagIds.size()];
-        int i = 0;
-        for (int id : tagIds) {
-            inputs.tagIds[i++] = id;
         }
     }
 
@@ -146,5 +124,10 @@ public class VisionIOLimelight implements VisionIO {
                         Units.degreesToRadians(rawLLArray[3]),
                         Units.degreesToRadians(rawLLArray[4]),
                         Units.degreesToRadians(rawLLArray[5])));
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 }
