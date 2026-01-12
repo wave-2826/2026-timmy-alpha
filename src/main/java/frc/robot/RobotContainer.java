@@ -52,9 +52,10 @@ public class RobotContainer {
                     new ModuleIOTalonFXReal(DriveConstants.frontRightConfig),
                     new ModuleIOTalonFXReal(DriveConstants.backLeftConfig),
                     new ModuleIOTalonFXReal(DriveConstants.backRightConfig));
-                this.vision = new Vision(
+                vision = new Vision(
                     new VisionIOLimelight(VisionConstants.camera0Name, robotState::getRotation),
                     new VisionIOLimelight(VisionConstants.camera1Name, robotState::getRotation));
+                intake = new Intake(new IntakeIOSpark());
                 break;
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations
@@ -71,6 +72,7 @@ public class RobotContainer {
                 vision = new Vision(
                     new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
                     new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
+                intake = new Intake(new IntakeIOSim());
                 break;
             default:
                 // Replayed robot, disable IO implementations
@@ -81,6 +83,7 @@ public class RobotContainer {
                     new ModuleIO() {},
                     new ModuleIO() {});
                 vision = new Vision(new VisionIO() {}, new VisionIO() {});
+                intake = new Intake(new IntakeIO() {});
                 break;
         }
 
@@ -101,7 +104,8 @@ public class RobotContainer {
     private void configureButtonBindings() {
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(
-                drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> -controller.getRightX()));
+                drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> controller.getRightX()));
+        intake.setDefaultCommand(intake.runTeleop(() -> controller.getLeftTriggerAxis(), () -> controller.getRightTriggerAxis()));
 
         // Lock to 0° when A button is held
         controller
