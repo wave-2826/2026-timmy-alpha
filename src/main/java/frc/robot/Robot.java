@@ -84,13 +84,13 @@ public class Robot extends LoggedRobot {
             case REAL:
                 // Running on a real robot, log to a USB stick ("/U/logs")
                 Logger.addDataReceiver(new WPILOGWriter());
-                if (Constants.useNTLogs) Logger.addDataReceiver(new NT4Publisher());
+                if(Constants.useNTLogs) Logger.addDataReceiver(new NT4Publisher());
                 else Logger.addDataReceiver(new RLOGServer());
                 break;
             case SIM:
                 // Running a physics simulator, log to NT
-                if (Constants.logInSimulation) Logger.addDataReceiver(new WPILOGWriter());
-                if (Constants.useNTLogs) Logger.addDataReceiver(new NT4Publisher());
+                if(Constants.logInSimulation) Logger.addDataReceiver(new WPILOGWriter());
+                if(Constants.useNTLogs) Logger.addDataReceiver(new NT4Publisher());
                 else Logger.addDataReceiver(new RLOGServer());
                 break;
             case REPLAY:
@@ -102,7 +102,7 @@ public class Robot extends LoggedRobot {
                 break;
         }
 
-        if (Constants.useSuperDangerousRTThreadPriority) Logger.addDataReceiver(new ThreadPriorityDummyLogReceiver());
+        if(Constants.useSuperDangerousRTThreadPriority) Logger.addDataReceiver(new ThreadPriorityDummyLogReceiver());
 
         // Initialize URCL
         Logger.registerURCL(URCL.startExternal());
@@ -151,7 +151,7 @@ public class Robot extends LoggedRobot {
         // and put our autonomous chooser on the dashboard.
         robotContainer = new RobotContainer();
 
-        // robotContainer.resetSimulatedRobot();
+        robotContainer.resetSimulationField();
 
         // Elastic dashboard utilities and setup
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
@@ -163,7 +163,7 @@ public class Robot extends LoggedRobot {
         //     Elastic.selectTab("Teleoperated");
         // }));
 
-        if (Constants.currentMode == Constants.Mode.REAL && Constants.useSuperDangerousRTThreadPriority) {
+        if(Constants.currentMode == Constants.Mode.REAL && Constants.useSuperDangerousRTThreadPriority) {
             // Switch the thread to high priority to improve loop timing.
             // This is a dangerous operation! Read the comment on useSuperDangerousRTThreadPriority and understand what
             // this does before using it anywhere.
@@ -204,7 +204,7 @@ public class Robot extends LoggedRobot {
         autonomousCommand = robotContainer.getAutonomousCommand();
 
         // schedule the autonomous command (example)
-        if (autonomousCommand != null) {
+        if(autonomousCommand != null) {
             autonomousCommand.schedule();
         }
     }
@@ -220,7 +220,7 @@ public class Robot extends LoggedRobot {
         // teleop starts running. If you want the autonomous to
         // continue until interrupted by another command, remove
         // this line or comment it out.
-        if (autonomousCommand != null) {
+        if(autonomousCommand != null) {
             autonomousCommand.cancel();
         }
     }
