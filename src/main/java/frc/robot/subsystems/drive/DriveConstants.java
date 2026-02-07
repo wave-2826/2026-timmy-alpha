@@ -26,6 +26,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
+import frc.robot.subsystems.drive.kinematicConstraints.KinematicConstraints;
 
 /**
  * A cleaned up TunerConstants file; most constants correspond to those in TunerConstants.java.
@@ -187,6 +188,14 @@ public class DriveConstants {
             .withCANBusName(CANBus.getName())
             .withPigeon2Id(pigeonId)
             .withPigeon2Configs(pigeonConfigs);
+    
+    public static final KinematicConstraints kinematicConstraints = new KinematicConstraints(
+        MetersPerSecondPerSecond.of(10) /* measuered "magic value" - max linear acceleration */,
+        RadiansPerSecondPerSecond.of(10 * (maxAngularSpeedRadPerSec / maxSpeedMetersPerSec)),
+        MetersPerSecondPerSecond.of(8), /* Skid acceleration limit */
+        MetersPerSecondPerSecond.of(5), /* Max tilt acceleration X */
+        MetersPerSecondPerSecond.of(10) /* Max tilt acceleration Y */
+    );
         
     public static final SwerveModuleConfig frontLeftConfig =
         new SwerveModuleConfig(10, 11, 12, Rotations.of(-0.042236328125), trackWidth.div(2.0), wheelBase.div(2.0), true);

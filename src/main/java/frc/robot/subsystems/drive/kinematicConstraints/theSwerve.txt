@@ -1,0 +1,18 @@
+# The "swerve thing"
+
+Goals:
+- Improved odometry
+- Improved power consumption
+- Improve swerve wear patterns
+- Avoid tipping
+- Understand when the drive is well-controlled
+- Improve code architecture
+- Smoother acceleration/better traction
+
+Components:
+- System-wide acceleration limiting
+	- Forward limits: maximum acceleration based on speed
+	- Tilt limits: acceleration per-axis limit based on CoG
+	- Skid limits: acceleration limit based on skid torque
+- Skid detection
+- Odometry which prioritizes tractive wheels

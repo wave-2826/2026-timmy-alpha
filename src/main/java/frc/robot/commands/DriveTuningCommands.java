@@ -220,7 +220,7 @@ public class DriveTuningCommands {
                 // Turn in place, accelerating up to full speed
                 Commands.run(() -> {
                     double speed = limiter.calculate(WHEEL_RADIUS_MAX_VELOCITY);
-                    drive.runVelocity(new ChassisSpeeds(0.0, 0.0, speed));
+                    drive.runVelocity(new ChassisSpeeds(0.0, 0.0, speed), false);
                 }, drive)),
 
             // Measurement sequence

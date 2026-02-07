@@ -116,20 +116,21 @@ public class Drive extends SubsystemBase {
     }
 
     /**
-     * Runs the drive at the desired robot-relative velocity with the specified feedforwards.
+     * Runs the drive at the desired robot-relative velocity with the specified feedforwards.  
+     * Doesn't use kinematic constraints because feedfoward control should already be within the robot's capabilities.
      *
      * @param speeds
      */
     public void runVelocityWithFeedforward(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
-        runVelocity(speeds, feedforwards.accelerationsMPSSq());
+        runVelocity(speeds, feedforwards.accelerationsMPSSq(), false);
     }
 
     /**
      * Runs the drive at the desired robot-relative velocity. Doesn't account for acceleration.
      * @param speeds
      */
-    public void runVelocity(ChassisSpeeds speeds) {
-        runVelocity(speeds, new double[4]);
+    public void runVelocity(ChassisSpeeds speeds, boolean useKinematicConstraints) {
+        runVelocity(speeds, new double[4], useKinematicConstraints);
     }
 
     /**
@@ -137,9 +138,12 @@ public class Drive extends SubsystemBase {
      *
      * @param speeds Speeds in meters/sec
      * @param accelerations Accelerations **assuming unoptimized module states**.
+     * @param useKinematicConstraints Whether to apply kinematic constraints to the chassis speeds before calculating module setpoints. 
+     *   Should be true for normal operation, but false for autonomous when paths should already be kinematically feasible.
      */
-    @SuppressWarnings("unused")
-    public void runVelocity(ChassisSpeeds speeds, double[] accelerationsMps2) {
+    public void runVelocity(ChassisSpeeds speeds, double[] accelerationsMps2, boolean useKinematicConstraints) {
+        if(useKinematicConstraints) speeds = DriveConstants.kinematicConstraints.constrainChassisSpeeds(speeds);
+        
         // Calculate module setpoints
         speeds = ChassisSpeeds.discretize(speeds, 0.02);
         SwerveModuleState[] setpointStates = robotState.kinematics.toSwerveModuleStates(speeds);
@@ -206,7 +210,7 @@ public class Drive extends SubsystemBase {
 
     /** Stops the drive. */
     public void stop() {
-        runVelocity(new ChassisSpeeds());
+        runVelocity(new ChassisSpeeds(), false);
     }
 
     /**
