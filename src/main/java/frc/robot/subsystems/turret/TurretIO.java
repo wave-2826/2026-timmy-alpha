@@ -3,17 +3,59 @@ package frc.robot.subsystems.turret;
 import org.littletonrobotics.junction.AutoLog;
 
 public interface TurretIO {
-  @AutoLog
-  public static class TurretIOInputs {
-    public double positionRad = 0.0;
-    public double velocityRadPerSec = 0.0;
-    public double appliedVolts = 0.0;
-    public double currentAmps = 0.0;
-  }
+    @AutoLog
+    public static class TurretIOInputs {
+        public record FlywheelMotorInputs(
+            /** Whether the motor is connected */
+            boolean connected,
+            /** The measured flywheel speed. */
+            double speedRadPerSec,
+            /** The motor current draw. */
+            double motorCurrentAmps
+        ) {}
+        public record AzimuthMotorInputs(
+            /** Whether the motor is connected */
+            boolean connected,
+            /** The measured azimuth outer ring angle. */
+            double azimuthAngleRad,
+            /** The motor current draw. */
+            double motorCurrentAmps
+        ) {}
+        public record HoodMotorInputs(
+            /** Whether the motor is connected */
+            boolean connected,
+            /** 
+             * The measured hood ring angle.
+             * The actual hood angle is the difference between this and the azimuth ring angle (and a reduction).
+             */
+            double hoodRingAngleRad,
+            /** The motor current draw. */
+            double motorCurrentAmps
+        ) {}
 
-  /** Update the set of loggable inputs. */
-  public default void updateInputs(TurretIOInputs inputs) {}
+        FlywheelMotorInputs topFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
+        FlywheelMotorInputs bottomFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
 
-  /** Run open loop at the specified power. */
-  public default void setPower(double power) {}
+        AzimuthMotorInputs azimuth = new AzimuthMotorInputs(false, 0.0, 0.0);
+
+        HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0);
+    }
+
+    public static record TurretIOOutputs(
+        /** The target flywheel speed. */
+        double flywheelSpeedRadPerSec,
+        /** The turret azimuth angle relative to the robot base. */
+        double azimuthAngleRad,
+        /** The angle of the hood outer ring relative to the azimuth position. */
+        double hoodRingAngleDiffRad
+    ) {}
+
+    /** Update the set of loggable inputs - data measured from the turret and passed into code. */
+    public default void updateInputs(TurretIOInputs inputs) {}
+
+    /** Run the turret with the given outputs. */
+    public default void setOutputs(TurretIOOutputs outputs) {}
+
+    /** Run open loop at the specified power. */
+    public default void setPower(double power) {}
 }
