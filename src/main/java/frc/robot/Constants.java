@@ -22,7 +22,7 @@ public final class Constants {
      */
     public static final boolean useNTLogs = false;
 
-    /** If the robot is in "tuning mode". When in tuning mode, tunable constants are added to NetworkTables. */
+    /** If the robot is in "tuning mode". When in tuning mode, tunable constants are added to NetworkTables. Tuning is automatically disabled during matches. */
     public static boolean tuningMode = true;
 
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;

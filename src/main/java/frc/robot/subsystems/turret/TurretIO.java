@@ -8,8 +8,8 @@ public interface TurretIO {
         public record FlywheelMotorInputs(
             /** Whether the motor is connected */
             boolean connected,
-            /** The measured flywheel speed. */
-            double speedRadPerSec,
+            /** The measured flywheel angular velocity. */
+            double velocityRadPerSec,
             /** The motor current draw. */
             double motorCurrentAmps
         ) {}
@@ -18,6 +18,8 @@ public interface TurretIO {
             boolean connected,
             /** The measured azimuth outer ring angle. */
             double azimuthAngleRad,
+            /** The measured velocity in rad/sec. */
+            double azimuthVelocityRadPerSec,
             /** The motor current draw. */
             double motorCurrentAmps
         ) {}
@@ -29,6 +31,8 @@ public interface TurretIO {
              * The actual hood angle is the difference between this and the azimuth ring angle (and a reduction).
              */
             double hoodRingAngleRad,
+            /** The meas ured velocity of the hood ring in rad/sec. */
+            double hoodRingVelocityRadPerSec,
             /** The motor current draw. */
             double motorCurrentAmps
         ) {}
@@ -36,9 +40,9 @@ public interface TurretIO {
         FlywheelMotorInputs topFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
         FlywheelMotorInputs bottomFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
 
-        AzimuthMotorInputs azimuth = new AzimuthMotorInputs(false, 0.0, 0.0);
+        AzimuthMotorInputs azimuth = new AzimuthMotorInputs(false, 0.0, 0.0, 0.0);
 
-        HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0);
+        HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0, 0.0);
     }
 
     public static record TurretIOOutputs(

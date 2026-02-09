@@ -105,10 +105,9 @@ public final class PhoenixUtil {
      * <h4>Note:This function is skipped when running on a real robot, ensuring no impact on constants used on real
      * robot hardware.</h4>
      */
-    public static SwerveModuleConstants regulateModuleConstantForSimulation(
-            SwerveModuleConstants<?, ?, ?> moduleConstants) {
+    public static SwerveModuleConstants<?, ?, ?> regulateModuleConstantForSimulation(SwerveModuleConstants<?, ?, ?> moduleConstants) {
         // Skip regulation if running on a real robot
-        if (RobotBase.isReal()) return moduleConstants;
+        if(RobotBase.isReal()) return moduleConstants;
 
         // Apply simulation-specific adjustments to module constants
         return moduleConstants
