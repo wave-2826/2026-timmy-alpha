@@ -116,7 +116,7 @@ public class DriveTuningCommands {
         chooser.addOption("TUNING | Drive Slip Current Measurement", slipCurrentMeasurement(drive));
 
         // These only apply to when we're doing "real" tuning
-        if(Constants.tuningMode) {
+        if(Robot.tuningMode()) {
             chooser.addOption("TUNING | Drive Simple FF Characterization", feedforwardCharacterization(drive));
 
             chooser.addOption("TUNING | Drive SysId (Quasistatic Forward)",
