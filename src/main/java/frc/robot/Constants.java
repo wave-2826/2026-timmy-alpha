@@ -38,6 +38,8 @@ public final class Constants {
 
     public static boolean isSim = currentMode == Mode.SIM;
 
+    public static boolean disableHAL = false;
+
     /**
      * Maintains a real-time thread priority for the main robot thread throughout the entire program execution. This is
      * INCREDIBLY dangerous! Do NOT use this without understanding the consequences and EXTENSIVELY testing code with it
