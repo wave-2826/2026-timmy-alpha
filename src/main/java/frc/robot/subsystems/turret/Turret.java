@@ -1,5 +1,6 @@
 package frc.robot.subsystems.turret;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -49,7 +50,13 @@ public class Turret extends SubsystemBase {
         if(target == null) {
             io.stop();
         } else {
-            io.setOutputs(new TurretIOOutputs(target.flywheelSpeedRadPerSec, target.azimuthAngleRad, target.hoodRingAngleDiffRad));
+            TurretIOOutputs outputs = new TurretIOOutputs(
+                target.flywheelSpeedRadPerSec,
+                target.azimuthAngleRad % (Math.PI * 2),
+                MathUtil.clamp(target.hoodRingAngleDiffRad, -Math.PI / 2, Math.PI / 2)
+            );
+            io.setOutputs(outputs);
+            Logger.recordOutput("Turret/Target", outputs);
         }
     }
 
@@ -60,11 +67,12 @@ public class Turret extends SubsystemBase {
     ) {
         return Commands.runEnd(() -> {
             if(target == null) {
-                target = new TurretTarget(0.0, inputs.azimuth.azimuthAngleRad(), inputs.hood.hoodRingAngleRad());
+                target = new TurretTarget(0.0, inputs.azimuth.azimuthAngleRad(), 0);
             }
-            target.flywheelSpeedRadPerSec = flywheelSpeedSupplier.getAsDouble() * TurretConstants.maxFlywheelSpeedRadPerSec;
-            target.azimuthAngleRad += azimuthSpeedSupplier.getAsDouble() * TurretConstants.maxAzimuthSpeedRadPerSec * 0.5;
-            target.hoodRingAngleDiffRad += hoodSpeedSupplier.getAsDouble() * TurretConstants.maxHoodRingSpeedRadPerSec * 0.05;
+            target.flywheelSpeedRadPerSec = MathUtil.applyDeadband(flywheelSpeedSupplier.getAsDouble(), 0.2) * TurretConstants.maxFlywheelSpeedRadPerSec;
+            target.azimuthAngleRad += MathUtil.applyDeadband(azimuthSpeedSupplier.getAsDouble(), 0.2) * Math.PI * 0.02;
+            target.azimuthAngleRad %= Math.PI * 2;
+            target.hoodRingAngleDiffRad += hoodSpeedSupplier.getAsDouble() * Math.PI * 0.01;
         }, () -> {
             target = null;
         }, this);

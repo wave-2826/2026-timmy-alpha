@@ -18,10 +18,14 @@ public interface TurretIO {
             boolean connected,
             /** The measured azimuth outer ring angle. */
             double azimuthAngleRad,
+            /** The azimuth motor's internal encoder angle. */
+            double azimuthInternalEncoderAngle,
             /** The measured velocity in rad/sec. */
             double azimuthVelocityRadPerSec,
             /** The motor current draw. */
-            double motorCurrentAmps
+            double motorCurrentAmps,
+            /** The applied output as a percentage. */
+            double appliedOutput
         ) {}
         public record HoodMotorInputs(
             /** Whether the motor is connected */
@@ -34,15 +38,17 @@ public interface TurretIO {
             /** The meas ured velocity of the hood ring in rad/sec. */
             double hoodRingVelocityRadPerSec,
             /** The motor current draw. */
-            double motorCurrentAmps
+            double motorCurrentAmps,
+            /** The applied output as a percentage. */
+            double appliedOutput
         ) {}
 
         FlywheelMotorInputs topFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
         FlywheelMotorInputs bottomFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
 
-        AzimuthMotorInputs azimuth = new AzimuthMotorInputs(false, 0.0, 0.0, 0.0);
+        AzimuthMotorInputs azimuth = new AzimuthMotorInputs(false, 0.0, 0.0, 0.0, 0.0, 0.0);
 
-        HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0, 0.0);
+        HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0, 0.0, 0.0);
     }
 
     public static record TurretIOOutputs(
