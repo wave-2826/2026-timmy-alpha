@@ -9,6 +9,7 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
@@ -23,7 +24,7 @@ import static frc.robot.util.SparkUtil.getIfOk;
 public class TurretIOReal implements TurretIO {
     protected final SparkFlex topFlywheelMotor    = new SparkFlex(topFlywheelCanID, MotorType.kBrushless);
     protected final SparkFlex bottomFlywheelMotor = new SparkFlex(bottomFlywheelCanID, MotorType.kBrushless);
-    protected final SparkFlex azimuthMotor        = new SparkFlex(azimuthCanID, MotorType.kBrushless);
+    protected final SparkMax azimuthMotor         = new SparkMax(azimuthCanID, MotorType.kBrushless);
     protected final SparkFlex hoodMotor           = new SparkFlex(hoodCanID, MotorType.kBrushless);
 
     protected final SparkClosedLoopController flywheelController;

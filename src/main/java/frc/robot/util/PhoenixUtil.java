@@ -1,9 +1,9 @@
 package frc.robot.util;
 
 import static edu.wpi.first.units.Units.*;
-import static edu.wpi.first.units.Units.Seconds;
 
 import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.configs.ParentConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -105,7 +105,9 @@ public final class PhoenixUtil {
      * <h4>Note:This function is skipped when running on a real robot, ensuring no impact on constants used on real
      * robot hardware.</h4>
      */
-    public static SwerveModuleConstants<?, ?, ?> regulateModuleConstantForSimulation(SwerveModuleConstants<?, ?, ?> moduleConstants) {
+    public static
+        <A extends ParentConfiguration, B extends ParentConfiguration, C extends ParentConfiguration>
+        SwerveModuleConstants<A, B, C> regulateModuleConstantForSimulation(SwerveModuleConstants<A, B, C> moduleConstants) {
         // Skip regulation if running on a real robot
         if(RobotBase.isReal()) return moduleConstants;
 
