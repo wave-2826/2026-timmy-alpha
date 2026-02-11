@@ -8,6 +8,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.DriveTuningCommands;
 import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretIO;
+import frc.robot.subsystems.turret.TurretIOReal;
+import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.subsystems.vision.*;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -21,9 +25,10 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  */
 public class RobotContainer {
     // Subsystems
-    private final Drive drive;
-    private final Vision vision;
-    // private final Intake intake;
+    public final Drive drive;
+    public final Vision vision;
+    // public final Intake intake;
+    public final Turret turret;
 
     private SwerveDriveSimulation driveSimulation = null;
 
@@ -51,6 +56,7 @@ public class RobotContainer {
                     new VisionIOLimelight(VisionConstants.camera0Name, robotState::getRotation),
                     new VisionIOLimelight(VisionConstants.camera1Name, robotState::getRotation));
                 // intake = new Intake(new IntakeIOSpark());
+                turret = new Turret(new TurretIOReal());
                 break;
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations
@@ -68,6 +74,7 @@ public class RobotContainer {
                     new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
                     new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
                 // intake = new Intake(new IntakeIOSim());
+                turret = new Turret(new TurretIOSim());
                 break;
             default:
                 // Replayed robot, disable IO implementations
@@ -79,6 +86,7 @@ public class RobotContainer {
                     new ModuleIO() {});
                 vision = new Vision(new VisionIO() {}, new VisionIO() {});
                 // intake = new Intake(new IntakeIO() {});
+                turret = new Turret(new TurretIO() {});
                 break;
         }
 
@@ -86,8 +94,7 @@ public class RobotContainer {
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
         DriveTuningCommands.addTuningCommandsToAutoChooser(drive, autoChooser);
-
-        Controls.getInstance().configureControls(drive, driveSimulation);
+        Controls.getInstance().configureControls(this, driveSimulation);
 
         resetSimulationField();
     }

@@ -60,6 +60,6 @@ public interface TurretIO {
     /** Run the turret with the given outputs. */
     public default void setOutputs(TurretIOOutputs outputs) {}
 
-    /** Run open loop at the specified power. */
-    public default void setPower(double power) {}
+    /** Stop all turret motion and hold position. */
+    public default void stop() {}
 }

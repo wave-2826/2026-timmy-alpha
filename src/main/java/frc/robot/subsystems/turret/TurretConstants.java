@@ -1,5 +1,6 @@
 package frc.robot.subsystems.turret;
 
+import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.util.SparkPIDConstants;
 import frc.robot.util.tunables.TunableSparkPID;
 
@@ -21,6 +22,14 @@ public class TurretConstants {
 
     public static final double flywheelBevelReduction = 10.0 / 18.0;
     public static final double hoodBevelReduction = 20.0 / 35.0;
+
+    // Limits
+    public static final double maxFlywheelSpeedRadPerSec = DCMotor.getNeoVortex(1).freeSpeedRadPerSec *
+        flywheelToRingReduction * flywheelPlanetReduction * flywheelBevelReduction * 0.8;
+    public static final double maxHoodRingSpeedRadPerSec = DCMotor.getNeoVortex(1).freeSpeedRadPerSec *
+        hoodToRingReduction * hoodPlanetReduction * hoodBevelReduction * 0.8;
+    public static final double maxAzimuthSpeedRadPerSec = DCMotor.getNeoVortex(1).freeSpeedRadPerSec *
+        azimuthToRingReduction * 0.8;
 
     // Current limits
     public static final int flywheelCurrentLimit = 40; // amps

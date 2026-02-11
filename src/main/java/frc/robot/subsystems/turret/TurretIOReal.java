@@ -107,4 +107,11 @@ public class TurretIOReal implements TurretIO {
         azimuthController.setReference(outputs.azimuthAngleRad(), ControlType.kPosition);
         hoodController.setReference(outputs.azimuthAngleRad() + outputs.hoodRingAngleDiffRad(), ControlType.kPosition);
     }
+
+    @Override
+    public void stop() {
+        flywheelController.setReference(0.0, ControlType.kVelocity);
+        azimuthMotor.stopMotor();
+        hoodMotor.stopMotor();
+    }
 }

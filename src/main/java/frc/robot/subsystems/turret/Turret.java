@@ -1,7 +1,11 @@
 package frc.robot.subsystems.turret;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import java.util.function.DoubleSupplier;
+
 import org.littletonrobotics.junction.Logger;
 import frc.robot.subsystems.turret.TurretIO.TurretIOOutputs;
 
@@ -19,6 +23,20 @@ public class Turret extends SubsystemBase {
     private final TurretIO io;
     private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
 
+    public class TurretTarget {
+        public double flywheelSpeedRadPerSec;
+        public double azimuthAngleRad;
+        public double hoodRingAngleDiffRad;
+
+        public TurretTarget(double flywheelSpeedRadPerSec, double azimuthAngleRad, double hoodRingAngleDiffRad) {
+            this.flywheelSpeedRadPerSec = flywheelSpeedRadPerSec;
+            this.azimuthAngleRad = azimuthAngleRad;
+            this.hoodRingAngleDiffRad = hoodRingAngleDiffRad;
+        }
+    }
+
+    public TurretTarget target = null;
+
     public Turret(TurretIO io) {
         this.io = io;
     }
@@ -28,15 +46,27 @@ public class Turret extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Turret", inputs);
 
-        // TODO
-        var outputs = new TurretIOOutputs(
-            0, 0, 0
-        );
-
-        io.setOutputs(outputs);
+        if(target == null) {
+            io.stop();
+        } else {
+            io.setOutputs(new TurretIOOutputs(target.flywheelSpeedRadPerSec, target.azimuthAngleRad, target.hoodRingAngleDiffRad));
+        }
     }
 
-    public Command runPercent(double percent) {
-        return runEnd(() -> io.setPower(percent * 12.0), () -> io.setPower(0.0));
+    public Command runManual(
+        DoubleSupplier flywheelSpeedSupplier,
+        DoubleSupplier azimuthSpeedSupplier,
+        DoubleSupplier hoodSpeedSupplier
+    ) {
+        return Commands.runEnd(() -> {
+            if(target == null) {
+                target = new TurretTarget(0.0, inputs.azimuth.azimuthAngleRad(), inputs.hood.hoodRingAngleRad());
+            }
+            target.flywheelSpeedRadPerSec = flywheelSpeedSupplier.getAsDouble() * TurretConstants.maxFlywheelSpeedRadPerSec;
+            target.azimuthAngleRad += azimuthSpeedSupplier.getAsDouble() * TurretConstants.maxAzimuthSpeedRadPerSec * 0.5;
+            target.hoodRingAngleDiffRad += hoodSpeedSupplier.getAsDouble() * TurretConstants.maxHoodRingSpeedRadPerSec * 0.05;
+        }, () -> {
+            target = null;
+        }, this);
     }
 }

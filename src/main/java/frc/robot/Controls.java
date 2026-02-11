@@ -16,15 +16,17 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
 public class Controls {
     private static final double debounceTime = Constants.isSim ? 0.15 : 0;
 
-    private final Alert driverDisconnectedAlert = new Alert("Driver controller disconnected (port 0)",
-        AlertType.kWarning);
+    private final Alert driverDisconnectedAlert = new Alert("Driver controller disconnected (port 0)", AlertType.kWarning);
+    private final Alert coDriverDisconnectedAlert = new Alert("Co-driver controller disconnected (port 1)", AlertType.kInfo);
 
     private final CommandXboxController driver = new CommandXboxController(0);
+    private final CommandXboxController coDriver = new CommandXboxController(1);
 
     private final LoggedTunableNumber endgameAlert1Time = new LoggedTunableNumber("Controls/EndgameAlert1Time", 30.0);
     private final LoggedTunableNumber endgameAlert2Time = new LoggedTunableNumber("Controls/EndgameAlert2Time", 20.0);
@@ -40,10 +42,15 @@ public class Controls {
     }
 
     /** Configures the controls. */
-    public void configureControls(Drive drive, SwerveDriveSimulation driveSimulation) {
+    public void configureControls(RobotContainer rc, SwerveDriveSimulation driveSimulation) {
+        Drive drive = rc.drive;
+        Turret turret = rc.turret;
+        
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> driver.getRightX()));
         driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+
+        turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getLeftY));
 
         // Reset gyro or odometry if in simulation
         final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
@@ -91,6 +98,8 @@ public class Controls {
     public void update() {
         // Controller disconnected alerts
         int driverPort = driver.getHID().getPort();
+        int coDriverPort = coDriver.getHID().getPort();
         driverDisconnectedAlert.set(!DriverStation.isJoystickConnected(driverPort) || !DriverStation.getJoystickIsXbox(driverPort));
+        coDriverDisconnectedAlert.set(!DriverStation.isJoystickConnected(coDriverPort) || !DriverStation.getJoystickIsXbox(coDriverPort));
     }
 }
