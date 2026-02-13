@@ -5,7 +5,9 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
@@ -42,12 +44,14 @@ public class TurretIOReal implements TurretIO {
         var flywheelBaseConfig = new SparkFlexConfig();
         flywheelBaseConfig.signals.apply(SparkUtil.defaultSignals);
         TurretConstants.flywheelMotorPID.applyConfigAndRegister(flywheelBaseConfig, topFlywheelMotor, bottomFlywheelMotor);
+        flywheelBaseConfig.closedLoopRampRate(1.0);
         flywheelBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(flywheelCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         flywheelBaseConfig.encoder
-            .positionConversionFactor(2.0 * Math.PI * flywheelToRingReduction * flywheelPlanetReduction * flywheelBevelReduction) // rotations -> radians
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0 * flywheelToRingReduction * flywheelPlanetReduction * flywheelBevelReduction); // RPM -> rad/s
+            .positionConversionFactor(2.0 * Math.PI) // rotations -> radians
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s
+        flywheelBaseConfig.inverted(true);
         var topFlywheelConfig = new SparkFlexConfig().apply(flywheelBaseConfig);
-        var bottomFlywheelConfig = new SparkFlexConfig().apply(flywheelBaseConfig).follow(topFlywheelMotor, true);
+        var bottomFlywheelConfig = new SparkFlexConfig().apply(flywheelBaseConfig);
         tryUntilOk(topFlywheelMotor, 5, () -> topFlywheelMotor.configure(topFlywheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
         tryUntilOk(bottomFlywheelMotor, 5, () -> bottomFlywheelMotor.configure(bottomFlywheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
 
@@ -67,7 +71,7 @@ public class TurretIOReal implements TurretIO {
             .zeroCentered(false)
             .positionConversionFactor(2.0 * Math.PI) // Rotations -> Radians (of ring)
             .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s (of ring)
-        azimuthConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(azimuthCurrentLimit).voltageCompensation(Constants.voltageCompensation);
+        azimuthConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(azimuthCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         azimuthConfig.encoder
             .positionConversionFactor(2.0 * Math.PI * azimuthToRingReduction) // Rotor Rotations -> Radians (of ring)
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 * azimuthToRingReduction); // RPM -> rad/s (of ring)
@@ -91,7 +95,7 @@ public class TurretIOReal implements TurretIO {
         azimuthController = azimuthMotor.getClosedLoopController();
         hoodController = hoodMotor.getClosedLoopController();
 
-        hoodMotor.getEncoder().setPosition(azimuthEncoder.getPosition());
+        hoodEncoder.setPosition(azimuthEncoder.getPosition());
     }
   
     @Override
@@ -120,9 +124,11 @@ public class TurretIOReal implements TurretIO {
 
     @Override
     public void setOutputs(TurretIOOutputs outputs) {
-        flywheelController.setReference(outputs.flywheelSpeedRadPerSec(), ControlType.kVelocity);
+        // TODO: Calculate next velocity
+        var ff = flywheelMotorFF.calculateWithVelocities(outputs.flywheelSpeedRadPerSec(), outputs.flywheelSpeedRadPerSec());
+        flywheelController.setReference(outputs.flywheelSpeedRadPerSec(), ControlType.kVelocity, ClosedLoopSlot.kSlot0, ff, ArbFFUnits.kVoltage);
         azimuthController.setReference(outputs.azimuthAngleRad(), ControlType.kPosition);
-        hoodController.setReference(outputs.azimuthAngleRad() + outputs.hoodRingAngleDiffRad(), ControlType.kPosition);
+        hoodController.setReference(outputs.azimuthAngleRad() + outputs.hoodAngleRad(), ControlType.kPosition);
     }
 
     @Override

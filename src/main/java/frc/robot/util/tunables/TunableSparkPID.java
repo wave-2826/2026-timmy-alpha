@@ -31,14 +31,13 @@ public class TunableSparkPID {
 
         public InternalPIDConstants(OptionalDouble p, OptionalDouble i, OptionalDouble iZone, OptionalDouble d,
             OptionalDouble f, ClosedLoopSlot slot) {
-            if(p.isPresent()) this.p = new LoggedTunableNumber(tunablePath + slot.toString() + "P", p.getAsDouble());
-            if(i.isPresent()) this.i = new LoggedTunableNumber(tunablePath + slot.toString() + "I", i.getAsDouble());
-            if(i.isPresent()) this.i = new LoggedTunableNumber(tunablePath + slot.toString() + "IZone",
-                i.getAsDouble());
-            if(iZone.isPresent()) this.iZone = new LoggedTunableNumber(tunablePath + slot.toString() + "IZone",
-                i.getAsDouble());
-            if(d.isPresent()) this.d = new LoggedTunableNumber(tunablePath + slot.toString() + "D", d.getAsDouble());
-            if(f.isPresent()) this.f = new LoggedTunableNumber(tunablePath + slot.toString() + "F", f.getAsDouble());
+            String slotStr = slot == ClosedLoopSlot.kSlot0 ? "" : Integer.toString(slot.ordinal());
+            if(p.isPresent()) this.p = new LoggedTunableNumber(tunablePath + slotStr + "_P", p.getAsDouble());
+            if(i.isPresent()) this.i = new LoggedTunableNumber(tunablePath + slotStr + "_I", i.getAsDouble());
+            if(i.isPresent()) this.i = new LoggedTunableNumber(tunablePath + slotStr + "_IZone", i.getAsDouble());
+            if(iZone.isPresent()) this.iZone = new LoggedTunableNumber(tunablePath + slotStr + "_IZone", i.getAsDouble());
+            if(d.isPresent()) this.d = new LoggedTunableNumber(tunablePath + slotStr + "_D", d.getAsDouble());
+            if(f.isPresent()) this.f = new LoggedTunableNumber(tunablePath + slotStr + "_F", f.getAsDouble());
             this.slot = slot;
 
             hasChanged(); // Don't fire on initial creation
@@ -53,14 +52,16 @@ public class TunableSparkPID {
         }
     }
 
-    /** The set of PID slots to be used when on a simulated robot. */
+    /** The set of PID slots used for a real robot; only used to appropriately copy to sim. */
+    private ArrayList<SparkPIDConstants> realPidGains;
+    /** The set of PID slots to be used. */
     private ArrayList<InternalPIDConstants> pidSlots;
     /** The path to the tunable constants. */
     private String tunablePath;
     /** The list of sparks to be configured. */
     private ArrayList<SparkBase> sparks = new ArrayList<>();
 
-    /** A list of change listeners that are run y loop iteration when in tuning mode. */
+    /** A list of change listeners that are run every loop iteration when in tuning mode. */
     private static ArrayList<Runnable> changeListenerRegistry = new ArrayList<>();
 
     /**
@@ -81,6 +82,7 @@ public class TunableSparkPID {
      * @param tunablePath The path to the tunable constants.
      */
     public TunableSparkPID(String tunablePath) {
+        realPidGains = new ArrayList<>();
         pidSlots = new ArrayList<>();
         this.tunablePath = tunablePath;
 
@@ -161,6 +163,7 @@ public class TunableSparkPID {
      * @param slot
      */
     public TunableSparkPID addRealRobotGains(SparkPIDConstants constants) {
+        realPidGains.add(constants);
         if(Constants.currentMode == Constants.Mode.REAL) pidSlots.add(constants.toInternal(this));
         return this;
     }
@@ -175,6 +178,18 @@ public class TunableSparkPID {
      */
     public TunableSparkPID addSimGains(SparkPIDConstants constants) {
         if(Constants.currentMode != Constants.Mode.REAL) pidSlots.add(constants.toInternal(this));
+        return this;
+    }
+
+    /**
+     * Copies the real robot gains to simulation.
+     */
+    public TunableSparkPID copyRealGainsInSim() {
+        if(Constants.currentMode != Constants.Mode.REAL) {
+            for(SparkPIDConstants c : realPidGains) {
+                pidSlots.add(c.toInternal(this));
+            }
+        }
         return this;
     }
 }

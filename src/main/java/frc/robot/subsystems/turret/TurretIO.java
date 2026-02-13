@@ -57,7 +57,7 @@ public interface TurretIO {
         /** The turret azimuth angle relative to the robot base. */
         double azimuthAngleRad,
         /** The angle of the hood outer ring relative to the azimuth position. */
-        double hoodRingAngleDiffRad
+        double hoodAngleRad
     ) {}
 
     /** Update the set of loggable inputs - data measured from the turret and passed into code. */

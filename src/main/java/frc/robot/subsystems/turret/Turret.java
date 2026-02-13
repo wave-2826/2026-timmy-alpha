@@ -27,12 +27,12 @@ public class Turret extends SubsystemBase {
     public class TurretTarget {
         public double flywheelSpeedRadPerSec;
         public double azimuthAngleRad;
-        public double hoodRingAngleDiffRad;
+        public double hoodAngleRad;
 
         public TurretTarget(double flywheelSpeedRadPerSec, double azimuthAngleRad, double hoodRingAngleDiffRad) {
             this.flywheelSpeedRadPerSec = flywheelSpeedRadPerSec;
             this.azimuthAngleRad = azimuthAngleRad;
-            this.hoodRingAngleDiffRad = hoodRingAngleDiffRad;
+            this.hoodAngleRad = hoodRingAngleDiffRad;
         }
     }
 
@@ -53,7 +53,7 @@ public class Turret extends SubsystemBase {
             TurretIOOutputs outputs = new TurretIOOutputs(
                 target.flywheelSpeedRadPerSec,
                 target.azimuthAngleRad % (Math.PI * 2),
-                MathUtil.clamp(target.hoodRingAngleDiffRad, -Math.PI / 2, Math.PI / 2)
+                MathUtil.clamp(target.hoodAngleRad, 0, Math.PI / 2)
             );
             io.setOutputs(outputs);
             Logger.recordOutput("Turret/Target", outputs);
@@ -70,9 +70,12 @@ public class Turret extends SubsystemBase {
                 target = new TurretTarget(0.0, inputs.azimuth.azimuthAngleRad(), 0);
             }
             target.flywheelSpeedRadPerSec = MathUtil.applyDeadband(flywheelSpeedSupplier.getAsDouble(), 0.2) * TurretConstants.maxFlywheelSpeedRadPerSec;
-            target.azimuthAngleRad += MathUtil.applyDeadband(azimuthSpeedSupplier.getAsDouble(), 0.2) * Math.PI * 0.02;
+            
+            target.azimuthAngleRad -= MathUtil.applyDeadband(azimuthSpeedSupplier.getAsDouble(), 0.2) * Math.PI * 0.02;
             target.azimuthAngleRad %= Math.PI * 2;
-            target.hoodRingAngleDiffRad += hoodSpeedSupplier.getAsDouble() * Math.PI * 0.01;
+
+            target.hoodAngleRad -= hoodSpeedSupplier.getAsDouble() * Math.PI * 0.008;
+            target.hoodAngleRad = MathUtil.clamp(target.hoodAngleRad, -0.15, 0.9);
         }, () -> {
             target = null;
         }, this);
