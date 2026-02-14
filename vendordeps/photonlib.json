@@ -1,9 +1,15 @@
 {
     "fileName": "photonlib.json",
     "name": "photonlib",
+<<<<<<< HEAD
     "version": "v2025.3.1",
     "uuid": "515fe07e-bfc6-11fa-b3de-0242ac130004",
     "frcYear": "2025",
+=======
+    "version": "v2026.2.2",
+    "uuid": "515fe07e-bfc6-11fa-b3de-0242ac130004",
+    "frcYear": "2026",
+>>>>>>> a285bc87b4076d32a07ec7d01713b449be262891
     "mavenUrls": [
         "https://maven.photonvision.org/repository/internal",
         "https://maven.photonvision.org/repository/snapshots"
@@ -13,7 +19,11 @@
         {
             "groupId": "org.photonvision",
             "artifactId": "photontargeting-cpp",
+<<<<<<< HEAD
             "version": "v2025.3.1",
+=======
+            "version": "v2026.2.2",
+>>>>>>> a285bc87b4076d32a07ec7d01713b449be262891
             "skipInvalidPlatforms": true,
             "isJar": false,
             "validPlatforms": [
@@ -28,7 +38,11 @@
         {
             "groupId": "org.photonvision",
             "artifactId": "photonlib-cpp",
+<<<<<<< HEAD
             "version": "v2025.3.1",
+=======
+            "version": "v2026.2.2",
+>>>>>>> a285bc87b4076d32a07ec7d01713b449be262891
             "libName": "photonlib",
             "headerClassifier": "headers",
             "sharedLibrary": true,
@@ -43,7 +57,11 @@
         {
             "groupId": "org.photonvision",
             "artifactId": "photontargeting-cpp",
+<<<<<<< HEAD
             "version": "v2025.3.1",
+=======
+            "version": "v2026.2.2",
+>>>>>>> a285bc87b4076d32a07ec7d01713b449be262891
             "libName": "photontargeting",
             "headerClassifier": "headers",
             "sharedLibrary": true,
@@ -60,12 +78,20 @@
         {
             "groupId": "org.photonvision",
             "artifactId": "photonlib-java",
+<<<<<<< HEAD
             "version": "v2025.3.1"
+=======
+            "version": "v2026.2.2"
+>>>>>>> a285bc87b4076d32a07ec7d01713b449be262891
         },
         {
             "groupId": "org.photonvision",
             "artifactId": "photontargeting-java",
+<<<<<<< HEAD
             "version": "v2025.3.1"
+=======
+            "version": "v2026.2.2"
+>>>>>>> a285bc87b4076d32a07ec7d01713b449be262891
         }
     ]
 }
