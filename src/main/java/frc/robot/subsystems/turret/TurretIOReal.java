@@ -126,14 +126,14 @@ public class TurretIOReal implements TurretIO {
     public void setOutputs(TurretIOOutputs outputs) {
         // TODO: Calculate next velocity
         var ff = flywheelMotorFF.calculateWithVelocities(outputs.flywheelSpeedRadPerSec(), outputs.flywheelSpeedRadPerSec());
-        flywheelController.setReference(outputs.flywheelSpeedRadPerSec(), ControlType.kVelocity, ClosedLoopSlot.kSlot0, ff, ArbFFUnits.kVoltage);
-        azimuthController.setReference(outputs.azimuthAngleRad(), ControlType.kPosition);
-        hoodController.setReference(outputs.azimuthAngleRad() + outputs.hoodAngleRad(), ControlType.kPosition);
+        flywheelController.setSetpoint(outputs.flywheelSpeedRadPerSec(), ControlType.kVelocity, ClosedLoopSlot.kSlot0, ff, ArbFFUnits.kVoltage);
+        azimuthController.setSetpoint(outputs.azimuthAngleRad(), ControlType.kPosition);
+        hoodController.setSetpoint(outputs.azimuthAngleRad() + outputs.hoodAngleRad(), ControlType.kPosition);
     }
 
     @Override
     public void stop() {
-        flywheelController.setReference(0.0, ControlType.kVelocity);
+        flywheelController.setSetpoint(0.0, ControlType.kVelocity);
         azimuthMotor.stopMotor();
         hoodMotor.stopMotor();
     }
