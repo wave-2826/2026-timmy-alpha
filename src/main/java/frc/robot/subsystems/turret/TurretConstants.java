@@ -13,7 +13,7 @@ public class TurretConstants {
     public static final int azimuthCanID = 53;
     public static final int hoodCanID = 54;
 
-    // Reductions:
+    // Reductions; all are a ratio between output and input.
     // All stages have the same 31:200 reduction, but the hood and azimuth are further reduced by the bevel and planetary stages.
     public static final double flywheelToRingReduction = 31.0 / 200.0;
     public static final double azimuthToRingReduction = 31.0 / 200.0;
@@ -29,8 +29,15 @@ public class TurretConstants {
     private static final double reflectInertia(double externalInertia, double ratioInternal) {
         return (1 / ratioInternal) * (1 / ratioInternal) * externalInertia;
     }
+    private static final double parallelAxisInertia(double inertia, double mass, double radius) {
+        return inertia + mass * radius * radius;
+    }
     // This could be tuned instead of calculated, but... eh...
-    public static final DCMotor flywheelSimMotor = DCMotor.getNeoVortex(1);
+    public static final DCMotor flywheelSimMotor = DCMotor.getNeoVortex(2);
+    public static final DCMotor azimuthSimMotor = DCMotor.getNeoVortex(1);
+    public static final DCMotor hoodSimMotor = DCMotor.getNeoVortex(1);
+
+    /** The moment of inertia experienced by the two motors for the flywheel (reflected through the drivetrain) */
     public static final double flywheelMotorInertiaKgM2 = reflectInertia(
         reflectInertia(
             0.0004089093 + // Wheel
@@ -43,15 +50,35 @@ public class TurretConstants {
         flywheelToRingReduction
     ) + 0.0000201921 + 0.0000011706 + // Motor shaft stuff
         0.00221388368; // Rev NEO vortex MOI (measured since Rev doesn't give it to us...)
+    
+    /** The moment of inertia experienced by the motor for azimuth rotation (reflected through the drivetrain) */
+    public static final double azimuthMotorInertiaKgM2 = reflectInertia(
+        0.0116297925 + // Big ring
+        parallelAxisInertia(0.0265304183, 1.4442381, 0.0297434), // Full turret azimuth MOI around center of rotation
+        azimuthToRingReduction
+    ) + 0.0000201921 + 0.0000011706 + // Motor shaft stuff
+        0.00221388368; // Rev NEO vortex MOI (measured since Rev doesn't give it to us...)
+
+    /** The moment of inertia experienced by the motor for hood rotation (reflected through the drivetrain) */
+    public static final double hoodMotorInertiaKgM2 = reflectInertia(
+        reflectInertia(
+            reflectInertia(
+                parallelAxisInertia(0.00199082756, 0.2853, 0.079629), // The actual hood doodad
+                hoodBevelReduction
+            ) + 2.92639653e-6, // Transmission before bevel gear
+            hoodPlanetReduction
+        ) + 0.0116297925, // Big ring
+        hoodToRingReduction
+    ) + 0.0000201921 + 0.0000011706 + // Motor shaft stuff
+        0.00221388368; // Rev NEO vortex MOI (measured since Rev doesn't give it to us...)
+
     /** kA for the flywheel system in volts per (rad/s^2). Calculated using the motor inertia reflected through the entire drivetrain. */
     public static final double flywheelMotorKA = flywheelMotorInertiaKgM2 / (flywheelSimMotor.KtNMPerAmp * 12); // uhh maybe?
-     
+    
     // Limits
     public static final double maxFlywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(4966); // Tuned
-    public static final double maxHoodRingSpeedRadPerSec = DCMotor.getNeoVortex(1).freeSpeedRadPerSec *
-        hoodToRingReduction * hoodPlanetReduction * hoodBevelReduction * 0.8;
-    public static final double maxAzimuthSpeedRadPerSec = DCMotor.getNeoVortex(1).freeSpeedRadPerSec *
-        azimuthToRingReduction * 0.8;
+    public static final double maxHoodRingSpeedRadPerSec = hoodSimMotor.freeSpeedRadPerSec * hoodToRingReduction * hoodPlanetReduction * hoodBevelReduction * 0.8;
+    public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * azimuthToRingReduction * 0.8;
 
     // Current limits
     public static final int flywheelCurrentLimit = 67; // amps
@@ -60,12 +87,12 @@ public class TurretConstants {
 
     // PIDs
     public static final TunableSparkPID flywheelMotorPID = new TunableSparkPID("Turret/Flywheel")
-        .addRealRobotGains(new SparkPIDConstants(0.0002, 0.0, 0.0, 0.0))
-        .addSimGains(new SparkPIDConstants(0.0001, 0.0, 0.0, 0.0));
+        .addRealRobotGains(new SparkPIDConstants(0.0005, 0.0, 0.0))
+        .addSimGains(new SparkPIDConstants(0.0005, 0.0, 0.0));
     public static final TunableSimpleMotorFF flywheelMotorFF = new TunableSimpleMotorFF("Turret/FlywheelFF")
-        .addGains(0.0, 12.0 / maxFlywheelSpeedRadPerSec, 0.9); // TODO: Tune gains
+        .addGains(0.0, 12.0 / maxFlywheelSpeedRadPerSec, flywheelMotorKA); // TODO: Tune gains
     public static final TunableSparkPID azimuthMotorPID = new TunableSparkPID("Turret/Azimuth")
-        .addRealRobotGains(new SparkPIDConstants(0.7, 0.0, 0.2, 0.0))
-        .addSimGains(new SparkPIDConstants(0.05, 0.0, 0.0, 0.0));
+        .addRealRobotGains(new SparkPIDConstants(0.7, 0.0, 0.2))
+        .addSimGains(new SparkPIDConstants(0.05, 0.0, 0.0));
     public static final TunableSparkPID hoodMotorPID = azimuthMotorPID;
 }
