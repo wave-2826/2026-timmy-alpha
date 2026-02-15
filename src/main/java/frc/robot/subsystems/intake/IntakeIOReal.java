@@ -4,15 +4,15 @@ import static frc.robot.subsystems.intake.IntakeConstants.*;
 import static frc.robot.util.SparkUtil.*;
 
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import au.grapplerobotics.LaserCan;
-import java.util.function.DoubleSupplier;
 
 public class IntakeIOReal implements IntakeIO {
     protected final SparkMax roller = new SparkMax(intakeRollerCanId, MotorType.kBrushless);
@@ -24,37 +24,79 @@ public class IntakeIOReal implements IntakeIO {
     protected final SparkClosedLoopController deployControllerR = deployR.getClosedLoopController();
 
     protected final RelativeEncoder rollerEncoder = roller.getEncoder();
-    protected final LaserCan deployLCan = new LaserCan(intakeDeployLLaserCanId);
-    protected final LaserCan deployRCan = new LaserCan(intakeDeployRLaserCanId);
+    protected final RelativeEncoder deployEncoderL = deployL.getEncoder();
+    protected final RelativeEncoder deployEncoderR = deployR.getEncoder();
+
+    protected final SparkClosedLoopController deployController;
 
     public IntakeIOReal() {
-        var config = new SparkMaxConfig();
-        config.idleMode(IdleMode.kBrake).smartCurrentLimit(currentLimit).voltageCompensation(12.0);
-        config
+        var rollerConfig = new SparkMaxConfig();
+        rollerConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(rollerCurrentLimit).voltageCompensation(12.0);
+        rollerConfig
             .encoder
             .positionConversionFactor(
-                2.0 * Math.PI / motorReduction) // Rotor Rotations -> Intake Radians
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0 / motorReduction)
+                2.0 * Math.PI / rollerMotorReduction) // Rotor Rotations -> Intake Radians
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0 / rollerMotorReduction)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
-    
-        IntakeConstants.rollerPID.applyConfigAndRegister(config, roller);
+        
+        var deployBaseConfig = new SparkMaxConfig();
+        deployBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(deployCurrentLimit).voltageCompensation(12.0);
+        deployBaseConfig
+            .encoder
+            .positionConversionFactor(
+                2.0 * Math.PI / pinionRadius)
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0 / pinionRadius)
+            .uvwMeasurementPeriod(10)
+            .uvwAverageDepth(2);
+        var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
+        var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
+        deployRConfig.follow(deployL);
 
-        tryUntilOk(roller, 5, () -> roller.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        IntakeConstants.rollerPID.applyConfigAndRegister(rollerConfig, roller);
+        IntakeConstants.deployPID.applyConfigAndRegister(deployLConfig, deployL);
+        IntakeConstants.deployPID.applyConfigAndRegister(deployRConfig, deployR);
+
+        tryUntilOk(roller, 5, () -> roller.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        tryUntilOk(deployL, 5, () -> deployL.configure(deployLConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        tryUntilOk(deployR, 5, () -> deployR.configure(deployRConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+
+        deployController = deployL.getClosedLoopController();
     }
   
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        ifOk(roller, rollerEncoder::getVelocity, (value) -> inputs.velocityRadPerSec = value);
-        ifOk(
-            roller,
-            new DoubleSupplier[] {roller::getAppliedOutput, roller::getBusVoltage},
-            (values) -> inputs.appliedVolts = values[0] * values[1]);
-        ifOk(roller, roller::getOutputCurrent, (value) -> inputs.currentAmps = value);
+        var rollerVelocity = getIfOk(roller, rollerEncoder::getVelocity, 0.0);
+        var rollerCurrent = getIfOk(roller, roller::getOutputCurrent, 0.0);
+        inputs.roller = new IntakeIOInputs.RollerMotorInputs(sparkStickyFault, rollerVelocity, rollerCurrent);
+
+        var deployLCurrent = getIfOk(deployL, deployL::getOutputCurrent, 0.0);
+        var deployLPosition = getIfOk(deployL, deployEncoderL::getPosition, 0.0);
+        inputs.deployL = new IntakeIOInputs.DeployMotorInputs(sparkStickyFault, deployLCurrent, deployLPosition);
+
+        var deployRCurrent = getIfOk(deployR, deployR::getOutputCurrent, 0.0);
+        var deployRPosition = getIfOk(deployR, deployEncoderR::getPosition, 0.0);
+        inputs.deployR = new IntakeIOInputs.DeployMotorInputs(sparkStickyFault, deployRCurrent, deployRPosition);
     }
   
     @Override
-    public void setVoltage(double volts) {
+    public void setRollerVoltage(double volts) {
         roller.setVoltage(volts);
+    }
+
+    @Override
+    public void setDeployVoltage(double volts) {
+        roller.setVoltage(volts);
+    }
+
+    @Override
+    public void resetDeployEncoders() {
+        deployEncoderL.setPosition(0);
+        deployEncoderR.setPosition(0);
+    }
+
+    @Override
+    public void setDeployPosition(double position) {
+        deployController.setSetpoint(position, ControlType.kPosition);
     }
 }

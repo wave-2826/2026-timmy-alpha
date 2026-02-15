@@ -1,7 +1,12 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+
+import static frc.robot.subsystems.intake.IntakeConstants.opeThatsaResetCurrent;
+
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -19,13 +24,29 @@ public class Intake extends SubsystemBase {
     Logger.processInputs("Intake", inputs);
   }
 
-  public Command runPercent(double percent) {
-    return runEnd(() -> io.setVoltage(percent * 12.0), () -> io.setVoltage(0.0));
+  public Command runRollerPercent(double percent) {
+    return runEnd(() -> io.setRollerVoltage(percent * 12.0), () -> io.setRollerVoltage(0.0));
   }
 
-  public Command runTeleop(DoubleSupplier forward, DoubleSupplier reverse) {
+  public Command runRollerTeleop(DoubleSupplier forward, DoubleSupplier reverse) {
     return runEnd(
-        () -> io.setVoltage((forward.getAsDouble() - reverse.getAsDouble()) * 12.0),
-        () -> io.setVoltage(0.0));
+        () -> io.setRollerVoltage((forward.getAsDouble() - reverse.getAsDouble()) * 12.0),
+        () -> io.setRollerVoltage(0.0));
+  }
+
+  public Command deployIntake() {
+    return Commands.runEnd(
+      () -> io.setDeployVoltage(8.0),
+      () -> io.setDeployVoltage(0.0)
+    ).until(() -> (inputs.deployL.motorCurrentAmps() + inputs.deployR.motorCurrentAmps()) / 2 > IntakeConstants.opeThatsaResetCurrent)
+    .andThen();
+  }
+
+  public Command setIntakePosition(DoubleSupplier position) {
+    return Commands.run(
+      () -> {
+        io.setDeployPosition(position.getAsDouble());
+      }
+    );
   }
 }

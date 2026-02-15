@@ -8,13 +8,13 @@ import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
-import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
 import frc.robot.Constants;
 import frc.robot.util.SparkUtil;
@@ -127,14 +127,14 @@ public class TurretIOReal implements TurretIO {
     public void setOutputs(TurretIOOutputs outputs) {
         // TODO: Calculate next velocity
         var ff = flywheelMotorFF.calculateWithVelocities(outputs.flywheelSpeedRadPerSec(), outputs.flywheelSpeedRadPerSec());
-        flywheelController.setReference(outputs.flywheelSpeedRadPerSec(), ControlType.kVelocity, ClosedLoopSlot.kSlot0, ff, ArbFFUnits.kVoltage);
-        azimuthController.setReference(outputs.azimuthAngleRad(), ControlType.kPosition);
-        hoodController.setReference(outputs.azimuthAngleRad() + outputs.hoodAngleRad(), ControlType.kPosition);
+        flywheelController.setSetpoint(outputs.flywheelSpeedRadPerSec(), ControlType.kVelocity, ClosedLoopSlot.kSlot0, ff, ArbFFUnits.kVoltage);
+        azimuthController.setSetpoint(outputs.azimuthAngleRad(), ControlType.kPosition);
+        hoodController.setSetpoint(outputs.azimuthAngleRad() + outputs.hoodAngleRad(), ControlType.kPosition);
     }
 
     @Override
     public void stop() {
-        flywheelController.setReference(0.0, ControlType.kVelocity);
+        flywheelController.setSetpoint(0.0, ControlType.kVelocity);
         azimuthMotor.stopMotor();
         hoodMotor.stopMotor();
     }
