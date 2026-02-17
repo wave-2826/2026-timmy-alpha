@@ -6,6 +6,7 @@ import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkSim;
 
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.simulation.LinearSystemSim;
 
 public class TurretIOSim extends TurretIOReal {
     // DC simulation motors
@@ -21,6 +22,8 @@ public class TurretIOSim extends TurretIOReal {
 
     // Spark simulation sensors
     protected SparkAbsoluteEncoderSim azimuthEncoderSim = azimuthMotorSim.getAbsoluteEncoderSim();
+
+    protected LinearSystemSim<?, ?, ?> turretSystemSim = new LinearSystemSim<>(TurretSim.createTurretSystem());
 
     public TurretIOSim() {
         super();

@@ -49,9 +49,9 @@ public class TurretIOReal implements TurretIO {
         flywheelBaseConfig.encoder
             .positionConversionFactor(2.0 * Math.PI) // rotations -> radians
             .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s
-        flywheelBaseConfig.inverted(true);
         var topFlywheelConfig = new SparkFlexConfig().apply(flywheelBaseConfig);
         var bottomFlywheelConfig = new SparkFlexConfig().apply(flywheelBaseConfig);
+        bottomFlywheelConfig.follow(topFlywheelMotor, true);
         tryUntilOk(topFlywheelMotor, 5, () -> topFlywheelMotor.configure(topFlywheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
         tryUntilOk(bottomFlywheelMotor, 5, () -> bottomFlywheelMotor.configure(bottomFlywheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
 

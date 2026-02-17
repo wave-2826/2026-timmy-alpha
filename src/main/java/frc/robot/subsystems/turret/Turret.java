@@ -13,7 +13,7 @@ import frc.robot.subsystems.turret.TurretIO.TurretIOOutputs;
 /**
  * Our robot has a triple-coaxial turret - all motors are static relative to the robot frame.  
  * The power transmission stack is as follows:
- * - Flywheel: 2x NEO Vortex, on the "innermost" coaxial stage; this will be affected by both azimuth and hood rotation, but runs
+ * - Flywheel: 2x NEO Vortex, on the "innermost" coaxial stage; this will be affected by the azimuth rotation, but runs
  *   at a high velocity anyway so we don't care to compensate. The motors spin opposite, and the top needs to spin counterclockwise
  *   to shoot.
  * - Hood: 1x NEO Vortex, on the "middle" coaxial stage. Must run with the azimuth rotation to maintain a consistent hood angle.

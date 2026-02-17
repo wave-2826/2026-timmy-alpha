@@ -8,14 +8,14 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkClosedLoopController;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import au.grapplerobotics.LaserCan;
 
 public class IntakeIOReal implements IntakeIO {
-    protected final SparkMax roller = new SparkMax(intakeRollerCanId, MotorType.kBrushless);
+    protected final SparkFlex roller = new SparkFlex(intakeRollerCanId, MotorType.kBrushless);
     protected final SparkMax deployL = new SparkMax(intakeDeployLCanId, MotorType.kBrushless);
     protected final SparkMax deployR = new SparkMax(intakeDeployRCanId, MotorType.kBrushless);
     

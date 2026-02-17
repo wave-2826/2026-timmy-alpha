@@ -1,0 +1,29 @@
+package frc.robot.subsystems.spindexer;
+
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.function.DoubleSupplier;
+import org.littletonrobotics.junction.Logger;
+
+public class Spindexer extends SubsystemBase {
+    private final SpindexerIO io;
+    private final SpindexerIOInputsAutoLogged inputs = new SpindexerIOInputsAutoLogged();
+
+    public Spindexer(SpindexerIO io) {
+        this.io = io;
+    }
+
+    @Override
+    public void periodic() {
+        io.updateInputs(inputs);
+        Logger.processInputs("Spindexer", inputs);
+    }
+
+    public Command runSpinnerPercent(double percent) {
+        return runEnd(() -> io.setSpinnerVoltage(percent * 12.0), () -> io.setSpinnerVoltage(0.0));
+    }
+
+    public Command runTransferPercent(double percent) {
+        return runEnd(() -> io.setTransferVoltage(percent * 12.0), () -> io.setTransferVoltage(0.0));
+    }
+}
