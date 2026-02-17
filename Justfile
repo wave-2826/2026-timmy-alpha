@@ -15,3 +15,6 @@ replay:
 
 template-subsystem:
     python ./misc/scripts/template-subsystem.py
+
+tune-turret:
+    python ./misc/turretTuning/analyze_data.py
