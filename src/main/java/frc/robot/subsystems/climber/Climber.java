@@ -19,7 +19,11 @@ public class Climber extends SubsystemBase {
         Logger.processInputs("Climber", inputs);
     }
 
-    public Command runPercent(double percent) {
-        return runEnd(() -> io.setPower(percent * 12.0), () -> io.setPower(0.0));
+    public Command runRightPercent(double percent) {
+        return runEnd(() -> io.setRightPower(percent * 12.0), () -> io.setRightPower(0.0));
+    }
+
+    public Command runLeftPercent(double percent) {
+        return runEnd(() -> io.setLeftPower(percent * 12.0), () -> io.setLeftPower(0.0));
     }
 }
