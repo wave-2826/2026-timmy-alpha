@@ -22,7 +22,7 @@ public class TurretConstants {
     public static final double flywheelPlanetReduction = 213.0 / 25.0;
     public static final double hoodPlanetReduction = 213.0 / 25.0;
 
-    public static final double flywheelBevelReduction = 10.0 / 18.0;
+    public static final double flywheelBevelReduction = -10.0 / 18.0;
     public static final double hoodBevelReduction = 20.0 / 35.0;
 
     // Inertias
@@ -76,7 +76,7 @@ public class TurretConstants {
     public static final double flywheelMotorKA = flywheelMotorInertiaKgM2 / (flywheelSimMotor.KtNMPerAmp * 12); // uhh maybe?
     
     // Limits
-    public static final double maxFlywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(4966); // Tuned
+    public static final double maxFlywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(5300); // Tuned
     public static final double maxHoodRingSpeedRadPerSec = hoodSimMotor.freeSpeedRadPerSec * hoodToRingReduction * hoodPlanetReduction * hoodBevelReduction * 0.8;
     public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * azimuthToRingReduction * 0.8;
 

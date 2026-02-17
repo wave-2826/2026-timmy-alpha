@@ -3,6 +3,7 @@ package frc.robot.subsystems.turret;
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N6;
@@ -14,6 +15,8 @@ import edu.wpi.first.wpilibj.simulation.LinearSystemSim;
 public final class TurretSim extends LinearSystemSim<N6, N3, N6> {
     /**
      * Compute the motor damping for a given motor, reflected through the given gear ratio.  
+     * Damping is based on the reverse EMF force, which provides a force opposite the direction
+     * of motion that is proportional to velocity. 
      * units: (Nm / Amp) / [(rad/s / Volt) * (Volt / Amp)] = Nm / (rad/s)
      * so this represents torque per unit of angular velocity (Nms/rad)
      * @param motor the motor to compute damping for
@@ -34,6 +37,10 @@ public final class TurretSim extends LinearSystemSim<N6, N3, N6> {
         return Math.tanh(10 * velocity);
     }
 
+    private static double flywheelMOI = TurretConstants.flywheelMotorInertiaKgM2;
+    private static double azimuthMOI = TurretConstants.azimuthMotorInertiaKgM2;
+    private static double hoodMOI = TurretConstants.hoodMotorInertiaKgM2;
+
     /**
      * Construct a linear system for the turret flywheel, hood, and azimuth.
      * For more information on linear systems, see https://file.tavsys.net/control/controls-engineering-in-frc.pdf
@@ -53,10 +60,6 @@ public final class TurretSim extends LinearSystemSim<N6, N3, N6> {
      * Not just coaxially, but with friction between stages.
      */
     public static LinearSystem<N6, N3, N6> createTurretSystem() {
-        var flywheelMOI = TurretConstants.flywheelMotorInertiaKgM2;
-        var azimuthMOI = TurretConstants.azimuthMotorInertiaKgM2;
-        var hoodMOI = TurretConstants.hoodMotorInertiaKgM2;
-
         // Total gearings; these are a ratio between output and input, so should be less than 1.
         var totalFlywheelGearing = TurretConstants.flywheelToRingReduction * TurretConstants.flywheelPlanetReduction * TurretConstants.flywheelBevelReduction;
         var totalHoodGearing = TurretConstants.hoodToRingReduction * TurretConstants.hoodPlanetReduction * TurretConstants.hoodBevelReduction;
@@ -71,6 +74,10 @@ public final class TurretSim extends LinearSystemSim<N6, N3, N6> {
         double flywheelDampingAccel = flywheelDampingForce / flywheelMOI;
         double hoodDampingAccel = hoodDampingForce / hoodMOI;
         double azimuthDampingAccel = azimuthDampingForce / azimuthMOI;
+
+        // Coupling ratios
+        double azimuthFlyCoupling = TurretConstants.flywheelToRingReduction * TurretConstants.flywheelBevelReduction;
+        double azimuthHoodCoupling = TurretConstants.hoodToRingReduction * TurretConstants.hoodBevelReduction;
         
         return new LinearSystem<>(
             // System matrix
@@ -81,18 +88,18 @@ public final class TurretSim extends LinearSystemSim<N6, N3, N6> {
                 // spotless trambles in fear when it sees this formatting
                 // ⌄⌄⌄⌄⌄⌄⌄⌄⌄⌄⌄ -- flywheel position derivative, flywheel velocity derivative, hood position derivative, hood velocity derivative, azimuth position derivative, azimuth velocity derivative
                 
-                // [ 0,                        flywheel pos += velocity, 0,                        0,                        0,                        0                        ]
-                     0,                        1,                        0,                        0,                        0,                        0,
+                // [ 0,                        flywheel pos += velocity, 0,                        0,                        0,                        fly += k * azimuth vel   ]
+                     0,                        1,                        0,                        0,                        0,                        azimuthFlyCoupling,
                 // [ 0,                        flywheel vel -= damp,     0,                        0,                        0,                        0                        ]
-                     0,                        flywheelDampingAccel,     0,                        0,                        0,                        0,
-                // [ 0,                        0,                        0,                        hood pos += velocity,     0,                        0                        ]
-                     0,                        0,                        0,                        1,                        0,                        0,
+                     0,                        -flywheelDampingAccel,    0,                        0,                        0,                        0,
+                // [ 0,                        0,                        0,                        hood pos += velocity,     0,                        hood += k * azimuth vel  ]
+                     0,                        0,                        0,                        1,                        0,                        azimuthHoodCoupling,
                 // [ 0,                        0,                        0,                        hood vel -= damp,         0,                        0                        ]
-                     0,                        0,                        0,                        hoodDampingAccel,         0,                        0,
+                     0,                        0,                        0,                        -hoodDampingAccel,        0,                        0,
                 // [ 0,                        0,                        0,                        0,                        0,                        azimuth pos += velocity  ]
                      0,                        0,                        0,                        0,                        0,                        1,
                 // [ 0,                        0,                        0,                        0,                        0,                        azimuth vel -= damp      ]
-                     0,                        0,                        0,                        0,                        0,                        azimuthDampingAccel
+                     0,                        0,                        0,                        0,                        0,                        -azimuthDampingAccel
             ),
             // Input matrix
             MatBuilder.fill(
@@ -127,14 +134,29 @@ public final class TurretSim extends LinearSystemSim<N6, N3, N6> {
      * @param dtSeconds the time difference between controller updates.
      */
     @Override
-    protected Matrix<N6, N1> updateX(Matrix<N6, N1> currentXhat, Matrix<N3, N1> u, double dtSeconds) {
+    protected Matrix<N6, N1> updateX(Matrix<N6, N1> currentXhat, Matrix<N3, N1> currentU, double dtSeconds) {
         Matrix<N6, N1> updatedXhat = NumericalIntegration.rkdp(
-            (Matrix<N6, N1> x, Matrix<N3, N1> _u) -> {
-                Matrix<N6, N1> xdot = m_plant.getA().times(x).plus(m_plant.getB().times(_u));
-                return xdot;
+            (Matrix<N6, N1> x, Matrix<N3, N1> u) -> {
+                // standard linear dynamics (Ax + Bu)
+                Matrix<N6, N1> xdot = m_plant.getA().times(x).plus(m_plant.getB().times(u));
+
+                double flyVel = x.get(1, 0);
+                double hoodVel = x.get(3, 0);
+                double aziVel = x.get(5, 0);
+
+                // nonlinear coulomb friction
+                // friction needs to be relative to the "scrubbing" surfaces
+                // double flyFricTorque = -kS_fly * Math.signum(flyVel - (kFA * aziVel));
+                // double hoodFricTorque = -kS_hood * Math.signum(hoodVel - (kHA * aziVel));
+                // double aziFricTorque = -kS_azi * Math.signum(aziVel);
+
+                // convert torques to acceleration (torque/moi)
+                // add to the velocity derivative rows (1, 3, 5)
+                return xdot.plus(VecBuilder.fill(0, flyFricTorque / flywheelMOI, 0, hoodFricTorque / hoodMOI, 0, aziFricTorque / azimuthMOI));
             },
-            currentXhat, u, dtSeconds
-        );
+            currentXhat,
+            currentU,
+            dtSeconds);
 
         // TODO: hard limits on hood
         // // We check for collision after updating xhat
