@@ -36,7 +36,7 @@ public class Intake extends SubsystemBase {
 
   public Command deployIntake() {
     return Commands.runEnd(
-      () -> io.setDeployVoltage(8.0),
+      () -> io.setDeployVoltage(2.4),
       () -> io.setDeployVoltage(0.0)
     ).until(() -> (inputs.deployL.motorCurrentAmps() + inputs.deployR.motorCurrentAmps()) / 2 > IntakeConstants.opeThatsaResetCurrent)
     .andThen();

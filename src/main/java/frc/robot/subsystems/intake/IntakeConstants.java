@@ -9,10 +9,10 @@ public class IntakeConstants {
     public static final int intakeDeployLCanId = 22;
     public static final int intakeDeployRLaserCanId = 23;
     public static final int intakeDeployLLaserCanId = 24;
-    public static final double rollerMotorReduction = 9.0;
+    public static final double rollerMotorReduction = 0.0;
     public static final int rollerCurrentLimit = 40;
     public static final int deployCurrentLimit = 25;
-    public static final int opeThatsaResetCurrent = 20;
+    public static final double opeThatsaResetCurrent = 9.0;
     public static final double pinionRadius = 0.0362855;
 
 
