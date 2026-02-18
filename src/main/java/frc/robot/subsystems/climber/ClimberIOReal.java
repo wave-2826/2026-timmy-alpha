@@ -11,11 +11,6 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import frc.robot.subsystems.climber.ClimberIO.ClimberIOInputs.climbMotorInputs;
-import frc.robot.subsystems.intake.IntakeIO.IntakeIOInputs;
-
-import java.util.function.DoubleSupplier;
-
 public class ClimberIOReal implements ClimberIO {
     private final SparkMax leftMotor = new SparkMax(leftCanId, MotorType.kBrushless);
     private final SparkMax rightMotor = new SparkMax(rightCanId, MotorType.kBrushless);
@@ -31,6 +26,10 @@ public class ClimberIOReal implements ClimberIO {
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 / motorReduction)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
+        
+        ClimberConstants.climbPID.applyConfigAndRegister(config, rightMotor);
+        ClimberConstants.climbPID.applyConfigAndRegister(config, leftMotor);
+
   
         tryUntilOk(rightMotor, 5, () ->
             rightMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
