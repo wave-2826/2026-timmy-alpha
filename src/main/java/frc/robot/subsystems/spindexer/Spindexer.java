@@ -2,7 +2,6 @@ package frc.robot.subsystems.spindexer;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Spindexer extends SubsystemBase {
