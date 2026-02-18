@@ -7,14 +7,14 @@ package frc.robot.generated;
 public class TurretTuningData {
     public static final double flywheelStaticLoss = 18.613291;
     public static final double flywheelDynamicLoss = 0.061555;
-    public static final double azimuthStaticLoss = 30.531136;
-    public static final double azimuthDynamicLoss = 0.087494;
-    public static final double hoodStaticLoss = 19.869447;
-    public static final double hoodDynamicLoss = 0.058550;
-    public static final double allRingsStaticLoss = 16.744051;
-    public static final double allRingsDynamicLoss = 0.469038;
-    public static final double bottomStaticStaticLoss = 13.745302;
-    public static final double bottomStaticDynamicLoss = 0.363292;
+    public static final double azimuthStaticLoss = 30.571254;
+    public static final double azimuthDynamicLoss = 0.126094;
+    public static final double hoodStaticLoss = 19.904149;
+    public static final double hoodDynamicLoss = 0.058532;
+    public static final double allRingsStaticLoss = 16.772440;
+    public static final double allRingsDynamicLoss = 0.468751;
+    public static final double bottomStaticStaticLoss = 13.620071;
+    public static final double bottomStaticDynamicLoss = 0.366592;
     public static final double topStaticStaticLoss = 26.174908;
-    public static final double topStaticDynamicLoss = 0.381901;
+    public static final double topStaticDynamicLoss = 0.382180;
 }
