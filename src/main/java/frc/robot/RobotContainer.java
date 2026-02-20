@@ -12,6 +12,9 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOReal;
 import frc.robot.subsystems.turret.TurretIOSim;
+import frc.robot.subsystems.intake.*;
+import frc.robot.subsystems.climber.*;
+import frc.robot.subsystems.spindexer.*;
 import frc.robot.subsystems.vision.*;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -27,7 +30,9 @@ public class RobotContainer {
     // Subsystems
     public final Drive drive;
     public final Vision vision;
-    // public final Intake intake;
+    public final Intake intake;
+    public final Climber climber;
+    public final Spindexer spindexer;
     public final Turret turret;
 
     private SwerveDriveSimulation driveSimulation = null;
@@ -57,6 +62,9 @@ public class RobotContainer {
                     new VisionIOLimelight(VisionConstants.camera1Name, robotState::getRotation));
                 // intake = new Intake(new IntakeIOSpark());
                 turret = new Turret(new TurretIOReal());
+                intake = new Intake(new IntakeIOReal());
+                climber = new Climber(new ClimberIOReal());
+                spindexer = new Spindexer(new SpindexerIOReal());
                 break;
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations
@@ -75,6 +83,9 @@ public class RobotContainer {
                     new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
                 // intake = new Intake(new IntakeIOSim());
                 turret = new Turret(new TurretIOSim());
+                intake = new Intake(new IntakeIO() {});
+                climber = new Climber(new ClimberIO() {});
+                spindexer = new Spindexer(new SpindexerIO() {});
                 break;
             default:
                 // Replayed robot, disable IO implementations
@@ -87,6 +98,9 @@ public class RobotContainer {
                 vision = new Vision(new VisionIO() {}, new VisionIO() {});
                 // intake = new Intake(new IntakeIO() {});
                 turret = new Turret(new TurretIO() {});
+                intake = new Intake(new IntakeIO() {});
+                climber = new Climber(new ClimberIO() {});
+                spindexer = new Spindexer(new SpindexerIO() {});
                 break;
         }
 

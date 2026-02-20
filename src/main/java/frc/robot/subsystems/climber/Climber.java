@@ -1,5 +1,6 @@
 package frc.robot.subsystems.climber;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
@@ -24,5 +25,25 @@ public class Climber extends SubsystemBase {
 
     public Command runLeftPercent(double percent) {
         return runEnd(() -> io.setLeftPower(percent * 12.0), () -> io.setLeftPower(0.0));
+    }
+
+    public Command extendBoth() {
+        return runEnd(() -> {
+            runLeftPercent(50);
+            runRightPercent(50);
+        }, () -> {
+            runLeftPercent(0);
+            runRightPercent(0);
+        }).until(() -> ((inputs.left.motorPosition() + inputs.right.motorPosition()) / 2 >= Units.inchesToMeters(25)));
+    }
+
+    public Command retractBoth() {
+        return runEnd(() -> {
+            runLeftPercent(-50);
+            runRightPercent(-50);
+        }, () -> {
+            runLeftPercent(0);
+            runRightPercent(0);
+        }).until(() -> ((inputs.left.motorPosition() + inputs.right.motorPosition()) / 2 <= Units.inchesToMeters(15)));
     }
 }
