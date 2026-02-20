@@ -59,10 +59,11 @@ public class Controls {
         drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> driver.getRightX()));
         driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-        driver.b().onTrue(climber.extendBoth());
-        driver.a().onTrue(climber.retractBoth());
+        driver.b().whileTrue(climber.extendBoth());
+        driver.a().whileTrue(climber.retractBoth());
 
-        driver.leftBumper().onTrue(intake.deployIntake());
+        driver.leftBumper().onTrue(Commands.runOnce(intake::deployIntake, intake)).onTrue(intake.runRollerPercent(20));
+        driver.rightBumper().onTrue(intake.runRollerPercent(0));
         driver.leftTrigger(0.05).onTrue(intake.bringIntakeIn(driver::getLeftTriggerAxis));
 
         turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
