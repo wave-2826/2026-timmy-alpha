@@ -46,4 +46,10 @@ public class Intake extends SubsystemBase {
       }
     );
   }
+
+  public Command bringIntakeIn(DoubleSupplier triggerPosition) {
+    return setIntakePosition(() -> {
+      return IntakeConstants.fullyInPos + (-IntakeConstants.fullyInPos * triggerPosition.getAsDouble());
+    });
+  }
 }

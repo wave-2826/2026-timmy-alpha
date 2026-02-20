@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.math.util.Units;
 import frc.robot.util.SparkPIDConstants;
 import frc.robot.util.tunables.TunableSparkPID;
 
@@ -14,6 +15,7 @@ public class IntakeConstants {
     public static final int deployCurrentLimit = 25;
     public static final double opeThatsaResetCurrent = 9.0;
     public static final double pinionRadius = 0.0362855;
+    public static final double fullyInPos = Units.inchesToMeters(14.75); // TODO: Remeasure using robot
 
 
 

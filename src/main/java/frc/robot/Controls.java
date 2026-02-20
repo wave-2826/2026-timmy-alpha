@@ -16,7 +16,12 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOReal;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
 public class Controls {
@@ -45,10 +50,21 @@ public class Controls {
     public void configureControls(RobotContainer rc, SwerveDriveSimulation driveSimulation) {
         Drive drive = rc.drive;
         Turret turret = rc.turret;
+        Climber climber = rc.climber;
+        Spindexer spindexer = rc.spindexer;
+        Intake intake = rc.intake;
+        
         
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> driver.getRightX()));
         driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
+
+        driver.b().whileTrue(climber.extendBoth());
+        driver.a().whileTrue(climber.retractBoth());
+
+        driver.leftBumper().onTrue(Commands.runOnce(intake::deployIntake, intake)).onTrue(intake.runRollerPercent(20));
+        driver.rightBumper().onTrue(intake.runRollerPercent(0));
+        driver.leftTrigger(0.05).onTrue(intake.bringIntakeIn(driver::getLeftTriggerAxis));
 
         turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
 
