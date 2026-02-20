@@ -3,10 +3,10 @@ package frc.robot.subsystems.turret;
 import static frc.robot.subsystems.turret.TurretConstants.*;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
+import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
@@ -24,14 +24,14 @@ import static frc.robot.util.SparkUtil.checkFault;
 import static frc.robot.util.SparkUtil.getIfOk;
 
 public class TurretIOReal implements TurretIO {
-    protected final SparkFlex topFlywheelMotor    = new SparkFlex(topFlywheelCanID, MotorType.kBrushless);
-    protected final SparkFlex bottomFlywheelMotor = new SparkFlex(bottomFlywheelCanID, MotorType.kBrushless);
-    protected final SparkMax azimuthMotor         = new SparkMax(azimuthCanID, MotorType.kBrushless);
-    protected final SparkFlex hoodMotor           = new SparkFlex(hoodCanID, MotorType.kBrushless);
+    public final SparkFlex topFlywheelMotor    = new SparkFlex(topFlywheelCanID, MotorType.kBrushless);
+    public final SparkFlex bottomFlywheelMotor = new SparkFlex(bottomFlywheelCanID, MotorType.kBrushless);
+    public final SparkMax azimuthMotor         = new SparkMax(azimuthCanID, MotorType.kBrushless);
+    public final SparkFlex hoodMotor           = new SparkFlex(hoodCanID, MotorType.kBrushless);
 
-    protected final SparkClosedLoopController flywheelController;
-    protected final SparkClosedLoopController azimuthController;
-    protected final SparkClosedLoopController hoodController;
+    public final SparkClosedLoopController flywheelController = topFlywheelMotor.getClosedLoopController();
+    public final SparkClosedLoopController azimuthController = azimuthMotor.getClosedLoopController();
+    public final SparkClosedLoopController hoodController = hoodMotor.getClosedLoopController();
 
     protected final RelativeEncoder topFlywheelEncoder = topFlywheelMotor.getEncoder();
     protected final RelativeEncoder bottomFlywheelEncoder = bottomFlywheelMotor.getEncoder();
@@ -40,6 +40,10 @@ public class TurretIOReal implements TurretIO {
     protected final RelativeEncoder hoodEncoder = hoodMotor.getEncoder();
 
     public TurretIOReal() {
+        configureAndReset();
+    }
+
+    public void configureAndReset() {
         // Flywheel motors
         var flywheelBaseConfig = new SparkFlexConfig();
         flywheelBaseConfig.signals.apply(SparkUtil.defaultSignals);
@@ -89,11 +93,6 @@ public class TurretIOReal implements TurretIO {
             .positionConversionFactor(2.0 * Math.PI * hoodToRingReduction) // Rotor Rotations -> Radians (of ring)
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 * hoodToRingReduction); // RPM -> rad/s (of ring)
         tryUntilOk(hoodMotor, 5, () -> hoodMotor.configure(hoodConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-
-        // Interfaces
-        flywheelController = topFlywheelMotor.getClosedLoopController();
-        azimuthController = azimuthMotor.getClosedLoopController();
-        hoodController = hoodMotor.getClosedLoopController();
 
         hoodEncoder.setPosition(azimuthEncoder.getPosition());
     }

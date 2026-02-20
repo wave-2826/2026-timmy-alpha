@@ -3,12 +3,10 @@ package frc.robot.subsystems.turret;
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N6;
 import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.NumericalIntegration;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.LinearSystemSim;
 
@@ -135,34 +133,35 @@ public final class TurretSim extends LinearSystemSim<N6, N3, N6> {
      */
     @Override
     protected Matrix<N6, N1> updateX(Matrix<N6, N1> currentXhat, Matrix<N3, N1> currentU, double dtSeconds) {
-        Matrix<N6, N1> updatedXhat = NumericalIntegration.rkdp(
-            (Matrix<N6, N1> x, Matrix<N3, N1> u) -> {
-                // standard linear dynamics (Ax + Bu)
-                Matrix<N6, N1> xdot = m_plant.getA().times(x).plus(m_plant.getB().times(u));
+        // Matrix<N6, N1> updatedXhat = NumericalIntegration.rkdp(
+        //     (Matrix<N6, N1> x, Matrix<N3, N1> u) -> {
+        //         // standard linear dynamics (Ax + Bu)
+        //         Matrix<N6, N1> xdot = m_plant.getA().times(x).plus(m_plant.getB().times(u));
 
-                double flyVel = x.get(1, 0);
-                double hoodVel = x.get(3, 0);
-                double aziVel = x.get(5, 0);
+        //         double flyVel = x.get(1, 0);
+        //         double hoodVel = x.get(3, 0);
+        //         double aziVel = x.get(5, 0);
 
-                // nonlinear coulomb friction
-                // friction needs to be relative to the "scrubbing" surfaces
-                // double flyFricTorque = -kS_fly * Math.signum(flyVel - (kFA * aziVel));
-                // double hoodFricTorque = -kS_hood * Math.signum(hoodVel - (kHA * aziVel));
-                // double aziFricTorque = -kS_azi * Math.signum(aziVel);
+        //         // nonlinear coulomb friction
+        //         // friction needs to be relative to the "scrubbing" surfaces
+        //         // double flyFricTorque = -kS_fly * Math.signum(flyVel - (kFA * aziVel));
+        //         // double hoodFricTorque = -kS_hood * Math.signum(hoodVel - (kHA * aziVel));
+        //         // double aziFricTorque = -kS_azi * Math.signum(aziVel);
 
-                // convert torques to acceleration (torque/moi)
-                // add to the velocity derivative rows (1, 3, 5)
-                return xdot.plus(VecBuilder.fill(0, flyFricTorque / flywheelMOI, 0, hoodFricTorque / hoodMOI, 0, aziFricTorque / azimuthMOI));
-            },
-            currentXhat,
-            currentU,
-            dtSeconds);
+        //         // convert torques to acceleration (torque/moi)
+        //         // add to the velocity derivative rows (1, 3, 5)
+        //         // return xdot.plus(VecBuilder.fill(0, flyFricTorque / flywheelMOI, 0, hoodFricTorque / hoodMOI, 0, aziFricTorque / azimuthMOI));
+        //     },
+        //     currentXhat,
+        //     currentU,
+        //     dtSeconds);
 
         // TODO: hard limits on hood
         // // We check for collision after updating xhat
         // if(wouldHitLowerLimit(updatedXhat.get(0, 0))) return VecBuilder.fill(m_minAngle, 0);
         // if(wouldHitUpperLimit(updatedXhat.get(0, 0))) return VecBuilder.fill(m_maxAngle, 0);
         
-        return updatedXhat;
+        // return updatedXhat;
+        return currentXhat;
     }
 }

@@ -25,8 +25,8 @@ public class Controls {
     private final Alert driverDisconnectedAlert = new Alert("Driver controller disconnected (port 0)", AlertType.kWarning);
     private final Alert coDriverDisconnectedAlert = new Alert("Co-driver controller disconnected (port 1)", AlertType.kInfo);
 
-    private final CommandXboxController driver = new CommandXboxController(0);
-    private final CommandXboxController coDriver = new CommandXboxController(1);
+    public final CommandXboxController driver = new CommandXboxController(0);
+    public final CommandXboxController coDriver = new CommandXboxController(1);
 
     private final LoggedTunableNumber endgameAlert1Time = new LoggedTunableNumber("Controls/EndgameAlert1Time", 30.0);
     private final LoggedTunableNumber endgameAlert2Time = new LoggedTunableNumber("Controls/EndgameAlert2Time", 20.0);

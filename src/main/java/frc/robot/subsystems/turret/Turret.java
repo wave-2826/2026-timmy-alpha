@@ -21,7 +21,7 @@ import frc.robot.subsystems.turret.TurretIO.TurretIOOutputs;
  *   attached absolute encoder.
  */
 public class Turret extends SubsystemBase {
-    private final TurretIO io;
+    public final TurretIO io; // Blegh shouldn't be public... just for now
     private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
 
     public class TurretTarget {
