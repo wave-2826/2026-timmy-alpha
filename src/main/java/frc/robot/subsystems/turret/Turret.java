@@ -8,6 +8,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
+
+import frc.robot.Controls;
+import frc.robot.commands.tuning.TurretTuning;
 import frc.robot.subsystems.turret.TurretIO.TurretIOOutputs;
 
 /**
@@ -21,7 +24,7 @@ import frc.robot.subsystems.turret.TurretIO.TurretIOOutputs;
  *   attached absolute encoder.
  */
 public class Turret extends SubsystemBase {
-    public final TurretIO io; // Blegh shouldn't be public... just for now
+    private final TurretIO io;
     private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
 
     public class TurretTarget {
@@ -40,6 +43,8 @@ public class Turret extends SubsystemBase {
 
     public Turret(TurretIO io) {
         this.io = io;
+
+        TurretTuning.init();
     }
 
     @Override
@@ -79,5 +84,15 @@ public class Turret extends SubsystemBase {
         }, () -> {
             target = null;
         }, this);
+    }
+
+    public Command runTuning() {
+        if(!(io instanceof TurretIOReal)) {
+            // TODO: This is really temporary sob
+            return Commands.none();
+        }
+        
+        TurretTuning tuning = new TurretTuning((TurretIOReal)io, Controls.getInstance().coDriver);
+        return Commands.runOnce(tuning::start).andThen(Commands.runEnd(tuning::run, tuning::stop, this));
     }
 }

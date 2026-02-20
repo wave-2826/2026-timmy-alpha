@@ -1,6 +1,7 @@
 package frc.robot;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.revrobotics.util.StatusLogger;
 
 import edu.wpi.first.math.MathShared;
 import edu.wpi.first.math.MathSharedStore;
@@ -19,9 +20,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import frc.robot.commands.tuning.TurretTuning;
-import frc.robot.subsystems.turret.TurretIO;
-import frc.robot.subsystems.turret.TurretIOReal;
 import frc.robot.util.Elastic;
 import frc.robot.util.LoggedTracer;
 import frc.robot.util.NTClientLogger;
@@ -56,8 +54,6 @@ public class Robot extends LoggedRobot {
      * the private field in IterativeRobotBase.
      */
     private static final double loopOverrunWarningTimeout = 0.2;
-
-    TurretTuning tempTurretTuning = new TurretTuning();
 
     private Command autonomousCommand;
     private RobotContainer robotContainer;
@@ -111,13 +107,13 @@ public class Robot extends LoggedRobot {
         }
 
         if(Constants.useSuperDangerousRTThreadPriority) Logger.addDataReceiver(new ThreadPriorityDummyLogReceiver());
+        
+        silenceGarbage();
 
         // Initialize URCL
         Logger.registerURCL(URCL.startExternal());
 
         Logger.start();
-
-        silenceGarbage();
 
         // Log active commands. Also taken from 6328's code.
         Map<String, Integer> commandCounts = new HashMap<>();
@@ -176,6 +172,7 @@ public class Robot extends LoggedRobot {
      */
     private void silenceGarbage() {
         SignalLogger.enableAutoLogging(false);
+        StatusLogger.disableAutoLogging();
 
         // Adjust the loop overrun warning timeout; taken from 6328's code.
         // This is obviously a bit hacky, but we log our loop times and consistently watch them,
@@ -261,11 +258,6 @@ public class Robot extends LoggedRobot {
     @Override
     public void disabledInit() {
         robotContainer.resetSimulationField();
-
-        TurretIO io = robotContainer.turret.io;
-        if(io instanceof TurretIOReal) {
-            tempTurretTuning.stop((TurretIOReal)io);
-        }
     }
 
     /** This function is called periodically when disabled. */
@@ -277,7 +269,7 @@ public class Robot extends LoggedRobot {
     public void autonomousInit() {
         autonomousCommand = robotContainer.getAutonomousCommand();
 
-        // schedule the autonomous command (example)
+        // schedule the autonomous command
         if(autonomousCommand != null) {
             autonomousCommand.schedule();
         }
@@ -309,19 +301,12 @@ public class Robot extends LoggedRobot {
         // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().cancelAll();
 
-        TurretIO io = robotContainer.turret.io;
-        if(io instanceof TurretIOReal) {
-            tempTurretTuning.start((TurretIOReal)io, Controls.getInstance().coDriver);
-        }
+        robotContainer.turret.runTuning().schedule();
     }
 
     /** This function is called periodically during test mode. */
     @Override
     public void testPeriodic() {
-        TurretIO io = robotContainer.turret.io;
-        if(io instanceof TurretIOReal) {
-            tempTurretTuning.run((TurretIOReal)io, Controls.getInstance().coDriver);
-        }
     }
 
     /** This function is called once when the robot is first started up. */
