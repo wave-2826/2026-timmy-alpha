@@ -51,12 +51,13 @@ public class RobotContainer {
         switch(Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
-                drive = new Drive(
-                    new GyroIOPigeon2(),
-                    new ModuleIOTalonFXReal(DriveConstants.frontLeftConfig),
-                    new ModuleIOTalonFXReal(DriveConstants.frontRightConfig),
-                    new ModuleIOTalonFXReal(DriveConstants.backLeftConfig),
-                    new ModuleIOTalonFXReal(DriveConstants.backRightConfig));
+                // drive = new Drive(
+                //     new GyroIOPigeon2(),
+                //     new ModuleIOTalonFXReal(DriveConstants.frontLeftConfig),
+                //     new ModuleIOTalonFXReal(DriveConstants.frontRightConfig),
+                //     new ModuleIOTalonFXReal(DriveConstants.backLeftConfig),
+                //     new ModuleIOTalonFXReal(DriveConstants.backRightConfig));
+                drive = new Drive(new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
                 vision = new Vision(
                     new VisionIOLimelight(VisionConstants.camera0Name, robotState::getRotation),
                     new VisionIOLimelight(VisionConstants.camera1Name, robotState::getRotation));

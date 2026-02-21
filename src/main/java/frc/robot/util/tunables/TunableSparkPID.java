@@ -1,6 +1,7 @@
 package frc.robot.util.tunables;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.OptionalDouble;
 
 import com.revrobotics.spark.ClosedLoopSlot;
@@ -17,6 +18,9 @@ import static frc.robot.util.SparkUtil.tryUntilOk;
 
 import frc.robot.Constants;
 import frc.robot.Robot;
+import frc.robot.util.Elastic;
+import frc.robot.util.Elastic.Notification;
+import frc.robot.util.Elastic.Notification.NotificationLevel;
 import frc.robot.util.SparkPIDConstants;
 
 public class TunableSparkPID {
@@ -59,7 +63,7 @@ public class TunableSparkPID {
     /** The path to the tunable constants. */
     private String tunablePath;
     /** The list of sparks to be configured. */
-    private ArrayList<SparkBase> sparks = new ArrayList<>();
+    private HashSet<SparkBase> sparks = new HashSet<>();
 
     /** A list of change listeners that are run every loop iteration when in tuning mode. */
     private static ArrayList<Runnable> changeListenerRegistry = new ArrayList<>();
@@ -87,9 +91,7 @@ public class TunableSparkPID {
         this.tunablePath = tunablePath;
 
         // Register a change listener to check for changes
-        changeListenerRegistry.add(() -> {
-            checkChange();
-        });
+        changeListenerRegistry.add(this::checkChange);
     }
 
     /**
@@ -105,7 +107,7 @@ public class TunableSparkPID {
             config.i(c.i == null ? 0. : c.i.get(), c.slot);
             config.d(c.d == null ? 0. : c.d.get(), c.slot);
             config.velocityFF(c.f == null ? 0. : c.f.get(), c.slot);
-            config.iZone(c.iZone == null ? 10000. : c.iZone.get(), c.slot);
+            if(c.iZone != null) config.iZone(c.iZone.get(), c.slot);
         }
         return config;
     }
@@ -147,6 +149,7 @@ public class TunableSparkPID {
 
                     tryUntilOk(spark, 5, () -> spark.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters));
                 }
+                Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Tunable PIDs", "Configured " + sparks.size() + " motors with updated PIDs!"));
                 return;
             }
         }

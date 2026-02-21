@@ -20,7 +20,7 @@ public final class Constants {
      * Whether to use NetworkTables instead of RLog for AdvantageScope logging. RLog _significantly_ reduces lag in
      * AdvantageScope.
      */
-    public static final boolean useNTLogs = false;
+    public static final boolean useNTLogs = true;
 
     /** If the robot is in "tuning mode". When in tuning mode, tunable constants are added to NetworkTables. Tuning is automatically disabled during matches. */
     public static boolean tuningMode = true;
