@@ -5,11 +5,9 @@ import frc.robot.util.SparkPIDConstants;
 import frc.robot.util.tunables.TunableSparkPID;
 
 public class IntakeConstants {
-    public static final int intakeRollerCanId = 20;
-    public static final int intakeDeployRCanId = 21;
-    public static final int intakeDeployLCanId = 22;
-    public static final int intakeDeployRLaserCanId = 23;
-    public static final int intakeDeployLLaserCanId = 24;
+    public static final int intakeRollerCanId = 30;
+    public static final int intakeDeployRCanId = 31;
+    public static final int intakeDeployLCanId = 32;
     public static final double rollerMotorReduction = 0.0;
     public static final int rollerCurrentLimit = 40;
     public static final int deployCurrentLimit = 25;
