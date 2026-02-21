@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.OptionalDouble;
 
+import com.revrobotics.PersistMode;
+import com.revrobotics.ResetMode;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
@@ -38,7 +38,6 @@ public class TunableSparkPID {
             String slotStr = slot == ClosedLoopSlot.kSlot0 ? "" : Integer.toString(slot.ordinal());
             if(p.isPresent()) this.p = new LoggedTunableNumber(tunablePath + slotStr + "_P", p.getAsDouble());
             if(i.isPresent()) this.i = new LoggedTunableNumber(tunablePath + slotStr + "_I", i.getAsDouble());
-            if(i.isPresent()) this.i = new LoggedTunableNumber(tunablePath + slotStr + "_IZone", i.getAsDouble());
             if(iZone.isPresent()) this.iZone = new LoggedTunableNumber(tunablePath + slotStr + "_IZone", i.getAsDouble());
             if(d.isPresent()) this.d = new LoggedTunableNumber(tunablePath + slotStr + "_D", d.getAsDouble());
             if(f.isPresent()) this.f = new LoggedTunableNumber(tunablePath + slotStr + "_F", f.getAsDouble());
@@ -48,10 +47,10 @@ public class TunableSparkPID {
         }
 
         public boolean hasChanged() {
-            return (p != null && p.hasChanged(hashCode())) || //
-                (i != null && i.hasChanged(hashCode())) || //
-                (d != null && d.hasChanged(hashCode())) || //
-                (f != null && f.hasChanged(hashCode())) || //
+            return (p != null && p.hasChanged(hashCode())) ||
+                (i != null && i.hasChanged(hashCode())) ||
+                (d != null && d.hasChanged(hashCode())) ||
+                (f != null && f.hasChanged(hashCode())) ||
                 (iZone != null && iZone.hasChanged(hashCode()));
         }
     }

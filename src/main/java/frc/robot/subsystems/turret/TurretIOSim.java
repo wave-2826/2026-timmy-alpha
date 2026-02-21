@@ -2,7 +2,6 @@ package frc.robot.subsystems.turret;
 
 import com.revrobotics.sim.SparkAbsoluteEncoderSim;
 import com.revrobotics.sim.SparkFlexSim;
-import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkSim;
 
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -17,7 +16,7 @@ public class TurretIOSim extends TurretIOReal {
     // Spark simulation objects
     protected SparkSim topFlywheelMotorSim = new SparkFlexSim(topFlywheelMotor, flywheelSimMotor);
     protected SparkSim bottomFlywheelMotorSim = new SparkFlexSim(bottomFlywheelMotor, flywheelSimMotor);
-    protected SparkSim azimuthMotorSim = new SparkMaxSim(azimuthMotor, azimuthSimMotor);
+    protected SparkSim azimuthMotorSim = new SparkFlexSim(azimuthMotor, azimuthSimMotor);
     protected SparkSim hoodMotorSim = new SparkFlexSim(hoodMotor, hoodSimMotor);
 
     // Spark simulation sensors
