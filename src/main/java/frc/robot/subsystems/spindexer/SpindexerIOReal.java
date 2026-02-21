@@ -8,11 +8,12 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 public class SpindexerIOReal implements SpindexerIO {
-    private final SparkMax spinnerMotor = new SparkMax(spinnerCanId, MotorType.kBrushless);
+    private final SparkFlex spinnerMotor = new SparkFlex(spinnerCanId, MotorType.kBrushless);
     private final SparkMax transferMotor = new SparkMax(transferCanId, MotorType.kBrushless);
     private final RelativeEncoder spinEncoder = spinnerMotor.getEncoder();
     private final RelativeEncoder transferEncoder = transferMotor.getEncoder();
