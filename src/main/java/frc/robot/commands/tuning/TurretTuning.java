@@ -7,6 +7,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
@@ -40,9 +41,9 @@ public class TurretTuning {
     private static double ENUMERATION_PERIOD = 2.5;
 
     private static TunableSparkPID flywheelVelocityPID = new TunableSparkPID("TurretTuning/FlywheelPID")
-        .addRealRobotGains(new SparkPIDConstants(0.0003, 0.0, 0.0, 0.0018, ClosedLoopSlot.kSlot1));
+        .addRealRobotGains(new SparkPIDConstants(0.001, 0.0, 0.0, 0.02, ClosedLoopSlot.kSlot1));
     private static TunableSparkPID azimuthVelocityPID = new TunableSparkPID("TurretTuning/AzimuthPID")
-        .addRealRobotGains(new SparkPIDConstants(0.0004, 0.0, 0.0, 0.0023, ClosedLoopSlot.kSlot1));
+        .addRealRobotGains(new SparkPIDConstants(0.008, 0.0, 0.0, 0.025, ClosedLoopSlot.kSlot1));
 
     /** File handle for the CSV file we're writing to. */
     FileWriter enumerationDataFile;
@@ -65,6 +66,7 @@ public class TurretTuning {
         
     }
     private Motor[] motors;
+    private EventLoop triggerLoop = new EventLoop();
     
     public TurretTuning(TurretIOReal io, CommandXboxController controller) {
         this.io = io;
@@ -107,10 +109,10 @@ public class TurretTuning {
             Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Turret tuning", "Successfully reconfigured"));
         }
 
-        controller.rightBumper().onTrue(Commands.runOnce(this::nextMotor));
-        controller.leftBumper().onTrue(Commands.runOnce(this::previousMotor));
-        controller.a().onTrue(Commands.runOnce(this::resetAverage));
-        controller.b().onTrue(Commands.runOnce(this::toggleEnumerateSequence));
+        controller.rightBumper(triggerLoop).onTrue(Commands.runOnce(this::nextMotor));
+        controller.leftBumper(triggerLoop).onTrue(Commands.runOnce(this::previousMotor));
+        controller.a(triggerLoop).onTrue(Commands.runOnce(this::resetAverage));
+        controller.b(triggerLoop).onTrue(Commands.runOnce(this::toggleEnumerateSequence));
     }
 
     private void nextMotor() {
@@ -124,6 +126,7 @@ public class TurretTuning {
         averageSamples = 0;
         for(int i = 0; i < currentAverageSums.length; i++) {
             currentAverageSums[i] = 0.0;
+            velocityAverageSums[i] = 0.0;
         }
     }
 
@@ -186,12 +189,12 @@ public class TurretTuning {
         try {
             StringBuilder line = new StringBuilder();
             for(int i = 0; i < motors.length; i++) {
-                double targetSpeed = Units.rotationsPerMinuteToRadiansPerSecond(getMotorSpeed(i));
+                double targetVelocity = Units.rotationsPerMinuteToRadiansPerSecond(getMotorSpeed(i));
 
                 double current = currentAverageSums[i] / averageSamples;
                 double measuredVelocity = velocityAverageSums[i] / averageSamples;
                 
-                line.append(targetSpeed).append(",").append(measuredVelocity).append(",").append(current).append(",");
+                line.append(targetVelocity).append(",").append(measuredVelocity).append(",").append(current).append(",");
             }
             enumerationDataFile.write(line.toString().replaceAll(",$", "") + "\n");
             Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Turret tuning", "Step " + enumerationIndex + "/" + (int)Math.pow(azimuthEnumerationSpeeds.length, 3) + " logged"));
@@ -234,6 +237,8 @@ public class TurretTuning {
     }
 
     public void run() {
+        triggerLoop.poll();
+
         double changePerSecond = -200; // rpm/s
         motorSpeeds[activeMotor].set(MathUtil.applyDeadband(controller.getRightY(), 0.1) * 0.02 * changePerSecond + motorSpeeds[activeMotor].get());
 
@@ -248,13 +253,13 @@ public class TurretTuning {
         }
         // Reset average period at the start of every cycle
         if(enumerating) {
-            int lastIndex = enumerationIndex;
-            enumerationIndex = (int)((Timer.getFPGATimestamp() - enumerationStartTime) / ENUMERATION_PERIOD);
-            if(enumerationIndex != lastIndex) {
+            int newEnumerationIndex = (int)((Timer.getFPGATimestamp() - enumerationStartTime) / ENUMERATION_PERIOD);
+            if(newEnumerationIndex != enumerationIndex) {
                 if(enumerationIndex > 0) {
                     logEnumerationLine();
                 }
             }
+            enumerationIndex = newEnumerationIndex;
 
             double timeIntoCurrentStep = (Timer.getFPGATimestamp() - enumerationStartTime) % ENUMERATION_PERIOD;
             // Reset averages halfway through each step once the motors have had time to settle
@@ -296,5 +301,7 @@ public class TurretTuning {
         io.configureAndReset();
 
         if(enumerating) stopEnumeration();
+
+        triggerLoop.clear();
     }
 }

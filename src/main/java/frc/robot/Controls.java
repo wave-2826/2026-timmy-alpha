@@ -59,7 +59,7 @@ public class Controls {
         drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> driver.getRightX()));
         driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-        driver.b().whileTrue(climber.extendBoth()).onTrue(intake.bringIntakeIn(1);
+        // driver.b().whileTrue(climber.extendBoth()).onTrue(intake.bringIntakeIn(1));
         driver.a().whileTrue(climber.retractBoth());
 
         driver.leftBumper().onTrue(Commands.runOnce(intake::deployIntake, intake)).onTrue(intake.runRollerPercent(20));
