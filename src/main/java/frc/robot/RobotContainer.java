@@ -63,9 +63,12 @@ public class RobotContainer {
                     new VisionIOLimelight(VisionConstants.camera1Name, robotState::getRotation));
                 // intake = new Intake(new IntakeIOSpark());
                 turret = new Turret(new TurretIOReal());
-                intake = new Intake(new IntakeIOReal());
-                climber = new Climber(new ClimberIOReal());
-                spindexer = new Spindexer(new SpindexerIOReal());
+                // intake = new Intake(new IntakeIOReal());
+                intake = new Intake(new IntakeIO() {});
+                // climber = new Climber(new ClimberIOReal());
+                climber = new Climber(new ClimberIO() {});
+                // spindexer = new Spindexer(new SpindexerIOReal());
+                spindexer = new Spindexer(new SpindexerIO() {});
                 break;
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations

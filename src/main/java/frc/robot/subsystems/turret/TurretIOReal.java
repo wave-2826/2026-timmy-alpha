@@ -26,7 +26,7 @@ import static frc.robot.util.SparkUtil.getIfOk;
 public class TurretIOReal implements TurretIO {
     public final SparkFlex topFlywheelMotor    = new SparkFlex(topFlywheelCanID, MotorType.kBrushless);
     public final SparkFlex bottomFlywheelMotor = new SparkFlex(bottomFlywheelCanID, MotorType.kBrushless);
-    public final SparkMax azimuthMotor         = new SparkMax(azimuthCanID, MotorType.kBrushless);
+    public final SparkFlex azimuthMotor        = new SparkFlex(azimuthCanID, MotorType.kBrushless);
     public final SparkFlex hoodMotor           = new SparkFlex(hoodCanID, MotorType.kBrushless);
 
     public final SparkClosedLoopController flywheelController = topFlywheelMotor.getClosedLoopController();
