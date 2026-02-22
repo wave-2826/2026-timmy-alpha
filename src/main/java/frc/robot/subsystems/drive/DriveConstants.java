@@ -108,8 +108,8 @@ public class DriveConstants {
 
     // Both sets of gains need to be tuned to your individual robot.
 
-    public static final Mass robotMass = Kilogram.of(74.088);
-    public static final MomentOfInertia robotMomentOfInertia = KilogramSquareMeters.of(6.883);
+    public static final Mass robotMass = Pound.of(140);
+    public static final MomentOfInertia robotMomentOfInertia = KilogramSquareMeters.of(7.4702);
     public static final double wheelCOF = 1.2;
 
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
@@ -160,8 +160,8 @@ public class DriveConstants {
     // This needs to be tuned to your individual robot
     public static final LinearVelocity linearFreeSpeed = MetersPerSecond.of(4.73); // "Magic" number from max speed measurement
 
-    public static final Distance trackWidth = Inches.of(17.75);
-    public static final Distance wheelBase = Inches.of(16);
+    public static final Distance trackWidth = Inches.of(27.5);
+    public static final Distance wheelBase = Inches.of(14.5);
     public static final double driveBaseRadius = Math.hypot(trackWidth.in(Meters) / 2.0, wheelBase.in(Meters) / 2.0);
 
     public static final double maxSpeedMetersPerSec = linearFreeSpeed.in(MetersPerSecond);

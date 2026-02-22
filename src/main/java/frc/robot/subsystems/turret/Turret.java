@@ -9,6 +9,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
 import frc.robot.Controls;
 import frc.robot.commands.tuning.TurretTuning;
 import frc.robot.subsystems.turret.TurretIO.TurretIOMPCOutputs;
@@ -25,16 +27,6 @@ import frc.robot.subsystems.turret.TurretIO.TurretIOPIDOutputs;
  *   attached absolute encoder.
  */
 public class Turret extends SubsystemBase {
-    private final TurretIO io;
-    private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
-
-    private enum ControlMode {
-        NONE,
-        PID,
-        MPC
-    }
-    private ControlMode controlMode = ControlMode.PID;
-
     public class TurretTarget {
         public double flywheelSpeedRadPerSec;
         public double azimuthAngleRad;
@@ -46,6 +38,16 @@ public class Turret extends SubsystemBase {
             this.hoodAngleRad = hoodRingAngleDiffRad;
         }
     }
+    private enum ControlMode {
+        NONE,
+        PID,
+        MPC
+    }
+
+    private final TurretIO io;
+    private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
+
+    private LoggedDashboardChooser<ControlMode> controlModeChooser = new LoggedDashboardChooser<>("Turret/ControlMode");
 
     public TurretTarget target = null;
 
@@ -54,6 +56,9 @@ public class Turret extends SubsystemBase {
     public Turret(TurretIO io) {
         this.io = io;
         controller = new TurretController(inputs);
+
+        controlModeChooser.addDefaultOption("PID", ControlMode.PID);
+        controlModeChooser.addOption("MPC", ControlMode.MPC);
 
         TurretTuning.init();
     }
@@ -68,7 +73,7 @@ public class Turret extends SubsystemBase {
         if(target == null) {
             io.stop();
         } else {
-            switch(controlMode) {
+            switch(controlModeChooser.get()) {
                 case NONE:
                     return;
                 case PID: {
@@ -104,8 +109,6 @@ public class Turret extends SubsystemBase {
         DoubleSupplier hoodSpeedSupplier
     ) {
         return Commands.runEnd(() -> {
-            controlMode = ControlMode.PID;
-
             if(target == null) {
                 target = new TurretTarget(0.0, inputs.azimuth.azimuthAngleRad(), 0);
             }
