@@ -25,6 +25,9 @@ public class TurretConstants {
     public static final double flywheelBevelReduction = -10.0 / 18.0;
     public static final double hoodBevelReduction = 20.0 / 35.0;
 
+    public static final double hoodMinAngle = Units.degreesToRadians(15);
+    public static final double hoodMaxAngle = Units.degreesToRadians(43);
+
     // Inertias
     private static final double reflectInertia(double externalInertia, double ratioInternal) {
         return (1 / ratioInternal) * (1 / ratioInternal) * externalInertia;

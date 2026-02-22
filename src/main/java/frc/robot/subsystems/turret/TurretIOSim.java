@@ -22,7 +22,7 @@ public class TurretIOSim extends TurretIOReal {
     // Spark simulation sensors
     protected SparkAbsoluteEncoderSim azimuthEncoderSim = azimuthMotorSim.getAbsoluteEncoderSim();
 
-    protected LinearSystemSim<?, ?, ?> turretSystemSim = new LinearSystemSim<>(TurretSim.createTurretSystem());
+    protected TurretSim turretSim = new TurretSim();
 
     public TurretIOSim() {
         super();
@@ -30,7 +30,7 @@ public class TurretIOSim extends TurretIOReal {
   
     public void updateInputs(TurretIOInputs inputs) {
         // Outputs should already be set
-        // TODO: Sim
+        
 
         super.updateInputs(inputs);
     }
