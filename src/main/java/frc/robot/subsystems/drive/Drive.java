@@ -25,7 +25,10 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.RobotState;
 import frc.robot.util.Container;
+import frc.robot.util.Elastic;
 import frc.robot.util.LocalADStarAK;
+import frc.robot.util.Elastic.Notification;
+import frc.robot.util.Elastic.Notification.NotificationLevel;
 
 import java.io.FileWriter;
 import java.util.Optional;
@@ -265,9 +268,10 @@ public class Drive extends SubsystemBase {
                 for(int i = 0; i < 4; i++) {
                     double averageOffset = offsetAverages[i] / averageSamples.value;
                     var module = modules[i];
-                    writer.write(String.format("Module %d: %f radians\n", module.name, averageOffset));
+                    writer.write(String.format("Module %s: %f radians\n", module.name, averageOffset));
                 }
                 writer.close();
+                Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Module zeroing", "Successfully saved module offsets to moduleOffsets.txt!"));
             } catch(Exception e) {
                 e.printStackTrace();
             }

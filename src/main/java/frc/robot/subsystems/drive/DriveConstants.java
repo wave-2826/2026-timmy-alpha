@@ -196,15 +196,15 @@ public class DriveConstants {
         MetersPerSecondPerSecond.of(5), /* Max tilt acceleration X */
         MetersPerSecondPerSecond.of(10) /* Max tilt acceleration Y */
     );
-        
+    
     public static final SwerveModuleConfig frontLeftConfig =
-        new SwerveModuleConfig(20, 21, 22, Radians.of(0.0), trackWidth.div(2.0), wheelBase.div(2.0), true);
+        new SwerveModuleConfig(20, 21, 22, Radians.of(-2.906722), trackWidth.div(2.0), wheelBase.div(2.0), false);
     public static final SwerveModuleConfig frontRightConfig =
-        new SwerveModuleConfig(30, 31, 32, Radians.of(0.0), trackWidth.div(-2.0), wheelBase.div(2.0), false);
+        new SwerveModuleConfig(30, 31, 32, Radians.of(0.984103), trackWidth.div(-2.0), wheelBase.div(2.0), false);
     public static final SwerveModuleConfig backLeftConfig =
-        new SwerveModuleConfig(10, 11, 12, Radians.of(0.0), trackWidth.div(2.0), wheelBase.div(-2.0), true);
+        new SwerveModuleConfig(10, 11, 12, Radians.of(-0.414148), trackWidth.div(2.0), wheelBase.div(-2.0), false);
     public static final SwerveModuleConfig backRightConfig =
-        new SwerveModuleConfig(40, 41, 42, Radians.of(0.0), trackWidth.div(-2.0), wheelBase.div(-2.0), false);
+        new SwerveModuleConfig(40, 41, 42, Radians.of(-0.293685), trackWidth.div(-2.0), wheelBase.div(-2.0), false);
 
     public static final ArrayList<SwerveModuleConfig> moduleConfigs = new ArrayList<>(Arrays.asList(
         frontLeftConfig,

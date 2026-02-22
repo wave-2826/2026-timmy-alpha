@@ -10,8 +10,8 @@ public class SpindexerConstants {
     public static final double spinnerMotorReduction = 25.0;
     public static final double transferMotorReduction = 15.0;
 
-    public static final int spinnerCurrentLimit = 20;
-    public static final int transferCurrentLimit = 10;
+    public static final int spinnerCurrentLimit = 35;
+    public static final int transferCurrentLimit = 20;
 
     public static final TunableSparkPID spinnerPID = new TunableSparkPID("Spindexer/Spinner")
         .addRealRobotGains(new SparkPIDConstants(0.005, 0, 0))

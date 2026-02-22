@@ -112,7 +112,7 @@ public class RobotContainer {
         testChooser = new LoggedDashboardChooser<>("Test Command");
         testChooser.addDefaultOption("Zero module rotations", drive.rezeroModules());
         testChooser.addOption("Auto tune turret", turret.runTuning());
-        DriveTuningCommands.addTuningCommandsToAutoChooser(drive, autoChooser);
+        DriveTuningCommands.addTuningCommandsToAutoChooser(drive, testChooser);
 
         resetSimulationField();
     }

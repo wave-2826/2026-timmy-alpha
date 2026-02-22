@@ -27,25 +27,25 @@ public class Intake extends SubsystemBase {
     
     public Command runRollerTeleop(DoubleSupplier forward, DoubleSupplier reverse) {
         return runEnd(
-        () -> io.setRollerVoltage((forward.getAsDouble() - reverse.getAsDouble()) * 12.0),
-        () -> io.setRollerVoltage(0.0));
+            () -> io.setRollerVoltage((forward.getAsDouble() - reverse.getAsDouble()) * 12.0),
+            () -> io.setRollerVoltage(0.0)
+        );
     }
     
     public Command deployIntake() {
         return Commands.runEnd(
-        () -> io.setDeployVoltage(2.4),
-        () -> io.setDeployVoltage(0.0)
+            () -> io.setDeployVoltage(2.4),
+            () -> io.setDeployVoltage(0.0)
         )
-        .until(() -> (inputs.deployL.motorCurrentAmps() + inputs.deployR.motorCurrentAmps()) / 2 > IntakeConstants.opeThatsaResetCurrent)
-        .andThen(io::resetDeployEncoders);
+            .until(() -> (inputs.deployL.motorCurrentAmps() + inputs.deployR.motorCurrentAmps()) / 2 > IntakeConstants.opeThatsaResetCurrent)
+            .withTimeout(1.0)
+            .andThen(io::resetDeployEncoders);
     }
     
     public Command setIntakePosition(DoubleSupplier position) {
-        return Commands.run(
-        () -> {
-            io.setDeployPosition(position.getAsDouble());
-        }
-        );
+        return Commands.run(() -> {
+            io.setDeployPosition(-position.getAsDouble());
+        });
     }
     
     public Command setIntakePositionNormalized(DoubleSupplier triggerPosition) {

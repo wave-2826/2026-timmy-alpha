@@ -59,7 +59,7 @@ public class Controls {
 
         driver.leftBumper().onTrue(Commands.runOnce(intake::deployIntake, intake)).onTrue(intake.runRollerPercent(20));
         driver.rightBumper().onTrue(intake.runRollerPercent(0));
-        driver.leftTrigger(0.05).whileTrue(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
+        intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
 
         spindexer.setDefaultCommand(spindexer.runAllPercent(coDriver::getLeftTriggerAxis));
         turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
