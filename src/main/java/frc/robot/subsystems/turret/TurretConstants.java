@@ -1,5 +1,7 @@
 package frc.robot.subsystems.turret;
 
+import com.revrobotics.spark.ClosedLoopSlot;
+
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import frc.robot.util.SparkPIDConstants;
@@ -101,11 +103,15 @@ public class TurretConstants {
     // PIDs
     public static final TunableSparkPID flywheelMotorPID = new TunableSparkPID("Turret/Flywheel")
         .addRealRobotGains(new SparkPIDConstants(0.0005, 0.0, 0.0))
-        .addSimGains(new SparkPIDConstants(0.0005, 0.0, 0.0));
+        .addRealRobotGains(new SparkPIDConstants(0.005, 0.0, 0.0, ClosedLoopSlot.kSlot1))
+        .copyRealGainsInSim();
+    
     public static final TunableSimpleMotorFF flywheelMotorFF = new TunableSimpleMotorFF("Turret/FlywheelFF")
-        .addGains(0.0, 12.0 / maxFlywheelSpeedRadPerSec, flywheelMotorKA); // TODO: Tune gains
+        .addGains(0.0, 12.0 / maxFlywheelSpeedRadPerSec, flywheelMotorKA);
+    
     public static final TunableSparkPID azimuthMotorPID = new TunableSparkPID("Turret/Azimuth")
         .addRealRobotGains(new SparkPIDConstants(0.7, 0.0, 0.2))
-        .addSimGains(new SparkPIDConstants(0.05, 0.0, 0.0));
+        .addRealRobotGains(new SparkPIDConstants(0.005, 0.0, 0.0, ClosedLoopSlot.kSlot1))
+        .copyRealGainsInSim();
     public static final TunableSparkPID hoodMotorPID = azimuthMotorPID;
 }

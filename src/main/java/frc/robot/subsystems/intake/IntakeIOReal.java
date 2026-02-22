@@ -85,7 +85,7 @@ public class IntakeIOReal implements IntakeIO {
 
     @Override
     public void setDeployVoltage(double volts) {
-        roller.setVoltage(volts);
+        deployL.setVoltage(volts);
     }
 
     @Override

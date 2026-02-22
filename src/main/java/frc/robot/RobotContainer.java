@@ -46,8 +46,6 @@ public class RobotContainer {
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
-        RobotState robotState = RobotState.getInstance();
-
         switch(Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
@@ -58,8 +56,8 @@ public class RobotContainer {
                     new ModuleIOTalonFXReal(DriveConstants.backLeftConfig),
                     new ModuleIOTalonFXReal(DriveConstants.backRightConfig));
                 vision = new Vision(
-                    new VisionIOLimelight(VisionConstants.camera0Name, robotState::getRotation),
-                    new VisionIOLimelight(VisionConstants.camera1Name, robotState::getRotation));
+                    new VisionIOPhotonVision(VisionConstants.camera0Name, robotToCamera0),
+                    new VisionIOPhotonVision(VisionConstants.camera1Name, robotToCamera1));
                 intake = new Intake(new IntakeIOReal());
                 turret = new Turret(new TurretIOReal());
                 // climber = new Climber(new ClimberIOReal());
