@@ -20,13 +20,9 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.IntakeIO;
-import frc.robot.subsystems.intake.IntakeIOReal;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
 public class Controls {
-    private static final double debounceTime = Constants.isSim ? 0.15 : 0;
-
     private final Alert driverDisconnectedAlert = new Alert("Driver controller disconnected (port 0)", AlertType.kWarning);
     private final Alert coDriverDisconnectedAlert = new Alert("Co-driver controller disconnected (port 1)", AlertType.kInfo);
 
@@ -63,10 +59,9 @@ public class Controls {
 
         driver.leftBumper().onTrue(Commands.runOnce(intake::deployIntake, intake)).onTrue(intake.runRollerPercent(20));
         driver.rightBumper().onTrue(intake.runRollerPercent(0));
-        driver.leftTrigger(0.05).onTrue(intake.bringIntakeIn(driver::getLeftTriggerAxis));
+        driver.leftTrigger(0.05).whileTrue(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
 
-        spindexer.setDefaultCommand(spindexer.runSpinnerPercent(coDriver::getLeftTriggerAxis).alongWith(spindexer.runTransferPercent(coDriver::getLeftTriggerAxis)));
-
+        spindexer.setDefaultCommand(spindexer.runAllPercent(coDriver::getLeftTriggerAxis));
         turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
 
         // Reset gyro or odometry if in simulation

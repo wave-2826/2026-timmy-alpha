@@ -251,7 +251,7 @@ public class Robot extends LoggedRobot {
     }
 
     public static boolean tuningMode() {
-        return Constants.tuningMode && !DriverStation.isFMSAttached();
+        return Constants.tuningMode; // && !DriverStation.isFMSAttached();
     }
 
     /** This function is called once when the robot is disabled. */
@@ -301,7 +301,8 @@ public class Robot extends LoggedRobot {
         // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().cancelAll();
 
-        robotContainer.turret.runTuning().schedule();
+        autonomousCommand = robotContainer.getTestCommand();
+        autonomousCommand.schedule();
     }
 
     /** This function is called periodically during test mode. */

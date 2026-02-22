@@ -44,6 +44,8 @@ public class RobotContainer {
         return selected == null || selected == "None";
     }
 
+    private final LoggedDashboardChooser<Command> testChooser;
+
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         switch(Constants.currentMode) {
@@ -105,19 +107,21 @@ public class RobotContainer {
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
-        DriveTuningCommands.addTuningCommandsToAutoChooser(drive, autoChooser);
         Controls.getInstance().configureControls(this, driveSimulation);
+
+        testChooser = new LoggedDashboardChooser<>("Test Command");
+        testChooser.addDefaultOption("Zero module rotations", drive.rezeroModules());
+        testChooser.addOption("Auto tune turret", turret.runTuning());
+        DriveTuningCommands.addTuningCommandsToAutoChooser(drive, autoChooser);
 
         resetSimulationField();
     }
 
-    /**
-     * Use this to pass the autonomous command to the main {@link Robot} class.
-     *
-     * @return the command to run in autonomous
-     */
     public Command getAutonomousCommand() {
         return autoChooser.get();
+    }
+    public Command getTestCommand() {
+        return testChooser.get();
     }
 
     public void resetSimulationField() {

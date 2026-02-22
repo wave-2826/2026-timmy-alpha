@@ -38,7 +38,7 @@ public class Module {
 
     private final ModuleIO io;
     private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
-    private final String name;
+    public final String name;
 
     private final Alert driveDisconnectedAlert;
     private final Alert turnDisconnectedAlert;
@@ -182,6 +182,11 @@ public class Module {
     /** Returns the module velocity in rotations/sec (Phoenix native units). */
     public double getFFCharacterizationVelocity() {
         return Units.radiansToRotations(inputs.driveVelocityRadPerSec);
+    }
+
+    /** Gets the zero offset of the module. This is the amount to be added to the encoder. */
+    public Rotation2d getZeroOffset() {
+        return inputs.uncorrectedTurnAbsolute.unaryMinus();
     }
 
     /** Sets the current limit on the drive motor temporarily for slip current measurement. */

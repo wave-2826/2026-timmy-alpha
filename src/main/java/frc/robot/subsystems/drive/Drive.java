@@ -18,12 +18,16 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.RobotState;
+import frc.robot.util.Container;
 import frc.robot.util.LocalADStarAK;
 
+import java.io.FileWriter;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -243,6 +247,31 @@ public class Drive extends SubsystemBase {
             states[i] = modules[i].getPosition();
         }
         return states;
+    }
+
+    /** Recollect zero offsets for modules. */
+    public Command rezeroModules() {
+        double[] offsetAverages = new double[4];
+        Container<Integer> averageSamples = new Container<>(0);
+        return Commands.runEnd(() -> {
+            for(int i = 0; i < 4; i++) {
+                var module = modules[i];
+                offsetAverages[i] += module.getZeroOffset().getRadians();
+            }
+            averageSamples.value += 1;
+        }, () -> {
+            try {
+                FileWriter writer = new FileWriter("/U/moduleOffsets.txt");
+                for(int i = 0; i < 4; i++) {
+                    double averageOffset = offsetAverages[i] / averageSamples.value;
+                    var module = modules[i];
+                    writer.write(String.format("Module %d: %f radians\n", module.name, averageOffset));
+                }
+                writer.close();
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }, this);
     }
 
     /**

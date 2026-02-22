@@ -22,7 +22,7 @@ public class Intake extends SubsystemBase {
     }
     
     public Command runRollerPercent(double percent) {
-        return runEnd(() -> io.setRollerVoltage(percent * 12.0), () -> io.setRollerVoltage(0.0));
+        return runOnce(() -> io.setRollerVoltage(percent * 12.0));
     }
     
     public Command runRollerTeleop(DoubleSupplier forward, DoubleSupplier reverse) {
@@ -48,7 +48,7 @@ public class Intake extends SubsystemBase {
         );
     }
     
-    public Command bringIntakeIn(DoubleSupplier triggerPosition) {
+    public Command setIntakePositionNormalized(DoubleSupplier triggerPosition) {
         return setIntakePosition(() -> {
             return IntakeConstants.trackLengthMeters * triggerPosition.getAsDouble();
         });
