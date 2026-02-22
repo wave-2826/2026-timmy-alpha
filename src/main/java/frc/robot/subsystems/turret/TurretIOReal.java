@@ -130,6 +130,13 @@ public class TurretIOReal implements TurretIO {
     }
 
     @Override
+    public void setMPCOutputs(TurretIOMPCOutputs outputs) {
+        flywheelController.setSetpoint(outputs.flywheelCurrent() / 2.0, ControlType.kCurrent);
+        azimuthController.setSetpoint(outputs.azimuthCurrent(), ControlType.kCurrent);
+        hoodController.setSetpoint(outputs.hoodCurrent(), ControlType.kCurrent);
+    }
+
+    @Override
     public void stop() {
         flywheelController.setSetpoint(0.0, ControlType.kVelocity);
         azimuthMotor.stopMotor();

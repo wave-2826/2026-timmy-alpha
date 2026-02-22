@@ -61,12 +61,12 @@ public interface TurretIO {
     ) {}
 
     public static record TurretIOMPCOutputs(
-        /** The voltage to apply to the flywheel motors. */
-        double flywheelVoltage,
-        /** The voltage to apply to the hood motor. */
-        double hoodVoltage,
-        /** The voltage to apply to the azimuth motor. */
-        double azimuthVoltage
+        /** The current to apply to the flywheel motors (half to each), in amps. */
+        double flywheelCurrent,
+        /** The current to apply to the hood motor, in amps. */
+        double hoodCurrent,
+        /** The current to apply to the azimuth motor, in amps. */
+        double azimuthCurrent
     ) {}
 
     /** Update the set of loggable inputs - data measured from the turret and passed into code. */

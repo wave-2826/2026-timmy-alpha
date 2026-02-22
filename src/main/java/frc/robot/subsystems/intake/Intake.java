@@ -49,7 +49,7 @@ public class Intake extends SubsystemBase {
 
   public Command bringIntakeIn(DoubleSupplier triggerPosition) {
     return setIntakePosition(() -> {
-      return IntakeConstants.fullyInPos * triggerPosition.getAsDouble();
+      return IntakeConstants.trackLengthMeters * triggerPosition.getAsDouble();
     });
   }
 }

@@ -51,24 +51,20 @@ public class RobotContainer {
         switch(Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
-                // drive = new Drive(
-                //     new GyroIOPigeon2(),
-                //     new ModuleIOTalonFXReal(DriveConstants.frontLeftConfig),
-                //     new ModuleIOTalonFXReal(DriveConstants.frontRightConfig),
-                //     new ModuleIOTalonFXReal(DriveConstants.backLeftConfig),
-                //     new ModuleIOTalonFXReal(DriveConstants.backRightConfig));
-                drive = new Drive(new GyroIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {}, new ModuleIO() {});
+                drive = new Drive(
+                    new GyroIOPigeon2(),
+                    new ModuleIOTalonFXReal(DriveConstants.frontLeftConfig),
+                    new ModuleIOTalonFXReal(DriveConstants.frontRightConfig),
+                    new ModuleIOTalonFXReal(DriveConstants.backLeftConfig),
+                    new ModuleIOTalonFXReal(DriveConstants.backRightConfig));
                 vision = new Vision(
                     new VisionIOLimelight(VisionConstants.camera0Name, robotState::getRotation),
                     new VisionIOLimelight(VisionConstants.camera1Name, robotState::getRotation));
-                // intake = new Intake(new IntakeIOSpark());
+                intake = new Intake(new IntakeIOReal());
                 turret = new Turret(new TurretIOReal());
-                // intake = new Intake(new IntakeIOReal());
-                intake = new Intake(new IntakeIO() {});
                 // climber = new Climber(new ClimberIOReal());
                 climber = new Climber(new ClimberIO() {});
-                // spindexer = new Spindexer(new SpindexerIOReal());
-                spindexer = new Spindexer(new SpindexerIO() {});
+                spindexer = new Spindexer(new SpindexerIOReal());
                 break;
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations

@@ -44,14 +44,13 @@ public class IntakeIOReal implements IntakeIO {
         deployBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(deployCurrentLimit).voltageCompensation(12.0);
         deployBaseConfig
             .encoder
-            .positionConversionFactor(
-                2.0 * Math.PI / pinionRadius)
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0 / pinionRadius)
+            .positionConversionFactor(2.0 * Math.PI * pinionRadiusMeters)
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0 * pinionRadiusMeters)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
-        deployRConfig.follow(deployL);
+        deployRConfig.follow(deployL, true);
 
         IntakeConstants.rollerPID.applyConfigAndRegister(rollerConfig, roller);
         IntakeConstants.deployPID.applyConfigAndRegister(deployLConfig, deployL);
