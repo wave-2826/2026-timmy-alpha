@@ -54,7 +54,6 @@ public class Controls {
         Spindexer spindexer = rc.spindexer;
         Intake intake = rc.intake;
         
-        
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> driver.getRightX()));
         driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
@@ -65,6 +64,8 @@ public class Controls {
         driver.leftBumper().onTrue(Commands.runOnce(intake::deployIntake, intake)).onTrue(intake.runRollerPercent(20));
         driver.rightBumper().onTrue(intake.runRollerPercent(0));
         driver.leftTrigger(0.05).onTrue(intake.bringIntakeIn(driver::getLeftTriggerAxis));
+
+        spindexer.setDefaultCommand(spindexer.runSpinnerPercent(coDriver::getLeftTriggerAxis).alongWith(spindexer.runTransferPercent(coDriver::getLeftTriggerAxis)));
 
         turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
 
