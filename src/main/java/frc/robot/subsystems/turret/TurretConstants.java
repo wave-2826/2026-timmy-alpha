@@ -25,6 +25,16 @@ public class TurretConstants {
     public static final double flywheelBevelReduction = -10.0 / 18.0;
     public static final double hoodBevelReduction = 20.0 / 35.0;
 
+    // Calculated reductions
+    // Total gearings; these are a ratio between output and input, so should be less than 1.
+    public static final double totalFlywheelGearing = TurretConstants.flywheelToRingReduction * TurretConstants.flywheelPlanetReduction * TurretConstants.flywheelBevelReduction;
+    public static final double totalHoodGearing = TurretConstants.hoodToRingReduction * TurretConstants.hoodPlanetReduction * TurretConstants.hoodBevelReduction;
+    public static final double totalAzimuthGearing = TurretConstants.azimuthToRingReduction;
+
+    public static final double azimuthFlyCoupling = TurretConstants.flywheelToRingReduction * TurretConstants.flywheelBevelReduction;
+    public static final double azimuthHoodCoupling = TurretConstants.hoodToRingReduction * TurretConstants.hoodBevelReduction;
+
+    // Constraints
     public static final double hoodMinAngle = Units.degreesToRadians(15);
     public static final double hoodMaxAngle = Units.degreesToRadians(43);
 

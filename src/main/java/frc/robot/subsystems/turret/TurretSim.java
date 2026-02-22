@@ -6,14 +6,14 @@ import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.numbers.N6;
+import edu.wpi.first.math.numbers.N5;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.NumericalIntegration;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.LinearSystemSim;
 import frc.robot.generated.TurretTuningData;
 
-public final class TurretSim extends LinearSystemSim<N6, N3, N6> {
+public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
     /**
      * Compute the motor damping for a given motor, reflected through the given gear ratio.  
      * Damping is based on the reverse EMF force, which provides a force opposite the direction
@@ -57,80 +57,69 @@ public final class TurretSim extends LinearSystemSim<N6, N3, N6> {
      * 
      * Positions and velocities are in rotations and rotations per second, not radians.
      * 
-     * State (x): [flywheel position, flywheel velocity, hood position, hood velocity, azimuth position, azimuth velocity]ᵀ
+     * State (x): [flywheel velocity, hood position, hood velocity, azimuth position, azimuth velocity]ᵀ
      * Input (u): [flywheel torque applied, hood torque applied, azimuth torque applied]
-     * Output (y): [flywheel position, flywheel velocity, hood position, hood velocity, azimuth position, azimuth velocity]ᵀ
+     * Output (y): [flywheel velocity, hood position, hood velocity, azimuth position, azimuth velocity]ᵀ
      * 
      * We simulate these together instead of using regular flywheel models because they're heavily impacted by each other.
      * Not just coaxially, but with friction between stages.
      */
-    public static LinearSystem<N6, N3, N6> createTurretSystem() {
-        // Total gearings; these are a ratio between output and input, so should be less than 1.
-        var totalFlywheelGearing = TurretConstants.flywheelToRingReduction * TurretConstants.flywheelPlanetReduction * TurretConstants.flywheelBevelReduction;
-        var totalHoodGearing = TurretConstants.hoodToRingReduction * TurretConstants.hoodPlanetReduction * TurretConstants.hoodBevelReduction;
-        var totalAzimuthGearing = TurretConstants.azimuthToRingReduction;
-
+    public static LinearSystem<N5, N3, N5> createTurretSystem() {
         // motor damping in Nm/(rad/s)
-        double flywheelDampingForce = computeMotorDamping(TurretConstants.flywheelSimMotor, totalFlywheelGearing);
-        double hoodDampingForce = computeMotorDamping(TurretConstants.hoodSimMotor, totalHoodGearing);
-        double azimuthDampingForce = computeMotorDamping(TurretConstants.azimuthSimMotor, totalAzimuthGearing);
+        double flywheelDampingForce = computeMotorDamping(TurretConstants.flywheelSimMotor, TurretConstants.totalFlywheelGearing);
+        double hoodDampingForce = computeMotorDamping(TurretConstants.hoodSimMotor, TurretConstants.totalHoodGearing);
+        double azimuthDampingForce = computeMotorDamping(TurretConstants.azimuthSimMotor, TurretConstants.totalAzimuthGearing);
 
         // damping acceleration in rad/s/s/(rad/s)
         double flywheelDampingAccel = flywheelDampingForce / flywheelMOI;
         double hoodDampingAccel = hoodDampingForce / hoodMOI;
         double azimuthDampingAccel = azimuthDampingForce / azimuthMOI;
 
-        // Coupling ratios
-        double azimuthFlyCoupling = TurretConstants.flywheelToRingReduction * TurretConstants.flywheelBevelReduction;
-        double azimuthHoodCoupling = TurretConstants.hoodToRingReduction * TurretConstants.hoodBevelReduction;
-        
         // Linear friction for each stage
         // The current models are in amps, but we want acceleration per velocity (rad/s^2 / rad/s = 1/s);
         // So we convert the current by 
-        double flywheelFricFromAzimuth = computeMotorAccelProportion(TurretConstants.azimuthSimMotor,  totalAzimuthGearing,  TurretTuningData.FlywheelCurrentModel.azimuth, azimuthMOI);
-        double flywheelFricFromHood =    computeMotorAccelProportion(TurretConstants.hoodSimMotor,     totalHoodGearing,     TurretTuningData.FlywheelCurrentModel.hood,    hoodMOI);
-        double hoodFricFromAzimuth =     computeMotorAccelProportion(TurretConstants.azimuthSimMotor,  totalAzimuthGearing,  TurretTuningData.HoodCurrentModel.azimuth,     azimuthMOI);
-        double hoodFricFromFlywheel =    computeMotorAccelProportion(TurretConstants.flywheelSimMotor, totalFlywheelGearing, TurretTuningData.HoodCurrentModel.flywheel,    flywheelMOI);
-        double azimuthFricFromFlywheel = computeMotorAccelProportion(TurretConstants.flywheelSimMotor, totalFlywheelGearing, TurretTuningData.AzimuthCurrentModel.flywheel, flywheelMOI);
-        double azimuthFricFromHood =     computeMotorAccelProportion(TurretConstants.hoodSimMotor,     totalHoodGearing,     TurretTuningData.AzimuthCurrentModel.hood,     hoodMOI);
+        double flywheelFricFromAzimuth = computeMotorAccelProportion(TurretConstants.azimuthSimMotor,  TurretConstants.totalAzimuthGearing,  TurretTuningData.FlywheelCurrentModel.azimuth, azimuthMOI);
+        double flywheelFricFromHood =    computeMotorAccelProportion(TurretConstants.hoodSimMotor,     TurretConstants.totalHoodGearing,     TurretTuningData.FlywheelCurrentModel.hood,    hoodMOI);
+        double hoodFricFromAzimuth =     computeMotorAccelProportion(TurretConstants.azimuthSimMotor,  TurretConstants.totalAzimuthGearing,  TurretTuningData.HoodCurrentModel.azimuth,     azimuthMOI);
+        double hoodFricFromFlywheel =    computeMotorAccelProportion(TurretConstants.flywheelSimMotor, TurretConstants.totalFlywheelGearing, TurretTuningData.HoodCurrentModel.flywheel,    flywheelMOI);
+        double azimuthFricFromFlywheel = computeMotorAccelProportion(TurretConstants.flywheelSimMotor, TurretConstants.totalFlywheelGearing, TurretTuningData.AzimuthCurrentModel.flywheel, flywheelMOI);
+        double azimuthFricFromHood =     computeMotorAccelProportion(TurretConstants.hoodSimMotor,     TurretConstants.totalHoodGearing,     TurretTuningData.AzimuthCurrentModel.hood,     hoodMOI);
 
         return new LinearSystem<>(
             // System matrix
             MatBuilder.fill(
-                Nat.N6(), Nat.N6(),
+                Nat.N5(), Nat.N5(),
                 
                 // This is a very 2D piece of code. prepare to scroll!
                 // spotless trambles in fear when it sees this formatting
-                // ⌄⌄⌄⌄⌄⌄⌄⌄⌄⌄⌄ -- flywheel position derivative, flywheel velocity derivative, hood position derivative, hood velocity derivative, azimuth position derivative, azimuth velocity derivative
-                // [ 0, flywheel pos += velocity, 0, 0,                        0, fly += k * azimuth vel   ]
-                     0, 1,                        0, 0,                        0, azimuthFlyCoupling,
-                // [ 0, flywheel vel -= damp,     0, fly vel += hood fric,     0, fly vel += azimuth fric  ]
-                     0, -flywheelDampingAccel,    0, flywheelFricFromHood,     0, flywheelFricFromAzimuth,
-                // [ 0, 0,                        0, hood pos += velocity,     0, hood += k * azimuth vel  ]
-                     0, 0,                        0, 1,                        0, azimuthHoodCoupling,
-                // [ 0, hood vel += fly fric,     0, hood vel -= damp,         0, hood vel += azimuth fric ]
-                     0, hoodFricFromFlywheel,     0, -hoodDampingAccel,        0, hoodFricFromAzimuth,
-                // [ 0, 0,                        0, 0,                        0, azimuth pos += velocity  ]
-                     0, 0,                        0, 0,                        0, 1,
-                // [ 0, azimuth vel += fly fric,  0, azimuth vel += hood fric, 0, azimuth vel -= damp      ]
-                     0, azimuthFricFromFlywheel,  0, azimuthFricFromHood,      0, -azimuthDampingAccel
+                // ⌄⌄⌄⌄⌄⌄⌄⌄⌄⌄⌄ -- flywheel velocity derivative, hood position derivative, hood velocity derivative, azimuth position derivative, azimuth velocity derivative
+                // [ flywheel pos += velocity, 0, 0,                        0, fly += k * azimuth vel   ]
+                // [ flywheel vel -= damp,     0, fly vel += hood fric,     0, fly vel += azimuth fric  ]
+                     -flywheelDampingAccel,    0, flywheelFricFromHood,     0, flywheelFricFromAzimuth,
+                // [ 0,                        0, hood pos += velocity,     0, 0                        ]
+                     0,                        0, 1,                        0, 0,
+                // [ hood vel += fly fric,     0, hood vel -= damp,         0, hood vel += azimuth fric ]
+                     hoodFricFromFlywheel,     0, -hoodDampingAccel,        0, hoodFricFromAzimuth,
+                // [ 0,                        0, 0,                        0, azimuth pos += velocity  ]
+                     0,                        0, 0,                        0, 1,
+                // [ azimuth vel += fly fric,  0, azimuth vel += hood fric, 0, azimuth vel -= damp      ]
+                     azimuthFricFromFlywheel,  0, azimuthFricFromHood,      0, -azimuthDampingAccel
             ),
             // Input matrix
             MatBuilder.fill(
-                Nat.N6(), Nat.N3(),
+                Nat.N5(), Nat.N3(),
 
             //  ⌄--------------⌄----------⌄-- flywheel torque applied, hood torque applied, azimuth torque applied
+                1/flywheelMOI * Math.pow(TurretConstants.totalFlywheelGearing, 2), 0, TurretConstants.azimuthFlyCoupling/hoodMOI * Math.pow(TurretConstants.totalHoodGearing, 2),
                 0, 0, 0,
-                1/flywheelMOI * Math.pow(totalFlywheelGearing, 2), 0, 0,
+                0, 1/hoodMOI * Math.pow(TurretConstants.totalHoodGearing, 2), TurretConstants.azimuthHoodCoupling/hoodMOI * Math.pow(TurretConstants.totalHoodGearing, 2),
                 0, 0, 0,
-                0, 1/hoodMOI * Math.pow(totalHoodGearing, 2), 0,
-                0, 0, 0,
-                0, 0, 1/azimuthMOI * Math.pow(totalAzimuthGearing, 2)
+                0, 0, 1/azimuthMOI * Math.pow(TurretConstants.totalAzimuthGearing, 2)
             ),
             // Output matrix (identity - just the state)
-            Matrix.eye(Nat.N6()),
+            Matrix.eye(Nat.N5()),
             // Feedthrough matrix (zero - no direct feedthrough)
-            new Matrix<>(Nat.N6(), Nat.N3())
+            new Matrix<>(Nat.N5(), Nat.N3())
         );
     }
 
@@ -148,9 +137,9 @@ public final class TurretSim extends LinearSystemSim<N6, N3, N6> {
      * @param dtSeconds the time difference between controller updates.
      */
     @Override
-    protected Matrix<N6, N1> updateX(Matrix<N6, N1> currentXhat, Matrix<N3, N1> currentU, double dtSeconds) {
-        Matrix<N6, N1> updatedXhat = NumericalIntegration.rkdp(
-            (Matrix<N6, N1> x, Matrix<N3, N1> u) -> {
+    protected Matrix<N5, N1> updateX(Matrix<N5, N1> currentXhat, Matrix<N3, N1> currentU, double dtSeconds) {
+        Matrix<N5, N1> updatedXhat = NumericalIntegration.rkdp(
+            (Matrix<N5, N1> x, Matrix<N3, N1> u) -> {
                 // standard linear dynamics (Ax + Bu)
                 return m_plant.getA().times(x).plus(m_plant.getB().times(u));
             },
@@ -173,20 +162,18 @@ public final class TurretSim extends LinearSystemSim<N6, N3, N6> {
     }
 
     public class TurretState {
-        public double flywheelPositionRotations;
         public double flywheelVelocityRps;
         public double hoodPositionRotations;
         public double hoodVelocityRps;
         public double azimuthPositionRotations;
         public double azimuthVelocityRps;
 
-        public TurretState(Matrix<N6, N1> xhat) {
-            flywheelPositionRotations = xhat.get(0, 0);
-            flywheelVelocityRps = xhat.get(1, 0);
-            hoodPositionRotations = xhat.get(2, 0);
-            hoodVelocityRps = xhat.get(3, 0);
-            azimuthPositionRotations = xhat.get(4, 0);
-            azimuthVelocityRps = xhat.get(5, 0);
+        public TurretState(Matrix<N5, N1> xhat) {
+            flywheelVelocityRps = xhat.get(0, 0);
+            hoodPositionRotations = xhat.get(1, 0);
+            hoodVelocityRps = xhat.get(2, 0);
+            azimuthPositionRotations = xhat.get(3, 0);
+            azimuthVelocityRps = xhat.get(4, 0);
         }
     }
 

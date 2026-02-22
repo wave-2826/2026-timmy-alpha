@@ -5,7 +5,6 @@ import com.revrobotics.sim.SparkFlexSim;
 import com.revrobotics.spark.SparkSim;
 
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.simulation.LinearSystemSim;
 
 public class TurretIOSim extends TurretIOReal {
     // DC simulation motors

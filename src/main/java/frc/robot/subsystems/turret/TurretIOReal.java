@@ -12,7 +12,6 @@ import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
-import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
@@ -122,7 +121,7 @@ public class TurretIOReal implements TurretIO {
     }
 
     @Override
-    public void setOutputs(TurretIOOutputs outputs) {
+    public void setPIDOutputs(TurretIOPIDOutputs outputs) {
         // TODO: Calculate next velocity
         var ff = flywheelMotorFF.calculateWithVelocities(outputs.flywheelSpeedRadPerSec(), outputs.flywheelSpeedRadPerSec());
         flywheelController.setSetpoint(outputs.flywheelSpeedRadPerSec(), ControlType.kVelocity, ClosedLoopSlot.kSlot0, ff, ArbFFUnits.kVoltage);

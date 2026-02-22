@@ -9,10 +9,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
-
 import frc.robot.Controls;
 import frc.robot.commands.tuning.TurretTuning;
-import frc.robot.subsystems.turret.TurretIO.TurretIOOutputs;
+import frc.robot.subsystems.turret.TurretIO.TurretIOMPCOutputs;
+import frc.robot.subsystems.turret.TurretIO.TurretIOPIDOutputs;
 
 /**
  * Our robot has a triple-coaxial turret - all motors are static relative to the robot frame.  
@@ -28,6 +28,13 @@ public class Turret extends SubsystemBase {
     private final TurretIO io;
     private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
 
+    private enum ControlMode {
+        NONE,
+        PID,
+        MPC
+    }
+    private ControlMode controlMode = ControlMode.PID;
+
     public class TurretTarget {
         public double flywheelSpeedRadPerSec;
         public double azimuthAngleRad;
@@ -42,8 +49,11 @@ public class Turret extends SubsystemBase {
 
     public TurretTarget target = null;
 
+    private TurretController controller;
+
     public Turret(TurretIO io) {
         this.io = io;
+        controller = new TurretController(inputs);
 
         TurretTuning.init();
     }
@@ -58,13 +68,33 @@ public class Turret extends SubsystemBase {
         if(target == null) {
             io.stop();
         } else {
-            TurretIOOutputs outputs = new TurretIOOutputs(
-                target.flywheelSpeedRadPerSec,
-                target.azimuthAngleRad % (Math.PI * 2),
-                MathUtil.clamp(target.hoodAngleRad, 0, Math.PI / 2)
-            );
-            io.setOutputs(outputs);
-            Logger.recordOutput("Turret/Target", outputs);
+            switch(controlMode) {
+                case NONE:
+                    return;
+                case PID: {
+                    TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
+                        target.flywheelSpeedRadPerSec,
+                        target.azimuthAngleRad % (Math.PI * 2),
+                        MathUtil.clamp(target.hoodAngleRad, 0, Math.PI / 2)
+                    );
+                    io.setPIDOutputs(outputs);
+                    break;
+                }
+                case MPC: {
+                    double[] outputs = controller.getOutputs(target.azimuthAngleRad, target.hoodAngleRad, target.flywheelSpeedRadPerSec);
+                    TurretIOMPCOutputs mpcOutputs = new TurretIOMPCOutputs(
+                        outputs[0],
+                        outputs[1],
+                        outputs[2]
+                    );
+                    io.setMPCOutputs(mpcOutputs);
+                    break;
+                }
+            }
+
+            Logger.recordOutput("Turret/Target/Azimuth", target.azimuthAngleRad);
+            Logger.recordOutput("Turret/Target/Hood", target.hoodAngleRad);
+            Logger.recordOutput("Turret/Target/Flywheel", target.flywheelSpeedRadPerSec);
         }
     }
 
@@ -74,9 +104,12 @@ public class Turret extends SubsystemBase {
         DoubleSupplier hoodSpeedSupplier
     ) {
         return Commands.runEnd(() -> {
+            controlMode = ControlMode.PID;
+
             if(target == null) {
                 target = new TurretTarget(0.0, inputs.azimuth.azimuthAngleRad(), 0);
             }
+
             target.flywheelSpeedRadPerSec = MathUtil.applyDeadband(flywheelSpeedSupplier.getAsDouble(), 0.2) * TurretConstants.maxFlywheelSpeedRadPerSec;
             
             target.azimuthAngleRad -= MathUtil.applyDeadband(azimuthSpeedSupplier.getAsDouble(), 0.2) * Math.PI * 0.02;

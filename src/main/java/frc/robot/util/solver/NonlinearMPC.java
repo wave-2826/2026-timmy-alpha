@@ -3,6 +3,7 @@ package frc.robot.util.solver;
 import java.util.function.BiFunction;
 import org.ejml.simple.SimpleMatrix;
 import org.wpilib.math.autodiff.NumericalIntegration;
+import org.wpilib.math.autodiff.Variable;
 import org.wpilib.math.autodiff.VariableMatrix;
 import org.wpilib.math.optimization.Constraints;
 import org.wpilib.math.optimization.Problem;
@@ -22,13 +23,17 @@ public class NonlinearMPC {
             this.X = X;
             this.U = U;
         }
+        public InitialGuess(double[] x, double[] u) {
+            this.X = new SimpleMatrix(x.length, 1, true, x);
+            this.U = new SimpleMatrix(u.length, 1, true, u);
+        }
     }
 
     public static interface InitialGuessFunction {
         InitialGuess apply(double[] currentState, double[] reference, int samplesN);
     }
     public static interface CostFunction {
-        VariableMatrix apply(VariableMatrix currentState, VariableMatrix inputs, double[] reference);
+        Variable apply(VariableMatrix currentState, VariableMatrix inputs, double[] reference);
     }
     public static interface ConstraintFunction {
         void apply(Problem problem, VariableMatrix currentState, VariableMatrix inputs);

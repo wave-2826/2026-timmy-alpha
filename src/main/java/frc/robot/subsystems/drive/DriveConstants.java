@@ -198,13 +198,13 @@ public class DriveConstants {
     );
         
     public static final SwerveModuleConfig frontLeftConfig =
-        new SwerveModuleConfig(10, 11, 12, Rotations.of(-0.042236328125), trackWidth.div(2.0), wheelBase.div(2.0), true);
+        new SwerveModuleConfig(20, 21, 22, Rotations.of(-0.042236328125), trackWidth.div(2.0), wheelBase.div(2.0), true);
     public static final SwerveModuleConfig frontRightConfig =
-        new SwerveModuleConfig(20, 21, 22, Rotations.of(0.157958984375), trackWidth.div(-2.0), wheelBase.div(2.0), false);
+        new SwerveModuleConfig(30, 31, 32, Rotations.of(0.157958984375), trackWidth.div(-2.0), wheelBase.div(2.0), false);
     public static final SwerveModuleConfig backLeftConfig =
-        new SwerveModuleConfig(40, 41, 42, Rotations.of(-0.431396484375), trackWidth.div(2.0), wheelBase.div(-2.0), true);
+        new SwerveModuleConfig(10, 11, 12, Rotations.of(-0.431396484375), trackWidth.div(2.0), wheelBase.div(-2.0), true);
     public static final SwerveModuleConfig backRightConfig =
-        new SwerveModuleConfig(30, 31, 32, Rotations.of(-0.030517578125), trackWidth.div(-2.0), wheelBase.div(-2.0), false);
+        new SwerveModuleConfig(40, 41, 42, Rotations.of(-0.030517578125), trackWidth.div(-2.0), wheelBase.div(-2.0), false);
 
     public static final ArrayList<SwerveModuleConfig> moduleConfigs = new ArrayList<>(Arrays.asList(
         frontLeftConfig,

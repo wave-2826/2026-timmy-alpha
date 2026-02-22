@@ -51,7 +51,7 @@ public interface TurretIO {
         HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0, 0.0, 0.0);
     }
 
-    public static record TurretIOOutputs(
+    public static record TurretIOPIDOutputs(
         /** The target flywheel speed. */
         double flywheelSpeedRadPerSec,
         /** The turret azimuth angle relative to the robot base. */
@@ -60,11 +60,23 @@ public interface TurretIO {
         double hoodAngleRad
     ) {}
 
+    public static record TurretIOMPCOutputs(
+        /** The voltage to apply to the flywheel motors. */
+        double flywheelVoltage,
+        /** The voltage to apply to the hood motor. */
+        double hoodVoltage,
+        /** The voltage to apply to the azimuth motor. */
+        double azimuthVoltage
+    ) {}
+
     /** Update the set of loggable inputs - data measured from the turret and passed into code. */
     public default void updateInputs(TurretIOInputs inputs) {}
 
-    /** Run the turret with the given outputs. */
-    public default void setOutputs(TurretIOOutputs outputs) {}
+    /** Run the turret with the given outputs in PID control mode. */
+    public default void setPIDOutputs(TurretIOPIDOutputs outputs) {}
+
+    /** Run the turret with the given outputs in MPC control mode. */
+    public default void setMPCOutputs(TurretIOMPCOutputs outputs) {}
 
     /** Stop all turret motion and hold position. */
     public default void stop() {}
