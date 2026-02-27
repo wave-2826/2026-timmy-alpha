@@ -14,6 +14,7 @@ import edu.wpi.first.math.numbers.N5;
 import edu.wpi.first.math.util.Units;
 import frc.robot.generated.TurretTuningData;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
+import frc.robot.util.LoggedTracer;
 import frc.robot.util.solver.NonlinearMPC;
 import frc.robot.util.solver.NonlinearMPC.InitialGuess;
 
@@ -69,8 +70,8 @@ public class TurretController {
             this::mpcDynamics,
             0.01,
             this::mpcCost, this::applyMpcConstraints, this::mpcInitialGuess,
-            0.5,
-            0.003, 0.001
+            0.1,
+            0.003, 0.1
         );
     }
 
@@ -87,14 +88,20 @@ public class TurretController {
     public double[] getOutputs(
         double targetAzimuthAngle, double targetHoodAngle, double targetFlywheelSpeed
     ) {
-        observer.correct(modelState, getCurrentState());
+        LoggedTracer.record("Turret/Blah");
 
+        observer.correct(modelState, getCurrentState());
+        
+        LoggedTracer.record("Turret/Kalman");
+        
         double[] reference = new double[] {
             targetFlywheelSpeed,
             targetHoodAngle,
             targetAzimuthAngle
         };
         var solution = mpc.calculate(observer.getXhat().getData(), reference);
+
+        LoggedTracer.record("Turret/Solution");
 
         return solution;
     }
@@ -138,19 +145,17 @@ public class TurretController {
             .times(Math.pow(TurretConstants.totalHoodGearing, 2))
             .plus(azimuthAcceleration.times(TurretConstants.azimuthHoodCoupling));
         
-        return new VariableMatrix(new Variable[][] {
-            new Variable[] {
-                // d(flywheel velocity)/dt
-                flywheelAcceleration,
-                // d(hood position)/dt = hood velocity
-                state.get(2, 0),
-                // d(hood velocity)/dt
-                hoodAcceleration,
-                // d(azimuth position)/dt = azimuth velocity
-                state.get(4, 0),
-                // d(azimuth velocity)/dt
-                azimuthAcceleration
-            }
+        return NonlinearMPC.columnMatrix(new Variable[] {
+            // d(flywheel velocity)/dt
+            flywheelAcceleration,
+            // d(hood position)/dt = hood velocity
+            state.get(2, 0),
+            // d(hood velocity)/dt
+            hoodAcceleration,
+            // d(azimuth position)/dt = azimuth velocity
+            state.get(4, 0),
+            // d(azimuth velocity)/dt
+            azimuthAcceleration
         });
     }
 
