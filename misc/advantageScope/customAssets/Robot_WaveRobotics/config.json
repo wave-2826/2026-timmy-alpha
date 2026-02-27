@@ -1,0 +1,14 @@
+{
+    "name": "WaveRobotics",
+    "isFTC": false,
+    "disableSimplification": false,
+    "rotations": [
+        { "axis": "x", "degrees": 90 },
+        { "axis": "z", "degrees": 90 }
+    ],
+    "position": [-0.18415, -0.34925, 0],
+    "cameras": [
+    ],
+    "components": [
+    ]
+}
