@@ -50,6 +50,7 @@ public class IntakeIOReal implements IntakeIO {
             .uvwAverageDepth(2);
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
+        deployLConfig.inverted(true);
         deployRConfig.follow(deployL, true);
 
         IntakeConstants.rollerPID.applyConfigAndRegister(rollerConfig, roller);
@@ -97,5 +98,10 @@ public class IntakeIOReal implements IntakeIO {
     @Override
     public void setDeployPosition(double position) {
         deployController.setSetpoint(position, ControlType.kPosition);
+    }
+
+    @Override
+    public void stopDeploy() {
+        deployController.setSetpoint(0, ControlType.kDutyCycle);
     }
 }

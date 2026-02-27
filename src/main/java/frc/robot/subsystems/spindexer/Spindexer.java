@@ -32,7 +32,7 @@ public class Spindexer extends SubsystemBase {
     public Command runAllPercent(DoubleSupplier percent) {
         return runEnd(() -> {
             double volts = percent.getAsDouble() * 12.0;
-            io.setSpinnerVoltage(volts);
+            io.setSpinnerVoltage(-volts);
             io.setTransferVoltage(volts);
         }, () -> {
             io.setSpinnerVoltage(0.0);

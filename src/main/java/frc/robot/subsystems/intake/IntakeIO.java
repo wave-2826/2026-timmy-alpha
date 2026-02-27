@@ -38,4 +38,5 @@ public interface IntakeIO {
     
     public default void resetDeployEncoders() {}
     public default void setDeployPosition(double position) {}
+    public default void stopDeploy() {}
 }

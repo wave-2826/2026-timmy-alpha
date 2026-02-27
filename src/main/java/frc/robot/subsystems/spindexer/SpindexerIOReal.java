@@ -11,6 +11,8 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
+
 
 public class SpindexerIOReal implements SpindexerIO {
     private final SparkFlex spinnerMotor = new SparkFlex(spinnerCanId, MotorType.kBrushless);
@@ -19,7 +21,7 @@ public class SpindexerIOReal implements SpindexerIO {
     private final RelativeEncoder transferEncoder = transferMotor.getEncoder();
   
     public SpindexerIOReal() {
-        var spinnerConfig = new SparkMaxConfig();
+        var spinnerConfig = new SparkFlexConfig();
         spinnerConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(spinnerCurrentLimit).voltageCompensation(12.0);
         spinnerConfig
             .encoder

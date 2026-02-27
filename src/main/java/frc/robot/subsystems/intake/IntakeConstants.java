@@ -14,7 +14,7 @@ public class IntakeConstants {
     public static final int rollerCurrentLimit = 40;
     public static final int deployCurrentLimit = 25;
     
-    public static final double opeThatsaResetCurrent = 10.0;
+    public static final double opeThatsaResetCurrent = 20.0;
     
     public static final double pinionRadiusMeters = 0.0362855;
     public static final double trackLengthMeters = Units.inchesToMeters(14.75);
@@ -23,6 +23,6 @@ public class IntakeConstants {
         .addRealRobotGains(new SparkPIDConstants(0.005, 0, 0))
         .addSimGains(new SparkPIDConstants(0.005, 0, 0));
     public static final TunableSparkPID deployPID = new TunableSparkPID("Intake/Deploy")
-        .addRealRobotGains(new SparkPIDConstants(0.005, 0, 0))
+        .addRealRobotGains(new SparkPIDConstants(0.5, 0, 0))
         .addSimGains(new SparkPIDConstants(0.005, 0, 0));
 }

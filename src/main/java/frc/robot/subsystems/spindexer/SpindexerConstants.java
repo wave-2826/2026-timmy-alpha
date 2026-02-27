@@ -7,7 +7,7 @@ public class SpindexerConstants {
     public static final int transferCanId = 40;
     public static final int spinnerCanId = 41;
 
-    public static final double spinnerMotorReduction = 25.0;
+    public static final double spinnerMotorReduction = 9.0;
     public static final double transferMotorReduction = 15.0;
 
     public static final int spinnerCurrentLimit = 35;

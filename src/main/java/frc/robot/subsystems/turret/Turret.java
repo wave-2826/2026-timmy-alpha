@@ -113,7 +113,7 @@ public class Turret extends SubsystemBase {
                 target = new TurretTarget(0.0, inputs.azimuth.azimuthAngleRad(), 0);
             }
 
-            target.flywheelSpeedRadPerSec = MathUtil.applyDeadband(flywheelSpeedSupplier.getAsDouble(), 0.2) * TurretConstants.maxFlywheelSpeedRadPerSec;
+            target.flywheelSpeedRadPerSec = MathUtil.applyDeadband(-flywheelSpeedSupplier.getAsDouble(), 0.2) * TurretConstants.maxFlywheelSpeedRadPerSec;
             
             target.azimuthAngleRad -= MathUtil.applyDeadband(azimuthSpeedSupplier.getAsDouble(), 0.2) * Math.PI * 0.02;
             target.azimuthAngleRad %= Math.PI * 2;
