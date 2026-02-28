@@ -14,6 +14,17 @@ import edu.wpi.first.wpilibj.simulation.LinearSystemSim;
 import frc.robot.generated.TurretTuningData;
 
 public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
+    public enum TurretSimMode {
+        LinearSystem,
+        MeasuredDynamics
+    };
+
+    private TurretSimMode mode = TurretSimMode.LinearSystem;
+    public TurretSim(TurretSimMode mode) {
+        super(createTurretSystem());
+        this.mode = mode;
+    }
+
     /**
      * Compute the motor damping for a given motor, reflected through the given gear ratio.  
      * Damping is based on the reverse EMF force, which provides a force opposite the direction
@@ -122,11 +133,6 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
             new Matrix<>(Nat.N5(), Nat.N3())
         );
     }
-
-    public TurretSim() {
-        super(createTurretSystem());
-    }
-
     
     /**
      * Update the state of the turret.  
@@ -139,16 +145,18 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
     @Override
     protected Matrix<N5, N1> updateX(Matrix<N5, N1> currentXhat, Matrix<N3, N1> currentU, double dtSeconds) {
         Matrix<N5, N1> updatedXhat = NumericalIntegration.rkdp(
-            (Matrix<N5, N1> x, Matrix<N3, N1> u) -> {
-                // standard linear dynamics (Ax + Bu)
-                return m_plant.getA().times(x).plus(m_plant.getB().times(u));
+            (Matrix<N5, N1> x, Matrix<N3, N1> u) -> switch (mode) {
+                case LinearSystem -> m_plant.getA().times(x).plus(m_plant.getB().times(u));
+                case MeasuredDynamics -> TurretController.mcpDynamicsButNumbers(x.getData(), u.getData());
             },
             currentXhat,
             currentU,
-            dtSeconds);
+            dtSeconds
+        );
 
         // We check for collision after updating xhat
-        // This isn't an accurate model since it loses energy, but it's whatever.
+        // This isn't an accurate model since it loses energy that would
+        // realistically be transferred to other stages, but it's whatever.
         double hoodPosition = updatedXhat.get(2, 0);
         if(hoodPosition < TurretConstants.hoodMinAngle) {
             updatedXhat.set(2, 0, TurretConstants.hoodMinAngle);

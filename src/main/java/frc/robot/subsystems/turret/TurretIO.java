@@ -12,7 +12,15 @@ public interface TurretIO {
             double velocityRadPerSec,
             /** The motor current draw. */
             double motorCurrentAmps
-        ) {}
+        ) {
+            FlywheelMotorInputs half() {
+                return new FlywheelMotorInputs(
+                    connected,
+                    velocityRadPerSec / 2,
+                    motorCurrentAmps / 2
+                );
+            }
+        }
         public record AzimuthMotorInputs(
             /** Whether the motor is connected */
             boolean connected,

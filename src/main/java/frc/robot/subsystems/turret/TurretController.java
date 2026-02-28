@@ -71,7 +71,8 @@ public class TurretController {
             0.01,
             this::mpcCost, this::applyMpcConstraints, this::mpcInitialGuess,
             0.1,
-            0.003, 0.1
+            0.001, // Timeout, s
+            0.1 // Tolerance, A
         );
     }
 
@@ -88,7 +89,7 @@ public class TurretController {
     public double[] getOutputs(
         double targetAzimuthAngle, double targetHoodAngle, double targetFlywheelSpeed
     ) {
-        LoggedTracer.record("Turret/Blah");
+        LoggedTracer.skipEpoch();
 
         observer.correct(modelState, getCurrentState());
         
@@ -159,7 +160,7 @@ public class TurretController {
         });
     }
 
-    private Matrix<N5, N1> mcpDynamicsButNumbers(double[] state, double[] input) {
+    public static Matrix<N5, N1> mcpDynamicsButNumbers(double[] state, double[] input) {
         double flywheelSteadyStateCurrent = TurretTuningData.FlywheelCurrentModel.calculate(input[0], input[1], input[2]);
         double hoodSteadyStateCurrent = TurretTuningData.HoodCurrentModel.calculate(input[0], input[1], input[2]);
         double azimuthSteadyStateCurrent = TurretTuningData.AzimuthCurrentModel.calculate(input[0], input[1], input[2]);
@@ -182,13 +183,13 @@ public class TurretController {
         return VecBuilder.fill(flywheelAcceleration, state[2], hoodAcceleration, state[4], azimuthAcceleration);
     }
 
-    private Variable mpcCost(VariableMatrix state, VariableMatrix input, double[] reference) {
+    private Variable mpcCost(VariableMatrix state, VariableMatrix input, VariableMatrix reference) {
         // Cost is basically just tracking error, but we add small penalties for current usage
         // Normalize to avoid overemphasizing flywheel
-        Variable flywheelVelocityError = state.get(0, 0).minus(reference[0])
+        Variable flywheelVelocityError = state.get(0).minus(reference.get(0))
             .times(1 / TurretConstants.maxFlywheelSpeedRadPerSec * 0.5);
-        Variable hoodPositionError = state.get(1, 0).minus(reference[1]);
-        Variable azimuthPositionError = state.get(3, 0).minus(reference[2]);
+        Variable hoodPositionError = state.get(1).minus(reference.get(1));
+        Variable azimuthPositionError = state.get(3).minus(reference.get(2));
         Variable cost = flywheelVelocityError.times(flywheelVelocityError)
             .plus(hoodPositionError.times(hoodPositionError))
             .plus(azimuthPositionError.times(azimuthPositionError));
