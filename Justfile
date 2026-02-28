@@ -7,12 +7,12 @@ ConstantsFile := "src/main/java/frc/robot/Constants.java"
 simulate:
     (Get-Content -Path {{ConstantsFile}}) -replace "simMode = Mode.REPLAY;", "simMode = Mode.SIM;" | Set-Content -Path {{ConstantsFile}}
     .\misc\scripts\openSimPrograms.ps1
-    .\gradlew simulateJava  "-Dorg.gradle.java.home=C:\Users\Public\wpilib\2025\jdk\"
+    .\gradlew hotswapSimulateJava  "-Dorg.gradle.java.home=C:\Users\Public\wpilib\2025\jdk\"
 
 [linux]
 simulate:
     sed -i 's/simMode = Mode.REPLAY;/simMode = Mode.SIM;/g' {{ConstantsFile}}
-    ./gradlew simulateJava
+    ./gradlew hotswapSimulateJava
 
 [windows]
 replay:
@@ -30,3 +30,6 @@ template-subsystem:
 
 tune-turret:
     python ./misc/turretTuning/analyze_data.py
+
+setup-hotswap:
+    python ./misc/scripts/setup-hotswap.py
