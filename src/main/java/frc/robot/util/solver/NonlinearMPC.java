@@ -9,6 +9,8 @@ import org.wpilib.math.optimization.Constraints;
 import org.wpilib.math.optimization.Problem;
 import org.wpilib.math.optimization.solver.Options;
 
+import frc.robot.util.LoggedTracer;
+
 /**
  * A nonlinear model-predictive control solver using Slepnir based on that presented in [Controls Engineering in FRC](https://file.tavsys.net/control/controls-engineering-in-frc.pdf)
  * The book's Python implementation is available here: https://github.com/calcmogul/controls-engineering-in-frc/blob/main/bookutil/bookutil/nonlinear_mpc.py
@@ -96,6 +98,17 @@ public class NonlinearMPC {
         this.N = (int) (predictionHorizon / samplePeriod);
     }
 
+    public static VariableMatrix columnMatrix(Variable[] items) {
+        Variable[][] list = new Variable[items.length][1];
+        for(int i = 0; i < items.length; i++) list[i][0] = items[i];
+        return new VariableMatrix(list);
+    }
+    public static VariableMatrix columnMatrix(double[] items) {
+        Variable[][] list = new Variable[items.length][1];
+        for(int i = 0; i < items.length; i++) list[i][0] = new Variable(items[i]);
+        return new VariableMatrix(list);
+    }
+
     public double[] calculate(double[] x, double[] r) {
         Problem problem = new Problem();
 
@@ -105,7 +118,7 @@ public class NonlinearMPC {
         problem.minimize(cost.apply(X, U, r));
 
         // Initial state constraint
-        problem.subjectTo(Constraints.eq(X.col(0), new VariableMatrix(new double[][] { x })));
+        problem.subjectTo(Constraints.eq(X.col(0), columnMatrix(x)));
 
         // Dynamics constraints
         for(int k = 0; k < N; k++) {
@@ -126,11 +139,13 @@ public class NonlinearMPC {
         X.set(XWarmStart);
         U.set(UWarmStart);
 
+        LoggedTracer.record("Turret/Problem Formulation");
+
         problem.solve(new Options().withTimeout(timeout).withTolerance(tolerance));
 
         XWarmStart = X.value();
         UWarmStart = U.value();
 
-        return UWarmStart.getColumn(0).toArray2()[0];
+        return UWarmStart.transpose().getRow(0).toArray2()[0];
     }
 }
