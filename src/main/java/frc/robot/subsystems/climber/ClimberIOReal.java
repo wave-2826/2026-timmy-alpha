@@ -10,10 +10,15 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.wpilibj.Servo;
 
 public class ClimberIOReal implements ClimberIO {
     private final SparkMax leftMotor = new SparkMax(leftCanId, MotorType.kBrushless);
     private final SparkMax rightMotor = new SparkMax(rightCanId, MotorType.kBrushless);
+
+    private final Servo servoL = new Servo(leftServoPWM);
+    private final Servo servoR = new Servo(rightServoPWM);
+
     private final RelativeEncoder leftEncoder = leftMotor.getEncoder();
     private final RelativeEncoder rightEncoder = rightMotor.getEncoder();
   
@@ -46,6 +51,13 @@ public class ClimberIOReal implements ClimberIO {
         var climbLCurrent = getIfOk(leftMotor, leftMotor::getOutputCurrent, 0.0);
         var climbLPosition = getIfOk(leftMotor, leftEncoder::getPosition, 0.0);
         inputs.left = new ClimberIOInputs.climbMotorInputs(sparkStickyFault, climbLCurrent, climbLPosition);
+
+        var servoLPosition = servoL.getPosition();
+        inputs.leftServeo = new ClimberIOInputs.servoInputs(servoLPosition);
+
+        var servoRPosition = servoR.getPosition();
+        inputs.rightServeo = new ClimberIOInputs.servoInputs(servoRPosition);
+
     }
   
     @Override
@@ -56,5 +68,15 @@ public class ClimberIOReal implements ClimberIO {
     @Override
     public void setRightPower(double power) {
         rightMotor.set(power);
+    }
+
+    @Override
+    public void setLeftServoPosition(double position) {
+        servoL.set(position);
+    }
+
+    @Override
+    public void setRightServoPosition(double position) {
+        servoR.set(position);
     }
 }

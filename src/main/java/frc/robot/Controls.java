@@ -57,7 +57,7 @@ public class Controls {
         // driver.b().whileTrue(climber.extendBoth()).onTrue(intake.bringIntakeIn(1));
         driver.a().whileTrue(climber.retractBoth());
 
-        driver.leftBumper().whileTrue(intake.deployIntake()).onTrue(intake.runRollerPercent(20));
+        driver.leftBumper().onTrue(intake.deployIntake());//.onTrue(intake.runRollerPercent(20));
         driver.rightBumper().onTrue(intake.runRollerPercent(0));
         intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
 

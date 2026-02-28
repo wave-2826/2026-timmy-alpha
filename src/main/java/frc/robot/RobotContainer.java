@@ -63,7 +63,7 @@ public class RobotContainer {
                 intake = new Intake(new IntakeIOReal());
                 turret = new Turret(new TurretIOReal());
                 // climber = new Climber(new ClimberIOReal());
-                climber = new Climber(new ClimberIO() {});
+                climber = new Climber(new ClimberIOReal());
                 spindexer = new Spindexer(new SpindexerIOReal());
                 break;
             case SIM:
