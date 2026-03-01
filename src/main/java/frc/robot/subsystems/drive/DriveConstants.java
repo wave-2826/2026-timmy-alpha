@@ -162,9 +162,12 @@ public class DriveConstants {
     // This needs to be tuned to your individual robot
     public static final LinearVelocity linearFreeSpeed = MetersPerSecond.of(4.73); // "Magic" number from max speed measurement
 
-    public static final Distance trackWidth = Inches.of(27.5);
-    public static final Distance wheelBase = Inches.of(14.5);
-    public static final double driveBaseRadius = Math.hypot(trackWidth.in(Meters) / 2.0, wheelBase.in(Meters) / 2.0);
+    /** Spacing between wheel centers on the Y axis */
+    public static final Distance trackWidthY = Inches.of(27.5);
+    /** Spacing between wheel centers on the X axis */
+    public static final Distance wheelBaseX = Inches.of(14.5);
+
+    public static final double driveBaseRadius = Math.hypot(trackWidthY.in(Meters) / 2.0, wheelBaseX.in(Meters) / 2.0);
 
     public static final double maxSpeedMetersPerSec = linearFreeSpeed.in(MetersPerSecond);
     public static final double maxAngularSpeedRadPerSec = maxSpeedMetersPerSec / driveBaseRadius;
@@ -200,13 +203,13 @@ public class DriveConstants {
     );
     
     public static final SwerveModuleConfig frontLeftConfig =
-        new SwerveModuleConfig(20, 21, 22, Radians.of(-2.906722), trackWidth.div(2.0), wheelBase.div(2.0), false);
+        new SwerveModuleConfig(20, 21, 22, Radians.of(-2.906722), trackWidthY.div(2.0), wheelBaseX.div(2.0), false);
     public static final SwerveModuleConfig frontRightConfig =
-        new SwerveModuleConfig(30, 31, 32, Radians.of(0.984103), trackWidth.div(-2.0), wheelBase.div(2.0), false);
+        new SwerveModuleConfig(30, 31, 32, Radians.of(0.984103), trackWidthY.div(-2.0), wheelBaseX.div(2.0), false);
     public static final SwerveModuleConfig backLeftConfig =
-        new SwerveModuleConfig(10, 11, 12, Radians.of(-0.414148), trackWidth.div(2.0), wheelBase.div(-2.0), false);
+        new SwerveModuleConfig(10, 11, 12, Radians.of(-0.414148), trackWidthY.div(2.0), wheelBaseX.div(-2.0), false);
     public static final SwerveModuleConfig backRightConfig =
-        new SwerveModuleConfig(40, 41, 42, Radians.of(-0.293685), trackWidth.div(-2.0), wheelBase.div(-2.0), false);
+        new SwerveModuleConfig(40, 41, 42, Radians.of(-0.293685), trackWidthY.div(-2.0), wheelBaseX.div(-2.0), false);
 
     public static final ArrayList<SwerveModuleConfig> moduleConfigs = new ArrayList<>(Arrays.asList(
         frontLeftConfig,

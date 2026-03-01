@@ -315,8 +315,8 @@ public class FuelSim {
     protected boolean simulateAirResistance = false;
     protected Supplier<Pose2d> robotPoseSupplier = null;
     protected Supplier<ChassisSpeeds> robotFieldSpeedsSupplier = null;
-    protected double robotWidth; // size along the robot's y axis
-    protected double robotLength; // size along the robot's x axis
+    protected double bumperSizeX; // size along the robot's x axis
+    protected double bumperSizeY; // size along the robot's y axis
     protected double bumperHeight;
     protected ArrayList<SimIntake> intakes = new ArrayList<>();
     protected double loggingFreqHz = 10;
@@ -332,6 +332,8 @@ public class FuelSim {
                 grid[i][j] = new ArrayList<Fuel>();
             }
         }
+
+        loggingTimer.start();
     }
 
     /**
@@ -398,45 +400,18 @@ public class FuelSim {
 
     /**
      * Registers a robot with the fuel simulator
-     * @param width from left to right (y-axis)
-     * @param length from front to back (x-axis)
      * @param bumperHeight
      * @param poseSupplier
-     * @param fieldSpeedsSupplier field-relative `ChassisSpeeds` supplier
      */
     public void registerRobot(
-        double width,
-        double length,
         double bumperHeight,
-        Supplier<Pose2d> poseSupplier,
-        Supplier<ChassisSpeeds> fieldSpeedsSupplier
+        SwerveDriveSimulation sim
     ) {
-        this.robotPoseSupplier = poseSupplier;
-        this.robotFieldSpeedsSupplier = fieldSpeedsSupplier;
-        this.robotWidth = width;
-        this.robotLength = length;
+        this.robotPoseSupplier = sim::getSimulatedDriveTrainPose;
+        this.robotFieldSpeedsSupplier = sim::getDriveTrainSimulatedChassisSpeedsRobotRelative;
+        this.bumperSizeY = sim.config.bumperWidthY.in(Meters);
+        this.bumperSizeX = sim.config.bumperLengthX.in(Meters);
         this.bumperHeight = bumperHeight;
-    }
-
-    /**
-     * Registers a robot with the fuel simulator
-     * @param width from left to right (y-axis)
-     * @param length from front to back (x-axis)
-     * @param bumperHeight from the ground
-     * @param poseSupplier
-     * @param fieldSpeedsSupplier field-relative `ChassisSpeeds` supplier
-     */
-    public void registerRobot(
-            Distance width,
-            Distance length,
-            Distance bumperHeight,
-            Supplier<Pose2d> poseSupplier,
-            Supplier<ChassisSpeeds> fieldSpeedsSupplier) {
-        this.robotPoseSupplier = poseSupplier;
-        this.robotFieldSpeedsSupplier = fieldSpeedsSupplier;
-        this.robotWidth = width.in(Meters);
-        this.robotLength = length.in(Meters);
-        this.bumperHeight = bumperHeight.in(Meters);
     }
 
     /**
@@ -504,10 +479,10 @@ public class FuelSim {
                 .getTranslation();
 
         if (fuel.pos.getZ() > bumperHeight) return; // above bumpers
-        double distanceToBottom = -FUEL_RADIUS - robotLength / 2 - relativePos.getX();
-        double distanceToTop = -FUEL_RADIUS - robotLength / 2 + relativePos.getX();
-        double distanceToRight = -FUEL_RADIUS - robotWidth / 2 - relativePos.getY();
-        double distanceToLeft = -FUEL_RADIUS - robotWidth / 2 + relativePos.getY();
+        double distanceToBottom = -FUEL_RADIUS - bumperSizeX / 2 - relativePos.getX();
+        double distanceToTop = -FUEL_RADIUS - bumperSizeX / 2 + relativePos.getX();
+        double distanceToRight = -FUEL_RADIUS - bumperSizeY / 2 - relativePos.getY();
+        double distanceToLeft = -FUEL_RADIUS - bumperSizeY / 2 + relativePos.getY();
 
         // not inside robot
         if (distanceToBottom > 0 || distanceToTop > 0 || distanceToRight > 0 || distanceToLeft > 0) return;

@@ -156,12 +156,12 @@ public class Drive extends SubsystemBase {
         // Calculate module setpoints
         speeds = ChassisSpeeds.discretize(speeds, 0.02);
         SwerveModuleState[] setpointStates = robotState.kinematics.toSwerveModuleStates(speeds);
-        // SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, DriveConstants.linearFreeSpeed);
+        SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, DriveConstants.linearFreeSpeed);
  
-        for(int i = 0; i < 4; i++) setpointStates[i] = new SwerveModuleState(
-            Math.sin(Timer.getFPGATimestamp() * 2) * 9,
-            Rotation2d.fromRotations(Timer.getFPGATimestamp() / 2)
-        );
+        // for(int i = 0; i < 4; i++) setpointStates[i] = new SwerveModuleState(
+        //     Math.sin(Timer.getFPGATimestamp() * 2) * 9,
+        //     Rotation2d.fromRotations(Timer.getFPGATimestamp() / 2)
+        // );
 
         // Log unoptimized setpoints and setpoint speeds
         Logger.recordOutput("SwerveStates/Setpoints", setpointStates);

@@ -107,6 +107,7 @@ public class SwerveDriveSimulation {
         }
         
         public DriveTrainSimulationConfig withBumperSize(Distance bumperLengthX, Distance bumperWidthY) {
+            // TODO: don't be half an inch off
             this.bumperLengthX = bumperLengthX;
             this.bumperWidthY = bumperWidthY;
 
@@ -187,7 +188,7 @@ public class SwerveDriveSimulation {
     protected final Translation2d[] moduleTranslations;
     protected final SwerveDriveKinematics kinematics;
     private final double gravityForceOnEachModule;
-    private final DriveTrainSimulationConfig config;
+    public final DriveTrainSimulationConfig config;
 
     // Simple physics state
     private Pose2d pose;
@@ -268,11 +269,53 @@ public class SwerveDriveSimulation {
         );
 
         // 6. Wall collision: clamp position and zero velocity if hit
-        double x = Math.max(FIELD_MIN_X, Math.min(FIELD_MAX_X, pose.getX()));
-        double y = Math.max(FIELD_MIN_Y, Math.min(FIELD_MAX_Y, pose.getY()));
-        if (x != pose.getX()) velocity = new Translation2d(0, velocity.getY());
-        if (y != pose.getY()) velocity = new Translation2d(velocity.getX(), 0);
-        pose = new Pose2d(x, y, pose.getRotation());
+        // Compute robot corners in field coordinates
+        double halfLength = config.bumperLengthX.in(Meters) / 2.0;
+        double halfWidth = config.bumperWidthY.in(Meters) / 2.0;
+        Rotation2d rot = pose.getRotation();
+        Translation2d center = pose.getTranslation();
+
+        // Robot corners relative to center
+        Translation2d[] corners = new Translation2d[] {
+            new Translation2d(+halfLength, +halfWidth).rotateBy(rot).plus(center),
+            new Translation2d(+halfLength, -halfWidth).rotateBy(rot).plus(center),
+            new Translation2d(-halfLength, +halfWidth).rotateBy(rot).plus(center),
+            new Translation2d(-halfLength, -halfWidth).rotateBy(rot).plus(center)
+        };
+
+        // Find min/max x/y among corners
+        double minX = Arrays.stream(corners).mapToDouble(Translation2d::getX).min().orElse(center.getX());
+        double maxX = Arrays.stream(corners).mapToDouble(Translation2d::getX).max().orElse(center.getX());
+        double minY = Arrays.stream(corners).mapToDouble(Translation2d::getY).min().orElse(center.getY());
+        double maxY = Arrays.stream(corners).mapToDouble(Translation2d::getY).max().orElse(center.getY());
+
+        double dx = 0, dy = 0;
+        boolean hitWall = false;
+
+        if (minX < FIELD_MIN_X) {
+            dx = FIELD_MIN_X - minX;
+            hitWall = true;
+        } else if (maxX > FIELD_MAX_X) {
+            dx = FIELD_MAX_X - maxX;
+            hitWall = true;
+        }
+        if (minY < FIELD_MIN_Y) {
+            dy = FIELD_MIN_Y - minY;
+            hitWall = true;
+        } else if (maxY > FIELD_MAX_Y) {
+            dy = FIELD_MAX_Y - maxY;
+            hitWall = true;
+        }
+
+        if (hitWall) {
+            // Move robot back inside field
+            Translation2d newCenter = center.plus(new Translation2d(dx, dy));
+            pose = new Pose2d(newCenter, pose.getRotation());
+
+            // Zero velocity in direction(s) of collision
+            if (dx != 0) velocity = new Translation2d(0, velocity.getY());
+            if (dy != 0) velocity = new Translation2d(velocity.getX(), 0);
+        }
 
         // 7. Update gyro
         gyroSimulation.updateSimulationSubTick(angularVelocity);

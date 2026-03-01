@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.IterativeRobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Watchdog;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -26,6 +27,7 @@ import frc.robot.util.NTClientLogger;
 import frc.robot.util.RioAlerts;
 import frc.robot.util.SparkUtil;
 import frc.robot.util.ThreadPriorityDummyLogReceiver;
+import frc.robot.util.simUtils.Simulation;
 import frc.robot.util.tunables.TunableSparkPID;
 
 import java.lang.reflect.Field;
@@ -257,7 +259,7 @@ public class Robot extends LoggedRobot {
     /** This function is called once when the robot is disabled. */
     @Override
     public void disabledInit() {
-        robotContainer.resetSimulationField();
+        if(Constants.isSim) Simulation.getInstance().resetSimulationField();
     }
 
     /** This function is called periodically when disabled. */
@@ -312,11 +314,13 @@ public class Robot extends LoggedRobot {
 
     /** This function is called once when the robot is first started up. */
     @Override
-    public void simulationInit() {}
+    public void simulationInit() {
+        DriverStationSim.setDsAttached(true);
+    }
 
     /** This function is called periodically whilst in simulation. */
     @Override
     public void simulationPeriodic() {
-        robotContainer.updateSimulation();
+        if(Constants.isSim) Simulation.getInstance().updateSimulation();
     }
 }
