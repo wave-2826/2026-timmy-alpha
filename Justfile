@@ -7,12 +7,12 @@ ConstantsFile := "src/main/java/frc/robot/Constants.java"
 simulate:
     (Get-Content -Path {{ConstantsFile}}) -replace "simMode = Mode.REPLAY;", "simMode = Mode.SIM;" | Set-Content -Path {{ConstantsFile}}
     .\misc\scripts\openSimPrograms.ps1
-    .\gradlew hotswapSimulateJava  "-Dorg.gradle.java.home=C:\Users\Public\wpilib\2025\jdk\"
+    .\gradlew simulateJava  "-Dorg.gradle.java.home=C:\Users\Public\wpilib\2025\jdk\"
 
 [linux]
 simulate:
     sed -i 's/simMode = Mode.REPLAY;/simMode = Mode.SIM;/g' {{ConstantsFile}}
-    ./gradlew hotswapSimulateJava
+    ./gradlew simulateJava -t
 
 [windows]
 replay:

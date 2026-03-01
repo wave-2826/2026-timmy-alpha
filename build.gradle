@@ -1,3 +1,5 @@
+import java.nio.file.FileSystems
+
 plugins {
     id "java"
     id "edu.wpi.first.GradleRIO" version "2026.2.1"
@@ -116,11 +118,8 @@ test {
 wpi.sim.addGui().defaultEnabled = true
 // wpi.sim.addDriverstation()
 
-// Only for simulation
-task(hotswapSimulateJava, type: JavaExec) {
-    // fancy hotswap stuffs
-    jvmArgs += ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"]
-
+// update simulateJavaRelease for fancy hotswap
+tasks.named("simulateJavaRelease", JavaExec) {
     println "simulateJava will use JBR"
 
     // Set java executable to JBR java
@@ -129,51 +128,37 @@ task(hotswapSimulateJava, type: JavaExec) {
         vendor = JvmVendorSpec.matching("JetBrains")
     }
 
+    // Set mainClass and classpath before any conditional logic
+    mainClass = ROBOT_MAIN_CLASS
+    classpath = sourceSets.main.runtimeClasspath
+
     // load hotswap agent if present
     def hotswapAgentJar = file("$rootDir/libs/hotswap-agent.jar")
     if(hotswapAgentJar.exists()) {
-        jvmArgs += ["-XX:+AllowEnhancedClassRedefinition -XX:HotswapAgent=external -javaagent:${hotswapAgentJar.absolutePath}"]
-    }
-
-    // ensure native JNI libraries are visible to the JVM. Gradle's toolchain
-    // chooser doesn't understand our custom java launcher properly, so we 
-    // set java.library.path and the loader env var manually
-    def osName = System.getProperty("os.name").toLowerCase()
-    def candidateNativeDirs = [
-        file("$buildDir/jni/release"),
-        file("$buildDir/jni/debug"),
-        file("$buildDir/jni")
-    ]
-    def nativeDir = candidateNativeDirs.find { it.exists() }
-    if (nativeDir != null) {
-        def nativePath = nativeDir.absolutePath
-        // force the JVM to load native libs from the build JNI folder
-        jvmArgs += ["-Djava.library.path=${nativePath}"]
-
-        if(osName.contains("windows")) {
-            // ensure PATH contains the native dir so Windows loader can find .dlls
-            environment 'PATH', "${nativePath}${File.pathSeparator}${System.getenv('PATH') ?: ''}"
-        } else if(osName.contains("mac") || osName.contains("darwin")) {
-            // APPARENTLY this works - untested though
-            environment 'DYLD_LIBRARY_PATH', "${nativePath}${File.pathSeparator}${System.getenv('DYLD_LIBRARY_PATH') ?: ''}"
-        } else {
-            environment 'LD_LIBRARY_PATH', "${nativePath}${File.pathSeparator}${System.getenv('LD_LIBRARY_PATH') ?: ''}"
-        }
-
-        println "Added native library path for simulation: ${nativePath}"
+        var params = "autoHotswap=true"
+        jvmArgs += [
+            "-XX:+AllowEnhancedClassRedefinition",
+            "-XX:HotswapAgent=external",
+            "-javaagent:${hotswapAgentJar.absolutePath}=${params}"
+        ]
     } else {
-        println "Warning: no native JNI directory found under build/jni (simulation may fail)."
+        println "Hotswap agent not found at ${hotswapAgentJar.absolutePath}, running without hotswap support"
     }
+}
 
-    // main class and classpath
-    mainClass = ROBOT_MAIN_CLASS
-    classpath = sourceSets.main.runtimeClasspath
+// Disable unnecessary tasks during simulation to avoid jar creation and speed up the build process
+def isSim = project.gradle.startParameter.taskNames.any({
+    it.toLowerCase().contains("simulate") || it.toLowerCase().contains("classes")
+})
+tasks.named("createVersionFile").configure {
+    enabled = !isSim
 }
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib
 // knows where to look for our Robot Class.
 jar {
+    enabled = !isSim
     from {
         configurations.runtimeClasspath.collect {
             it.isDirectory() ? it : zipTree(it)
@@ -186,7 +171,6 @@ jar {
 
 // Configure jar and deploy tasks
 deployArtifact.jarTask = jar
-wpi.java.configureExecutableTasks(jar)
 wpi.java.configureTestTasks(test)
 
 // Configure string concat to always inline compile
@@ -207,8 +191,9 @@ gversion {
 
 // Create commit with working changes on event branches
 task(eventDeploy) {
+    enabled = !isSim
     doLast {
-        if (project.gradle.startParameter.taskNames.any({ it.toLowerCase().contains("deploy") })) {
+        if(project.gradle.startParameter.taskNames.any({ it.toLowerCase().contains("deploy") })) {
             def branchPrefix = "event"
             def branch = 'git branch --show-current'.execute().text.trim()
             def commitMessage = "Update at '${new Date().toString()}'"
