@@ -16,6 +16,7 @@ public class IntakeConstants {
     
     public static final double opeThatsaResetCurrent = deployCurrentLimit + 0.5;
     
+    public static final double pinionReduction = 5.;
     public static final double pinionRadiusMeters = Units.inchesToMeters(2.857143/2); // input diameter
     public static final double trackLengthMeters = Units.inchesToMeters(14.75);
 
