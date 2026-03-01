@@ -5,10 +5,6 @@ import static edu.wpi.first.units.Units.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.ironmaple.simulation.drivesims.COTS;
-import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
-import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
-
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.hardware.*;
@@ -26,6 +22,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
+import frc.robot.Constants;
 import frc.robot.subsystems.drive.kinematicConstraints.KinematicConstraints;
 
 /**
@@ -77,8 +74,8 @@ public class DriveConstants {
                 .withWheelRadius(wheelRadius)
                 .withSteerMotorGains(steerGains)
                 .withDriveMotorGains(driveGains)
-                .withSteerMotorClosedLoopOutput(steerClosedLoopOutput)
-                .withDriveMotorClosedLoopOutput(driveClosedLoopOutput)
+                .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
+                .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
                 .withSlipCurrent(slipCurrent)
                 .withSpeedAt12Volts(linearFreeSpeed)
                 .withDriveMotorType(driveMotorType)
@@ -115,17 +112,22 @@ public class DriveConstants {
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     public static final Slot0Configs steerGains = new Slot0Configs()
-        .withKP(325).withKI(0).withKD(0.8).withKS(0.1).withKV(1.59).withKA(0)
+        .withKP(Constants.isSim ? 100 : 100)
+        .withKI(Constants.isSim ? 0   : 0)
+        .withKD(Constants.isSim ? 10  : 10)
+        .withKS(Constants.isSim ? 0.1 : 0.1)
+        .withKV(Constants.isSim ? 0.0 : 0.0)
+        .withKA(Constants.isSim ? 0   : 0)
+
         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     public static final Slot0Configs driveGains = new Slot0Configs()
-        .withKP(3.0).withKI(0).withKD(0).withKS(0).withKV(0.124);
-
-    /** The closed-loop output type to use for the steer motors; this affects their PID/FF gains */
-    private static final ClosedLoopOutputType steerClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;
-    /** The closed-loop output type to use for the steer motors; this affects their PID/FF gains */
-    private static final ClosedLoopOutputType driveClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;
+        .withKP(Constants.isSim ? 3.0   : 3.0)
+        .withKI(Constants.isSim ? 0     : 0)
+        .withKD(Constants.isSim ? 0     : 0)
+        .withKS(Constants.isSim ? 0     : 0)
+        .withKV(Constants.isSim ? 0.124 : 0.124);
 
     /** The type of motor used for the drive motor */
     private static final DriveMotorArrangement driveMotorType = DriveMotorArrangement.TalonFX_Integrated;
@@ -229,21 +231,6 @@ public class DriveConstants {
         new PIDConstants(6.5, 0.0, 0.25), new PIDConstants(8.0, 1.0, 0.75));
 
     static final double odometryFrequency = new CANBus(DriveConstants.drivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
-
-    public static final DriveTrainSimulationConfig mapleSimConfig = DriveTrainSimulationConfig.Default()
-        .withRobotMass(DriveConstants.robotMass)
-        .withCustomModuleTranslations(DriveConstants.moduleTranslations)
-        .withGyro(COTS.ofPigeon2())
-        .withSwerveModule(new SwerveModuleSimulationConfig(
-            DCMotor.getKrakenX60(1),
-            DCMotor.getFalcon500(1),
-            DriveConstants.driveGearRatio,
-            DriveConstants.steerGearRatio,
-            DriveConstants.driveFrictionVoltage,
-            DriveConstants.steerFrictionVoltage,
-            DriveConstants.wheelRadius,
-            DriveConstants.steerInertia,
-            DriveConstants.wheelCOF));
 
     /** Swerve Drive class utilizing CTR Electronics' Phoenix 6 API with the selected device types. */
     public static class TunerSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> {

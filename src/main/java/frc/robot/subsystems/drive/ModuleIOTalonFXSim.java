@@ -4,8 +4,9 @@ import static edu.wpi.first.units.Units.*;
 
 import frc.robot.subsystems.drive.DriveConstants.SwerveModuleConfig;
 import frc.robot.util.PhoenixUtil;
+import frc.robot.util.simUtils.SwerveModuleSimulation;
+
 import java.util.Arrays;
-import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
 
 /**
  * Physics sim implementation of module IO. The sim models are configured using a set of module constants from Phoenix.

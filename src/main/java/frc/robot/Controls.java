@@ -1,7 +1,6 @@
 package frc.robot;
 
 import java.util.HashMap;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,6 +19,7 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.util.simUtils.Simulation;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
 public class Controls {
@@ -43,7 +43,7 @@ public class Controls {
     }
 
     /** Configures the controls. */
-    public void configureControls(RobotContainer rc, SwerveDriveSimulation driveSimulation) {
+    public void configureControls(RobotContainer rc) {
         Drive drive = rc.drive;
         Turret turret = rc.turret;
         Climber climber = rc.climber;
@@ -65,12 +65,12 @@ public class Controls {
         turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
 
         // Reset gyro or odometry if in simulation
-        final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
+        final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
             : () -> drive.setPose(new Pose2d(RobotState.getInstance().getPose().getTranslation(),
                 DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Rotation2d.kZero
                     : Rotation2d.k180deg)); // Zero gyro
         final Runnable resetOdometry = Constants.isSim
-            ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
+            ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
             : () -> drive.setPose(
                 new Pose2d(0, 0, DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Rotation2d.kZero : Rotation2d.k180deg)); // Zero gyro
 
