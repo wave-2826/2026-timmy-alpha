@@ -16,10 +16,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * <h1>Simulates the main battery of the robot.</h1>
- *
- * <p>This class simulates the behavior of a robot's battery. Electrical appliances can be added to the battery to draw
- * current. The battery voltage is affected by the current drawn from various appliances.
+ * Simulates the main battery of the robot. Electrical appliances can be added to the battery to draw
+ * current, and the battery voltage is affected by the current drawn from various appliances.
  */
 public class SimulatedBattery {
     // Nominal voltage for a fully charged battery (13.5 volts).

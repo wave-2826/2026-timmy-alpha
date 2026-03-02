@@ -2,23 +2,91 @@ package frc.robot.util.simUtils;
 
 import static edu.wpi.first.units.Units.*;
 
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 /**
- * <h1>{@link edu.wpi.first.wpilibj.simulation.DCMotorSim} with a bit of extra spice.</h1>
- *
- * <p>This class extends the functionality of the original {@link edu.wpi.first.wpilibj.simulation.DCMotorSim} and
- * models the following aspects in addition:
- *
- * <ul>
- *   <li>Motor Controller Closed Loops.
- *   <li>Smart current limiting.
- *   <li>Friction force on the rotor.
- * </ul>
+ * DCMotorSim with extra features:
+ * - Motor controller closed loops
+ * - Smart current limiting
+ * - Rotor friction force
  */
 public class SimulatedMotor {
-    public class SimMotorState {
+    public static final class SimMotorConfigs {
+        public final DCMotor motor;
+        public final double gearing;
+        public final MomentOfInertia loadMOI;
+        public final Torque friction;
+
+        protected Angle forwardHardwareLimit, reverseHardwareLimit;
+
+        public SimMotorConfigs(DCMotor motor, double gearing, MomentOfInertia loadMOI, Voltage frictionVoltage) {
+            this.motor = motor;
+            this.gearing = gearing;
+            this.loadMOI = loadMOI;
+            this.friction = NewtonMeters.of(motor.getTorque(motor.getCurrent(0, frictionVoltage.in(Volts))));
+
+            forwardHardwareLimit = Radians.of(Double.POSITIVE_INFINITY);
+            reverseHardwareLimit = Radians.of(-Double.POSITIVE_INFINITY);
+        }
+
+        public Voltage calculateVoltage(Current current, AngularVelocity mechanismVelocity) {
+            return Volts.of(motor.getVoltage(current.in(Amps), mechanismVelocity.in(RadiansPerSecond) * gearing));
+        }
+
+        public AngularVelocity calculateMechanismVelocity(Current current, Voltage voltage) {
+            return RadiansPerSecond.of(motor.getSpeed(motor.getTorque(current.in(Amps)), voltage.in(Volts))).div(gearing);
+        }
+
+        public Current calculateCurrent(AngularVelocity mechanismVelocity, Voltage voltage) {
+            return Amps.of(motor.getCurrent(mechanismVelocity.in(RadiansPerSecond) * gearing, voltage.in(Volts)));
+        }
+
+        public Current calculateCurrent(Torque torque) {
+            return Amps.of(motor.getCurrent(torque.in(NewtonMeters) / gearing));
+        }
+
+        public Torque calculateTorque(Current current) {
+            return NewtonMeters.of(motor.getTorque(current.in(Amps)) * gearing);
+        }
+
+        public SimMotorConfigs withHardLimits(Angle forwardLimit, Angle reverseLimit) {
+            this.forwardHardwareLimit = forwardLimit;
+            this.reverseHardwareLimit = reverseLimit;
+            return this;
+        }
+
+        public AngularVelocity freeSpinMechanismVelocity() {
+            return RadiansPerSecond.of(motor.freeSpeedRadPerSec / gearing);
+        }
+
+        public Current freeSpinCurrent() {
+            return Amps.of(motor.freeCurrentAmps);
+        }
+
+        public Current stallCurrent() {
+            return Amps.of(motor.stallCurrentAmps);
+        }
+
+        public Torque stallTorque() {
+            return NewtonMeters.of(motor.stallTorqueNewtonMeters);
+        }
+
+        public Voltage nominalVoltage() {
+            return Volts.of(motor.nominalVoltageVolts);
+        }
+
+        @Override
+        protected SimMotorConfigs clone() {
+            SimMotorConfigs cfg = new SimMotorConfigs(
+                motor, gearing, loadMOI, Volts.of(motor.getVoltage(friction.in(NewtonMeter), 0.0))
+            ).withHardLimits(forwardHardwareLimit, reverseHardwareLimit);
+
+            return cfg;
+        }
+    }
+
+    public static class SimMotorState {
         public Angle mechanismAngularPosition;
         public AngularVelocity mechanismAngularVelocity;
 
@@ -28,7 +96,6 @@ public class SimulatedMotor {
         }
 
         public void step(Torque finalElectricTorque, Torque finalFrictionTorque, MomentOfInertia loadMOI, Time dt) {
-            // Step 0: Convert all units to SI units (radians, radians per second, Newton-meters, seconds, kg*m²)
             double currentAngularPositionRadians = mechanismAngularPosition.in(Radians);
             double currentAngularVelocityRadiansPerSecond = mechanismAngularVelocity.in(RadiansPerSecond);
             final double electricTorqueNewtonsMeters = finalElectricTorque.in(NewtonMeters);
@@ -36,34 +103,25 @@ public class SimulatedMotor {
             final double loadMOIKgMetersSquared = loadMOI.in(KilogramSquareMeters);
             final double dtSeconds = dt.in(Seconds);
 
-            // Step 1: Apply electric torque to the angular velocity.
-            // The torque causes a change in the angular velocity, according to the moment of inertia.
+            // Apply electric torque to angular velocity
             currentAngularVelocityRadiansPerSecond += electricTorqueNewtonsMeters / loadMOIKgMetersSquared * dtSeconds;
 
-            // Step 2: Calculate the change in angular velocity due to friction.
-            // Friction opposes the motion and reduces the angular velocity over time.
+            // Friction opposes motion and reduces angular velocity
             final double deltaAngularVelocityDueToFrictionRadPerSec =
-                    Math.copySign(frictionTorqueNewtonsMeters, -currentAngularVelocityRadiansPerSecond)
-                            / loadMOIKgMetersSquared
-                            * dtSeconds;
+                Math.copySign(frictionTorqueNewtonsMeters, -currentAngularVelocityRadiansPerSecond)
+                    / loadMOIKgMetersSquared
+                    * dtSeconds;
 
-            // Step 3: Check if the angular velocity changes direction due to friction, or if it reaches zero.
-            // If friction causes the motor to reverse direction, or if the velocity reaches zero, set the angular velocity
-            // to zero.
-            if ((currentAngularVelocityRadiansPerSecond + deltaAngularVelocityDueToFrictionRadPerSec)
-                            * currentAngularVelocityRadiansPerSecond
-                    <= 0)
-                // The velocity has reversed direction or reached zero, so stop the motor
+            // If friction reverses direction or velocity reaches zero, stop the motor
+            if((currentAngularVelocityRadiansPerSecond + deltaAngularVelocityDueToFrictionRadPerSec)
+                * currentAngularVelocityRadiansPerSecond <= 0)
                 currentAngularVelocityRadiansPerSecond = 0;
             else
-                // Otherwise, apply the change due to friction
                 currentAngularVelocityRadiansPerSecond += deltaAngularVelocityDueToFrictionRadPerSec;
 
-            // Step 4: Integrate angular velocity to find the new position.
-            // The new angular position is the current position plus the change in position over the time step.
+            // Integrate angular velocity to get new position
             currentAngularPositionRadians += currentAngularVelocityRadiansPerSecond * dtSeconds;
 
-            // Return a new instance with the updated angular position and velocity
             this.mechanismAngularPosition = Radians.of(currentAngularPositionRadians);
             this.mechanismAngularVelocity = RadiansPerSecond.of(currentAngularVelocityRadiansPerSecond);
         }
@@ -88,17 +146,17 @@ public class SimulatedMotor {
 
     public void update(Time dt) {
         this.appliedVoltage = controller.updateControlSignal(
-                state.mechanismAngularPosition,
-                state.mechanismAngularVelocity,
-                state.mechanismAngularPosition.times(configs.gearing),
-                state.mechanismAngularVelocity.times(configs.gearing));
+            state.mechanismAngularPosition,
+            state.mechanismAngularVelocity,
+            state.mechanismAngularPosition.times(configs.gearing),
+            state.mechanismAngularVelocity.times(configs.gearing));
         this.appliedVoltage = SimulatedBattery.clamp(appliedVoltage);
         this.statorCurrent = configs.calculateCurrent(state.mechanismAngularVelocity, appliedVoltage);
         this.state.step(configs.calculateTorque(statorCurrent), configs.friction, configs.loadMOI, dt);
 
-        if (state.mechanismAngularPosition.lte(configs.reverseHardwareLimit))
+        if(state.mechanismAngularPosition.lte(configs.reverseHardwareLimit))
             state = new SimMotorState(configs.reverseHardwareLimit, RadiansPerSecond.zero());
-        else if (state.mechanismAngularPosition.gte(configs.forwardHardwareLimit))
+        else if(state.mechanismAngularPosition.gte(configs.forwardHardwareLimit))
             state = new SimMotorState(configs.forwardHardwareLimit, RadiansPerSecond.zero());
     }
 
@@ -112,101 +170,56 @@ public class SimulatedMotor {
     }
 
     /**
-     * <h2>Obtains the <strong>final</strong> position of the mechanism.</h2>
-     *
-     * <p>This is equivalent to {@link edu.wpi.first.wpilibj.simulation.DCMotorSim#getAngularPosition()}.
-     *
-     * @return the angular position of the mechanism, continuous
+     * Returns the mechanism's angular position (continuous)
      */
     public Angle getAngularPosition() {
         return state.mechanismAngularPosition;
     }
 
     /**
-     * <h2>Obtains the angular position measured by the relative encoder of the motor.</h2>
-     *
-     * @return the angular position measured by the encoder, continuous
+     * Returns the encoder's angular position (continuous)
      */
     public Angle getEncoderPosition() {
         return getAngularPosition().times(configs.gearing);
     }
 
     /**
-     * <h2>Obtains the <strong>final</strong> velocity of the mechanism.</h2>
-     *
-     * <p>This is equivalent to {@link edu.wpi.first.wpilibj.simulation.DCMotorSim#getAngularVelocity()}.
-     *
-     * @return the final angular velocity of the mechanism
+     * Returns the mechanism's angular velocity
      */
     public AngularVelocity getVelocity() {
         return state.mechanismAngularVelocity;
     }
 
     /**
-     * <h2>Obtains the angular velocity measured by the relative encoder of the motor.</h2>
-     *
-     * @return the angular velocity measured by the encoder
+     * Returns the encoder's angular velocity
      */
     public AngularVelocity getEncoderVelocity() {
         return getVelocity().times(configs.gearing);
     }
 
     /**
-     * <h2>Obtains the applied voltage by the motor controller.</h2>
-     *
-     * <p>The applied voltage is calculated by the motor controller in the previous call to {@link #update(Time)}
-     *
-     * <p>The motor controller specified by {@link #useMotorController(SimulatedMotorController)} is used to calculate
-     * the applied voltage.
-     *
-     * <p>The applied voltage is also restricted for current limit and battery voltage.
-     *
-     * @return the applied voltage
+     * Returns the applied voltage from the motor controller
      */
     public Voltage getAppliedVoltage() {
         return appliedVoltage;
     }
 
     /**
-     * <h2>Obtains the <strong>stator</strong> current.</h2>
-     *
-     * <p>This is equivalent to {@link DCMotorSim#getCurrentDrawAmps()}
-     *
-     * @return the stator current of the motor
+     * Returns the stator current
      */
     public Current getStatorCurrent() {
         return statorCurrent;
     }
 
     /**
-     * <h2>Obtains the <strong>supply</strong> current.</h2>
-     *
-     * <p>The supply current is different from the stator current, as described <a
-     * href='https://www.chiefdelphi.com/t/current-limiting-talonfx-values/374780/10'>here</a>.
-     *
-     * @return the supply current of the motor
+     * Returns the supply current (different from stator current)
      */
     public Current getSupplyCurrent() {
-        // Supply Power = Stator Power (Conservation of Energy)
-        // Hence,
-        // Battery Voltage x Supply Current = Applied Voltage x Stator Current
+        // Supply Power = Stator Power
         // Supply Current = Stator Current * Applied Voltage / Battery Voltage
         return getStatorCurrent().times(appliedVoltage.div(SimulatedBattery.getBatteryVoltage()));
     }
 
-    /**
-     * <h2>Obtains the configuration of the motor.</h2>
-     *
-     * <p>You can modify the configuration of this motor by:
-     *
-     * <pre><code>
-     *     mapleMotorSim.getConfigs()
-     *          .with...(...)
-     *          .with...(...);
-     * </code></pre>
-     *
-     * @return the configuration of the motor
-     */
     public SimMotorConfigs getConfigs() {
         return this.configs;
     }

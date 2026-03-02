@@ -12,13 +12,16 @@ simulate:
 [linux]
 simulate:
     sed -i 's/simMode = Mode.REPLAY;/simMode = Mode.SIM;/g' {{ConstantsFile}}
-    ./gradlew simulateJava -t
+    ./gradlew simulateJava
 
 [windows]
 replay:
     (Get-Content -Path {{ConstantsFile}}) -replace "simMode = Mode.SIM;", "simMode = Mode.REPLAY;" | Set-Content -Path {{ConstantsFile}}
     .\misc\scripts\openSimPrograms.ps1
     .\gradlew simulateJava  "-Dorg.gradle.java.home=C:\Users\Public\wpilib\2025\jdk\"
+
+build:
+    ./gradlew build
 
 [linux]
 replay:

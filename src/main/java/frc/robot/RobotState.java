@@ -166,7 +166,7 @@ public class RobotState {
     public boolean isOnRightSide() {
         var bluePose = AutoBuilder.shouldFlip() ? FlippingUtil.flipFieldPose(RobotState.getInstance().getPose())
             : RobotState.getInstance().getPose();
-        return bluePose.getY() < FieldConstants.fieldWidth / 2.;
+        return bluePose.getY() < FieldConstants.fieldWidthY / 2.;
     }
 
     /** Returns the current odometry rotation. */

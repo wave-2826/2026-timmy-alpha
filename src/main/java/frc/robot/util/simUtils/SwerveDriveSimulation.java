@@ -9,6 +9,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
+import frc.robot.FieldConstants;
 import frc.robot.util.simUtils.SwerveModuleSimulation.SwerveModuleSimulationConfig;
 
 import java.util.Arrays;
@@ -16,7 +17,7 @@ import java.util.OptionalDouble;
 import java.util.function.Supplier;
 
 /**
- * Simplified SwerveDriveSimulation without dyn4j.
+ * Simplified swerve drive simulation - based on that of MapleSim - without dyn4j.
  */
 public class SwerveDriveSimulation {
     public static class COTS {
@@ -43,7 +44,6 @@ public class SwerveDriveSimulation {
         public static Supplier<GyroSimulation> ofPigeon2() {
             return () -> new GyroSimulation(0.5, 0.02);
         }
-
     }
 
     public static class DriveTrainSimulationConfig {
@@ -134,7 +134,6 @@ public class SwerveDriveSimulation {
             Supplier<SwerveModuleSimulation>... swerveModuleSimulationFactory
         ) {
             if(swerveModuleSimulationFactory.length == 1) return withSwerveModule(swerveModuleSimulationFactory[0]);
-
             if(swerveModuleSimulationFactory.length != moduleTranslations.length) throw new IllegalArgumentException("Module simulation factories length must be 1 or 4, provided " + swerveModuleSimulationFactory.length);
 
             this.swerveModuleSimulationFactories = swerveModuleSimulationFactory;
@@ -168,13 +167,12 @@ public class SwerveDriveSimulation {
 
         public Distance trackWidthY() {
             final OptionalDouble maxModuleY = Arrays.stream(moduleTranslations)
-                    .mapToDouble(Translation2d::getY)
-                    .max();
+                .mapToDouble(Translation2d::getY)
+                .max();
             final OptionalDouble minModuleY = Arrays.stream(moduleTranslations)
-                    .mapToDouble(Translation2d::getY)
-                    .min();
-            if (maxModuleY.isEmpty() || minModuleY.isEmpty())
-                throw new IllegalStateException("Modules translations are empty");
+                .mapToDouble(Translation2d::getY)
+                .min();
+            if(maxModuleY.isEmpty() || minModuleY.isEmpty()) throw new IllegalStateException("Modules translations are empty");
             return Meters.of(maxModuleY.getAsDouble() - minModuleY.getAsDouble());
         }
 
@@ -195,10 +193,6 @@ public class SwerveDriveSimulation {
     private Translation2d velocity = new Translation2d();
     private double angularVelocity = 0.0;
 
-    // Field boundaries (meters)
-    private static final double FIELD_MIN_X = 0.0, FIELD_MAX_X = 16.54;
-    private static final double FIELD_MIN_Y = 0.0, FIELD_MAX_Y = 8.02;
-
     public SwerveDriveSimulation(DriveTrainSimulationConfig config, Pose2d initialPoseOnField) {
         this.config = config;
         this.pose = initialPoseOnField;
@@ -215,15 +209,18 @@ public class SwerveDriveSimulation {
      * Call this every simulation tick with the simulation timestep (seconds).
      */
     public void update(double dtSeconds) {
-        // 1. Update modules and sum forces
+        // Update modules and sum forces
+        // Force (N) in world coordinates
         Translation2d totalForce = new Translation2d();
+        // Torque (N*m) around origin of robot, positive is CCW
         double totalTorque = 0.0;
 
-        for (int i = 0; i < moduleSimulations.length; i++) {
+        for(int i = 0; i < moduleSimulations.length; i++) {
             SwerveModuleSimulation module = moduleSimulations[i];
-            Translation2d moduleVel = velocity.plus(
-                new Translation2d(-angularVelocity * (moduleTranslations[i].getY()), angularVelocity * (moduleTranslations[i].getX()))
-            );
+            Translation2d moduleVel = velocity.plus(new Translation2d(
+                -angularVelocity * (moduleTranslations[i].getY()),
+                angularVelocity * (moduleTranslations[i].getX())
+            ));
             Translation2d moduleForce = module.updateSimulationSubTickGetModuleForce(
                 moduleVel, pose.getRotation(), gravityForceOnEachModule);
 
@@ -233,57 +230,52 @@ public class SwerveDriveSimulation {
             );
 
             // Torque = r x F (2D cross product)
-            double dx = moduleTranslations[i].getX();
-            double dy = moduleTranslations[i].getY();
-            totalTorque += dx * moduleForce.getY() - dy * moduleForce.getX();
+            totalTorque += moduleTranslations[i].cross(moduleForce);
         }
 
-        // 2. Simple friction (linear and angular damping)
+        // Simple friction; only linear and angular damping
         double linearDamping = 1.4;
         double angularDamping = 1.4;
-        Translation2d friction = new Translation2d(-velocity.getX() * linearDamping, -velocity.getY() * linearDamping);
+        Translation2d linearFriction = new Translation2d(-velocity.getX() * linearDamping, -velocity.getY() * linearDamping);
         double frictionTorque = -angularVelocity * angularDamping;
 
         totalForce = new Translation2d(
-            totalForce.getX() + friction.getX(),
-            totalForce.getY() + friction.getY()
+            totalForce.getX() + linearFriction.getX(),
+            totalForce.getY() + linearFriction.getY()
         );
         totalTorque += frictionTorque;
 
-        // 3. Update velocities (F = m*a)
+        // Update velocity based on total linear force (F = m*a)
         double mass = config.robotMass.in(Kilograms);
         velocity = new Translation2d(
             velocity.getX() + (totalForce.getX() / mass) * dtSeconds,
             velocity.getY() + (totalForce.getY() / mass) * dtSeconds
         );
 
-        // 4. Update angular velocity (T = I*alpha)
+        // Update angular velocity (T = I*alpha)
         double inertia = mass * Math.pow(config.driveBaseRadius().in(Meters), 2);
         angularVelocity += (totalTorque / inertia) * dtSeconds;
 
-        // 5. Update pose
+        // Update pose
         pose = new Pose2d(
             pose.getTranslation().getX() + velocity.getX() * dtSeconds,
             pose.getTranslation().getY() + velocity.getY() * dtSeconds,
             pose.getRotation().plus(Rotation2d.fromRadians(angularVelocity * dtSeconds))
         );
 
-        // 6. Wall collision: clamp position and zero velocity if hit
-        // Compute robot corners in field coordinates
+        // Wall collision based on corners in field coordinates
         double halfLength = config.bumperLengthX.in(Meters) / 2.0;
         double halfWidth = config.bumperWidthY.in(Meters) / 2.0;
         Rotation2d rot = pose.getRotation();
         Translation2d center = pose.getTranslation();
 
-        // Robot corners relative to center
+        // Find min/max x/y among corners
         Translation2d[] corners = new Translation2d[] {
             new Translation2d(+halfLength, +halfWidth).rotateBy(rot).plus(center),
             new Translation2d(+halfLength, -halfWidth).rotateBy(rot).plus(center),
             new Translation2d(-halfLength, +halfWidth).rotateBy(rot).plus(center),
             new Translation2d(-halfLength, -halfWidth).rotateBy(rot).plus(center)
         };
-
-        // Find min/max x/y among corners
         double minX = Arrays.stream(corners).mapToDouble(Translation2d::getX).min().orElse(center.getX());
         double maxX = Arrays.stream(corners).mapToDouble(Translation2d::getX).max().orElse(center.getX());
         double minY = Arrays.stream(corners).mapToDouble(Translation2d::getY).min().orElse(center.getY());
@@ -292,32 +284,32 @@ public class SwerveDriveSimulation {
         double dx = 0, dy = 0;
         boolean hitWall = false;
 
-        if (minX < FIELD_MIN_X) {
-            dx = FIELD_MIN_X - minX;
+        if(minX < 0.0) {
+            dx = -minX;
             hitWall = true;
-        } else if (maxX > FIELD_MAX_X) {
-            dx = FIELD_MAX_X - maxX;
+        } else if(maxX > FieldConstants.fieldLengthX) {
+            dx = FieldConstants.fieldLengthX - maxX;
             hitWall = true;
         }
-        if (minY < FIELD_MIN_Y) {
-            dy = FIELD_MIN_Y - minY;
+        if(minY < 0.0) {
+            dy = -minY;
             hitWall = true;
-        } else if (maxY > FIELD_MAX_Y) {
-            dy = FIELD_MAX_Y - maxY;
+        } else if(maxY > FieldConstants.fieldWidthY) {
+            dy = FieldConstants.fieldWidthY - maxY;
             hitWall = true;
         }
 
-        if (hitWall) {
+        if(hitWall) {
             // Move robot back inside field
             Translation2d newCenter = center.plus(new Translation2d(dx, dy));
             pose = new Pose2d(newCenter, pose.getRotation());
 
             // Zero velocity in direction(s) of collision
-            if (dx != 0) velocity = new Translation2d(0, velocity.getY());
-            if (dy != 0) velocity = new Translation2d(velocity.getX(), 0);
+            if(dx != 0) velocity = new Translation2d(0, velocity.getY());
+            if(dy != 0) velocity = new Translation2d(velocity.getX(), 0);
         }
 
-        // 7. Update gyro
+        // Update gyro
         gyroSimulation.updateSimulationSubTick(angularVelocity);
     }
 

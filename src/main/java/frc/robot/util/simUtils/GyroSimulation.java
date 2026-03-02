@@ -9,15 +9,14 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Simulation for a IMU module used as gyro.
+ * Simulates an IMU gyro.
  *
- * <p>The Simulation is basically an indefinite integral of the angular velocity during each simulation sub ticks. Above
- * that, it also simulates the measurement inaccuracy of the gyro, drifting in no-motion and drifting due to impacts.
+ * Integrates angular velocity per simulation sub-tick. Simulates measurement inaccuracy, drift at rest, and impact drift.
  */
 public class GyroSimulation {
-    /* The threshold of instantaneous angular acceleration at which the chassis is considered to experience an "impact." */
+    // Threshold for angular acceleration to count as an "impact"
     private static final double angularAccelerationDriftThreshold = 500;
-    /* The amount of drift, in radians, that the gyro experiences as a result of each multiple of the angular acceleration threshold. */
+    // Drift per threshold multiple, in radians
     private static final double impactDriftCoefficient = Math.toRadians(1);
     
     private final double average30sDriftMotionless;
@@ -28,13 +27,10 @@ public class GyroSimulation {
     private final Queue<Rotation2d> cachedRotations;
 
     /**
-     * <h2>Creates a Gyro Simulation.</h2>
+     * Creates a Gyro Simulation.
      *
-     * @param average30sDriftMotionless the average amount of drift, in degrees, the gyro experiences
-     *     if it remains motionless for 30 seconds on a vibrating platform. This value can often be found in the user
-     *     manual.
-     * @param velocityMeasurementStdDevPercent the standard deviation of the velocity measurement,
-     *     typically around 0.05
+     * @param average30sDriftMotionless average drift in degrees over 30s at rest
+     * @param velocityMeasurementStdDevPercent stddev of velocity measurement, e.g. 0.05
      */
     public GyroSimulation(double average30sDriftMotionless, double velocityMeasurementStdDevPercent) {
         this.average30sDriftMotionless = average30sDriftMotionless;
@@ -92,25 +88,22 @@ public class GyroSimulation {
 
     private static final Random random = new Random();
 
+    // Returns a random value from a normal distribution
     public static double generateRandomNormal(double mean, double stdDev) {
         double u1 = random.nextDouble();
         double u2 = random.nextDouble();
-        // Box–Muller transform https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+        // Box–Muller transform
         double z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
         return z0 * stdDev + mean;
     }
 
     /**
-     * <h2>Gets the Measured ΔTheta of the Gyro.</h2>
+     * Gets the measured delta-theta of the gyro.
      *
-     * <p>This method simulates the change in the robot's angle (ΔTheta) since the last sub-tick, as measured by the
-     * gyro.
+     * Simulates change in angle since last sub-tick, with random error.
      *
-     * <p>The measurement includes random errors based on the configuration of the gyro.
-     *
-     * @param actualAngularVelocityRadPerSec the actual angular velocity in radians per second, used to calculate the
-     *     ΔTheta
-     * @return the measured ΔTheta, including any measurement errors
+     * @param actualAngularVelocityRadPerSec actual angular velocity in rad/s
+     * @return measured delta-theta with error
      */
     private Rotation2d getGyroDTheta(double actualAngularVelocityRadPerSec) {
         this.measuredAngularVelocityRadPerSec = generateRandomNormal(

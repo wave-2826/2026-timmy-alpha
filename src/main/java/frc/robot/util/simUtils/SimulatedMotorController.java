@@ -18,8 +18,8 @@ public interface SimulatedMotorController {
     final class GenericMotorController implements SimulatedMotorController {
         private final DCMotor model;
         private Current currentLimit = Amps.of(150);
-        private Angle forwardSoftwareLimit = Radians.of(Double.POSITIVE_INFINITY),
-            reverseSoftwareLimit = Radians.of(-Double.POSITIVE_INFINITY);
+        private Angle forwardSoftwareLimit = Radians.of(Double.POSITIVE_INFINITY);
+        private Angle reverseSoftwareLimit = Radians.of(-Double.POSITIVE_INFINITY);
 
         private Voltage requestedVoltage = Volts.zero();
         private Voltage appliedVoltage = Volts.zero();
@@ -44,13 +44,8 @@ public interface SimulatedMotorController {
         }
 
         /**
-         * <h2>(Utility Function) Constrains the Output Voltage of a Motor.</h2>
-         *
-         * <p>Constrains the output voltage of a motor such that the <strong>stator</strong> current does not exceed the
-         * current limit
-         *
-         * <p>Prevents motor from exceeding software limits
-         *
+         * Constrains the output voltage of a motor such that the stator current does not exceed the
+         * current limit.
          * @param encoderAngle the angle of the encoder
          * @param encoderVelocity the velocity of the encoder
          * @param requestedVoltage the requested voltage
@@ -72,9 +67,8 @@ public interface SimulatedMotorController {
             // Resource for current limiting:
             // https://file.tavsys.net/control/controls-engineering-in-frc.pdf (sec 12.1.3)
             double limitedVoltage = requestedOutputVoltageVolts;
-            final boolean currentTooHigh =
-                    Math.abs(currentAtRequestedVoltageAmps) > (kCurrentThreshold * currentLimitAmps);
-            if (currentTooHigh) {
+            final boolean currentTooHigh = Math.abs(currentAtRequestedVoltageAmps) > (kCurrentThreshold * currentLimitAmps);
+            if(currentTooHigh) {
                 final double limitedCurrent = Math.copySign(currentLimitAmps, currentAtRequestedVoltageAmps);
                 limitedVoltage = model.getVoltage(model.getTorque(limitedCurrent), motorCurrentVelocityRadPerSec);
             }
