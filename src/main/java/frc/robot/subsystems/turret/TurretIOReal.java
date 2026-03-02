@@ -16,6 +16,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
 import frc.robot.Constants;
+import frc.robot.subsystems.turret.controller.TurretControllerIO.TurretMPCOutputs;
 import frc.robot.util.SparkUtil;
 
 import static frc.robot.util.SparkUtil.tryUntilOk;
@@ -50,8 +51,8 @@ public class TurretIOReal implements TurretIO {
         flywheelBaseConfig.closedLoopRampRate(1.0);
         flywheelBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(flywheelCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         flywheelBaseConfig.encoder
-            .positionConversionFactor(2.0 * Math.PI) // rotations -> radians
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s
+            .positionConversionFactor(2.0 * Math.PI * TurretConstants.totalFlywheelGearing) // rotations -> radians
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0 * TurretConstants.totalFlywheelGearing); // RPM -> rad/s
         var topFlywheelConfig = new SparkFlexConfig().apply(flywheelBaseConfig);
         var bottomFlywheelConfig = new SparkFlexConfig().apply(flywheelBaseConfig);
         bottomFlywheelConfig.follow(topFlywheelMotor, true);
@@ -100,24 +101,24 @@ public class TurretIOReal implements TurretIO {
     public void updateInputs(TurretIOInputs inputs) {
         var topFlywheelVelocity = getIfOk(topFlywheelMotor, topFlywheelEncoder::getVelocity, 0);
         var topFlywheelCurrent = getIfOk(topFlywheelMotor, topFlywheelMotor::getOutputCurrent, 0);
-        inputs.topFlywheel = new TurretIOInputs.FlywheelMotorInputs(checkFault(), topFlywheelVelocity, topFlywheelCurrent);
+        inputs.topFlywheel = new TurretIOInputs.FlywheelMotorInputs(!checkFault(), topFlywheelVelocity, topFlywheelCurrent);
         
         var bottomFlywheelVelocity = getIfOk(bottomFlywheelMotor, bottomFlywheelEncoder::getVelocity, 0);
         var bottomFlywheelCurrent = getIfOk(bottomFlywheelMotor, bottomFlywheelMotor::getOutputCurrent, 0);
-        inputs.bottomFlywheel = new TurretIOInputs.FlywheelMotorInputs(checkFault(), bottomFlywheelVelocity, bottomFlywheelCurrent);
+        inputs.bottomFlywheel = new TurretIOInputs.FlywheelMotorInputs(!checkFault(), bottomFlywheelVelocity, bottomFlywheelCurrent);
 
         var azimuthAngle = getIfOk(azimuthMotor, azimuthAbsEncoder::getPosition, 0);
         var azimuthInternalAngle = getIfOk(azimuthMotor, azimuthEncoder::getPosition, 0);
         var azimuthVelocity = getIfOk(azimuthMotor, azimuthAbsEncoder::getVelocity, 0);
         var azimuthCurrent = getIfOk(azimuthMotor, azimuthMotor::getOutputCurrent, 0);
         var azimuthApplied = getIfOk(azimuthMotor, azimuthMotor::getAppliedOutput, 0);
-        inputs.azimuth = new TurretIOInputs.AzimuthMotorInputs(checkFault(), azimuthAngle, azimuthInternalAngle, azimuthVelocity, azimuthCurrent, azimuthApplied);
+        inputs.azimuth = new TurretIOInputs.AzimuthMotorInputs(!checkFault(), azimuthAngle, azimuthInternalAngle, azimuthVelocity, azimuthCurrent, azimuthApplied);
 
         var hoodRingAngle = getIfOk(hoodMotor, hoodEncoder::getPosition, 0);
         var hoodRingVelocity = getIfOk(hoodMotor, hoodEncoder::getVelocity, 0);
         var hoodCurrent = getIfOk(hoodMotor, hoodMotor::getOutputCurrent, 0);
         var hoodApplied = getIfOk(hoodMotor, hoodMotor::getAppliedOutput, 0);
-        inputs.hood = new TurretIOInputs.HoodMotorInputs(checkFault(), hoodRingAngle, hoodRingVelocity, hoodCurrent, hoodApplied);
+        inputs.hood = new TurretIOInputs.HoodMotorInputs(!checkFault(), hoodRingAngle, hoodRingVelocity, hoodCurrent, hoodApplied);
     }
 
     @Override
@@ -130,7 +131,7 @@ public class TurretIOReal implements TurretIO {
     }
 
     @Override
-    public void setMPCOutputs(TurretIOMPCOutputs outputs) {
+    public void setMPCOutputs(TurretMPCOutputs outputs) {
         flywheelController.setSetpoint(outputs.flywheelCurrent() / 2.0, ControlType.kCurrent, ClosedLoopSlot.kSlot1);
         azimuthController.setSetpoint(outputs.azimuthCurrent(), ControlType.kCurrent, ClosedLoopSlot.kSlot1);
         hoodController.setSetpoint(outputs.hoodCurrent(), ControlType.kCurrent, ClosedLoopSlot.kSlot1);

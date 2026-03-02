@@ -25,16 +25,16 @@ public class TurretConstants {
     public static final double hoodPlanetReduction = 213.0 / 25.0;
 
     public static final double flywheelBevelReduction = -10.0 / 18.0;
-    public static final double hoodBevelReduction = 20.0 / 35.0;
+    public static final double hoodRingToHoodReduction = 20.0 / 35.0;
 
     // Calculated reductions
     // Total gearings; these are a ratio between output and input, so should be less than 1.
     public static final double totalFlywheelGearing = TurretConstants.flywheelToRingReduction * TurretConstants.flywheelPlanetReduction * TurretConstants.flywheelBevelReduction;
-    public static final double totalHoodGearing = TurretConstants.hoodToRingReduction * TurretConstants.hoodPlanetReduction * TurretConstants.hoodBevelReduction;
+    public static final double totalHoodGearing = TurretConstants.hoodToRingReduction * TurretConstants.hoodPlanetReduction * TurretConstants.hoodRingToHoodReduction;
     public static final double totalAzimuthGearing = TurretConstants.azimuthToRingReduction;
 
     public static final double azimuthFlyCoupling = TurretConstants.flywheelToRingReduction * TurretConstants.flywheelBevelReduction;
-    public static final double azimuthHoodCoupling = TurretConstants.hoodToRingReduction * TurretConstants.hoodBevelReduction;
+    public static final double azimuthHoodCoupling = TurretConstants.hoodToRingReduction * TurretConstants.hoodRingToHoodReduction;
 
     // Constraints
     public static final double hoodMinAngle = Units.degreesToRadians(15);
@@ -79,7 +79,7 @@ public class TurretConstants {
         reflectInertia(
             reflectInertia(
                 parallelAxisInertia(0.00199082756, 0.2853, 0.079629), // The actual hood doodad
-                hoodBevelReduction
+                hoodRingToHoodReduction
             ) + 2.92639653e-6, // Transmission before bevel gear
             hoodPlanetReduction
         ) + 0.0116297925, // Big ring
@@ -92,7 +92,7 @@ public class TurretConstants {
     
     // Limits
     public static final double maxFlywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(5300); // Tuned
-    public static final double maxHoodRingSpeedRadPerSec = hoodSimMotor.freeSpeedRadPerSec * hoodToRingReduction * hoodPlanetReduction * hoodBevelReduction * 0.8;
+    public static final double maxHoodRingSpeedRadPerSec = hoodSimMotor.freeSpeedRadPerSec * hoodToRingReduction * hoodPlanetReduction * hoodRingToHoodReduction * 0.8;
     public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * azimuthToRingReduction * 0.8;
 
     // Current limits
@@ -101,17 +101,17 @@ public class TurretConstants {
     public static final int hoodCurrentLimit = 70; // amps
 
     // PIDs
-    public static final TunableSparkPID flywheelMotorPID = new TunableSparkPID("Turret/Flywheel")
-        .addRealRobotGains(new SparkPIDConstants(0.0005, 0.0, 0.0))
-        .addRealRobotGains(new SparkPIDConstants(0.005, 0.0, 0.0, ClosedLoopSlot.kSlot1))
-        .copyRealGainsInSim();
-    
     public static final TunableSimpleMotorFF flywheelMotorFF = new TunableSimpleMotorFF("Turret/FlywheelFF")
         .addGains(0.0, 12.0 / maxFlywheelSpeedRadPerSec, flywheelMotorKA);
     
+    public static final TunableSparkPID flywheelMotorPID = new TunableSparkPID("Turret/Flywheel")
+        .addRealRobotGains(new SparkPIDConstants(0.0005, 0.0, 0.0))
+        .addRealRobotGains(new SparkPIDConstants(0.0005, 0.0, 0.0, ClosedLoopSlot.kSlot1)) // Current PID
+        .copyRealGainsInSim();
+    
     public static final TunableSparkPID azimuthMotorPID = new TunableSparkPID("Turret/Azimuth")
         .addRealRobotGains(new SparkPIDConstants(0.7, 0.0, 0.2))
-        .addRealRobotGains(new SparkPIDConstants(0.005, 0.0, 0.0, ClosedLoopSlot.kSlot1))
+        .addRealRobotGains(new SparkPIDConstants(0.001, 0.0, 0.0, ClosedLoopSlot.kSlot1)) // Current PID
         .copyRealGainsInSim();
     public static final TunableSparkPID hoodMotorPID = azimuthMotorPID;
 }

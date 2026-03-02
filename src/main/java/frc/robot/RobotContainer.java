@@ -10,6 +10,9 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOReal;
 import frc.robot.subsystems.turret.TurretIOSim;
+import frc.robot.subsystems.turret.controller.TurretControllerIO;
+import frc.robot.subsystems.turret.controller.TurretControllerMainThread;
+import frc.robot.subsystems.turret.controller.TurretControllerThreaded;
 import frc.robot.subsystems.intake.*;
 import frc.robot.subsystems.climber.*;
 import frc.robot.subsystems.spindexer.*;
@@ -55,7 +58,7 @@ public class RobotContainer {
                     new VisionIOPhotonVision(VisionConstants.camera0Name, robotToCamera0),
                     new VisionIOPhotonVision(VisionConstants.camera1Name, robotToCamera1));
                 intake = new Intake(new IntakeIOReal());
-                turret = new Turret(new TurretIOReal());
+                turret = new Turret(new TurretIOReal(), new TurretControllerMainThread());
                 // climber = new Climber(new ClimberIOReal());
                 climber = new Climber(new ClimberIOReal());
                 spindexer = new Spindexer(new SpindexerIOReal());
@@ -74,7 +77,7 @@ public class RobotContainer {
                     new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
                     new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
                 // intake = new Intake(new IntakeIOSim());
-                turret = new Turret(new TurretIOSim());
+                turret = new Turret(new TurretIOSim(), new TurretControllerMainThread());
                 intake = new Intake(new IntakeIO() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIO() {});
@@ -89,7 +92,7 @@ public class RobotContainer {
                     new ModuleIO() {});
                 vision = new Vision(new VisionIO() {}, new VisionIO() {});
                 // intake = new Intake(new IntakeIO() {});
-                turret = new Turret(new TurretIO() {});
+                turret = new Turret(new TurretIO() {}, new TurretControllerIO() {});
                 intake = new Intake(new IntakeIO() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIO() {});

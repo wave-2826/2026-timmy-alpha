@@ -43,7 +43,8 @@ public class TurretTuningData {
         }
 
         public static Variable calculate(Variable flywheel, Variable azimuth, Variable hood) {
-            return bias_var.plus(flywheel_var.times(flywheel)).plus(azimuth_var.times(azimuth)).plus(hood_var.times(hood)).plus(flywheel2_var.times(flywheel).times(flywheel)).plus(flywheel_azimuth_var.times(flywheel).times(azimuth)).plus(flywheel_hood_var.times(flywheel).times(hood)).plus(azimuth2_var.times(azimuth).times(azimuth)).plus(azimuth_hood_var.times(azimuth).times(hood)).plus(hood2_var.times(hood).times(hood));
+            // return bias_var.plus(flywheel_var.times(flywheel)).plus(azimuth_var.times(azimuth)).plus(hood_var.times(hood)).plus(flywheel2_var.times(flywheel).times(flywheel)).plus(flywheel_azimuth_var.times(flywheel).times(azimuth)).plus(flywheel_hood_var.times(flywheel).times(hood)).plus(azimuth2_var.times(azimuth).times(azimuth)).plus(azimuth_hood_var.times(azimuth).times(hood)).plus(hood2_var.times(hood).times(hood));
+            return bias_var.plus(flywheel_var.times(flywheel));
         }
     }
     /**
@@ -77,7 +78,8 @@ public class TurretTuningData {
         }
 
         public static Variable calculate(Variable flywheel, Variable azimuth, Variable hood) {
-            return bias_var.plus(flywheel_var.times(flywheel)).plus(azimuth_var.times(azimuth)).plus(hood_var.times(hood)).plus(flywheel2_var.times(flywheel).times(flywheel)).plus(flywheel_azimuth_var.times(flywheel).times(azimuth)).plus(flywheel_hood_var.times(flywheel).times(hood)).plus(azimuth2_var.times(azimuth).times(azimuth)).plus(azimuth_hood_var.times(azimuth).times(hood)).plus(hood2_var.times(hood).times(hood));
+            // return bias_var.plus(flywheel_var.times(flywheel)).plus(azimuth_var.times(azimuth)).plus(hood_var.times(hood)).plus(flywheel2_var.times(flywheel).times(flywheel)).plus(flywheel_azimuth_var.times(flywheel).times(azimuth)).plus(flywheel_hood_var.times(flywheel).times(hood)).plus(azimuth2_var.times(azimuth).times(azimuth)).plus(azimuth_hood_var.times(azimuth).times(hood)).plus(hood2_var.times(hood).times(hood));
+            return bias_var.plus(azimuth_var.times(azimuth));
         }
     }
     /**
@@ -111,7 +113,8 @@ public class TurretTuningData {
         }
 
         public static Variable calculate(Variable flywheel, Variable azimuth, Variable hood) {
-            return bias_var.plus(flywheel_var.times(flywheel)).plus(azimuth_var.times(azimuth)).plus(hood_var.times(hood)).plus(flywheel2_var.times(flywheel).times(flywheel)).plus(flywheel_azimuth_var.times(flywheel).times(azimuth)).plus(flywheel_hood_var.times(flywheel).times(hood)).plus(azimuth2_var.times(azimuth).times(azimuth)).plus(azimuth_hood_var.times(azimuth).times(hood)).plus(hood2_var.times(hood).times(hood));
+            // return bias_var.plus(flywheel_var.times(flywheel)).plus(azimuth_var.times(azimuth)).plus(hood_var.times(hood)).plus(flywheel2_var.times(flywheel).times(flywheel)).plus(flywheel_azimuth_var.times(flywheel).times(azimuth)).plus(flywheel_hood_var.times(flywheel).times(hood)).plus(azimuth2_var.times(azimuth).times(azimuth)).plus(azimuth_hood_var.times(azimuth).times(hood)).plus(hood2_var.times(hood).times(hood));
+            return bias_var.plus(hood_var.times(hood));
         }
     }
     /**
