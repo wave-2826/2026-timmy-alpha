@@ -152,11 +152,11 @@ public class DriveConstants {
             .withStatorCurrentLimitEnable(true));
     private static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
     // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
-    private static final Pigeon2Configuration pigeonConfigs = null;
+    public static final Pigeon2Configuration pigeonConfigs = null;
 
     // CAN bus that the devices are located on;
     // All swerve devices must share the same CAN bus
-    public static final CANBus CANBus = new CANBus("Default Name", "./logs/example.hoot");
+    public static final CANBus CANBus = new CANBus("*");
 
     // Effective free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
@@ -180,7 +180,7 @@ public class DriveConstants {
     public static final double steerGearRatio = 12.8;
     public static final Distance wheelRadius = Inches.of(2);
 
-    private static final int pigeonId = 9;
+    public static final int pigeonId = 9;
 
     // These are only used for simulation
     public static final MomentOfInertia steerInertia = KilogramSquareMeters.of(0.004);
@@ -188,11 +188,6 @@ public class DriveConstants {
     // Simulated voltage necessary to overcome friction
     public static final Voltage steerFrictionVoltage = Volts.of(0.2);
     public static final Voltage driveFrictionVoltage = Volts.of(0.2);
-
-    public static final SwerveDrivetrainConstants drivetrainConstants = new SwerveDrivetrainConstants()
-            .withCANBusName(CANBus.getName())
-            .withPigeon2Id(pigeonId)
-            .withPigeon2Configs(pigeonConfigs);
     
     public static final KinematicConstraints kinematicConstraints = new KinematicConstraints(
         MetersPerSecondPerSecond.of(10) /* measuered "magic value" - max linear acceleration */,
@@ -233,7 +228,7 @@ public class DriveConstants {
     public static final PPHolonomicDriveController realHolonomicDriveController = new PPHolonomicDriveController(
         new PIDConstants(6.5, 0.0, 0.25), new PIDConstants(8.0, 1.0, 0.75));
 
-    static final double odometryFrequency = new CANBus(DriveConstants.drivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
+    static final double odometryFrequency = CANBus.isNetworkFD() ? 250.0 : 100.0;
 
     /** Swerve Drive class utilizing CTR Electronics' Phoenix 6 API with the selected device types. */
     public static class TunerSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> {
