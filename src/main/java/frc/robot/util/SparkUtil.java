@@ -19,6 +19,7 @@ public class SparkUtil {
     /** Stores whether any error was has been detected by other utility methods. */
     public static boolean sparkStickyFault = false;
 
+    /** Returns if there has been a fault and resets if so. */
     public static boolean checkFault() {
         if(sparkStickyFault) {
             sparkStickyFault = false;
