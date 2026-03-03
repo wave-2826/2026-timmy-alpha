@@ -115,7 +115,7 @@ public class NonlinearMPC {
 
     public double[] calculate(double[] x, double[] r) {
         // Construct the problem once and only if something changes that we can't 
-        if(problem == null) {
+        // if(problem == null) {
             problem = new Problem();
             X = problem.decisionVariable(states, N + 1);
             U = problem.decisionVariable(inputs, N);
@@ -134,7 +134,7 @@ public class NonlinearMPC {
             }
 
             constraints.apply(problem, X, U);
-        }
+        // }
 
         CostReference.set(new double[][] { r });
         for(int i = 0; i < x.length; i++) InitialState.set(i, x[i]);

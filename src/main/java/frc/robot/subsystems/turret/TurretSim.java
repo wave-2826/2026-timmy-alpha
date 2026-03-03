@@ -41,12 +41,9 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
      * units: (Nm / Amp) / [(rad/s / Volt) * (Volt / Amp)] = Nm / (rad/s)
      * so this represents torque per unit of angular velocity (Nms/rad)
      * @param motor the motor to compute damping for
-     * @param ratio the gear ratio between the motor and the output shaft (output/input)
      */
-    private static double computeMotorDamping(DCMotor motor, double ratio) {
-        var dampingAtShaft = motor.KtNMPerAmp / (motor.KvRadPerSecPerVolt * motor.rOhms);
-        // damping reflects through the gearbox as the square of the gear ratio
-        return -dampingAtShaft * Math.pow(ratio, 2);
+    private static double computeMotorDamping(DCMotor motor) {
+        return -motor.KtNMPerAmp / (motor.KvRadPerSecPerVolt * motor.rOhms);
     }
 
     /**
@@ -55,12 +52,12 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
      */
     private static double computeMotorAccelProportion(
         DCMotor motor,
-        double ratio,
         double currentProportion,
         double momentOfInertiaKgM2) {
         var torqueAtShaft = motor.KtNMPerAmp * currentProportion; // Nm
         // (Nm * ratio^2) / (kg m^2) = rad/s^2
-        return torqueAtShaft * Math.pow(ratio, 2) / momentOfInertiaKgM2;
+        // return torqueAtShaft / momentOfInertiaKgM2;
+        return 0;
     }
 
     private static double flywheelMOI = TurretConstants.flywheelMotorInertiaKgM2;
@@ -71,11 +68,7 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
      * Construct a linear system for the turret flywheel, hood, and azimuth.
      * For more information on linear systems, see https://file.tavsys.net/control/controls-engineering-in-frc.pdf
      * 
-     * All angular positions and velocities are represented at the end of the power transmission:
-     * - Flywheel: at the flywheel itself (after all reductions)
-     * - Hood: at the hood rotational axis (after all reductions)
-     * - Azimuth: turret rotational axis (on the ring)
-     * 
+     * All angular positions and velocities are represented at the motors themselves.
      * Positions and velocities are in rotations and rotations per second, not radians.
      * 
      * State (x): [flywheel velocity, hood position, hood velocity, azimuth position, azimuth velocity]ᵀ
@@ -87,9 +80,9 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
      */
     public static LinearSystem<N5, N3, N5> createTurretSystem() {
         // motor damping in Nm/(rad/s)
-        double flywheelDampingTorque = computeMotorDamping(TurretConstants.flywheelSimMotor, TurretConstants.totalFlywheelGearing);
-        double hoodDampingTorque = computeMotorDamping(TurretConstants.hoodSimMotor, TurretConstants.totalHoodGearing);
-        double azimuthDampingTorque = computeMotorDamping(TurretConstants.azimuthSimMotor, TurretConstants.totalAzimuthGearing);
+        double flywheelDampingTorque = computeMotorDamping(TurretConstants.flywheelSimMotor);
+        double hoodDampingTorque = computeMotorDamping(TurretConstants.hoodSimMotor);
+        double azimuthDampingTorque = computeMotorDamping(TurretConstants.azimuthSimMotor);
 
         // damping acceleration in rad/s/s/(rad/s) = 1/s, as expected
         double flywheelDampingAccel = flywheelDampingTorque / flywheelMOI;
@@ -98,13 +91,12 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
 
         // Linear friction for each stage
         // The current models are in amps, but we want acceleration per velocity (rad/s^2 / rad/s = 1/s);
-        // So we convert the current by 
-        double flywheelFricFromAzimuth = computeMotorAccelProportion(TurretConstants.azimuthSimMotor,  TurretConstants.totalAzimuthGearing,  TurretTuningData.FlywheelCurrentModel.azimuth, azimuthMOI);
-        double flywheelFricFromHood =    computeMotorAccelProportion(TurretConstants.hoodSimMotor,     TurretConstants.totalHoodGearing,     TurretTuningData.FlywheelCurrentModel.hood,    hoodMOI);
-        double hoodFricFromAzimuth =     computeMotorAccelProportion(TurretConstants.azimuthSimMotor,  TurretConstants.totalAzimuthGearing,  TurretTuningData.HoodCurrentModel.azimuth,     azimuthMOI);
-        double hoodFricFromFlywheel =    computeMotorAccelProportion(TurretConstants.flywheelSimMotor, TurretConstants.totalFlywheelGearing, TurretTuningData.HoodCurrentModel.flywheel,    flywheelMOI);
-        double azimuthFricFromFlywheel = computeMotorAccelProportion(TurretConstants.flywheelSimMotor, TurretConstants.totalFlywheelGearing, TurretTuningData.AzimuthCurrentModel.flywheel, flywheelMOI);
-        double azimuthFricFromHood =     computeMotorAccelProportion(TurretConstants.hoodSimMotor,     TurretConstants.totalHoodGearing,     TurretTuningData.AzimuthCurrentModel.hood,     hoodMOI);
+        double flywheelFricFromAzimuth = computeMotorAccelProportion(TurretConstants.azimuthSimMotor,  TurretTuningData.FlywheelCurrentModel.azimuth, azimuthMOI);
+        double flywheelFricFromHood =    computeMotorAccelProportion(TurretConstants.hoodSimMotor,     TurretTuningData.FlywheelCurrentModel.hood,    hoodMOI);
+        double hoodFricFromAzimuth =     computeMotorAccelProportion(TurretConstants.azimuthSimMotor,  TurretTuningData.HoodCurrentModel.azimuth,     azimuthMOI);
+        double hoodFricFromFlywheel =    computeMotorAccelProportion(TurretConstants.flywheelSimMotor, TurretTuningData.HoodCurrentModel.flywheel,    flywheelMOI);
+        double azimuthFricFromFlywheel = computeMotorAccelProportion(TurretConstants.flywheelSimMotor, TurretTuningData.AzimuthCurrentModel.flywheel, flywheelMOI);
+        double azimuthFricFromHood =     computeMotorAccelProportion(TurretConstants.hoodSimMotor,     TurretTuningData.AzimuthCurrentModel.hood,     hoodMOI);
 
         return new LinearSystem<>(
             // System matrix
@@ -132,11 +124,11 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
                 Nat.N5(), Nat.N3(),
 
             //  ⌄--------------⌄----------⌄-- flywheel torque applied, hood torque applied, azimuth torque applied
-                1/flywheelMOI * TurretConstants.totalFlywheelGearing, 0, TurretConstants.azimuthFlyCoupling/hoodMOI * TurretConstants.totalHoodGearing,
+                1/flywheelMOI, 0, 0,
                 0, 0, 0,
-                0, 1/hoodMOI * TurretConstants.totalHoodGearing, TurretConstants.azimuthHoodCoupling/hoodMOI * TurretConstants.totalHoodGearing,
+                0, 1/hoodMOI, 0,
                 0, 0, 0,
-                0, 0, 1/azimuthMOI * TurretConstants.totalAzimuthGearing
+                0, 0, 1/azimuthMOI
             ),
 
             // Output matrix (identity - just the state)
@@ -186,11 +178,11 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
     }
 
     public record TurretState(
-        double flywheelVelocityRps,
-        double hoodPositionRotations,
-        double hoodVelocityRps,
-        double azimuthPositionRotations,
-        double azimuthVelocityRps
+        double flywheelMotorVelRps,
+        double hoodMotorPosRotations,
+        double hoodMotorVelRps,
+        double azimuthMotorPosRotations,
+        double azimuthMotorVelRps
     ) {
         public TurretState(Matrix<N5, N1> xhat) {
             this(
@@ -202,21 +194,30 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
             );
         }
 
-        /** Get the velocity of the flywheel motor itself in rotations per second */
-        public double getFlywheelMotorVelocity() {
-            double flywheelVelocityContribution = flywheelVelocityRps / TurretConstants.totalFlywheelGearing;
-            double azimuthContribution = azimuthVelocityRps * TurretConstants.azimuthFlyCoupling / TurretConstants.totalAzimuthGearing;
-            return flywheelVelocityContribution + azimuthContribution;
+        /** Get the velocity of the flywheel itself in rotations per second */
+        public double flywheelVelRps() {
+            return flywheelMotorVelRps * TurretConstants.totalFlywheelGearing -
+                azimuthMotorVelRps * TurretConstants.azimuthFlyCoupling;
         }
-        /** Get the velocity of the hood motor itself in rotations per second */
-        public double getHoodMotorVelocity() {
-            double hoodVelocityContribution = hoodVelocityRps / TurretConstants.totalHoodGearing;
-            double azimuthContribution = azimuthVelocityRps * TurretConstants.azimuthHoodCoupling / TurretConstants.totalAzimuthGearing;
-            return hoodVelocityContribution + azimuthContribution;
+        /** Get the velocity of the hood itself in rotations per second */
+        public double hoodVelRps() {
+            return hoodMotorVelRps * TurretConstants.totalHoodGearing -
+                azimuthMotorVelRps * TurretConstants.azimuthHoodCoupling;
         }
-        /** Get the velocity of the azimuth motor itself in rotations per second */
-        public double getAzimuthMotorVelocity() {
-            return azimuthVelocityRps / TurretConstants.totalAzimuthGearing;
+        /** Get the velocity of the azimuth itself in rotations per second */
+        public double azimuthVelRps() {
+            return azimuthMotorVelRps * TurretConstants.azimuthToRingReduction;
+        }
+
+        /** Get the hood position in rotations */
+        public double hoodPosRotations() {
+            return hoodMotorPosRotations * TurretConstants.totalHoodGearing -
+                azimuthMotorPosRotations * TurretConstants.azimuthHoodCoupling +
+                TurretConstants.hoodMinAngle / Math.PI / 2;
+        }
+        /** Get the azimuth position in rotations */
+        public double azimuthPosRotations() {
+            return azimuthMotorPosRotations * TurretConstants.azimuthToRingReduction;
         }
     }
 

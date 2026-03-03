@@ -28,7 +28,8 @@ public class TurretController {
      *     [flywheel velocity, hood position, hood velocity, azimuth position, azimuth velocity]ᵀ
      * And the input vector (u) is as follows:
      *     [flywheel current, hood current, azimuth current]ᵀ
-     * Positions and velocities are relative to the actuated mechanisms (actual flywheel, hood, and azimuth).  
+     * Positions and velocities are relative motors, not mechanisms - therefore, e.g. the hood position isn't
+     * proportional to the true hood.  
      * Angles are in radians and angular velocities in rad/s.
      */
     private NonlinearMPC mpc;
@@ -72,18 +73,18 @@ public class TurretController {
             0.01,
             this::mpcCost, this::applyMpcConstraints, this::mpcInitialGuess,
             0.1,
-            0.02, // Timeout, s
+            1.0, // Timeout, s
             0.1 // Tolerance, A
         );
     }
 
     private Matrix<N5, N1> getCurrentState() {
         return VecBuilder.fill(
-            inputs.getFlywheelVelocityRadPerSecond(),
-            inputs.getHoodAngleRad(),
-            inputs.getHoodVelocityRadPerSec(),
-            inputs.getAzimuthAngleRad(),
-            inputs.getAzimuthVelocityRadPerSec()
+            inputs.topFlywheel.flywheelVelocityRadPerSec(),
+            inputs.hood.hoodRingAngleRad() / TurretConstants.hoodToRingReduction,
+            inputs.hood.hoodRingVelocityRadPerSec() / TurretConstants.hoodToRingReduction,
+            inputs.azimuth.azimuthAngleRad() / TurretConstants.azimuthToRingReduction,
+            inputs.azimuth.azimuthVelocityRadPerSec() / TurretConstants.azimuthToRingReduction
         );
     }
 
@@ -92,8 +93,12 @@ public class TurretController {
     ) {
         LoggedTracer.skipEpoch();
 
-        observer.predict(modelState, 0.02);
-        observer.correct(modelState, getCurrentState());
+        try {
+            observer.predict(modelState, 0.02);
+            observer.correct(modelState, getCurrentState());
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
         
         LoggedTracer.record("Turret/Kalman");
         
@@ -113,11 +118,9 @@ public class TurretController {
         // The current equations we tune represent the current required to achieve a steady-state condition.
         // Therefore, the "available acceleration current" is the difference between our input and the
         // steady-state current.
-        Variable azimuthMotorVelocity = state.get(4, 0).div(TurretConstants.totalAzimuthGearing);
-        Variable flywheelMotorVelocity = state.get(0, 0).div(TurretConstants.totalFlywheelGearing)
-            .plus(azimuthMotorVelocity.times(TurretConstants.azimuthFlyCoupling));
-        Variable hoodMotorVelocity = state.get(2, 0).div(TurretConstants.totalHoodGearing)
-            .plus(azimuthMotorVelocity.times(TurretConstants.azimuthHoodCoupling));
+        Variable azimuthMotorVelocity = state.get(4, 0);
+        Variable flywheelMotorVelocity = state.get(0, 0);
+        Variable hoodMotorVelocity = state.get(2, 0);
 
         Variable flywheelSteadyStateCurrent = TurretTuningData.FlywheelCurrentModel.calculate(
             flywheelMotorVelocity, hoodMotorVelocity, azimuthMotorVelocity
@@ -135,45 +138,30 @@ public class TurretController {
 
         // Current (A) * Torque Constant (Nm/A) / Inertia (kg*m^2) = Acceleration (rad/s^2)
         Variable flywheelMotorAcceleration = flywheelCurrent
-            .times(TurretConstants.flywheelSimMotor.KtNMPerAmp)
-            .div(TurretConstants.flywheelMotorInertiaKgM2);
+            .times(TurretConstants.flywheelSimMotor.KtNMPerAmp / TurretConstants.flywheelMotorInertiaKgM2);
         Variable hoodMotorAcceleration = hoodCurrent
-            .times(TurretConstants.hoodSimMotor.KtNMPerAmp)
-            .div(TurretConstants.hoodMotorInertiaKgM2);
+            .times(TurretConstants.hoodSimMotor.KtNMPerAmp / TurretConstants.hoodMotorInertiaKgM2);
         Variable azimuthMotorAcceleration = azimuthCurrent
-            .times(TurretConstants.azimuthSimMotor.KtNMPerAmp)
-            .div(TurretConstants.azimuthMotorInertiaKgM2);
-        
-        // Acceleration at the mechanism itself is reduced by the gear ratio
-        Variable azimuthAcceleration = azimuthMotorAcceleration.times(Math.pow(TurretConstants.totalAzimuthGearing, 2));
-        
-        Variable flywheelAcceleration = flywheelMotorAcceleration
-            .times(Math.pow(TurretConstants.totalFlywheelGearing, 2))
-            .plus(azimuthAcceleration.times(TurretConstants.azimuthFlyCoupling));
-        Variable hoodAcceleration = hoodMotorAcceleration
-            .times(Math.pow(TurretConstants.totalHoodGearing, 2))
-            .plus(azimuthAcceleration.times(TurretConstants.azimuthHoodCoupling));
+            .times(TurretConstants.azimuthSimMotor.KtNMPerAmp / TurretConstants.azimuthMotorInertiaKgM2);
         
         return NonlinearMPC.columnMatrix(new Variable[] {
             // d(flywheel velocity)/dt
-            flywheelAcceleration,
+            flywheelMotorAcceleration,
             // d(hood position)/dt = hood velocity
             state.get(2, 0),
             // d(hood velocity)/dt
-            hoodAcceleration,
+            hoodMotorAcceleration,
             // d(azimuth position)/dt = azimuth velocity
             state.get(4, 0),
             // d(azimuth velocity)/dt
-            azimuthAcceleration
+            azimuthMotorAcceleration
         });
     }
 
     public static Matrix<N5, N1> mcpDynamicsButNumbers(double[] state, double[] input) {
-        double azimuthMotorVelocity = state[4] / TurretConstants.totalAzimuthGearing;
-        double flywheelMotorVelocity = state[0] / TurretConstants.totalFlywheelGearing
-            + azimuthMotorVelocity * TurretConstants.azimuthFlyCoupling;
-        double hoodMotorVelocity = state[2] / TurretConstants.totalHoodGearing
-            + azimuthMotorVelocity * TurretConstants.azimuthHoodCoupling;
+        double azimuthMotorVelocity = state[4];
+        double flywheelMotorVelocity = state[0];
+        double hoodMotorVelocity = state[2];
 
         double flywheelSteadyStateCurrent = TurretTuningData.FlywheelCurrentModel.calculate(flywheelMotorVelocity, hoodMotorVelocity, azimuthMotorVelocity);
         double hoodSteadyStateCurrent = TurretTuningData.HoodCurrentModel.calculate(flywheelMotorVelocity, hoodMotorVelocity, azimuthMotorVelocity);
@@ -187,31 +175,38 @@ public class TurretController {
         double hoodMotorAcceleration = hoodCurrent * TurretConstants.hoodSimMotor.KtNMPerAmp / TurretConstants.hoodMotorInertiaKgM2;
         double azimuthMotorAcceleration = azimuthCurrent * TurretConstants.azimuthSimMotor.KtNMPerAmp / TurretConstants.azimuthMotorInertiaKgM2;
 
-        double azimuthAcceleration = azimuthMotorAcceleration * TurretConstants.totalAzimuthGearing * TurretConstants.totalAzimuthGearing;
-
-        double flywheelAcceleration = flywheelMotorAcceleration * TurretConstants.totalFlywheelGearing * TurretConstants.totalFlywheelGearing
-            + azimuthAcceleration * TurretConstants.azimuthFlyCoupling;
-        double hoodAcceleration = hoodMotorAcceleration * TurretConstants.totalHoodGearing * TurretConstants.totalHoodGearing
-            + azimuthAcceleration * TurretConstants.azimuthHoodCoupling;
-
-        return VecBuilder.fill(flywheelAcceleration, state[2], hoodAcceleration, state[4], azimuthAcceleration);
+        return VecBuilder.fill(
+            flywheelMotorAcceleration, state[2],
+            hoodMotorAcceleration, state[4],
+            azimuthMotorAcceleration
+        );
     }
 
     private Variable mpcCost(VariableMatrix state, VariableMatrix input, VariableMatrix reference) {
+        Variable azimuthMotorVelocity = state.get(4, 0);
+        Variable azimuthMotorPosition = state.get(3, 0);
+        Variable flywheelVelocity = state.get(0, 0).times(TurretConstants.totalFlywheelGearing)
+            .minus(azimuthMotorVelocity.times(TurretConstants.azimuthFlyCoupling));
+        Variable hoodPosition = state.get(1, 0).times(TurretConstants.totalHoodGearing)
+            .minus(azimuthMotorPosition.times(TurretConstants.azimuthHoodCoupling));
+        Variable azimuthPosition = azimuthMotorPosition.times(TurretConstants.totalAzimuthGearing);
+
         // Cost is basically just tracking error, but we add small penalties for current usage
         // Normalize to avoid overemphasizing flywheel
-        Variable flywheelVelocityError = reference.get(0).minus(state.get(0))
+        Variable flywheelVelocityError = reference.get(0).minus(flywheelVelocity)
             .times(1 / TurretConstants.maxFlywheelSpeedRadPerSec * 0.5);
-        Variable hoodPositionError = reference.get(1).minus(state.get(1));
-        Variable azimuthPositionError = reference.get(2).minus(state.get(3));
+        Variable hoodPositionError = reference.get(1).minus(hoodPosition);
+        Variable azimuthPositionError = reference.get(2).minus(azimuthPosition);
 
         Variable cost = flywheelVelocityError.times(flywheelVelocityError)
             .plus(hoodPositionError.times(hoodPositionError))
             .plus(azimuthPositionError.times(azimuthPositionError));
+        
         // for(int i = 0; i < 3; i++) {
         //     Variable current = input.get(i, 0);
         //     cost = cost.plus(current.times(current).times(0.001));
         // }
+        
         return cost;
     }
 

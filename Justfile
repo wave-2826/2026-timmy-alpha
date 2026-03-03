@@ -14,6 +14,9 @@ simulate:
     sed -i 's/simMode = Mode.REPLAY;/simMode = Mode.SIM;/g' {{ConstantsFile}}
     ./gradlew simulateJava
 
+build-watch:
+    ./gradlew classes -t
+
 [windows]
 replay:
     (Get-Content -Path {{ConstantsFile}}) -replace "simMode = Mode.SIM;", "simMode = Mode.REPLAY;" | Set-Content -Path {{ConstantsFile}}

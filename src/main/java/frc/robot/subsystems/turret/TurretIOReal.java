@@ -51,8 +51,8 @@ public class TurretIOReal implements TurretIO {
         flywheelBaseConfig.closedLoopRampRate(1.0);
         flywheelBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(flywheelCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         flywheelBaseConfig.encoder
-            .positionConversionFactor(2.0 * Math.PI * TurretConstants.totalFlywheelGearing) // rotations -> radians
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0 * TurretConstants.totalFlywheelGearing); // RPM -> rad/s
+            .positionConversionFactor(2.0 * Math.PI) // rotations -> radians
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s
         var topFlywheelConfig = new SparkFlexConfig().apply(flywheelBaseConfig);
         var bottomFlywheelConfig = new SparkFlexConfig().apply(flywheelBaseConfig);
         bottomFlywheelConfig.follow(topFlywheelMotor, true);
@@ -77,8 +77,8 @@ public class TurretIOReal implements TurretIO {
             .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s (of ring)
         azimuthConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(azimuthCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         azimuthConfig.encoder
-            .positionConversionFactor(2.0 * Math.PI * azimuthToRingReduction) // Rotor Rotations -> Radians (of ring)
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0 * azimuthToRingReduction); // RPM -> rad/s (of ring)
+            .positionConversionFactor(2.0 * Math.PI) // Rotor Rotations -> Radians (of ring)
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s (of ring)
         tryUntilOk(azimuthMotor, 5, () -> azimuthMotor.configure(azimuthConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
 
         // Hood motor
@@ -90,8 +90,8 @@ public class TurretIOReal implements TurretIO {
             .positionWrappingInputRange(0, Math.PI * 2);
         hoodConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(hoodCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         hoodConfig.encoder
-            .positionConversionFactor(2.0 * Math.PI * hoodToRingReduction) // Rotor Rotations -> Radians (of ring)
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0 * hoodToRingReduction); // RPM -> rad/s (of ring)
+            .positionConversionFactor(2.0 * Math.PI) // Rotor Rotations -> Radians (of ring)
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s (of ring)
         tryUntilOk(hoodMotor, 5, () -> hoodMotor.configure(hoodConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
 
         hoodEncoder.setPosition(azimuthEncoder.getPosition());
@@ -99,23 +99,23 @@ public class TurretIOReal implements TurretIO {
   
     @Override
     public void updateInputs(TurretIOInputs inputs) {
-        var topFlywheelVelocity = getIfOk(topFlywheelMotor, topFlywheelEncoder::getVelocity, 0);
+        var topFlywheelVelocity = getIfOk(topFlywheelMotor, topFlywheelEncoder::getVelocity, 0) * TurretConstants.totalFlywheelGearing;
         var topFlywheelCurrent = getIfOk(topFlywheelMotor, topFlywheelMotor::getOutputCurrent, 0);
         inputs.topFlywheel = new TurretIOInputs.FlywheelMotorInputs(!checkFault(), topFlywheelVelocity, topFlywheelCurrent);
         
-        var bottomFlywheelVelocity = getIfOk(bottomFlywheelMotor, bottomFlywheelEncoder::getVelocity, 0);
+        var bottomFlywheelVelocity = getIfOk(bottomFlywheelMotor, bottomFlywheelEncoder::getVelocity, 0) * TurretConstants.totalFlywheelGearing;
         var bottomFlywheelCurrent = getIfOk(bottomFlywheelMotor, bottomFlywheelMotor::getOutputCurrent, 0);
         inputs.bottomFlywheel = new TurretIOInputs.FlywheelMotorInputs(!checkFault(), bottomFlywheelVelocity, bottomFlywheelCurrent);
 
         var azimuthAngle = getIfOk(azimuthMotor, azimuthAbsEncoder::getPosition, 0);
-        var azimuthInternalAngle = getIfOk(azimuthMotor, azimuthEncoder::getPosition, 0);
+        var azimuthInternalAngle = getIfOk(azimuthMotor, azimuthEncoder::getPosition, 0) * TurretConstants.azimuthToRingReduction;
         var azimuthVelocity = getIfOk(azimuthMotor, azimuthAbsEncoder::getVelocity, 0);
         var azimuthCurrent = getIfOk(azimuthMotor, azimuthMotor::getOutputCurrent, 0);
         var azimuthApplied = getIfOk(azimuthMotor, azimuthMotor::getAppliedOutput, 0);
         inputs.azimuth = new TurretIOInputs.AzimuthMotorInputs(!checkFault(), azimuthAngle, azimuthInternalAngle, azimuthVelocity, azimuthCurrent, azimuthApplied);
 
-        var hoodRingAngle = getIfOk(hoodMotor, hoodEncoder::getPosition, 0);
-        var hoodRingVelocity = getIfOk(hoodMotor, hoodEncoder::getVelocity, 0);
+        var hoodRingAngle = getIfOk(hoodMotor, hoodEncoder::getPosition, 0) * TurretConstants.hoodToRingReduction;
+        var hoodRingVelocity = getIfOk(hoodMotor, hoodEncoder::getVelocity, 0) * TurretConstants.hoodToRingReduction;
         var hoodCurrent = getIfOk(hoodMotor, hoodMotor::getOutputCurrent, 0);
         var hoodApplied = getIfOk(hoodMotor, hoodMotor::getAppliedOutput, 0);
         inputs.hood = new TurretIOInputs.HoodMotorInputs(!checkFault(), hoodRingAngle, hoodRingVelocity, hoodCurrent, hoodApplied);
@@ -132,9 +132,18 @@ public class TurretIOReal implements TurretIO {
 
     @Override
     public void setMPCOutputs(TurretMPCOutputs outputs) {
-        flywheelController.setSetpoint(outputs.flywheelCurrent() / 2.0, ControlType.kCurrent, ClosedLoopSlot.kSlot1);
-        azimuthController.setSetpoint(outputs.azimuthCurrent(), ControlType.kCurrent, ClosedLoopSlot.kSlot1);
-        hoodController.setSetpoint(outputs.hoodCurrent(), ControlType.kCurrent, ClosedLoopSlot.kSlot1);
+        flywheelController.setSetpoint(
+            outputs.flywheelCurrent() * TurretConstants.flywheelSimMotor.rOhms / 2.0 +
+            topFlywheelMotor.getEncoder().getVelocity() / TurretConstants.flywheelSimMotor.KvRadPerSecPerVolt,
+            ControlType.kVoltage, ClosedLoopSlot.kSlot1);
+        azimuthController.setSetpoint(
+            outputs.azimuthCurrent() * TurretConstants.azimuthSimMotor.rOhms +
+            azimuthMotor.getEncoder().getVelocity() / TurretConstants.azimuthSimMotor.KvRadPerSecPerVolt,
+            ControlType.kVoltage, ClosedLoopSlot.kSlot1);
+        hoodController.setSetpoint(
+            outputs.hoodCurrent() * TurretConstants.hoodSimMotor.rOhms +
+            hoodMotor.getEncoder().getVelocity() / TurretConstants.hoodSimMotor.KvRadPerSecPerVolt,
+            ControlType.kVoltage, ClosedLoopSlot.kSlot1);
     }
 
     @Override

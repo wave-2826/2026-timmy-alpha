@@ -33,8 +33,9 @@ public class TurretConstants {
     public static final double totalHoodGearing = TurretConstants.hoodToRingReduction * TurretConstants.hoodPlanetReduction * TurretConstants.hoodRingToHoodReduction;
     public static final double totalAzimuthGearing = TurretConstants.azimuthToRingReduction;
 
-    public static final double azimuthFlyCoupling = TurretConstants.flywheelToRingReduction * TurretConstants.flywheelBevelReduction;
-    public static final double azimuthHoodCoupling = TurretConstants.hoodToRingReduction * TurretConstants.hoodRingToHoodReduction;
+    // Couplings; these are a direct ratio between each motor and their coupled output
+    public static final double azimuthFlyCoupling = TurretConstants.totalAzimuthGearing * TurretConstants.flywheelToRingReduction * TurretConstants.flywheelBevelReduction;
+    public static final double azimuthHoodCoupling = TurretConstants.totalAzimuthGearing * TurretConstants.hoodToRingReduction * TurretConstants.hoodRingToHoodReduction;
 
     // Constraints
     public static final double hoodMinAngle = Units.degreesToRadians(15);

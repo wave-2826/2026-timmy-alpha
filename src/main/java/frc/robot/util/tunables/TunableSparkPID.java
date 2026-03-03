@@ -45,15 +45,15 @@ public class TunableSparkPID {
             ClosedLoopSlot slot
         ) {
             String slotStr = slot == ClosedLoopSlot.kSlot0 ? "" : Integer.toString(slot.ordinal());
-            if(p.isPresent()) this.p = new LoggedTunableNumber(tunablePath + slotStr + "_P", p.getAsDouble());
-            if(i.isPresent()) this.i = new LoggedTunableNumber(tunablePath + slotStr + "_I", i.getAsDouble());
-            if(d.isPresent()) this.d = new LoggedTunableNumber(tunablePath + slotStr + "_D", d.getAsDouble());
+            if(p.isPresent()) this.p = new LoggedTunableNumber(tunablePath + slotStr + "/P", p.getAsDouble());
+            if(i.isPresent()) this.i = new LoggedTunableNumber(tunablePath + slotStr + "/I", i.getAsDouble());
+            if(d.isPresent()) this.d = new LoggedTunableNumber(tunablePath + slotStr + "/D", d.getAsDouble());
             
-            if(iZone.isPresent()) this.iZone = new LoggedTunableNumber(tunablePath + slotStr + "_IZone", i.getAsDouble());
+            if(iZone.isPresent()) this.iZone = new LoggedTunableNumber(tunablePath + slotStr + "/IZone", i.getAsDouble());
 
-            if(fkS.isPresent()) this.fkS = new LoggedTunableNumber(tunablePath + slotStr + "_FkS", fkS.getAsDouble());
-            if(fkV.isPresent()) this.fkV = new LoggedTunableNumber(tunablePath + slotStr + "_FkV", fkV.getAsDouble());
-            if(fkA.isPresent()) this.fkA = new LoggedTunableNumber(tunablePath + slotStr + "_FkA", fkA.getAsDouble());
+            if(fkS.isPresent()) this.fkS = new LoggedTunableNumber(tunablePath + slotStr + "/FkS", fkS.getAsDouble());
+            if(fkV.isPresent()) this.fkV = new LoggedTunableNumber(tunablePath + slotStr + "/FkV", fkV.getAsDouble());
+            if(fkA.isPresent()) this.fkA = new LoggedTunableNumber(tunablePath + slotStr + "/FkA", fkA.getAsDouble());
             
             this.slot = slot;
 
