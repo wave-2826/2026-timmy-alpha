@@ -79,6 +79,11 @@ def main():
         if sys.platform.startswith("win"):
             program_files = os.environ.get("ProgramFiles", r"C:\\Program Files")
             system_dest = Path(program_files) / "Java" / jbr_folder_name
+            # Try to create the system destination parent if possible
+            try:
+                system_dest.parent.mkdir(parents=True, exist_ok=True)
+            except Exception:
+                pass
             user_dest = home / jbr_folder_name
         else:
             system_dest = Path("/usr/lib/jvm") / jbr_folder_name
@@ -89,7 +94,6 @@ def main():
         # fallback if not writable
         if not os.access(system_dest.parent, os.W_OK):
             dest = user_dest
-
         try:
             # move/copy extracted runtime to destination
             if dest.exists():
@@ -118,6 +122,9 @@ def main():
         print("HotswapAgent jar:", hotswap_dest)
         print("JBR runtime installed to:", dest)
         print("Use the java binary at:", java_bin)
+
+        import time
+        time.sleep(5)
 
 if __name__ == "__main__":
     main()

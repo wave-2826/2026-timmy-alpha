@@ -1,7 +1,6 @@
 package frc.robot;
 
 import java.util.HashMap;
-import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 import edu.wpi.first.math.geometry.Pose2d;

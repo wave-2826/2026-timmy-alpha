@@ -7,7 +7,7 @@ ConstantsFile := "src/main/java/frc/robot/Constants.java"
 simulate:
     (Get-Content -Path {{ConstantsFile}}) -replace "simMode = Mode.REPLAY;", "simMode = Mode.SIM;" | Set-Content -Path {{ConstantsFile}}
     .\misc\scripts\openSimPrograms.ps1
-    .\gradlew simulateJava  "-Dorg.gradle.java.home=C:\Users\Public\wpilib\2025\jdk\"
+    .\gradlew simulateJava "-Dorg.gradle.java.home=C:\Users\Public\wpilib\2026\jdk\"
 
 [linux]
 simulate:
@@ -18,7 +18,7 @@ simulate:
 replay:
     (Get-Content -Path {{ConstantsFile}}) -replace "simMode = Mode.SIM;", "simMode = Mode.REPLAY;" | Set-Content -Path {{ConstantsFile}}
     .\misc\scripts\openSimPrograms.ps1
-    .\gradlew simulateJava  "-Dorg.gradle.java.home=C:\Users\Public\wpilib\2025\jdk\"
+    .\gradlew simulateJava  "-Dorg.gradle.java.home=C:\Users\Public\wpilib\2026\jdk\"
 
 build:
     ./gradlew build

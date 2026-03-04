@@ -120,6 +120,16 @@ wpi.sim.addGui().defaultEnabled = true
 
 // update simulateJavaRelease for fancy hotswap
 tasks.named("simulateJavaRelease", JavaExec) {
+    // Set mainClass and classpath before any conditional logic
+    mainClass = ROBOT_MAIN_CLASS
+    classpath = sourceSets.main.runtimeClasspath
+    
+    // Temporary: don't update if on windows
+    if(FileSystems.getDefault().getSeparator() == "\\") {
+        println "simulateJava uhh"
+        return
+    }
+
     println "simulateJava will use JBR"
 
     // Set java executable to JBR java
@@ -127,10 +137,6 @@ tasks.named("simulateJavaRelease", JavaExec) {
         languageVersion = JavaLanguageVersion.of(17)
         vendor = JvmVendorSpec.matching("JetBrains")
     }
-
-    // Set mainClass and classpath before any conditional logic
-    mainClass = ROBOT_MAIN_CLASS
-    classpath = sourceSets.main.runtimeClasspath
 
     // load hotswap agent if present
     def hotswapAgentJar = file("$rootDir/libs/hotswap-agent.jar")
