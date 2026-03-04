@@ -49,4 +49,29 @@ public class Climber extends SubsystemBase {
             runRightPercent(0);
         }).until(() -> ((inputs.left.motorPosition() + inputs.right.motorPosition()) / 2 <= Units.inchesToMeters(15)));
     }
+
+    /** Extend to a ceratin length in millimeters */
+    public Command extendLeftServo(int length) {
+        return runEnd(() -> {
+            if (!(length > ClimberConstants.servoLengthmm)) {
+                io.setLeftServoPosition(length/ClimberConstants.servoLengthmm);
+            }
+        }, null);
+    }
+    /** Extend to a ceratin length in millimeters */
+    public Command extendRightServo(int length) {
+        return runEnd(() -> {
+            if (!(length > ClimberConstants.servoLengthmm)) {
+                io.setRightServoPosition(length/ClimberConstants.servoLengthmm);
+            }
+        }, null);
+    }
+    /** Extend to a ceratin length in millimeters */
+    public Command extendBothServos(int length) {
+        return runEnd(() -> {
+            extendLeftServo(length);
+            extendRightServo(length);
+        }, null);
+    }
+
 }

@@ -16,6 +16,7 @@ import frc.robot.subsystems.intake.*;
 import frc.robot.subsystems.climber.*;
 import frc.robot.subsystems.spindexer.*;
 import frc.robot.subsystems.vision.*;
+
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
@@ -62,8 +63,7 @@ public class RobotContainer {
                     new VisionIOPhotonVision(VisionConstants.camera1Name, robotToCamera1));
                 intake = new Intake(new IntakeIOReal());
                 turret = new Turret(new TurretIOReal());
-                // climber = new Climber(new ClimberIOReal());
-                climber = new Climber(new ClimberIOReal());
+                climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIOReal());
                 break;
             case SIM:
@@ -81,7 +81,6 @@ public class RobotContainer {
                 vision = new Vision(
                     new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
                     new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
-                // intake = new Intake(new IntakeIOSim());
                 turret = new Turret(new TurretIOSim());
                 intake = new Intake(new IntakeIO() {});
                 climber = new Climber(new ClimberIO() {});
@@ -96,9 +95,8 @@ public class RobotContainer {
                     new ModuleIO() {},
                     new ModuleIO() {});
                 vision = new Vision(new VisionIO() {}, new VisionIO() {});
-                // intake = new Intake(new IntakeIO() {});
-                turret = new Turret(new TurretIO() {});
                 intake = new Intake(new IntakeIO() {});
+                turret = new Turret(new TurretIO() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIO() {});
                 break;
@@ -115,6 +113,8 @@ public class RobotContainer {
         DriveTuningCommands.addTuningCommandsToAutoChooser(drive, testChooser);
 
         resetSimulationField();
+
+        
     }
 
     public Command getAutonomousCommand() {

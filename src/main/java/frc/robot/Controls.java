@@ -2,6 +2,7 @@ package frc.robot;
 
 import java.util.HashMap;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -20,6 +21,7 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.util.ShiftHelpers;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
 public class Controls {
@@ -31,6 +33,8 @@ public class Controls {
 
     private final LoggedTunableNumber endgameAlert1Time = new LoggedTunableNumber("Controls/EndgameAlert1Time", 30.0);
     private final LoggedTunableNumber endgameAlert2Time = new LoggedTunableNumber("Controls/EndgameAlert2Time", 20.0);
+
+    static LoggedNetworkBoolean shiftYours = new LoggedNetworkBoolean("YourShift"); 
 
     private static final Controls instance = new Controls();
 
@@ -85,6 +89,8 @@ public class Controls {
 
         endgameAlert1Trigger.onTrue(controllerRumbleWhileRunning(RumbleType.kBothRumble).withTimeout(0.5));
         endgameAlert2Trigger.onTrue(controllerRumbleWhileRunning(RumbleType.kBothRumble).withTimeout(0.4).andThen(Commands.waitSeconds(0.3)).repeatedly().withTimeout(2.0));
+
+        shiftYours.set(ShiftHelpers.currentShiftIsYours());
     }
 
     private HashMap<Integer, Double> driverRumbleCommands = new HashMap<>();
