@@ -1,4 +1,4 @@
-package frc.robot.subsystems.turret;
+package frc.robot.subsystems.turret.sim;
 
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Matrix;
@@ -12,26 +12,21 @@ import edu.wpi.first.math.system.NumericalIntegration;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.LinearSystemSim;
 import frc.robot.generated.TurretTuningData;
+import frc.robot.subsystems.turret.TurretConstants;
 import frc.robot.subsystems.turret.controller.TurretController;
 
-public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
+public final class TurretSimLinear extends LinearSystemSim<N5, N3, N5> implements TurretSim {
     public enum TurretSimMode {
         LinearSystem,
         MeasuredDynamics
     };
 
     private TurretSimMode mode;
-    public TurretSim(TurretSimMode mode) {
+    public TurretSimLinear(TurretSimMode mode) {
         super(createTurretSystem());
         this.mode = mode;
 
-        setState(VecBuilder.fill(
-            0, // flywheel velocity
-            TurretConstants.hoodMinAngle, // hood position
-            0, // hood velocity
-            0, // azimuth position
-            0  // azimuth velocity
-        ));
+        reset();
     }
 
     /**
@@ -56,8 +51,7 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
         double momentOfInertiaKgM2) {
         var torqueAtShaft = motor.KtNMPerAmp * currentProportion; // Nm
         // (Nm * ratio^2) / (kg m^2) = rad/s^2
-        // return torqueAtShaft / momentOfInertiaKgM2;
-        return 0;
+        return torqueAtShaft / momentOfInertiaKgM2;
     }
 
     private static double flywheelMOI = TurretConstants.flywheelMotorInertiaKgM2;
@@ -177,52 +171,26 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
         return updatedXhat;
     }
 
-    public record TurretState(
-        double flywheelMotorVelRps,
-        double hoodMotorPosRotations,
-        double hoodMotorVelRps,
-        double azimuthMotorPosRotations,
-        double azimuthMotorVelRps
-    ) {
-        public TurretState(Matrix<N5, N1> xhat) {
-            this(
-                xhat.get(0, 0),
-                xhat.get(1, 0),
-                xhat.get(2, 0),
-                xhat.get(3, 0),
-                xhat.get(4, 0)
-            );
-        }
-
-        /** Get the velocity of the flywheel itself in rotations per second */
-        public double flywheelVelRps() {
-            return flywheelMotorVelRps * TurretConstants.totalFlywheelGearing -
-                azimuthMotorVelRps * TurretConstants.azimuthFlyCoupling;
-        }
-        /** Get the velocity of the hood itself in rotations per second */
-        public double hoodVelRps() {
-            return hoodMotorVelRps * TurretConstants.totalHoodGearing -
-                azimuthMotorVelRps * TurretConstants.azimuthHoodCoupling;
-        }
-        /** Get the velocity of the azimuth itself in rotations per second */
-        public double azimuthVelRps() {
-            return azimuthMotorVelRps * TurretConstants.azimuthToRingReduction;
-        }
-
-        /** Get the hood position in rotations */
-        public double hoodPosRotations() {
-            return hoodMotorPosRotations * TurretConstants.totalHoodGearing -
-                azimuthMotorPosRotations * TurretConstants.azimuthHoodCoupling +
-                TurretConstants.hoodMinAngle / Math.PI / 2;
-        }
-        /** Get the azimuth position in rotations */
-        public double azimuthPosRotations() {
-            return azimuthMotorPosRotations * TurretConstants.azimuthToRingReduction;
-        }
+    public TurretState getState() {
+        var outputs = getOutput();
+        return new TurretState(
+            outputs.get(0, 0), // flywheel velocity
+            outputs.get(1, 0), // hood position
+            outputs.get(2, 0), // hood velocity
+            outputs.get(3, 0), // azimuth position
+            outputs.get(4, 0)  // azimuth velocity
+        );
     }
 
-    public TurretState getState() {
-        return new TurretState(getOutput());
+    @Override
+    public void reset() {
+        setState(VecBuilder.fill(
+            0, // flywheel velocity
+            TurretConstants.hoodMinAngle, // hood position
+            0, // hood velocity
+            0, // azimuth position
+            0  // azimuth velocity
+        ));
     }
 
     /**
@@ -232,6 +200,6 @@ public final class TurretSim extends LinearSystemSim<N5, N3, N5> {
         Matrix<N3, N1> u = VecBuilder.fill(flywheelTorque, hoodTorque, azimuthTorque);
         setInput(u);
         update(dtSeconds);
-        return new TurretState(getOutput());
+        return getState();
     }
 }

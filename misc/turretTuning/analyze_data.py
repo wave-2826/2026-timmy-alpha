@@ -128,7 +128,7 @@ public class TurretTuningData {{
 
             # Calculation method
             f.write("\n")
-            f.write(f"        public static double calculate(double flywheel, double azimuth, double hood) {{\n")
+            f.write(f"        public static double calculate(double flywheel_vel, double azimuth_vel, double hood_vel) {{\n")
             f.write(f"            return ")
             for i, (coeff, powers) in enumerate(zip(model.coef_, poly.powers_)):
                 if i == 0:
@@ -137,9 +137,9 @@ public class TurretTuningData {{
                     (coeff, term_str) = get_term_var_name(i, coeff, powers)
                     for var, power in zip(X.columns, powers):
                         var_map = {
-                            "flywheel_vel": "flywheel",
-                            "azimuth_vel": "azimuth",
-                            "hood_vel": "hood"
+                            "flywheel_vel": "flywheel_vel",
+                            "azimuth_vel": "azimuth_vel",
+                            "hood_vel": "hood_vel"
                         }
                         var_name = var_map.get(var, var)
                         if power > 1:
@@ -154,7 +154,7 @@ public class TurretTuningData {{
 
             # Calculation method for slepnir/autodiff
             f.write("\n")
-            f.write(f"        public static Variable calculate(Variable flywheel, Variable azimuth, Variable hood) {{\n")
+            f.write(f"        public static Variable calculate(Variable flywheel_vel, Variable azimuth_vel, Variable hood_vel) {{\n")
             f.write(f"            return ")
             # We need to turn this into something like
             # flywheel.times(0.1).times(azimuth).plus(hood.times(0.1))... etc etc
@@ -165,9 +165,9 @@ public class TurretTuningData {{
                     term_str = f"{get_term_var_name(i, coeff, powers)[1]}_var"
                     for var, power in zip(X.columns, powers):
                         var_map = {
-                            "flywheel_vel": "flywheel",
-                            "azimuth_vel": "azimuth",
-                            "hood_vel": "hood"
+                            "flywheel_vel": "flywheel_vel",
+                            "azimuth_vel": "azimuth_vel",
+                            "hood_vel": "hood_vel"
                         }
                         var_name = var_map.get(var, var)
                         for _ in range(power):

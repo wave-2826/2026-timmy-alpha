@@ -14,6 +14,8 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
+import edu.wpi.first.math.controller.PIDController;
+
 import static frc.robot.util.SparkUtil.tryUntilOk;
 
 import frc.robot.Constants;
@@ -77,6 +79,10 @@ public class TunableSparkPID {
     private String tunablePath;
     /** The list of sparks to be configured. */
     private HashSet<SparkBase> sparks = new HashSet<>();
+
+    private static record ConfigurableController(PIDController controller, ClosedLoopSlot slot) {};
+    /** The list of normal PID controllers to be configured. */
+    private HashSet<ConfigurableController> controllers = new HashSet<>();
 
     /** A list of change listeners that are run every loop iteration when in tuning mode. */
     private static ArrayList<Runnable> changeListenerRegistry = new ArrayList<>();
@@ -149,6 +155,25 @@ public class TunableSparkPID {
     }
 
     /**
+     * Registers a normal PIDController to be configured when the PID constants change. This is only really useful for
+     * simulation when we want to bypass REV's control loops.
+     * @param controller
+     * @param slot
+     */
+    public void configureController(PIDController controller, ClosedLoopSlot slot) {
+        controllers.add(new ConfigurableController(controller, slot));
+        for(InternalPIDConstants c : pidSlots) {
+            if(c.slot == slot) setControllerConfig(controller, c);
+        }
+    }
+
+    private void setControllerConfig(PIDController controller, InternalPIDConstants constants) {
+        controller.setP(constants.p == null ? 0. : constants.p.get());
+        controller.setI(constants.i == null ? 0. : constants.i.get());
+        controller.setD(constants.d == null ? 0. : constants.d.get());
+    }
+
+    /**
      * Checks if any of the PID constants have changed. If they have, it reconfigures all of the sparks that have been
      * registered. This is called every loop iteration when in tuning mode.
      */
@@ -162,6 +187,11 @@ public class TunableSparkPID {
 
                     tryUntilOk(spark, 5, () -> spark.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters));
                 }
+
+                for(ConfigurableController cc : controllers) {
+                    if(c.slot == cc.slot) setControllerConfig(cc.controller, c);
+                }
+
                 Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Tunable PIDs", "Configured " + sparks.size() + " motors with updated PIDs!"));
                 return;
             }

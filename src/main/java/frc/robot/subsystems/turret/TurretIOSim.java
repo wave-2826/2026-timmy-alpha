@@ -6,17 +6,35 @@ import org.littletonrobotics.junction.Logger;
 
 import com.revrobotics.sim.SparkAbsoluteEncoderSim;
 import com.revrobotics.sim.SparkFlexSim;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkSim;
+import com.revrobotics.spark.SparkBase.ControlType;
 
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
-import frc.robot.subsystems.turret.TurretSim.TurretSimMode;
+import frc.robot.subsystems.turret.controller.TurretControllerIO.TurretMPCOutputs;
+import frc.robot.subsystems.turret.sim.TurretSim;
+import frc.robot.subsystems.turret.sim.TurretSimDCMotor;
+import frc.robot.subsystems.turret.sim.TurretSimLinear;
+import frc.robot.subsystems.turret.sim.TurretSimLinear.TurretSimMode;
 
 public class TurretIOSim extends TurretIOReal {
+    private static int subticks = 10;
+
     // DC simulation motors
     protected static DCMotor flywheelSimMotor = DCMotor.getNeoVortex(2);
     protected static DCMotor azimuthSimMotor = DCMotor.getNeoVortex(1);
     protected static DCMotor hoodSimMotor = DCMotor.getNeoVortex(1);
+
+    // Current control PID loops - for some reason, the spark ControlMode.kCurrent doesn't work in sim??
+    protected PIDController flywheelCurrentController = new PIDController(0, 0, 0, 0.02 / subticks);
+    protected PIDController azimuthCurrentController = new PIDController(0, 0, 0, 0.02 / subticks);
+    protected PIDController hoodCurrentController = new PIDController(0, 0, 0, 0.02 / subticks);
+    protected Double flywheelCurrentTarget = null;
+    protected Double azimuthCurrentTarget = null;
+    protected Double hoodCurrentTarget = null;
 
     // Spark simulation objects
     protected SparkSim flywheelMotorSim = new SparkFlexSim(topFlywheelMotor, flywheelSimMotor);
@@ -26,10 +44,14 @@ public class TurretIOSim extends TurretIOReal {
     // Spark simulation sensors
     protected SparkAbsoluteEncoderSim azimuthEncoderSim = azimuthMotorSim.getAbsoluteEncoderSim();
 
-    protected TurretSim turretSim = new TurretSim(TurretSimMode.LinearSystem);
+    protected TurretSim turretSim = new TurretSimDCMotor();
 
     public TurretIOSim() {
         super();
+
+        TurretConstants.flywheelMotorPID.configureController(flywheelCurrentController, ClosedLoopSlot.kSlot1);
+        TurretConstants.azimuthMotorPID.configureController(azimuthCurrentController, ClosedLoopSlot.kSlot1);
+        TurretConstants.hoodMotorPID.configureController(hoodCurrentController, ClosedLoopSlot.kSlot1);
     }
 
     private double calculateTorque(SparkSim motorSim, DCMotor simMotor) {
@@ -40,20 +62,37 @@ public class TurretIOSim extends TurretIOReal {
     }
   
     public void updateInputs(TurretIOInputs inputs) {
-        // TODO: update sim thingies
+        if(!DriverStationSim.getDsAttached()) {
+            turretSim.reset();
+            return;
+        }
+
         // TODO: subtick on main subtick loop
-        int subticks = 5;
+
         for(int i = 0; i < subticks; i++) {
             var turretState = turretSim.updateAndGetState(
-                calculateTorque(flywheelMotorSim, flywheelSimMotor),
-                calculateTorque(hoodMotorSim, hoodSimMotor),
-                calculateTorque(azimuthMotorSim, azimuthSimMotor),
-                0.02
+                flywheelMotorSim.getAppliedOutput() * RoboRioSim.getVInVoltage(),
+                hoodMotorSim.getAppliedOutput() * RoboRioSim.getVInVoltage(),
+                azimuthMotorSim.getAppliedOutput() * RoboRioSim.getVInVoltage(),
+                0.02 / subticks
             );
 
-            flywheelMotorSim.iterate(turretState.flywheelMotorVelRps() * 2 * Math.PI, RoboRioSim.getVInVoltage(), 0.02 / subticks);
-            hoodMotorSim.iterate(turretState.hoodMotorVelRps() * 2 * Math.PI, RoboRioSim.getVInVoltage(), 0.02 / subticks);
-            azimuthMotorSim.iterate(turretState.azimuthMotorVelRps() * 2 * Math.PI, RoboRioSim.getVInVoltage(), 0.02 / subticks);
+            if(flywheelCurrentTarget != null) {
+                double flyOutput = flywheelCurrentController.calculate(flywheelMotorSim.getMotorCurrent(), flywheelCurrentTarget);
+                flywheelController.setSetpoint(flyOutput, ControlType.kDutyCycle);
+            }
+            if(azimuthCurrentTarget != null) {
+                double azimuthOutput = azimuthCurrentController.calculate(azimuthMotorSim.getMotorCurrent(), azimuthCurrentTarget);
+                azimuthController.setSetpoint(azimuthOutput, ControlType.kDutyCycle);
+            }
+            if(hoodCurrentTarget != null) {
+                double hoodOutput = hoodCurrentController.calculate(hoodMotorSim.getMotorCurrent(), hoodCurrentTarget);
+                hoodController.setSetpoint(hoodOutput, ControlType.kDutyCycle);
+            }
+
+            flywheelMotorSim.iterate(turretState.flywheelMotorVelRps(), RoboRioSim.getVInVoltage(), 0.02 / subticks);
+            hoodMotorSim.iterate(turretState.hoodMotorVelRps(), RoboRioSim.getVInVoltage(), 0.02 / subticks);
+            azimuthMotorSim.iterate(turretState.azimuthMotorVelRps(), RoboRioSim.getVInVoltage(), 0.02 / subticks);
         }
 
         var state = turretSim.getState();
@@ -67,7 +106,7 @@ public class TurretIOSim extends TurretIOReal {
         Logger.recordOutput("TurretSim/AzimuthTorque", calculateTorque(azimuthMotorSim, azimuthSimMotor));
 
         azimuthEncoderSim.setVelocity(turretSim.getState().azimuthVelRps() * 2 * Math.PI);
-        azimuthEncoderSim.setPosition(turretSim.getState().azimuthPosRotations() * 2 * Math.PI);
+        azimuthEncoderSim.setPosition(turretSim.getState().azimuthPosRad() * 2 * Math.PI);
 
         super.updateInputs(inputs);
 
@@ -76,5 +115,28 @@ public class TurretIOSim extends TurretIOReal {
         var distributedFlywheel = inputs.topFlywheel.half();
         inputs.topFlywheel = distributedFlywheel;
         inputs.bottomFlywheel = distributedFlywheel;
+    }
+
+    // private double manualVoltageCompensation(double voltage) {
+    //     return voltage * 13.4 / RobotController.getBatteryVoltage();
+    // }
+    // private double getVoltage(DCMotor motor, double current, double speedRadiansPerSec) {
+    //     return manualVoltageCompensation(1.0 / motor.KvRadPerSecPerVolt * speedRadiansPerSec) +
+    //         motor.rOhms * current;
+    // }
+
+    @Override
+    public void setPIDOutputs(TurretIOPIDOutputs outputs) {
+        flywheelCurrentTarget = null;
+        hoodCurrentTarget = null;
+        azimuthCurrentTarget = null;
+        super.setPIDOutputs(outputs);
+    }
+
+    @Override
+    public void setMPCOutputs(TurretMPCOutputs outputs) {
+        flywheelCurrentTarget = outputs.flywheelCurrent();
+        hoodCurrentTarget = outputs.hoodCurrent();
+        azimuthCurrentTarget = outputs.azimuthCurrent();
     }
 }

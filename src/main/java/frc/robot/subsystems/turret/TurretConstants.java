@@ -43,7 +43,7 @@ public class TurretConstants {
 
     // Inertias
     private static final double reflectInertia(double externalInertia, double ratioInternal) {
-        return (1 / ratioInternal) * (1 / ratioInternal) * externalInertia;
+        return ratioInternal * ratioInternal * externalInertia;
     }
     private static final double parallelAxisInertia(double inertia, double mass, double radius) {
         return inertia + mass * radius * radius;
@@ -107,12 +107,12 @@ public class TurretConstants {
     
     public static final TunableSparkPID flywheelMotorPID = new TunableSparkPID("Turret/Flywheel")
         .addRealRobotGains(new SparkPIDConstants(0.0005, 0.0, 0.0))
-        .addRealRobotGains(new SparkPIDConstants(0.0005, 0.0, 0.0, ClosedLoopSlot.kSlot1)) // Current PID
+        .addRealRobotGains(new SparkPIDConstants(0.001, 0.5, 0.0, ClosedLoopSlot.kSlot1)) // Current PID
         .copyRealGainsInSim();
     
     public static final TunableSparkPID azimuthMotorPID = new TunableSparkPID("Turret/Azimuth")
         .addRealRobotGains(new SparkPIDConstants(0.7, 0.0, 0.2))
-        .addRealRobotGains(new SparkPIDConstants(0.001, 0.0, 0.0, ClosedLoopSlot.kSlot1)) // Current PID
+        .addRealRobotGains(new SparkPIDConstants(0.001, 0.5, 0.0, ClosedLoopSlot.kSlot1)) // Current PID
         .copyRealGainsInSim();
     public static final TunableSparkPID hoodMotorPID = azimuthMotorPID;
 }

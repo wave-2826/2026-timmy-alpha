@@ -10,6 +10,7 @@ import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.ExtendedKalmanFilter;
 import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N5;
 import edu.wpi.first.math.util.Units;
 import frc.robot.generated.TurretTuningData;
@@ -39,11 +40,11 @@ public class TurretController {
      * The state vector (x) is as follows:
      *     [flywheel velocity, hood position, hood velocity, azimuth position, azimuth velocity]ᵀ
      * And the input vector (u) is as follows:
-     *     [...model state vector, flywheel current, hood current, azimuth current]ᵀ
+     *     [flywheel current, hood current, azimuth current]ᵀ
      * The output vector is the same as the state vector.
      */
-    private ExtendedKalmanFilter<N5, N5, N5> observer = new ExtendedKalmanFilter<N5, N5, N5>(
-        Nat.N5(), Nat.N5(), Nat.N5(),
+    private ExtendedKalmanFilter<N5, N3, N5> observer = new ExtendedKalmanFilter<N5, N3, N5>(
+        Nat.N5(), Nat.N3(), Nat.N5(),
         (x, u) -> mcpDynamicsButNumbers(x.getData(), u.getData()),
         (x, u) -> x, // Just output the state vector
         // Model standard deviations
@@ -92,13 +93,6 @@ public class TurretController {
         double targetAzimuthAngle, double targetHoodAngle, double targetFlywheelSpeed
     ) {
         LoggedTracer.skipEpoch();
-
-        try {
-            observer.predict(modelState, 0.02);
-            observer.correct(modelState, getCurrentState());
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
         
         LoggedTracer.record("Turret/Kalman");
         
@@ -110,6 +104,14 @@ public class TurretController {
         var solution = mpc.calculate(observer.getXhat().getData(), reference);
 
         LoggedTracer.record("Turret/Solution");
+
+        try {
+            var input = VecBuilder.fill(solution[0], solution[1], solution[2]);
+            observer.predict(input, 0.02);
+            observer.correct(input, getCurrentState());
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
 
         return solution;
     }
@@ -202,10 +204,10 @@ public class TurretController {
             .plus(hoodPositionError.times(hoodPositionError))
             .plus(azimuthPositionError.times(azimuthPositionError));
         
-        // for(int i = 0; i < 3; i++) {
-        //     Variable current = input.get(i, 0);
-        //     cost = cost.plus(current.times(current).times(0.001));
-        // }
+        for(int i = 0; i < 3; i++) {
+            Variable current = input.get(i, 0);
+            cost = cost.plus(current.times(current));
+        }
         
         return cost;
     }

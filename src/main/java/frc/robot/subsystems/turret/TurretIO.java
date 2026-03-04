@@ -26,11 +26,11 @@ public interface TurretIO {
         public record AzimuthMotorInputs(
             /** Whether the motor is connected */
             boolean connected,
-            /** The measured azimuth outer ring angle. */
+            /** The measured absolute azimuth angle. */
             double azimuthAngleRad,
             /** The azimuth motor's internal encoder angle. */
             double azimuthInternalEncoderAngle,
-            /** The measured velocity in rad/sec. */
+            /** The measured absolute velocity in rad/sec. */
             double azimuthVelocityRadPerSec,
             /** The motor current draw. */
             double motorCurrentAmps,

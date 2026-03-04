@@ -15,7 +15,6 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
-import frc.robot.Constants;
 import frc.robot.subsystems.turret.controller.TurretControllerIO.TurretMPCOutputs;
 import frc.robot.util.SparkUtil;
 
@@ -44,12 +43,17 @@ public class TurretIOReal implements TurretIO {
     }
 
     public void configureAndReset() {
+        // NOTE: do NOT turn on voltage compensation for these motors. Because
+        // we manually calculate BackEMF voltage plus our control signal voltage, but
+        // only one of those - control signal - must actually scale by a voltage compensation
+        // factor because it is used through duty cycle.
+
         // Flywheel motors
         var flywheelBaseConfig = new SparkFlexConfig();
         flywheelBaseConfig.signals.apply(SparkUtil.defaultSignals);
         TurretConstants.flywheelMotorPID.applyConfigAndRegister(flywheelBaseConfig, topFlywheelMotor, bottomFlywheelMotor);
         flywheelBaseConfig.closedLoopRampRate(1.0);
-        flywheelBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(flywheelCurrentLimit).voltageCompensation(Constants.voltageCompensation);
+        flywheelBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(flywheelCurrentLimit);
         flywheelBaseConfig.encoder
             .positionConversionFactor(2.0 * Math.PI) // rotations -> radians
             .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s
@@ -75,7 +79,7 @@ public class TurretIOReal implements TurretIO {
             .zeroCentered(false)
             .positionConversionFactor(2.0 * Math.PI) // Rotations -> Radians (of ring)
             .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s (of ring)
-        azimuthConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(azimuthCurrentLimit).voltageCompensation(Constants.voltageCompensation);
+        azimuthConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(azimuthCurrentLimit);
         azimuthConfig.encoder
             .positionConversionFactor(2.0 * Math.PI) // Rotor Rotations -> Radians (of ring)
             .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s (of ring)
@@ -88,7 +92,7 @@ public class TurretIOReal implements TurretIO {
         hoodConfig.closedLoop
             .positionWrappingEnabled(true)
             .positionWrappingInputRange(0, Math.PI * 2);
-        hoodConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(hoodCurrentLimit).voltageCompensation(Constants.voltageCompensation);
+        hoodConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(hoodCurrentLimit);
         hoodConfig.encoder
             .positionConversionFactor(2.0 * Math.PI) // Rotor Rotations -> Radians (of ring)
             .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s (of ring)
@@ -132,18 +136,19 @@ public class TurretIOReal implements TurretIO {
 
     @Override
     public void setMPCOutputs(TurretMPCOutputs outputs) {
+        // ugh wwhat
         flywheelController.setSetpoint(
-            outputs.flywheelCurrent() * TurretConstants.flywheelSimMotor.rOhms / 2.0 +
-            topFlywheelMotor.getEncoder().getVelocity() / TurretConstants.flywheelSimMotor.KvRadPerSecPerVolt,
-            ControlType.kVoltage, ClosedLoopSlot.kSlot1);
+            outputs.flywheelCurrent(),
+            // topFlywheelMotor.getEncoder().getVelocity() / TurretConstants.flywheelSimMotor.KvRadPerSecPerVolt,
+            ControlType.kCurrent, ClosedLoopSlot.kSlot1);
         azimuthController.setSetpoint(
-            outputs.azimuthCurrent() * TurretConstants.azimuthSimMotor.rOhms +
-            azimuthMotor.getEncoder().getVelocity() / TurretConstants.azimuthSimMotor.KvRadPerSecPerVolt,
-            ControlType.kVoltage, ClosedLoopSlot.kSlot1);
+            outputs.azimuthCurrent(),
+            // azimuthMotor.getEncoder().getVelocity() / TurretConstants.azimuthSimMotor.KvRadPerSecPerVolt,
+            ControlType.kCurrent, ClosedLoopSlot.kSlot1);
         hoodController.setSetpoint(
-            outputs.hoodCurrent() * TurretConstants.hoodSimMotor.rOhms +
-            hoodMotor.getEncoder().getVelocity() / TurretConstants.hoodSimMotor.KvRadPerSecPerVolt,
-            ControlType.kVoltage, ClosedLoopSlot.kSlot1);
+            outputs.hoodCurrent(),
+            // hoodMotor.getEncoder().getVelocity() / TurretConstants.hoodSimMotor.KvRadPerSecPerVolt,
+            ControlType.kCurrent, ClosedLoopSlot.kSlot1);
     }
 
     @Override
