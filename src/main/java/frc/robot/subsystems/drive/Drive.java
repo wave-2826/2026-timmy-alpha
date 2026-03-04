@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -156,10 +157,10 @@ public class Drive extends SubsystemBase {
         SwerveModuleState[] setpointStates = robotState.kinematics.toSwerveModuleStates(speeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, DriveConstants.linearFreeSpeed);
  
-        // for(int i = 0; i < 4; i++) setpointStates[i] = new SwerveModuleState(
-        //     Math.sin(Timer.getFPGATimestamp() * 2) * 9,
-        //     Rotation2d.fromRotations(Timer.getFPGATimestamp() / 2)
-        // );
+        for(int i = 0; i < 4; i++) setpointStates[i] = new SwerveModuleState(
+            Math.sin(Timer.getFPGATimestamp() * 2) * 5,
+            Rotation2d.fromRotations(Timer.getFPGATimestamp() / 2)
+        );
 
         // Log unoptimized setpoints and setpoint speeds
         Logger.recordOutput("SwerveStates/Setpoints", setpointStates);

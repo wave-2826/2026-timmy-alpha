@@ -11,6 +11,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -85,5 +86,10 @@ public final class Simulation {
 
             // TODO: also run other sim IO with subticks
         }
+    }
+
+    public void simulationInit() {
+        DriverStationSim.setDsAttached(true);
+        DriverStationSim.setEnabled(true);
     }
 }

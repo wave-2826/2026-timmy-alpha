@@ -3,6 +3,9 @@ package frc.robot;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.DriveTuningCommands;
 import frc.robot.subsystems.drive.*;
@@ -66,7 +69,7 @@ public class RobotContainer {
             case SIM:
                 // Sim robot, instantiate physics sim IO implementations
                 var driveSimulation = Simulation.getInstance().configureSimulation();
-                
+
                 drive = new Drive(
                     new GyroIOSim(driveSimulation.getGyroSimulation()),
                     new ModuleIOTalonFXSim(DriveConstants.frontLeftConfig, driveSimulation.getModules()[0]),
@@ -80,6 +83,8 @@ public class RobotContainer {
                 intake = new Intake(new IntakeIO() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIO() {});
+                
+                drive.setPose(new Pose2d(3, 3, new Rotation2d()));
                 break;
             default:
                 // Replayed robot, disable IO implementations
