@@ -46,11 +46,11 @@ public class ClimberIOReal implements ClimberIO {
     public void updateInputs(ClimberIOInputs inputs) {
         var climbRCurrent = getIfOk(rightMotor, rightMotor::getOutputCurrent, 0.0);
         var climbRPosition = getIfOk(rightMotor, rightEncoder::getPosition, 0.0);
-        inputs.right = new ClimberIOInputs.climbMotorInputs(sparkStickyFault, climbRCurrent, climbRPosition);
+        inputs.right = new ClimberIOInputs.climbMotorInputs(!sparkStickyFault, climbRCurrent, climbRPosition);
 
         var climbLCurrent = getIfOk(leftMotor, leftMotor::getOutputCurrent, 0.0);
         var climbLPosition = getIfOk(leftMotor, leftEncoder::getPosition, 0.0);
-        inputs.left = new ClimberIOInputs.climbMotorInputs(sparkStickyFault, climbLCurrent, climbLPosition);
+        inputs.left = new ClimberIOInputs.climbMotorInputs(!sparkStickyFault, climbLCurrent, climbLPosition);
 
         var servoLPosition = servoL.getPosition();
         inputs.leftServeo = new ClimberIOInputs.servoInputs(servoLPosition);

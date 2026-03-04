@@ -70,15 +70,15 @@ public class IntakeIOReal implements IntakeIO {
     public void updateInputs(IntakeIOInputs inputs) {
         var rollerVelocity = getIfOk(roller, rollerEncoder::getVelocity, 0.0);
         var rollerCurrent = getIfOk(roller, roller::getOutputCurrent, 0.0);
-        inputs.roller = new IntakeIOInputs.RollerMotorInputs(sparkStickyFault, rollerVelocity, rollerCurrent);
+        inputs.roller = new IntakeIOInputs.RollerMotorInputs(!sparkStickyFault, rollerVelocity, rollerCurrent);
 
         var deployLCurrent = getIfOk(deployL, deployL::getOutputCurrent, 0.0);
         var deployLPosition = getIfOk(deployL, deployEncoderL::getPosition, 0.0);
-        inputs.deployL = new IntakeIOInputs.DeployMotorInputs(sparkStickyFault, deployLCurrent, deployLPosition);
+        inputs.deployL = new IntakeIOInputs.DeployMotorInputs(!sparkStickyFault, deployLCurrent, deployLPosition);
 
         var deployRCurrent = getIfOk(deployR, deployR::getOutputCurrent, 0.0);
         var deployRPosition = getIfOk(deployR, deployEncoderR::getPosition, 0.0);
-        inputs.deployR = new IntakeIOInputs.DeployMotorInputs(sparkStickyFault, deployRCurrent, deployRPosition);
+        inputs.deployR = new IntakeIOInputs.DeployMotorInputs(!sparkStickyFault, deployRCurrent, deployRPosition);
     }
   
     @Override
