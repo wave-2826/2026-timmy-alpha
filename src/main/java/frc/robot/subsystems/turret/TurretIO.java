@@ -2,17 +2,27 @@ package frc.robot.subsystems.turret;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import frc.robot.subsystems.turret.controller.TurretControllerIO.TurretMPCOutputs;
+
 public interface TurretIO {
     @AutoLog
     public static class TurretIOInputs {
         public record FlywheelMotorInputs(
             /** Whether the motor is connected */
             boolean connected,
-            /** The measured flywheel angular velocity. */
-            double velocityRadPerSec,
+            /** The measured flywheel angular velocity at the flywheel. */
+            double flywheelVelocityRadPerSec,
             /** The motor current draw. */
             double motorCurrentAmps
-        ) {}
+        ) {
+            FlywheelMotorInputs half() {
+                return new FlywheelMotorInputs(
+                    connected,
+                    flywheelVelocityRadPerSec,
+                    motorCurrentAmps / 2
+                );
+            }
+        }
         public record AzimuthMotorInputs(
             /** Whether the motor is connected */
             boolean connected,
@@ -26,7 +36,18 @@ public interface TurretIO {
             double motorCurrentAmps,
             /** The applied output as a percentage. */
             double appliedOutput
-        ) {}
+        ) {
+            public AzimuthMotorInputs withAngle(double azimuthANgleRad) {
+                return new AzimuthMotorInputs(
+                    connected,
+                    azimuthANgleRad,
+                    azimuthInternalEncoderAngle,
+                    azimuthVelocityRadPerSec,
+                    motorCurrentAmps,
+                    appliedOutput
+                );
+            }
+        }
         public record HoodMotorInputs(
             /** Whether the motor is connected */
             boolean connected,
@@ -43,12 +64,35 @@ public interface TurretIO {
             double appliedOutput
         ) {}
 
-        FlywheelMotorInputs topFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
-        FlywheelMotorInputs bottomFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
+        public FlywheelMotorInputs topFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
+        public FlywheelMotorInputs bottomFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
 
-        AzimuthMotorInputs azimuth = new AzimuthMotorInputs(false, 0.0, 0.0, 0.0, 0.0, 0.0);
+        public AzimuthMotorInputs azimuth = new AzimuthMotorInputs(false, 0.0, 0.0, 0.0, 0.0, 0.0);
 
-        HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0, 0.0, 0.0);
+        public HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0, 0.0, 0.0);
+
+
+        public double getFlywheelVelocityRadPerSecond() {
+            return (
+                topFlywheel.flywheelVelocityRadPerSec() + bottomFlywheel.flywheelVelocityRadPerSec()
+            ) / 2 + azimuth.azimuthVelocityRadPerSec() * TurretConstants.azimuthFlyCoupling;
+        }
+        public double getHoodAngleRad() {
+            return hood.hoodRingAngleRad() * TurretConstants.hoodRingToHoodReduction -
+                azimuth.azimuthAngleRad() * TurretConstants.azimuthHoodCoupling +
+                TurretConstants.hoodMinAngle;
+            // TODO: Store an offset?
+        }
+        public double getHoodVelocityRadPerSec() {
+            return hood.hoodRingVelocityRadPerSec() -
+                azimuth.azimuthVelocityRadPerSec() * TurretConstants.azimuthHoodCoupling;
+        }
+        public double getAzimuthAngleRad() {
+            return azimuth.azimuthAngleRad();
+        }
+        public double getAzimuthVelocityRadPerSec() {
+            return azimuth.azimuthVelocityRadPerSec();
+        }
     }
 
     public static record TurretIOPIDOutputs(
@@ -60,15 +104,6 @@ public interface TurretIO {
         double hoodAngleRad
     ) {}
 
-    public static record TurretIOMPCOutputs(
-        /** The current to apply to the flywheel motors (half to each), in amps. */
-        double flywheelCurrent,
-        /** The current to apply to the hood motor, in amps. */
-        double hoodCurrent,
-        /** The current to apply to the azimuth motor, in amps. */
-        double azimuthCurrent
-    ) {}
-
     /** Update the set of loggable inputs - data measured from the turret and passed into code. */
     public default void updateInputs(TurretIOInputs inputs) {}
 
@@ -76,7 +111,7 @@ public interface TurretIO {
     public default void setPIDOutputs(TurretIOPIDOutputs outputs) {}
 
     /** Run the turret with the given outputs in MPC control mode. */
-    public default void setMPCOutputs(TurretIOMPCOutputs outputs) {}
+    public default void setMPCOutputs(TurretMPCOutputs outputs) {}
 
     /** Stop all turret motion and hold position. */
     public default void stop() {}

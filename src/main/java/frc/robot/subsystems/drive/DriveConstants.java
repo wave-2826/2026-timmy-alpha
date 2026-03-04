@@ -5,10 +5,6 @@ import static edu.wpi.first.units.Units.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import org.ironmaple.simulation.drivesims.COTS;
-import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
-import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
-
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.*;
 import com.ctre.phoenix6.hardware.*;
@@ -26,6 +22,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
+import frc.robot.Constants;
 import frc.robot.subsystems.drive.kinematicConstraints.KinematicConstraints;
 
 /**
@@ -77,8 +74,8 @@ public class DriveConstants {
                 .withWheelRadius(wheelRadius)
                 .withSteerMotorGains(steerGains)
                 .withDriveMotorGains(driveGains)
-                .withSteerMotorClosedLoopOutput(steerClosedLoopOutput)
-                .withDriveMotorClosedLoopOutput(driveClosedLoopOutput)
+                .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
+                .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
                 .withSlipCurrent(slipCurrent)
                 .withSpeedAt12Volts(linearFreeSpeed)
                 .withDriveMotorType(driveMotorType)
@@ -115,17 +112,22 @@ public class DriveConstants {
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     public static final Slot0Configs steerGains = new Slot0Configs()
-        .withKP(325).withKI(0).withKD(0.8).withKS(0.1).withKV(1.59).withKA(0)
+        .withKP(Constants.isSim ? 100 : 100)
+        .withKI(Constants.isSim ? 0   : 0)
+        .withKD(Constants.isSim ? 10  : 10)
+        .withKS(Constants.isSim ? 0.1 : 0.1)
+        .withKV(Constants.isSim ? 0.0 : 0.0)
+        .withKA(Constants.isSim ? 0   : 0)
+
         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     public static final Slot0Configs driveGains = new Slot0Configs()
-        .withKP(3.0).withKI(0).withKD(0).withKS(0).withKV(0.124);
-
-    /** The closed-loop output type to use for the steer motors; this affects their PID/FF gains */
-    private static final ClosedLoopOutputType steerClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;
-    /** The closed-loop output type to use for the steer motors; this affects their PID/FF gains */
-    private static final ClosedLoopOutputType driveClosedLoopOutput = ClosedLoopOutputType.TorqueCurrentFOC;
+        .withKP(Constants.isSim ? 3.0   : 3.0)
+        .withKI(Constants.isSim ? 0     : 0)
+        .withKD(Constants.isSim ? 0     : 0)
+        .withKS(Constants.isSim ? 0     : 0)
+        .withKV(Constants.isSim ? 0.124 : 0.124);
 
     /** The type of motor used for the drive motor */
     private static final DriveMotorArrangement driveMotorType = DriveMotorArrangement.TalonFX_Integrated;
@@ -150,19 +152,22 @@ public class DriveConstants {
             .withStatorCurrentLimitEnable(true));
     private static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
     // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
-    private static final Pigeon2Configuration pigeonConfigs = null;
+    public static final Pigeon2Configuration pigeonConfigs = null;
 
     // CAN bus that the devices are located on;
     // All swerve devices must share the same CAN bus
-    public static final CANBus CANBus = new CANBus("Default Name", "./logs/example.hoot");
+    public static final CANBus CANBus = new CANBus("*");
 
     // Effective free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
     public static final LinearVelocity linearFreeSpeed = MetersPerSecond.of(4.73); // "Magic" number from max speed measurement
 
-    public static final Distance trackWidth = Inches.of(27.5);
-    public static final Distance wheelBase = Inches.of(14.5);
-    public static final double driveBaseRadius = Math.hypot(trackWidth.in(Meters) / 2.0, wheelBase.in(Meters) / 2.0);
+    /** Spacing between wheel centers on the Y axis */
+    public static final Distance trackWidthY = Inches.of(27.5);
+    /** Spacing between wheel centers on the X axis */
+    public static final Distance wheelBaseX = Inches.of(14.5);
+
+    public static final double driveBaseRadius = Math.hypot(trackWidthY.in(Meters) / 2.0, wheelBaseX.in(Meters) / 2.0);
 
     public static final double maxSpeedMetersPerSec = linearFreeSpeed.in(MetersPerSecond);
     public static final double maxAngularSpeedRadPerSec = maxSpeedMetersPerSec / driveBaseRadius;
@@ -175,7 +180,7 @@ public class DriveConstants {
     public static final double steerGearRatio = 12.8;
     public static final Distance wheelRadius = Inches.of(2);
 
-    private static final int pigeonId = 9;
+    public static final int pigeonId = 9;
 
     // These are only used for simulation
     public static final MomentOfInertia steerInertia = KilogramSquareMeters.of(0.004);
@@ -183,11 +188,6 @@ public class DriveConstants {
     // Simulated voltage necessary to overcome friction
     public static final Voltage steerFrictionVoltage = Volts.of(0.2);
     public static final Voltage driveFrictionVoltage = Volts.of(0.2);
-
-    public static final SwerveDrivetrainConstants drivetrainConstants = new SwerveDrivetrainConstants()
-            .withCANBusName(CANBus.getName())
-            .withPigeon2Id(pigeonId)
-            .withPigeon2Configs(pigeonConfigs);
     
     public static final KinematicConstraints kinematicConstraints = new KinematicConstraints(
         MetersPerSecondPerSecond.of(10) /* measuered "magic value" - max linear acceleration */,
@@ -198,13 +198,13 @@ public class DriveConstants {
     );
     
     public static final SwerveModuleConfig frontLeftConfig =
-        new SwerveModuleConfig(20, 21, 22, Radians.of(-2.906722), trackWidth.div(2.0), wheelBase.div(2.0), false);
+        new SwerveModuleConfig(20, 21, 22, Radians.of(-2.906722), trackWidthY.div(2.0), wheelBaseX.div(2.0), false);
     public static final SwerveModuleConfig frontRightConfig =
-        new SwerveModuleConfig(30, 31, 32, Radians.of(0.984103), trackWidth.div(-2.0), wheelBase.div(2.0), false);
+        new SwerveModuleConfig(30, 31, 32, Radians.of(0.984103), trackWidthY.div(-2.0), wheelBaseX.div(2.0), false);
     public static final SwerveModuleConfig backLeftConfig =
-        new SwerveModuleConfig(10, 11, 12, Radians.of(-0.414148), trackWidth.div(2.0), wheelBase.div(-2.0), false);
+        new SwerveModuleConfig(10, 11, 12, Radians.of(-0.414148), trackWidthY.div(2.0), wheelBaseX.div(-2.0), false);
     public static final SwerveModuleConfig backRightConfig =
-        new SwerveModuleConfig(40, 41, 42, Radians.of(-0.293685), trackWidth.div(-2.0), wheelBase.div(-2.0), false);
+        new SwerveModuleConfig(40, 41, 42, Radians.of(-0.293685), trackWidthY.div(-2.0), wheelBaseX.div(-2.0), false);
 
     public static final ArrayList<SwerveModuleConfig> moduleConfigs = new ArrayList<>(Arrays.asList(
         frontLeftConfig,
@@ -228,22 +228,7 @@ public class DriveConstants {
     public static final PPHolonomicDriveController realHolonomicDriveController = new PPHolonomicDriveController(
         new PIDConstants(6.5, 0.0, 0.25), new PIDConstants(8.0, 1.0, 0.75));
 
-    static final double odometryFrequency = new CANBus(DriveConstants.drivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
-
-    public static final DriveTrainSimulationConfig mapleSimConfig = DriveTrainSimulationConfig.Default()
-        .withRobotMass(DriveConstants.robotMass)
-        .withCustomModuleTranslations(DriveConstants.moduleTranslations)
-        .withGyro(COTS.ofPigeon2())
-        .withSwerveModule(new SwerveModuleSimulationConfig(
-            DCMotor.getKrakenX60(1),
-            DCMotor.getFalcon500(1),
-            DriveConstants.driveGearRatio,
-            DriveConstants.steerGearRatio,
-            DriveConstants.driveFrictionVoltage,
-            DriveConstants.steerFrictionVoltage,
-            DriveConstants.wheelRadius,
-            DriveConstants.steerInertia,
-            DriveConstants.wheelCOF));
+    static final double odometryFrequency = CANBus.isNetworkFD() ? 250.0 : 100.0;
 
     /** Swerve Drive class utilizing CTR Electronics' Phoenix 6 API with the selected device types. */
     public static class TunerSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> {

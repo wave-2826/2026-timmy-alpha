@@ -23,7 +23,9 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
-import frc.robot.Constants;
+import frc.robot.util.Elastic;
+import frc.robot.util.Elastic.Notification;
+import frc.robot.util.Elastic.Notification.NotificationLevel;
 
 public abstract class ModuleIOTalonFX implements ModuleIO {
     protected final SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> constants;
@@ -31,10 +33,6 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
     protected final TalonFX driveTalon;
     protected final TalonFX turnTalon;
     protected final CANcoder cancoder;
-
-    protected final VoltageOut voltageRequest = new VoltageOut(0);
-    protected final PositionVoltage positionVoltageRequest = new PositionVoltage(0.0);
-    protected final VelocityVoltage velocityVoltageRequest = new VelocityVoltage(0.0);
 
     // Torque-current control requests
     protected final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0);
@@ -63,9 +61,9 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
     ) {
         this.constants = constants;
 
-        driveTalon = new TalonFX(constants.DriveMotorId, DriveConstants.drivetrainConstants.CANBusName);
-        turnTalon = new TalonFX(constants.SteerMotorId, DriveConstants.drivetrainConstants.CANBusName);
-        cancoder = new CANcoder(constants.EncoderId, DriveConstants.drivetrainConstants.CANBusName);
+        driveTalon = new TalonFX(constants.DriveMotorId, DriveConstants.CANBus);
+        turnTalon = new TalonFX(constants.SteerMotorId, DriveConstants.CANBus);
+        cancoder = new CANcoder(constants.EncoderId, DriveConstants.CANBus);
 
         configureMotors();
 
@@ -115,9 +113,6 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         var turnConfig = new TalonFXConfiguration();
         turnConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
         turnConfig.Slot0 = constants.SteerMotorGains;
-        if (Constants.currentMode == Constants.Mode.SIM)
-            turnConfig.Slot0.withKD(0.5).withKS(0); // during simulation, gains are slightly different
-
         turnConfig.Feedback.FeedbackRemoteSensorID = constants.EncoderId;
         turnConfig.Feedback.FeedbackSensorSource = switch (constants.FeedbackSource) {
             case RemoteCANcoder -> FeedbackSensorSourceValue.RemoteCANcoder;
@@ -136,6 +131,8 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
                 ? InvertedValue.Clockwise_Positive
                 : InvertedValue.CounterClockwise_Positive;
         tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
+
+        Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Swerve module", "Reconfigured motors"));
     }
 
     @Override
@@ -164,44 +161,26 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
 
     @Override
     public void setDriveOpenLoop(double output) {
-        driveTalon.setControl(
-            switch(constants.DriveMotorClosedLoopOutput) {
-                case Voltage -> voltageRequest.withOutput(output);
-                case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-            });
+        driveTalon.setControl(torqueCurrentRequest.withOutput(output));
     }
 
     @Override
     public void setTurnOpenLoop(double output) {
-        turnTalon.setControl(
-            switch (constants.SteerMotorClosedLoopOutput) {
-                case Voltage -> voltageRequest.withOutput(output);
-                case TorqueCurrentFOC -> torqueCurrentRequest.withOutput(output);
-            });
+        turnTalon.setControl(torqueCurrentRequest.withOutput(output));
     }
 
     @Override
     public void setDriveVelocity(double wheelVelocityRadPerSec, double accelerationRadPerSec2) {
         double motorVelocityRotPerSec = Units.radiansToRotations(wheelVelocityRadPerSec) * constants.DriveMotorGearRatio;
         double motorAccelerationRotPerSec2 = Units.radiansToRotations(accelerationRadPerSec2) * constants.DriveMotorGearRatio;
-        driveTalon.setControl(
-            switch (constants.DriveMotorClosedLoopOutput) {
-                case Voltage -> velocityVoltageRequest
-                    .withVelocity(motorVelocityRotPerSec)
-                    .withAcceleration(motorAccelerationRotPerSec2);
-                case TorqueCurrentFOC -> velocityTorqueCurrentRequest
-                    .withVelocity(motorVelocityRotPerSec)
-                    .withAcceleration(motorAccelerationRotPerSec2);
-            });
+        driveTalon.setControl(velocityTorqueCurrentRequest
+            .withVelocity(motorVelocityRotPerSec)
+            .withAcceleration(motorAccelerationRotPerSec2));
     }
 
     @Override
     public void setTurnPosition(Rotation2d rotation) {
-        turnTalon.setControl(
-            switch (constants.SteerMotorClosedLoopOutput) {
-                case Voltage -> positionVoltageRequest.withPosition(rotation.getRotations());
-                case TorqueCurrentFOC -> positionTorqueCurrentRequest.withPosition(rotation.getRotations());
-            });
+        turnTalon.setControl(positionTorqueCurrentRequest.withPosition(rotation.getRotations()));
     }
 
     @Override

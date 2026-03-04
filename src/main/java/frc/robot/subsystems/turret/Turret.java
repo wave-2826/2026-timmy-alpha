@@ -6,6 +6,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -13,8 +16,11 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import frc.robot.Controls;
 import frc.robot.commands.tuning.TurretTuning;
-import frc.robot.subsystems.turret.TurretIO.TurretIOMPCOutputs;
+import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.subsystems.turret.TurretIO.TurretIOPIDOutputs;
+import frc.robot.subsystems.turret.controller.TurretControllerIO;
+import frc.robot.subsystems.turret.controller.TurretControllerIO.TurretControllerIOInputs;
+import frc.robot.subsystems.turret.controller.TurretControllerIOInputsAutoLogged;
 
 /**
  * Our robot has a triple-coaxial turret - all motors are static relative to the robot frame.  
@@ -45,20 +51,23 @@ public class Turret extends SubsystemBase {
     }
 
     private final TurretIO io;
-    private final TurretIOInputsAutoLogged inputs = new TurretIOInputsAutoLogged();
+    private final TurretControllerIO controllerIO;
+
+    private final TurretIOInputs inputs = new TurretIOInputsAutoLogged();
+    private final TurretControllerIOInputs controllerInputs = new TurretControllerIOInputsAutoLogged();
 
     private LoggedDashboardChooser<ControlMode> controlModeChooser = new LoggedDashboardChooser<>("Turret/ControlMode");
 
     public TurretTarget target = null;
 
-    private TurretController controller;
-
-    public Turret(TurretIO io) {
+    public Turret(TurretIO io, TurretControllerIO controllerIO) {
         this.io = io;
-        controller = new TurretController(inputs);
+        this.controllerIO = controllerIO;
 
-        controlModeChooser.addDefaultOption("PID", ControlMode.PID);
-        controlModeChooser.addOption("MPC", ControlMode.MPC);
+        controllerIO.init(inputs);
+
+        controlModeChooser.addOption("PID", ControlMode.PID);
+        controlModeChooser.addDefaultOption("MPC", ControlMode.MPC);
 
         TurretTuning.init();
     }
@@ -66,7 +75,10 @@ public class Turret extends SubsystemBase {
     @Override
     public void periodic() {
         io.updateInputs(inputs);
-        Logger.processInputs("Turret", inputs);
+        Logger.processInputs("Turret", (TurretIOInputsAutoLogged)inputs);
+
+        if(controlModeChooser.get() == ControlMode.MPC) controllerIO.getOutput(controllerInputs);
+        Logger.processInputs("Turret/Controller", (TurretControllerIOInputsAutoLogged)controllerInputs);
 
         if(DriverStation.isTest()) return;
 
@@ -86,20 +98,22 @@ public class Turret extends SubsystemBase {
                     break;
                 }
                 case MPC: {
-                    double[] outputs = controller.getOutputs(target.azimuthAngleRad, target.hoodAngleRad, target.flywheelSpeedRadPerSec);
-                    TurretIOMPCOutputs mpcOutputs = new TurretIOMPCOutputs(
-                        outputs[0],
-                        outputs[1],
-                        outputs[2]
-                    );
-                    io.setMPCOutputs(mpcOutputs);
+                    io.setMPCOutputs(controllerInputs.mpc);
+
+                    controllerIO.run(target);
                     break;
                 }
             }
+            
+            Logger.recordOutput("Turret/Target/Azimuth", target.azimuthAngleRad, Radians);
+            Logger.recordOutput("Turret/Target/Hood", target.hoodAngleRad, Radians);
+            Logger.recordOutput("Turret/Target/Flywheel", target.flywheelSpeedRadPerSec, RadiansPerSecond);
 
-            Logger.recordOutput("Turret/Target/Azimuth", target.azimuthAngleRad);
-            Logger.recordOutput("Turret/Target/Hood", target.hoodAngleRad);
-            Logger.recordOutput("Turret/Target/Flywheel", target.flywheelSpeedRadPerSec);
+            Logger.recordOutput("Turret/Measured/FlywheelVelocity", inputs.getFlywheelVelocityRadPerSecond(), RadiansPerSecond);
+            Logger.recordOutput("Turret/Measured/Hood", inputs.getHoodAngleRad(), Radians);
+            Logger.recordOutput("Turret/Measured/HoodVelocity", inputs.getHoodVelocityRadPerSec(), RadiansPerSecond);
+            Logger.recordOutput("Turret/Measured/Azimuth", MathUtil.angleModulus(inputs.getAzimuthAngleRad()), Radians);
+            Logger.recordOutput("Turret/Measured/AzimuthVelocity", inputs.getAzimuthVelocityRadPerSec(), RadiansPerSecond);
         }
     }
 
@@ -110,7 +124,7 @@ public class Turret extends SubsystemBase {
     ) {
         return Commands.runEnd(() -> {
             if(target == null) {
-                target = new TurretTarget(0.0, inputs.azimuth.azimuthAngleRad(), 0);
+                target = new TurretTarget(0.0, inputs.getAzimuthAngleRad(), 0);
             }
 
             target.flywheelSpeedRadPerSec = MathUtil.applyDeadband(-flywheelSpeedSupplier.getAsDouble(), 0.2) * TurretConstants.maxFlywheelSpeedRadPerSec;

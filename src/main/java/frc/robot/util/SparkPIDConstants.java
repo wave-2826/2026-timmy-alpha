@@ -11,40 +11,51 @@ import frc.robot.util.tunables.TunableSparkPID.InternalPIDConstants;
 public class SparkPIDConstants {
     public OptionalDouble p;
     public OptionalDouble i;
-    public OptionalDouble iZone;
     public OptionalDouble d;
-    public OptionalDouble f;
+
+    public OptionalDouble iZone;
+    
+    public OptionalDouble fkS;
+    public OptionalDouble fkV;
+    public OptionalDouble fkA;
+    
     public ClosedLoopSlot slot;
 
-    public SparkPIDConstants(OptionalDouble p, OptionalDouble i, OptionalDouble iZone, OptionalDouble d, OptionalDouble f, ClosedLoopSlot slot) {
+    public SparkPIDConstants(
+        OptionalDouble p, OptionalDouble i, OptionalDouble d, OptionalDouble fkV,
+        OptionalDouble iZone,
+        OptionalDouble fkS, OptionalDouble fkA,
+        ClosedLoopSlot slot) {
         this.p = p;
         this.i = i;
-        this.i = i;
-        this.iZone = iZone;
         this.d = d;
-        this.f = f;
+
+        this.iZone = iZone;
+        
+        this.fkS = fkS;
+        this.fkV = fkV;
+        this.fkA = fkA;
+        
         this.slot = slot;
     }
 
-    public SparkPIDConstants(double p, double i, double iZone, double d, double f, ClosedLoopSlot slot) {
-        this(OptionalDouble.of(p), OptionalDouble.of(i), OptionalDouble.of(iZone), OptionalDouble.of(d),
-            OptionalDouble.of(f), slot);
-    }
-
     public SparkPIDConstants(double p, double i, double d, double f, ClosedLoopSlot slot) {
-        this(OptionalDouble.of(p), OptionalDouble.of(i), OptionalDouble.empty(), OptionalDouble.of(d),
-            OptionalDouble.of(f), slot);
+        this(
+            OptionalDouble.of(p), OptionalDouble.of(i), OptionalDouble.of(d),
+            OptionalDouble.of(f),
+            OptionalDouble.empty(), OptionalDouble.empty(), OptionalDouble.empty(),
+            slot
+        );
     }
 
     public SparkPIDConstants(double p, double i, double d, ClosedLoopSlot slot) {
-        this(OptionalDouble.of(p), OptionalDouble.of(i), OptionalDouble.empty(), OptionalDouble.of(d),
-            OptionalDouble.empty(), slot);
+        this(
+            OptionalDouble.of(p), OptionalDouble.of(i), OptionalDouble.of(d),
+            OptionalDouble.empty(),
+            OptionalDouble.empty(), OptionalDouble.empty(), OptionalDouble.empty(),
+            slot
+        );
     }
-
-    public SparkPIDConstants(double p, double i, double iZone, double d, double f) {
-        this(p, i, iZone, d, f, ClosedLoopSlot.kSlot0);
-    }
-
     public SparkPIDConstants(double p, double i, double d, double f) {
         this(p, i, d, f, ClosedLoopSlot.kSlot0);
     }
@@ -58,7 +69,34 @@ public class SparkPIDConstants {
         return this;
     }
 
+    public SparkPIDConstants kS(double fkS) {
+        this.fkS = OptionalDouble.of(fkS);
+        return this;
+    }
+    public SparkPIDConstants kV(double fkV) {
+        this.fkV = OptionalDouble.of(fkV);
+        return this;
+    }
+    public SparkPIDConstants kA(double fkA) {
+        this.fkA = OptionalDouble.of(fkA);
+        return this;
+    }
+
+    public SparkPIDConstants sva(double fkS, double fkV, double fkA) {
+        return kS(fkS).kV(fkV).kA(fkA);
+    }
+
+    public SparkPIDConstants slot(ClosedLoopSlot slot) {
+        this.slot = slot;
+        return this;
+    }
+
     public InternalPIDConstants toInternal(TunableSparkPID tunablePID) {
-        return tunablePID.new InternalPIDConstants(this.p, this.i, this.iZone, this.d, this.f, slot);
+        return tunablePID.new InternalPIDConstants(
+            p, i, d,
+            iZone,
+            fkS, fkV, fkA,
+            slot
+        );
     }
 }

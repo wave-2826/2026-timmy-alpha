@@ -20,6 +20,9 @@ replay:
     .\misc\scripts\openSimPrograms.ps1
     .\gradlew simulateJava  "-Dorg.gradle.java.home=C:\Users\Public\wpilib\2025\jdk\"
 
+build:
+    ./gradlew build
+
 [linux]
 replay:
     sed -i 's/simMode = Mode.SIM;/simMode = Mode.REPLAY;/g' {{ConstantsFile}}
@@ -30,3 +33,6 @@ template-subsystem:
 
 tune-turret:
     python ./misc/turretTuning/analyze_data.py
+
+setup-hotswap:
+    python ./misc/scripts/setup-hotswap.py

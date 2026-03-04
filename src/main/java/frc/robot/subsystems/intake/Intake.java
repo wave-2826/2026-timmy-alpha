@@ -40,14 +40,14 @@ public class Intake extends SubsystemBase {
             () -> io.stopDeploy()
         )
             .until(() -> (inputs.deployL.motorCurrentAmps() + inputs.deployR.motorCurrentAmps()) / 2 > IntakeConstants.opeThatsaResetCurrent)
-            // .withTimeout(1.0)
+            .withTimeout(1.0)
             .andThen(io::resetDeployEncoders);
     }
     
     public Command setIntakePosition(DoubleSupplier position) {
         return run(() -> {
             // if (position.getAsDouble() > 0.1 * IntakeConstants.trackLengthMeters) {
-                io.setDeployPosition(-position.getAsDouble() * 4.5);
+                io.setDeployPosition(-position.getAsDouble());
             // } else {
                 // io.stopDeploy();
             // }

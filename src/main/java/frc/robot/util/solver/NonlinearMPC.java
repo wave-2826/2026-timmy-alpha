@@ -9,8 +9,6 @@ import org.wpilib.math.optimization.Constraints;
 import org.wpilib.math.optimization.Problem;
 import org.wpilib.math.optimization.solver.Options;
 
-import frc.robot.util.LoggedTracer;
-
 /**
  * A nonlinear model-predictive control solver using Slepnir based on that presented in [Controls Engineering in FRC](https://file.tavsys.net/control/controls-engineering-in-frc.pdf)
  * The book's Python implementation is available here: https://github.com/calcmogul/controls-engineering-in-frc/blob/main/bookutil/bookutil/nonlinear_mpc.py
@@ -35,7 +33,7 @@ public class NonlinearMPC {
         InitialGuess apply(double[] currentState, double[] reference, int samplesN);
     }
     public static interface CostFunction {
-        Variable apply(VariableMatrix currentState, VariableMatrix inputs, double[] reference);
+        Variable apply(VariableMatrix currentState, VariableMatrix inputs, VariableMatrix reference);
     }
     public static interface ConstraintFunction {
         void apply(Problem problem, VariableMatrix currentState, VariableMatrix inputs);
@@ -109,24 +107,37 @@ public class NonlinearMPC {
         return new VariableMatrix(list);
     }
 
+    private Problem problem;
+    private VariableMatrix X;
+    private VariableMatrix U;
+    private VariableMatrix InitialState;
+    private VariableMatrix CostReference;
+
     public double[] calculate(double[] x, double[] r) {
-        Problem problem = new Problem();
+        // Construct the problem once and only if something changes that we can't 
+        if(problem == null) {
+            problem = new Problem();
+            X = problem.decisionVariable(states, N + 1);
+            U = problem.decisionVariable(inputs, N);
+            InitialState = new VariableMatrix(states, 1);
+            CostReference = new VariableMatrix(1, r.length);
 
-        VariableMatrix X = problem.decisionVariable(states, N + 1);
-        VariableMatrix U = problem.decisionVariable(inputs, N);
+            problem.minimize(cost.apply(X, U, CostReference));
 
-        problem.minimize(cost.apply(X, U, r));
+            // Initial state constraint (will update value each call)
+            problem.subjectTo(Constraints.eq(X.col(0), InitialState));
 
-        // Initial state constraint
-        problem.subjectTo(Constraints.eq(X.col(0), columnMatrix(x)));
+            // Dynamics constraints
+            for(int k = 0; k < N; k++) {
+                VariableMatrix nextX = NumericalIntegration.rk4(f, X.col(k), U.col(k), samplePeriod);
+                problem.subjectTo(Constraints.eq(X.col(k), nextX));
+            }
 
-        // Dynamics constraints
-        for(int k = 0; k < N; k++) {
-            VariableMatrix nextX = NumericalIntegration.rk4(f, X.col(k), U.col(k), samplePeriod);
-            problem.subjectTo(Constraints.eq(X.col(k), nextX));
+            constraints.apply(problem, X, U);
         }
 
-        constraints.apply(problem, X, U);
+        CostReference.set(new double[][] { r });
+        for(int i = 0; i < x.length; i++) InitialState.set(i, x[i]);
 
         // Initial guess
         if(!warmStartable) {
@@ -139,13 +150,11 @@ public class NonlinearMPC {
         X.set(XWarmStart);
         U.set(UWarmStart);
 
-        LoggedTracer.record("Turret/Problem Formulation");
-
         problem.solve(new Options().withTimeout(timeout).withTolerance(tolerance));
 
         XWarmStart = X.value();
         UWarmStart = U.value();
 
-        return UWarmStart.transpose().getRow(0).toArray2()[0];
+        return UWarmStart.getZDRM().data;
     }
 }

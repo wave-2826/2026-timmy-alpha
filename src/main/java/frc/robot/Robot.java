@@ -15,17 +15,16 @@ import edu.wpi.first.wpilibj.IterativeRobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Watchdog;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import frc.robot.util.Elastic;
 import frc.robot.util.LoggedTracer;
 import frc.robot.util.NTClientLogger;
 import frc.robot.util.RioAlerts;
 import frc.robot.util.SparkUtil;
 import frc.robot.util.ThreadPriorityDummyLogReceiver;
+import frc.robot.util.simUtils.Simulation;
 import frc.robot.util.tunables.TunableSparkPID;
 
 import java.lang.reflect.Field;
@@ -69,7 +68,7 @@ public class Robot extends LoggedRobot {
         Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
         Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
 
-        switch (BuildConstants.DIRTY) {
+        switch(BuildConstants.DIRTY) {
             case 0:
                 Logger.recordMetadata("GitDirty", "All changes committed");
                 break;
@@ -82,7 +81,7 @@ public class Robot extends LoggedRobot {
         }
 
         // Set up data receivers & replay source
-        switch (Constants.currentMode) {
+        switch(Constants.currentMode) {
             case REAL:
                 // Running on a real robot, log to a USB stick ("/U/logs")
                 Logger.addDataReceiver(new WPILOGWriter());
@@ -151,13 +150,6 @@ public class Robot extends LoggedRobot {
 
         robotContainer = new RobotContainer();
 
-        RobotModeTriggers.autonomous().and(DriverStation::isFMSAttached).onTrue(Commands.runOnce(() -> {
-            Elastic.selectTab("Autonomous");
-        }));
-        RobotModeTriggers.teleop().and(DriverStation::isFMSAttached).onTrue(Commands.runOnce(() -> {
-            Elastic.selectTab("Teleoperated");
-        }));
-
         if(Constants.currentMode == Constants.Mode.REAL && Constants.useSuperDangerousRTThreadPriority) {
             // Switch the thread to high priority to improve loop timing.
             // This is a dangerous operation! Read the comment on useSuperDangerousRTThreadPriority and understand what
@@ -174,7 +166,7 @@ public class Robot extends LoggedRobot {
         SignalLogger.enableAutoLogging(false);
         StatusLogger.disableAutoLogging();
 
-        // Adjust the loop overrun warning timeout; taken from 6328's code.
+        // Adjust the loop overrun warning timeout; partially taken from 6328.
         // This is obviously a bit hacky, but we log our loop times and consistently watch them,
         // so the loop overrun messages just become noise and make it hard to see real issues in
         // the console. Therefore, we increase the timeout to 0.2 seconds to reduce the noise.
@@ -188,6 +180,7 @@ public class Robot extends LoggedRobot {
         } catch (Exception e) {
             DriverStation.reportWarning("Failed to disable loop overrun warnings.", false);
         }
+        CommandScheduler.getInstance().setPeriod(loopOverrunWarningTimeout);
 
         DriverStation.silenceJoystickConnectionWarning(true);
         
@@ -213,7 +206,7 @@ public class Robot extends LoggedRobot {
                 }
             });
     }
-
+    
     /** This function is called periodically during all modes. */
     @Override
     public void robotPeriodic() {
@@ -257,7 +250,7 @@ public class Robot extends LoggedRobot {
     /** This function is called once when the robot is disabled. */
     @Override
     public void disabledInit() {
-        robotContainer.resetSimulationField();
+        if(Constants.isSim) Simulation.getInstance().resetSimulationField();
     }
 
     /** This function is called periodically when disabled. */
@@ -302,7 +295,7 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance().cancelAll();
 
         autonomousCommand = robotContainer.getTestCommand();
-        autonomousCommand.schedule();
+        CommandScheduler.getInstance().schedule(autonomousCommand);
     }
 
     /** This function is called periodically during test mode. */
@@ -312,11 +305,13 @@ public class Robot extends LoggedRobot {
 
     /** This function is called once when the robot is first started up. */
     @Override
-    public void simulationInit() {}
+    public void simulationInit() {
+        DriverStationSim.setDsAttached(true);
+    }
 
     /** This function is called periodically whilst in simulation. */
     @Override
     public void simulationPeriodic() {
-        robotContainer.updateSimulation();
+        if(Constants.isSim) Simulation.getInstance().updateSimulation();
     }
 }

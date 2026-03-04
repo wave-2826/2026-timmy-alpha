@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
@@ -21,6 +22,8 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.util.Elastic;
+import frc.robot.util.simUtils.Simulation;
 import frc.robot.util.ShiftHelpers;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
@@ -47,7 +50,7 @@ public class Controls {
     }
 
     /** Configures the controls. */
-    public void configureControls(RobotContainer rc, SwerveDriveSimulation driveSimulation) {
+    public void configureControls(RobotContainer rc) {
         Drive drive = rc.drive;
         Turret turret = rc.turret;
         Climber climber = rc.climber;
@@ -69,12 +72,12 @@ public class Controls {
         turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
 
         // Reset gyro or odometry if in simulation
-        final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
+        final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
             : () -> drive.setPose(new Pose2d(RobotState.getInstance().getPose().getTranslation(),
                 DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Rotation2d.kZero
                     : Rotation2d.k180deg)); // Zero gyro
         final Runnable resetOdometry = Constants.isSim
-            ? () -> drive.setPose(driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
+            ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
             : () -> drive.setPose(
                 new Pose2d(0, 0, DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Rotation2d.kZero : Rotation2d.k180deg)); // Zero gyro
 
@@ -89,6 +92,13 @@ public class Controls {
 
         endgameAlert1Trigger.onTrue(controllerRumbleWhileRunning(RumbleType.kBothRumble).withTimeout(0.5));
         endgameAlert2Trigger.onTrue(controllerRumbleWhileRunning(RumbleType.kBothRumble).withTimeout(0.4).andThen(Commands.waitSeconds(0.3)).repeatedly().withTimeout(2.0));
+
+        RobotModeTriggers.autonomous().and(DriverStation::isFMSAttached).onTrue(Commands.runOnce(() -> {
+            Elastic.selectTab("Autonomous");
+        }));
+        RobotModeTriggers.teleop().and(DriverStation::isFMSAttached).onTrue(Commands.runOnce(() -> {
+            Elastic.selectTab("Teleoperated");
+        }));
 
         shiftYours.set(ShiftHelpers.currentShiftIsYours());
     }

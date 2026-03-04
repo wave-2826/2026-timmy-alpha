@@ -28,19 +28,33 @@ public class TunableSparkPID {
     public class InternalPIDConstants {
         public LoggedTunableNumber p = null;
         public LoggedTunableNumber i = null;
-        public LoggedTunableNumber iZone = null;
         public LoggedTunableNumber d = null;
-        public LoggedTunableNumber f = null;
+
+        public LoggedTunableNumber iZone = null;
+
+        public LoggedTunableNumber fkS = null;
+        public LoggedTunableNumber fkV = null;
+        public LoggedTunableNumber fkA = null;
+        
         public ClosedLoopSlot slot;
 
-        public InternalPIDConstants(OptionalDouble p, OptionalDouble i, OptionalDouble iZone, OptionalDouble d,
-            OptionalDouble f, ClosedLoopSlot slot) {
+        public InternalPIDConstants(
+            OptionalDouble p, OptionalDouble i, OptionalDouble d,
+            OptionalDouble iZone,
+            OptionalDouble fkS, OptionalDouble fkV, OptionalDouble fkA,
+            ClosedLoopSlot slot
+        ) {
             String slotStr = slot == ClosedLoopSlot.kSlot0 ? "" : Integer.toString(slot.ordinal());
             if(p.isPresent()) this.p = new LoggedTunableNumber(tunablePath + slotStr + "_P", p.getAsDouble());
             if(i.isPresent()) this.i = new LoggedTunableNumber(tunablePath + slotStr + "_I", i.getAsDouble());
-            if(iZone.isPresent()) this.iZone = new LoggedTunableNumber(tunablePath + slotStr + "_IZone", i.getAsDouble());
             if(d.isPresent()) this.d = new LoggedTunableNumber(tunablePath + slotStr + "_D", d.getAsDouble());
-            if(f.isPresent()) this.f = new LoggedTunableNumber(tunablePath + slotStr + "_F", f.getAsDouble());
+            
+            if(iZone.isPresent()) this.iZone = new LoggedTunableNumber(tunablePath + slotStr + "_IZone", i.getAsDouble());
+
+            if(fkS.isPresent()) this.fkS = new LoggedTunableNumber(tunablePath + slotStr + "_FkS", fkS.getAsDouble());
+            if(fkV.isPresent()) this.fkV = new LoggedTunableNumber(tunablePath + slotStr + "_FkV", fkV.getAsDouble());
+            if(fkA.isPresent()) this.fkA = new LoggedTunableNumber(tunablePath + slotStr + "_FkA", fkA.getAsDouble());
+            
             this.slot = slot;
 
             hasChanged(); // Don't fire on initial creation
@@ -50,7 +64,7 @@ public class TunableSparkPID {
             return (p != null && p.hasChanged(hashCode())) ||
                 (i != null && i.hasChanged(hashCode())) ||
                 (d != null && d.hasChanged(hashCode())) ||
-                (f != null && f.hasChanged(hashCode())) ||
+                (fkV != null && fkV.hasChanged(hashCode())) ||
                 (iZone != null && iZone.hasChanged(hashCode()));
         }
     }
@@ -105,7 +119,7 @@ public class TunableSparkPID {
             config.p(c.p == null ? 0. : c.p.get(), c.slot);
             config.i(c.i == null ? 0. : c.i.get(), c.slot);
             config.d(c.d == null ? 0. : c.d.get(), c.slot);
-            config.velocityFF(c.f == null ? 0. : c.f.get(), c.slot);
+            config.feedForward.kV(c.fkV == null ? 0. : c.fkV.get(), c.slot);
             if(c.iZone != null) config.iZone(c.iZone.get(), c.slot);
         }
         return config;
@@ -161,7 +175,7 @@ public class TunableSparkPID {
      * @param p
      * @param i
      * @param d
-     * @param f
+     * @param fkV
      * @param slot
      */
     public TunableSparkPID addRealRobotGains(SparkPIDConstants constants) {
@@ -175,7 +189,7 @@ public class TunableSparkPID {
      * @param p
      * @param i
      * @param d
-     * @param f
+     * @param fkV
      * @param slot
      */
     public TunableSparkPID addSimGains(SparkPIDConstants constants) {

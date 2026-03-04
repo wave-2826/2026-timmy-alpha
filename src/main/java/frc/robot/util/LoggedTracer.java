@@ -14,6 +14,10 @@ public class LoggedTracer {
         startTime = Timer.getFPGATimestamp();
     }
 
+    public static void skipEpoch() {
+        startTime = Timer.getFPGATimestamp();
+    }
+
     /** Save the time elapsed since the last reset or record. */
     public static void record(String epochName) {
         double now = Timer.getFPGATimestamp();
