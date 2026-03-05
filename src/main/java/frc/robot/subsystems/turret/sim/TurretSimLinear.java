@@ -8,24 +8,14 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N5;
 import edu.wpi.first.math.system.LinearSystem;
-import edu.wpi.first.math.system.NumericalIntegration;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.LinearSystemSim;
 import frc.robot.generated.TurretTuningData;
 import frc.robot.subsystems.turret.TurretConstants;
-import frc.robot.subsystems.turret.controller.TurretController;
 
 public final class TurretSimLinear extends LinearSystemSim<N5, N3, N5> implements TurretSim {
-    public enum TurretSimMode {
-        LinearSystem,
-        MeasuredDynamics
-    };
-
-    private TurretSimMode mode;
-    public TurretSimLinear(TurretSimMode mode) {
+    public TurretSimLinear() {
         super(createTurretSystem());
-        this.mode = mode;
-
         reset();
     }
 
@@ -100,7 +90,6 @@ public final class TurretSimLinear extends LinearSystemSim<N5, N3, N5> implement
                 // This is a very 2D piece of code. prepare to scroll!
                 // spotless trambles in fear when it sees this formatting
                 // ⌄⌄⌄⌄⌄⌄⌄⌄⌄⌄⌄ -- flywheel velocity derivative, hood position derivative, hood velocity derivative, azimuth position derivative, azimuth velocity derivative
-                // [ flywheel pos += velocity, 0, 0,                        0, fly += k * azimuth vel   ]
                 // [ flywheel vel -= damp,     0, fly vel += hood fric,     0, fly vel += azimuth fric  ]
                      flywheelDampingAccel,     0, flywheelFricFromHood,     0, flywheelFricFromAzimuth,
                 // [ 0,                        0, hood pos += velocity,     0, 0                        ]
@@ -142,15 +131,7 @@ public final class TurretSimLinear extends LinearSystemSim<N5, N3, N5> implement
      */
     @Override
     protected Matrix<N5, N1> updateX(Matrix<N5, N1> currentXhat, Matrix<N3, N1> currentU, double dtSeconds) {
-        Matrix<N5, N1> updatedXhat = NumericalIntegration.rkdp(
-            (Matrix<N5, N1> x, Matrix<N3, N1> u) -> switch(mode) {
-                case LinearSystem -> m_plant.getA().times(x).plus(m_plant.getB().times(u));
-                case MeasuredDynamics -> TurretController.mcpDynamicsButNumbers(x.getData(), u.getData());
-            },
-            currentXhat,
-            currentU,
-            dtSeconds
-        );
+        var updatedXhat = super.updateX(currentXhat, currentU, dtSeconds);
 
         // We check for collision after updating xhat
         // This isn't an accurate model since it loses energy that would
