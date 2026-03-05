@@ -7,7 +7,6 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.commands.DriveTuningCommands;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
@@ -17,6 +16,9 @@ import frc.robot.subsystems.turret.controller.TurretControllerIO;
 import frc.robot.subsystems.turret.controller.TurretControllerMainThread;
 import frc.robot.subsystems.turret.controller.TurretControllerThreaded;
 import frc.robot.subsystems.intake.*;
+import frc.robot.commands.AutoCommands;
+import frc.robot.commands.AutoCommands.AutoPaths;
+import frc.robot.commands.drive.DriveTuningCommands;
 import frc.robot.subsystems.climber.*;
 import frc.robot.subsystems.spindexer.*;
 import frc.robot.subsystems.vision.*;
@@ -104,6 +106,12 @@ public class RobotContainer {
 
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+
+        for (AutoPaths path : AutoCommands.AutoPaths.values()) {
+            var name = path.name();
+            name = name.replaceAll("_", " ");
+            autoChooser.addOption(name, AutoCommands.runCodeCommand(path));
+        }
 
         Controls.getInstance().configureControls(this);
 

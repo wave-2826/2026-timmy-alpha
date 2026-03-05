@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.function.Supplier;
 
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.*;
@@ -229,6 +230,14 @@ public class DriveConstants {
         new PIDConstants(6.5, 0.0, 0.25), new PIDConstants(8.0, 1.0, 0.75));
 
     static final double odometryFrequency = CANBus.isNetworkFD() ? 250.0 : 100.0;
+
+    
+    public static final Supplier<Translation2d[]> GET_MODULE_POSITIONS = () -> new Translation2d[] {
+        new Translation2d(DriveConstants.frontLeftConfig.xPosition, DriveConstants.frontLeftConfig.yPosition),
+        new Translation2d(DriveConstants.frontRightConfig.xPosition, DriveConstants.frontRightConfig.yPosition),
+        new Translation2d(DriveConstants.backLeftConfig.xPosition, DriveConstants.backLeftConfig.yPosition),
+        new Translation2d(DriveConstants.backRightConfig.xPosition, DriveConstants.backRightConfig.yPosition),
+    };
 
     /** Swerve Drive class utilizing CTR Electronics' Phoenix 6 API with the selected device types. */
     public static class TunerSwerveDrivetrain extends SwerveDrivetrain<TalonFX, TalonFX, CANcoder> {
