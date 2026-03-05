@@ -1,5 +1,8 @@
 package frc.robot.subsystems.turret.sim;
 
+import org.littletonrobotics.junction.Logger;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -39,14 +42,14 @@ public final class TurretSimDCMotor implements TurretSim {
         );
     }
 
-    private static void applyCurrentBasedDeacceleration(DCMotorSim motorSim, DCMotor motor, double rotorInertia, double current) {
+    private static void applyCurrentBasedDeacceleration(DCMotorSim motorSim, DCMotor motor, double rotorInertia, double current, double dtSeconds) {
         double angVel = motorSim.getAngularVelocityRadPerSec();
         if(angVel < 1e-6) return;
 
-        double torque = motor.getTorque(current);
+        double torque = motor.getTorque(MathUtil.clamp(current, -80, 80));
         double deacceleration = torque / rotorInertia;
         
-        double newAngVel = angVel - deacceleration * 0.02;
+        double newAngVel = angVel - deacceleration * dtSeconds;
         motorSim.setAngularVelocity(newAngVel);
     }
 
@@ -68,11 +71,11 @@ public final class TurretSimDCMotor implements TurretSim {
         double azi_vel = azimuth.getAngularVelocityRadPerSec();
         double flywheelSteadyStateCurrent = TurretTuningData.FlywheelCurrentModel.calculate(flywheel_vel, azi_vel, hood_vel);
         double hoodSteadyStateCurrent = TurretTuningData.HoodCurrentModel.calculate(flywheel_vel, azi_vel, hood_vel);
-        double azimuthSteadyStateCurrent = TurretTuningData.AzimuthCurrentModel.calculate(flywheel_vel, azimuthVoltage, hood_vel);
+        double azimuthSteadyStateCurrent = TurretTuningData.AzimuthCurrentModel.calculate(flywheel_vel, azi_vel, hood_vel);
         
-        applyCurrentBasedDeacceleration(flywheel, TurretConstants.flywheelSimMotor, TurretConstants.flywheelMotorInertiaKgM2, flywheelSteadyStateCurrent);
-        applyCurrentBasedDeacceleration(hood, TurretConstants.hoodSimMotor, TurretConstants.hoodMotorInertiaKgM2, hoodSteadyStateCurrent);
-        applyCurrentBasedDeacceleration(azimuth, TurretConstants.azimuthSimMotor, TurretConstants.azimuthMotorInertiaKgM2, azimuthSteadyStateCurrent);
+        applyCurrentBasedDeacceleration(flywheel, TurretConstants.flywheelSimMotor, TurretConstants.flywheelMotorInertiaKgM2, flywheelSteadyStateCurrent, dtSeconds);
+        applyCurrentBasedDeacceleration(hood, TurretConstants.hoodSimMotor, TurretConstants.hoodMotorInertiaKgM2, hoodSteadyStateCurrent, dtSeconds);
+        applyCurrentBasedDeacceleration(azimuth, TurretConstants.azimuthSimMotor, TurretConstants.azimuthMotorInertiaKgM2, azimuthSteadyStateCurrent, dtSeconds);
 
         return getState();
     }

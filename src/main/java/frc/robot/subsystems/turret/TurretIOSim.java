@@ -17,8 +17,6 @@ import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import frc.robot.subsystems.turret.controller.TurretControllerIO.TurretMPCOutputs;
 import frc.robot.subsystems.turret.sim.TurretSim;
 import frc.robot.subsystems.turret.sim.TurretSimDCMotor;
-import frc.robot.subsystems.turret.sim.TurretSimLinear;
-import frc.robot.subsystems.turret.sim.TurretSimLinear.TurretSimMode;
 
 public class TurretIOSim extends TurretIOReal {
     private static int subticks = 10;
@@ -104,6 +102,10 @@ public class TurretIOSim extends TurretIOReal {
         Logger.recordOutput("TurretSim/FlyTorque", calculateTorque(flywheelMotorSim, flywheelSimMotor));
         Logger.recordOutput("TurretSim/HoodTorque", calculateTorque(hoodMotorSim, hoodSimMotor));
         Logger.recordOutput("TurretSim/AzimuthTorque", calculateTorque(azimuthMotorSim, azimuthSimMotor));
+
+        Logger.recordOutput("TurretSim/Setpoints/FlySetpoint", flywheelMotorSim.getSetpoint());
+        Logger.recordOutput("TurretSim/Setpoints/HoodSetpoint", hoodMotorSim.getSetpoint());
+        Logger.recordOutput("TurretSim/Setpoints/AzimuthSetpoint", azimuthMotorSim.getSetpoint());
 
         azimuthEncoderSim.setVelocity(turretSim.getState().azimuthVelRps() * 2 * Math.PI);
         azimuthEncoderSim.setPosition(turretSim.getState().azimuthPosRad() * 2 * Math.PI);

@@ -1,10 +1,6 @@
 package frc.robot.subsystems.turret.controller;
 
-import org.wpilib.math.autodiff.Variable;
-import org.wpilib.math.autodiff.VariableMatrix;
-import org.wpilib.math.optimization.Constraints;
-import org.wpilib.math.optimization.Problem;
-
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
@@ -17,23 +13,9 @@ import frc.robot.generated.TurretTuningData;
 import frc.robot.subsystems.turret.TurretConstants;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.util.LoggedTracer;
-import frc.robot.util.solver.NonlinearMPC;
-import frc.robot.util.solver.NonlinearMPC.InitialGuess;
 
 public class TurretController {
     Matrix<N5, N1> modelState;
-
-    /**
-     * The MPC controller for our turret.  
-     * The state vector (x) is as follows:
-     *     [flywheel velocity, hood position, hood velocity, azimuth position, azimuth velocity]ᵀ
-     * And the input vector (u) is as follows:
-     *     [flywheel current, hood current, azimuth current]ᵀ
-     * Positions and velocities are relative motors, not mechanisms - therefore, e.g. the hood position isn't
-     * proportional to the true hood.  
-     * Angles are in radians and angular velocities in rad/s.
-     */
-    private NonlinearMPC mpc;
 
     /**
      * The kalman filter observer for the turret state. 
@@ -45,7 +27,7 @@ public class TurretController {
      */
     private ExtendedKalmanFilter<N5, N3, N5> observer = new ExtendedKalmanFilter<N5, N3, N5>(
         Nat.N5(), Nat.N3(), Nat.N5(),
-        (x, u) -> mcpDynamicsButNumbers(x.getData(), u.getData()),
+        (x, u) -> numericMpcDynamics(x.getData(), u.getData()),
         (x, u) -> x, // Just output the state vector
         // Model standard deviations
         VecBuilder.fill(
@@ -67,22 +49,36 @@ public class TurretController {
     public TurretController(TurretIOInputs inputs) {
         this.inputs = inputs;
         modelState = getCurrentState();
+        
+        // linear system matrices (Ax + Bu)
+        // A describes how the state evolves naturally (pos += velocity)
+        // This doesn't include reverse EMF deceleration or friction because
+        // those are modeled as part of the feedforward current.
+        // Matrix<N5, N5> matA = TurretSimLinear.createTurretSystem().getA();
+        Matrix<N5, N5> matA = new Matrix<>(Nat.N5(), Nat.N5());
+        matA.set(1, 2, 1); // hood pos += vel
+        matA.set(3, 4, 1); // azimuth pos += vel
 
-        mpc = new NonlinearMPC(
-            5, 3,
-            this::mpcDynamics,
-            0.01,
-            this::mpcCost, this::applyMpcConstraints, this::mpcInitialGuess,
-            0.1,
-            1.0, // Timeout, s
-            0.1 // Tolerance, A
-        );
+        // B describes how current deltas affect acceleration
+        Matrix<N5, N3> matB = new Matrix<>(Nat.N5(), Nat.N3());
+        // accel = current * Kt / Inertia
+        double fwB = TurretConstants.flywheelSimMotor.KtNMPerAmp / TurretConstants.flywheelMotorInertiaKgM2;
+        double hoodB = TurretConstants.hoodSimMotor.KtNMPerAmp / TurretConstants.hoodMotorInertiaKgM2;
+        double azB = TurretConstants.azimuthSimMotor.KtNMPerAmp / TurretConstants.azimuthMotorInertiaKgM2;
+        
+        matB.set(0, 0, fwB);
+        matB.set(2, 1, hoodB);
+        matB.set(4, 2, azB);
     }
 
     private Matrix<N5, N1> getCurrentState() {
         return VecBuilder.fill(
             inputs.topFlywheel.flywheelVelocityRadPerSec(),
-            inputs.hood.hoodRingAngleRad() / TurretConstants.hoodToRingReduction,
+            MathUtil.clamp(
+                inputs.hood.hoodRingAngleRad() / TurretConstants.hoodToRingReduction + TurretConstants.hoodMinAngle,
+                TurretConstants.hoodMinAngle,
+                TurretConstants.hoodMaxAngle
+            ),
             inputs.hood.hoodRingVelocityRadPerSec() / TurretConstants.hoodToRingReduction,
             inputs.azimuth.azimuthAngleRad() / TurretConstants.azimuthToRingReduction,
             inputs.azimuth.azimuthVelocityRadPerSec() / TurretConstants.azimuthToRingReduction
@@ -94,73 +90,79 @@ public class TurretController {
     ) {
         LoggedTracer.skipEpoch();
         
-        LoggedTracer.record("Turret/Kalman");
+        var reference = new double[] { targetFlywheelSpeed, targetHoodAngle, 0.0, targetAzimuthAngle, 0.0 };
+        double[] xHat = observer.getXhat().getData();
         
-        double[] reference = new double[] {
-            targetFlywheelSpeed,
-            targetHoodAngle,
-            targetAzimuthAngle
-        };
-        var solution = mpc.calculate(observer.getXhat().getData(), reference);
+        double[] uMpc = new double[] { 0.0, 0.0, 0.0 };
+        double alpha = 1000.0; // Learning rate
+        double h = 1e-4; // Step for finite difference
+        double dt = 0.02;
+        
+        double[] Q = new double[] { 1.0, 10.0, 1.0, 10.0, 1.0 }; // Weights for [fw_vel, hood_pos, hood_vel, az_pos, az_vel]
 
-        LoggedTracer.record("Turret/Solution");
+        for (int iter = 0; iter < 20; iter++) {
+            double baseCost = calculateCost(xHat, uMpc, reference, Q, dt);
+            double[] grad = new double[3];
+            
+            for (int i = 0; i < 3; i++) {
+                double[] uPlus = uMpc.clone();
+                uPlus[i] += h;
+                double costPlus = calculateCost(xHat, uPlus, reference, Q, dt);
+                grad[i] = (costPlus - baseCost) / h;
+            }
+            
+            for (int i = 0; i < 3; i++) {
+                uMpc[i] -= alpha * grad[i];
+                double limit, feedforward;
 
+                switch(i) {
+                    case 0:
+                        feedforward = TurretTuningData.FlywheelCurrentModel.calculate(xHat[0], xHat[2], xHat[4]);
+                        limit = TurretConstants.flywheelCurrentLimit;
+                        break;
+                    case 1:
+                        feedforward = TurretTuningData.HoodCurrentModel.calculate(xHat[0], xHat[2], xHat[4]);
+                        limit = TurretConstants.hoodCurrentLimit;
+                        break;
+                    default:
+                        feedforward = TurretTuningData.AzimuthCurrentModel.calculate(xHat[0], xHat[2], xHat[4]);
+                        limit = TurretConstants.azimuthCurrentLimit;
+                        break;
+                }
+
+                // Clamp outputs
+                uMpc[i] += feedforward;
+                uMpc[i] = MathUtil.clamp(uMpc[i], -limit, limit);
+            }
+        }
+
+        double[] totalOutput = uMpc;
+
+        // Update kalman filter
         try {
-            var input = VecBuilder.fill(solution[0], solution[1], solution[2]);
-            observer.predict(input, 0.02);
-            observer.correct(input, getCurrentState());
+            var inputVec = VecBuilder.fill(totalOutput[0], totalOutput[1], totalOutput[2]);
+            observer.predict(inputVec, dt);
+            observer.correct(inputVec, getCurrentState());
         } catch(Exception e) {
             e.printStackTrace();
         }
 
-        return solution;
+        LoggedTracer.record("Turret/SolveEnd");
+        return totalOutput;
     }
 
-    private VariableMatrix mpcDynamics(VariableMatrix state, VariableMatrix input) {
-        // The current equations we tune represent the current required to achieve a steady-state condition.
-        // Therefore, the "available acceleration current" is the difference between our input and the
-        // steady-state current.
-        Variable azimuthMotorVelocity = state.get(4, 0);
-        Variable flywheelMotorVelocity = state.get(0, 0);
-        Variable hoodMotorVelocity = state.get(2, 0);
-
-        Variable flywheelSteadyStateCurrent = TurretTuningData.FlywheelCurrentModel.calculate(
-            flywheelMotorVelocity, hoodMotorVelocity, azimuthMotorVelocity
-        );
-        Variable hoodSteadyStateCurrent = TurretTuningData.HoodCurrentModel.calculate(
-            flywheelMotorVelocity, hoodMotorVelocity, azimuthMotorVelocity
-        );
-        Variable azimuthSteadyStateCurrent = TurretTuningData.AzimuthCurrentModel.calculate(
-            flywheelMotorVelocity, hoodMotorVelocity, azimuthMotorVelocity
-        );
-
-        Variable flywheelCurrent = input.get(0, 0).minus(flywheelSteadyStateCurrent);
-        Variable hoodCurrent = input.get(1, 0).minus(hoodSteadyStateCurrent);
-        Variable azimuthCurrent = input.get(2, 0).minus(azimuthSteadyStateCurrent);
-
-        // Current (A) * Torque Constant (Nm/A) / Inertia (kg*m^2) = Acceleration (rad/s^2)
-        Variable flywheelMotorAcceleration = flywheelCurrent
-            .times(TurretConstants.flywheelSimMotor.KtNMPerAmp / TurretConstants.flywheelMotorInertiaKgM2);
-        Variable hoodMotorAcceleration = hoodCurrent
-            .times(TurretConstants.hoodSimMotor.KtNMPerAmp / TurretConstants.hoodMotorInertiaKgM2);
-        Variable azimuthMotorAcceleration = azimuthCurrent
-            .times(TurretConstants.azimuthSimMotor.KtNMPerAmp / TurretConstants.azimuthMotorInertiaKgM2);
-        
-        return NonlinearMPC.columnMatrix(new Variable[] {
-            // d(flywheel velocity)/dt
-            flywheelMotorAcceleration,
-            // d(hood position)/dt = hood velocity
-            state.get(2, 0),
-            // d(hood velocity)/dt
-            hoodMotorAcceleration,
-            // d(azimuth position)/dt = azimuth velocity
-            state.get(4, 0),
-            // d(azimuth velocity)/dt
-            azimuthMotorAcceleration
-        });
+    private double calculateCost(double[] state, double[] input, double[] reference, double[] Q, double dt) {
+        Matrix<N5, N1> dxdt = numericMpcDynamics(state, input);
+        double cost = 0.0;
+        for (int i = 0; i < 5; i++) {
+            double nextStateVal = state[i] + dxdt.get(i, 0) * dt;
+            double error = nextStateVal - reference[i];
+            cost += error * error * Q[i];
+        }
+        return cost;
     }
 
-    public static Matrix<N5, N1> mcpDynamicsButNumbers(double[] state, double[] input) {
+    public static Matrix<N5, N1> numericMpcDynamics(double[] state, double[] input) {
         double azimuthMotorVelocity = state[4];
         double flywheelMotorVelocity = state[0];
         double hoodMotorVelocity = state[2];
@@ -182,53 +184,5 @@ public class TurretController {
             hoodMotorAcceleration, state[4],
             azimuthMotorAcceleration
         );
-    }
-
-    private Variable mpcCost(VariableMatrix state, VariableMatrix input, VariableMatrix reference) {
-        Variable azimuthMotorVelocity = state.get(4, 0);
-        Variable azimuthMotorPosition = state.get(3, 0);
-        Variable flywheelVelocity = state.get(0, 0).times(TurretConstants.totalFlywheelGearing)
-            .minus(azimuthMotorVelocity.times(TurretConstants.azimuthFlyCoupling));
-        Variable hoodPosition = state.get(1, 0).times(TurretConstants.totalHoodGearing)
-            .minus(azimuthMotorPosition.times(TurretConstants.azimuthHoodCoupling));
-        Variable azimuthPosition = azimuthMotorPosition.times(TurretConstants.totalAzimuthGearing);
-
-        // Cost is basically just tracking error, but we add small penalties for current usage
-        // Normalize to avoid overemphasizing flywheel
-        Variable flywheelVelocityError = reference.get(0).minus(flywheelVelocity)
-            .times(1 / TurretConstants.maxFlywheelSpeedRadPerSec * 0.5);
-        Variable hoodPositionError = reference.get(1).minus(hoodPosition);
-        Variable azimuthPositionError = reference.get(2).minus(azimuthPosition);
-
-        Variable cost = flywheelVelocityError.times(flywheelVelocityError)
-            .plus(hoodPositionError.times(hoodPositionError))
-            .plus(azimuthPositionError.times(azimuthPositionError));
-        
-        for(int i = 0; i < 3; i++) {
-            Variable current = input.get(i, 0);
-            cost = cost.plus(current.times(current));
-        }
-        
-        return cost;
-    }
-
-    private void applyMpcConstraints(Problem problem, VariableMatrix state, VariableMatrix inputs) {
-        // Hood position
-        var hoodAngle = state.get(1, 0);
-        problem.subjectTo(Constraints.bounds(TurretConstants.hoodMinAngle, hoodAngle, TurretConstants.hoodMaxAngle));
-
-        // Maximum current output
-        var flywheelCurrent = inputs.get(0, 0);
-        var hoodCurrent = inputs.get(1, 0);
-        var azimuthCurrent = inputs.get(2, 0);
-        problem.subjectTo(Constraints.bounds(-TurretConstants.flywheelCurrentLimit, flywheelCurrent, TurretConstants.flywheelCurrentLimit));
-        problem.subjectTo(Constraints.bounds(-TurretConstants.hoodCurrentLimit, hoodCurrent, TurretConstants.hoodCurrentLimit));
-        problem.subjectTo(Constraints.bounds(-TurretConstants.azimuthCurrentLimit, azimuthCurrent, TurretConstants.azimuthCurrentLimit));
-    }
-
-    private InitialGuess mpcInitialGuess(double[] currentState, double[] reference, int samplesN) {
-        return new InitialGuess(getCurrentState().getData(), new double[] {
-            0, 0, 0
-        });
     }
 }

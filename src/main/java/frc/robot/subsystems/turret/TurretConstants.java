@@ -25,7 +25,7 @@ public class TurretConstants {
     public static final double hoodPlanetReduction = 213.0 / 25.0;
 
     public static final double flywheelBevelReduction = -10.0 / 18.0;
-    public static final double hoodRingToHoodReduction = 20.0 / 35.0;
+    public static final double hoodRingToHoodReduction = 1.0 / 202.0;
 
     // Calculated reductions
     // Total gearings; these are a ratio between output and input, so should be less than 1.
