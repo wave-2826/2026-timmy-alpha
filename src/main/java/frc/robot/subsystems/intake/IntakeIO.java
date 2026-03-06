@@ -6,20 +6,20 @@ public interface IntakeIO {
     @AutoLog
     public static class IntakeIOInputs {
         public record RollerMotorInputs( 
-        /** Whether the motor is connected */
-        boolean connected,
-        /** The measured intake angular velocity. */
-        double velocityRadPerSec,
-        /** The motor current draw. */
-        double motorCurrentAmps
+            /** Whether the motor is connected */
+            boolean connected,
+            /** The measured intake angular velocity. */
+            double velocityRadPerSec,
+            /** The motor current draw. */
+            double currentAmps
         ) {}
         public record DeployMotorInputs(
-        /** Whether the motor is connected */
-        boolean connected,
-        /** The motor current draw. */
-        double motorCurrentAmps,
-        /** The motor's position according to the encoder in meters */
-        double motorPosition
+            /** Whether the motor is connected */
+            boolean connected,
+            /** The motor current draw. */
+            double currentAmps,
+            /** The motor's position according to the encoder in meters */
+            double motorPosition
         ) {}
         
         RollerMotorInputs roller = new RollerMotorInputs(false, 0.0, 0.0);

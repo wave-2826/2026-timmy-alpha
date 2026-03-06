@@ -39,7 +39,7 @@ public class Intake extends SubsystemBase {
             () -> io.setDeployVoltage(2.4),
             () -> io.stopDeploy()
         )
-            .until(() -> (inputs.deployL.motorCurrentAmps() + inputs.deployR.motorCurrentAmps()) / 2 > IntakeConstants.opeThatsaResetCurrent)
+            .until(() -> (inputs.deployL.currentAmps() + inputs.deployR.currentAmps()) / 2 > IntakeConstants.opeThatsaResetCurrent)
             .withTimeout(1.0)
             .andThen(io::resetDeployEncoders);
     }

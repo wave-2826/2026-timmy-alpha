@@ -298,7 +298,7 @@ public class DriveToPose extends Command {
 
     /**
      * Calculates our target theta velocity based on the current pose and target pose.
-    */
+     */
     private double calculateThetaVelocity(Pose2d currentPose, Pose2d targetPose) {
         double thetaFeedforwardScalar = MathUtil
             .clamp((Units.radiansToDegrees(absoluteThetaError) - thetaFFMinError.get())

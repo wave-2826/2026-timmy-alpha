@@ -99,26 +99,42 @@ public class TurretIOReal implements TurretIO {
   
     @Override
     public void updateInputs(TurretIOInputs inputs) {
-        var topFlywheelVelocity = getIfOk(topFlywheelMotor, topFlywheelEncoder::getVelocity, 0) * TurretConstants.totalFlywheelGearing;
+        var topFlywheelVelocity = getIfOk(topFlywheelMotor, topFlywheelEncoder::getVelocity, 0);
         var topFlywheelCurrent = getIfOk(topFlywheelMotor, topFlywheelMotor::getOutputCurrent, 0);
-        inputs.topFlywheel = new TurretIOInputs.FlywheelMotorInputs(!checkFault(), topFlywheelVelocity, topFlywheelCurrent);
+        inputs.topFlywheel = new TurretIOInputs.FlywheelMotorInputs(
+            !checkFault(),
+            topFlywheelVelocity, topFlywheelCurrent
+        );
         
-        var bottomFlywheelVelocity = getIfOk(bottomFlywheelMotor, bottomFlywheelEncoder::getVelocity, 0) * TurretConstants.totalFlywheelGearing;
+        var bottomFlywheelVelocity = getIfOk(bottomFlywheelMotor, bottomFlywheelEncoder::getVelocity, 0);
         var bottomFlywheelCurrent = getIfOk(bottomFlywheelMotor, bottomFlywheelMotor::getOutputCurrent, 0);
-        inputs.bottomFlywheel = new TurretIOInputs.FlywheelMotorInputs(!checkFault(), bottomFlywheelVelocity, bottomFlywheelCurrent);
+        inputs.bottomFlywheel = new TurretIOInputs.FlywheelMotorInputs(
+            !checkFault(),
+            bottomFlywheelVelocity, bottomFlywheelCurrent
+        );
 
         var azimuthAngle = getIfOk(azimuthMotor, azimuthAbsEncoder::getPosition, 0);
         var azimuthInternalAngle = getIfOk(azimuthMotor, azimuthEncoder::getPosition, 0);
         var azimuthVelocity = getIfOk(azimuthMotor, azimuthAbsEncoder::getVelocity, 0);
+        var azimuthInternalVelocity = getIfOk(azimuthMotor, azimuthEncoder::getVelocity, 0);
         var azimuthCurrent = getIfOk(azimuthMotor, azimuthMotor::getOutputCurrent, 0);
         var azimuthApplied = getIfOk(azimuthMotor, azimuthMotor::getAppliedOutput, 0);
-        inputs.azimuth = new TurretIOInputs.AzimuthMotorInputs(!checkFault(), azimuthAngle, azimuthInternalAngle, azimuthVelocity, azimuthCurrent, azimuthApplied);
+        inputs.azimuth = new TurretIOInputs.AzimuthMotorInputs(
+            !checkFault(),
+            azimuthAngle, azimuthInternalAngle,
+            azimuthVelocity, azimuthInternalVelocity,
+            azimuthCurrent, azimuthApplied
+        );
 
         var hoodAngle = getIfOk(hoodMotor, hoodEncoder::getPosition, 0);
         var hoodVelocity = getIfOk(hoodMotor, hoodEncoder::getVelocity, 0);
         var hoodCurrent = getIfOk(hoodMotor, hoodMotor::getOutputCurrent, 0);
         var hoodApplied = getIfOk(hoodMotor, hoodMotor::getAppliedOutput, 0);
-        inputs.hood = new TurretIOInputs.HoodMotorInputs(!checkFault(), hoodAngle, hoodVelocity, hoodCurrent, hoodApplied);
+        inputs.hood = new TurretIOInputs.HoodMotorInputs(
+            !checkFault(),
+            hoodAngle, hoodVelocity,
+            hoodCurrent, hoodApplied
+        );
     }
 
     @Override

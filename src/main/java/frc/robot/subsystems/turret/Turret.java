@@ -46,7 +46,7 @@ public class Turret extends SubsystemBase {
     private enum ControlMode {
         NONE,
         PID,
-        MPC
+        LQR
     }
 
     private final TurretIO io;
@@ -57,11 +57,15 @@ public class Turret extends SubsystemBase {
 
     public TurretTarget target = null;
 
+    private TurretController controller = new TurretController();
+    /** True once the LQR observer has been seeded with an initial measurement. */
+    private boolean controllerInitialised = false;
+
     public Turret(TurretIO io) {
         this.io = io;
 
-        controlModeChooser.addDefaultOption("PID", ControlMode.PID);
-        controlModeChooser.addOption("MPC", ControlMode.MPC);
+        controlModeChooser.addOption("PID", ControlMode.PID);
+        controlModeChooser.addDefaultOption("LQR", ControlMode.LQR);
 
         TurretTuning.init();
     }
@@ -74,6 +78,7 @@ public class Turret extends SubsystemBase {
         if(DriverStation.isTest()) return;
 
         if(target == null) {
+            controllerInitialised = false;
             io.stop();
         } else {
             switch(controlModeChooser.get()) {
@@ -94,12 +99,14 @@ public class Turret extends SubsystemBase {
                     io.setPIDOutputs(outputs);
                     break;
                 }
-                case MPC: {
-                    // Our singular goal:
-                    // Find the most efficient current setpoints to stop at the target
-                    // flywheel velocity, azimuth pos, and hood position as quickly as possible.
-
-                    // io.setMPCOutputs(controllerInputs.mpc);
+                case LQR: {
+                    // Seed the observer the first time we enter LQR mode so it
+                    // starts from the real measured state rather than zero.
+                    if (!controllerInitialised) {
+                        controller.reset(inputs);
+                        controllerInitialised = true;
+                    }
+                    io.setMPCOutputs(controller.calculate(inputs, target));
                     break;
                 }
             }

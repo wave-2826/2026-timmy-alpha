@@ -8,15 +8,15 @@ public interface TurretIO {
         public record FlywheelMotorInputs(
             /** Whether the motor is connected */
             boolean connected,
-            /** The measured flywheel angular velocity at the flywheel. */
-            double flywheelVelocityRadPerSec,
+            /** The measured motor flywheel angular velocity. */
+            double velocityRadPerSec,
             /** The motor current draw. */
             double motorCurrentAmps
         ) {
             FlywheelMotorInputs half() {
                 return new FlywheelMotorInputs(
                     connected,
-                    flywheelVelocityRadPerSec,
+                    velocityRadPerSec,
                     motorCurrentAmps / 2
                 );
             }
@@ -24,24 +24,27 @@ public interface TurretIO {
         public record AzimuthMotorInputs(
             /** Whether the motor is connected */
             boolean connected,
-            /** The measured absolute azimuth angle. */
-            double azimuthAngleRad,
+            /** The measured absolute mechanism azimuth angle. */
+            double angleRad,
             /** The azimuth motor's internal encoder angle. */
-            double azimuthInternalEncoderAngle,
-            /** The measured absolute velocity in rad/sec. */
-            double azimuthVelocityRadPerSec,
+            double internalEncoderAngle,
+            /** The measured absolute mechanism velocity in rad/sec. */
+            double velocityRadPerSec,
+            /** The azimuth motor's internal encoder velocity in rad/sec. */
+            double internalEncoderVelocity,
             /** The motor current draw. */
-            double motorCurrentAmps,
+            double currentAmps,
             /** The applied output as a percentage. */
             double appliedOutput
         ) {
             public AzimuthMotorInputs withAngle(double azimuthANgleRad) {
                 return new AzimuthMotorInputs(
                     connected,
-                    azimuthANgleRad,
-                    azimuthInternalEncoderAngle,
-                    azimuthVelocityRadPerSec,
-                    motorCurrentAmps,
+                    angleRad,
+                    internalEncoderAngle,
+                    velocityRadPerSec,
+                    internalEncoderVelocity,
+                    currentAmps,
                     appliedOutput
                 );
             }
@@ -53,11 +56,11 @@ public interface TurretIO {
              * The measured hood motor angle.
              * The actual hood angle is the difference between this and the azimuth ring angle (and a reduction).
              */
-            double hoodAngleRad,
+            double angleRad,
             /** The measured velocity of the hood motor in rad/sec. */
-            double hoodVelocityRadPerSec,
+            double velocityRadPerSec,
             /** The motor current draw. */
-            double motorCurrentAmps,
+            double currentAmps,
             /** The applied output as a percentage. */
             double appliedOutput
         ) {}
@@ -65,31 +68,31 @@ public interface TurretIO {
         public FlywheelMotorInputs topFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
         public FlywheelMotorInputs bottomFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
 
-        public AzimuthMotorInputs azimuth = new AzimuthMotorInputs(false, 0.0, 0.0, 0.0, 0.0, 0.0);
+        public AzimuthMotorInputs azimuth = new AzimuthMotorInputs(false, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
         public HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0, 0.0, 0.0);
 
 
         public double getFlywheelVelocityRadPerSecond() {
             return (
-                topFlywheel.flywheelVelocityRadPerSec() + bottomFlywheel.flywheelVelocityRadPerSec()
-            ) / 2 + azimuth.azimuthVelocityRadPerSec() * TurretConstants.azimuthFlyCoupling;
+                topFlywheel.velocityRadPerSec() + bottomFlywheel.velocityRadPerSec()
+            ) / 2 + azimuth.velocityRadPerSec() * TurretConstants.azimuthFlyCoupling;
         }
         public double getHoodAngleRad() {
-            return hood.hoodAngleRad() * TurretConstants.totalHoodGearing -
-                azimuth.azimuthAngleRad() * TurretConstants.azimuthHoodCoupling +
+            return hood.angleRad() * TurretConstants.totalHoodGearing -
+                azimuth.angleRad() * TurretConstants.azimuthHoodCoupling +
                 TurretConstants.hoodMinAngle;
             // TODO: Store an offset?
         }
         public double getHoodVelocityRadPerSec() {
-            return hood.hoodVelocityRadPerSec() * TurretConstants.totalHoodGearing -
-                azimuth.azimuthVelocityRadPerSec() * TurretConstants.azimuthHoodCoupling;
+            return hood.velocityRadPerSec() * TurretConstants.totalHoodGearing -
+                azimuth.velocityRadPerSec() * TurretConstants.azimuthHoodCoupling;
         }
         public double getAzimuthAngleRad() {
-            return azimuth.azimuthAngleRad();
+            return azimuth.angleRad();
         }
         public double getAzimuthVelocityRadPerSec() {
-            return azimuth.azimuthVelocityRadPerSec();
+            return azimuth.velocityRadPerSec();
         }
     }
 
