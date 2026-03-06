@@ -15,28 +15,52 @@ public class TurretVisualizer {
         return instance;
     }
 
-    private LoggedMechanism2d azimuth;
-    private LoggedMechanismLigament2d targetDisplay;
-    private LoggedMechanismLigament2d measuredDisplay;
+    private LoggedMechanism2d azimuthMechanism;
+    private LoggedMechanism2d hoodMechanism;
+
+    private LoggedMechanismLigament2d azimuthTargetDisplay;
+    private LoggedMechanismLigament2d azimuthMeasuredDisplay;
+
+    private LoggedMechanismLigament2d hoodTargetDisplay;
+    private LoggedMechanismLigament2d hoodMeasuredDisplay;
 
     private TurretVisualizer() {
-        azimuth = new LoggedMechanism2d(0.8, 0.8);
-        var root = azimuth.getRoot("red", 0.4, 0.4);
+        azimuthMechanism = new LoggedMechanism2d(0.8, 0.8);
+        var azimuthRoot = azimuthMechanism.getRoot("turret", 0.4, 0.4);
 
-        targetDisplay = new LoggedMechanismLigament2d("target", 0.3, 0);
-        targetDisplay.setColor(new Color8Bit(Color.kBlue));
+        hoodMechanism = new LoggedMechanism2d(0.8, 0.8);
+        var hoodRoot = hoodMechanism.getRoot("azimuth", 0.05, 0.05);
 
-        measuredDisplay = new LoggedMechanismLigament2d("measured", 0.3, 0);
-        measuredDisplay.setColor(new Color8Bit(Color.kRed));
+        azimuthTargetDisplay = new LoggedMechanismLigament2d("azimuthTarget", 0.3, 0);
+        azimuthTargetDisplay.setColor(new Color8Bit(Color.kPink));
 
-        root.append(targetDisplay);
-        root.append(measuredDisplay);
+        azimuthMeasuredDisplay = new LoggedMechanismLigament2d("azimuthMeasured", 0.3, 0);
+        azimuthMeasuredDisplay.setColor(new Color8Bit(Color.kRed));
+
+        azimuthRoot.append(azimuthTargetDisplay);
+        azimuthRoot.append(azimuthMeasuredDisplay);
+
+        hoodTargetDisplay = new LoggedMechanismLigament2d("hoodTarget", 0.3, 0);
+        hoodTargetDisplay.setColor(new Color8Bit(Color.kLightBlue));
+
+        hoodMeasuredDisplay = new LoggedMechanismLigament2d("hoodMeasured", 0.3, 0);
+        hoodMeasuredDisplay.setColor(new Color8Bit(Color.kBlue));
+
+        hoodRoot.append(hoodTargetDisplay);
+        hoodRoot.append(hoodMeasuredDisplay);
     }
 
-    public void update(double targetAzimuthRad, double measuredAzimuthRad) {
-        targetDisplay.setAngle(Units.radiansToDegrees(targetAzimuthRad));
-        measuredDisplay.setAngle(Units.radiansToDegrees(measuredAzimuthRad));
+    public void update(
+        double targetAzimuthRad, double measuredAzimuthRad,
+        double targetHoodRad, double measuredHoodRad
+    ) {
+        azimuthTargetDisplay.setAngle(Units.radiansToDegrees(targetAzimuthRad));
+        azimuthMeasuredDisplay.setAngle(Units.radiansToDegrees(measuredAzimuthRad));
 
-        Logger.recordOutput("Turret/Mechanism", azimuth);
+        hoodTargetDisplay.setAngle(Units.radiansToDegrees(targetHoodRad));
+        hoodMeasuredDisplay.setAngle(Units.radiansToDegrees(measuredHoodRad));
+
+        Logger.recordOutput("Turret/Mechanism/Azimuth", azimuthMechanism);
+        Logger.recordOutput("Turret/Mechanism/Hood", hoodMechanism);
     }
 }

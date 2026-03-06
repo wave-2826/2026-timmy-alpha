@@ -14,11 +14,10 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
-
-import frc.robot.subsystems.turret.controller.TurretControllerIO.TurretMPCOutputs;
 import frc.robot.util.SparkUtil;
 
 import static frc.robot.util.SparkUtil.tryUntilOk;
+
 import static frc.robot.util.SparkUtil.checkFault;
 import static frc.robot.util.SparkUtil.getIfOk;
 
@@ -73,7 +72,7 @@ public class TurretIOReal implements TurretIO {
         azimuthConfig.closedLoop
             .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
             .positionWrappingEnabled(true)
-            .positionWrappingInputRange(0, Math.PI * 2);
+            .positionWrappingInputRange(0, 2.0 * Math.PI / TurretConstants.totalAzimuthGearing);
         azimuthConfig.absoluteEncoder
             .zeroOffset(0)
             .zeroCentered(false)
@@ -89,9 +88,6 @@ public class TurretIOReal implements TurretIO {
         var hoodConfig = new SparkFlexConfig();
         hoodConfig.signals.apply(SparkUtil.defaultSignals);
         hoodMotorPID.applyConfigAndRegister(hoodConfig, hoodMotor);
-        hoodConfig.closedLoop
-            .positionWrappingEnabled(true)
-            .positionWrappingInputRange(0, Math.PI * 2);
         hoodConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(hoodCurrentLimit);
         hoodConfig.encoder
             .positionConversionFactor(2.0 * Math.PI) // Rotor Rotations -> Radians (of ring)
@@ -112,26 +108,30 @@ public class TurretIOReal implements TurretIO {
         inputs.bottomFlywheel = new TurretIOInputs.FlywheelMotorInputs(!checkFault(), bottomFlywheelVelocity, bottomFlywheelCurrent);
 
         var azimuthAngle = getIfOk(azimuthMotor, azimuthAbsEncoder::getPosition, 0);
-        var azimuthInternalAngle = getIfOk(azimuthMotor, azimuthEncoder::getPosition, 0) * TurretConstants.azimuthToRingReduction;
+        var azimuthInternalAngle = getIfOk(azimuthMotor, azimuthEncoder::getPosition, 0);
         var azimuthVelocity = getIfOk(azimuthMotor, azimuthAbsEncoder::getVelocity, 0);
         var azimuthCurrent = getIfOk(azimuthMotor, azimuthMotor::getOutputCurrent, 0);
         var azimuthApplied = getIfOk(azimuthMotor, azimuthMotor::getAppliedOutput, 0);
         inputs.azimuth = new TurretIOInputs.AzimuthMotorInputs(!checkFault(), azimuthAngle, azimuthInternalAngle, azimuthVelocity, azimuthCurrent, azimuthApplied);
 
-        var hoodRingAngle = getIfOk(hoodMotor, hoodEncoder::getPosition, 0) * TurretConstants.hoodToRingReduction;
-        var hoodRingVelocity = getIfOk(hoodMotor, hoodEncoder::getVelocity, 0) * TurretConstants.hoodToRingReduction;
+        var hoodAngle = getIfOk(hoodMotor, hoodEncoder::getPosition, 0);
+        var hoodVelocity = getIfOk(hoodMotor, hoodEncoder::getVelocity, 0);
         var hoodCurrent = getIfOk(hoodMotor, hoodMotor::getOutputCurrent, 0);
         var hoodApplied = getIfOk(hoodMotor, hoodMotor::getAppliedOutput, 0);
-        inputs.hood = new TurretIOInputs.HoodMotorInputs(!checkFault(), hoodRingAngle, hoodRingVelocity, hoodCurrent, hoodApplied);
+        inputs.hood = new TurretIOInputs.HoodMotorInputs(!checkFault(), hoodAngle, hoodVelocity, hoodCurrent, hoodApplied);
     }
 
     @Override
     public void setPIDOutputs(TurretIOPIDOutputs outputs) {
+        var flyMotorSetpoint = outputs.flywheelSpeedRadPerSec() / TurretConstants.totalFlywheelGearing;
         // TODO: Calculate next velocity
-        var ff = flywheelMotorFF.calculateWithVelocities(outputs.flywheelSpeedRadPerSec(), outputs.flywheelSpeedRadPerSec());
-        flywheelController.setSetpoint(outputs.flywheelSpeedRadPerSec(), ControlType.kVelocity, ClosedLoopSlot.kSlot0, ff, ArbFFUnits.kVoltage);
-        azimuthController.setSetpoint(outputs.azimuthAngleRad(), ControlType.kPosition);
-        hoodController.setSetpoint(outputs.azimuthAngleRad() + outputs.hoodAngleRad(), ControlType.kPosition);
+        var ff = flywheelMotorFF.calculateWithVelocities(flyMotorSetpoint, flyMotorSetpoint);
+        flywheelController.setSetpoint(flyMotorSetpoint, ControlType.kVelocity, ClosedLoopSlot.kSlot0, ff, ArbFFUnits.kVoltage);
+        azimuthController.setSetpoint(outputs.azimuthAngleRad() / TurretConstants.totalAzimuthGearing, ControlType.kPosition);
+        hoodController.setSetpoint((
+            outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction -
+            outputs.azimuthAngleRad()
+        ) * TurretConstants.hoodMotorToRingReduction, ControlType.kPosition);
     }
 
     @Override

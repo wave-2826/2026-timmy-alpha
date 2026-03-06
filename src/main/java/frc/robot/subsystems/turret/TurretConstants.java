@@ -17,25 +17,25 @@ public class TurretConstants {
 
     // Reductions; all are a ratio between output and input.
     // All stages have the same 31:200 reduction, but the hood and azimuth are further reduced by the bevel and planetary stages.
-    public static final double flywheelToRingReduction = 31.0 / 200.0;
-    public static final double azimuthToRingReduction = 31.0 / 200.0;
-    public static final double hoodToRingReduction = 31.0 / 200.0;
+    public static final double flyMotorToRingReduction = 35.0 / 200.0;
+    public static final double aziMotorToRingReduction = 35.0 / 200.0;
+    public static final double hoodMotorToRingReduction = 35.0 / 200.0;
     
     public static final double flywheelPlanetReduction = 213.0 / 25.0;
     public static final double hoodPlanetReduction = 213.0 / 25.0;
 
-    public static final double flywheelBevelReduction = -10.0 / 18.0;
-    public static final double hoodRingToHoodReduction = 1.0 / 202.0;
+    public static final double flywheelRingToFlyReduction = -10.0 / 18.0 * TurretConstants.flywheelPlanetReduction;
+    public static final double hoodRingToHoodReduction = 1.0 / 202.0 * TurretConstants.hoodPlanetReduction;
 
     // Calculated reductions
     // Total gearings; these are a ratio between output and input, so should be less than 1.
-    public static final double totalFlywheelGearing = TurretConstants.flywheelToRingReduction * TurretConstants.flywheelPlanetReduction * TurretConstants.flywheelBevelReduction;
-    public static final double totalHoodGearing = TurretConstants.hoodToRingReduction * TurretConstants.hoodPlanetReduction * TurretConstants.hoodRingToHoodReduction;
-    public static final double totalAzimuthGearing = TurretConstants.azimuthToRingReduction;
+    public static final double totalFlywheelGearing = TurretConstants.flyMotorToRingReduction * TurretConstants.flywheelRingToFlyReduction;
+    public static final double totalHoodGearing = TurretConstants.hoodMotorToRingReduction * TurretConstants.hoodRingToHoodReduction;
+    public static final double totalAzimuthGearing = TurretConstants.aziMotorToRingReduction;
 
     // Couplings; these are a direct ratio between each motor and their coupled output
-    public static final double azimuthFlyCoupling = TurretConstants.totalAzimuthGearing * TurretConstants.flywheelToRingReduction * TurretConstants.flywheelBevelReduction;
-    public static final double azimuthHoodCoupling = TurretConstants.totalAzimuthGearing * TurretConstants.hoodToRingReduction * TurretConstants.hoodRingToHoodReduction;
+    public static final double azimuthFlyCoupling = TurretConstants.totalAzimuthGearing * TurretConstants.flywheelRingToFlyReduction;
+    public static final double azimuthHoodCoupling = TurretConstants.totalAzimuthGearing * TurretConstants.hoodRingToHoodReduction;
 
     // Constraints
     public static final double hoodMinAngle = Units.degreesToRadians(15);
@@ -61,9 +61,9 @@ public class TurretConstants {
             0.0000368726 + // Shaft stuff
             0.0000011706 + // Other shaft stuff
             0.0004667602 * 3, // Inertial plates per plate
-            flywheelPlanetReduction * flywheelBevelReduction
+            flywheelPlanetReduction * flywheelRingToFlyReduction
         ) + 0.0116297925, // Big ring
-        flywheelToRingReduction
+        flyMotorToRingReduction
     ) + 0.0000201921 + 0.0000011706 + // Motor shaft stuff
         0.00221388368; // Rev NEO vortex MOI (measured since Rev doesn't give it to us...)
     
@@ -71,7 +71,7 @@ public class TurretConstants {
     public static final double azimuthMotorInertiaKgM2 = reflectInertia(
         0.0116297925 + // Big ring
         parallelAxisInertia(0.0265304183, 1.4442381, 0.0297434), // Full turret azimuth MOI around center of rotation
-        azimuthToRingReduction
+        aziMotorToRingReduction
     ) + 0.0000201921 + 0.0000011706 + // Motor shaft stuff
         0.00221388368; // Rev NEO vortex MOI (measured since Rev doesn't give it to us...)
 
@@ -84,7 +84,7 @@ public class TurretConstants {
             ) + 2.92639653e-6, // Transmission before bevel gear
             hoodPlanetReduction
         ) + 0.0116297925, // Big ring
-        hoodToRingReduction
+        hoodMotorToRingReduction
     ) + 0.0000201921 + 0.0000011706 + // Motor shaft stuff
         0.00221388368; // Rev NEO vortex MOI (measured since Rev doesn't give it to us...)
 
@@ -92,9 +92,9 @@ public class TurretConstants {
     public static final double flywheelMotorKA = flywheelMotorInertiaKgM2 / (flywheelSimMotor.KtNMPerAmp * 12); // uhh maybe?
     
     // Limits
-    public static final double maxFlywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(5300); // Tuned
-    public static final double maxHoodRingSpeedRadPerSec = hoodSimMotor.freeSpeedRadPerSec * hoodToRingReduction * hoodPlanetReduction * hoodRingToHoodReduction * 0.8;
-    public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * azimuthToRingReduction * 0.8;
+    public static final double maxFlywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(3000); // Tuned
+    public static final double maxHoodRingSpeedRadPerSec = hoodSimMotor.freeSpeedRadPerSec * hoodMotorToRingReduction * hoodPlanetReduction * hoodRingToHoodReduction * 0.8;
+    public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * aziMotorToRingReduction * 0.8;
 
     // Current limits
     public static final int flywheelCurrentLimit = 67; // amps
@@ -114,5 +114,9 @@ public class TurretConstants {
         .addRealRobotGains(new SparkPIDConstants(0.7, 0.0, 0.2))
         .addRealRobotGains(new SparkPIDConstants(0.001, 0.5, 0.0, ClosedLoopSlot.kSlot1)) // Current PID
         .copyRealGainsInSim();
-    public static final TunableSparkPID hoodMotorPID = azimuthMotorPID;
+    
+    public static final TunableSparkPID hoodMotorPID = new TunableSparkPID("Turret/Hood")
+        .addRealRobotGains(new SparkPIDConstants(1.2, 0.0, 0.2))
+        .addRealRobotGains(new SparkPIDConstants(0.001, 0.5, 0.0, ClosedLoopSlot.kSlot1)) // Current PID
+        .copyRealGainsInSim();
 }
