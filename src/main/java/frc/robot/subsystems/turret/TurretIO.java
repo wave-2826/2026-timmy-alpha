@@ -2,8 +2,6 @@ package frc.robot.subsystems.turret;
 
 import org.littletonrobotics.junction.AutoLog;
 
-import frc.robot.subsystems.turret.controller.TurretControllerIO.TurretMPCOutputs;
-
 public interface TurretIO {
     @AutoLog
     public static class TurretIOInputs {
@@ -52,12 +50,12 @@ public interface TurretIO {
             /** Whether the motor is connected */
             boolean connected,
             /** 
-             * The measured hood ring angle.
+             * The measured hood motor angle.
              * The actual hood angle is the difference between this and the azimuth ring angle (and a reduction).
              */
-            double hoodRingAngleRad,
-            /** The meas ured velocity of the hood ring in rad/sec. */
-            double hoodRingVelocityRadPerSec,
+            double hoodAngleRad,
+            /** The measured velocity of the hood motor in rad/sec. */
+            double hoodVelocityRadPerSec,
             /** The motor current draw. */
             double motorCurrentAmps,
             /** The applied output as a percentage. */
@@ -78,13 +76,13 @@ public interface TurretIO {
             ) / 2 + azimuth.azimuthVelocityRadPerSec() * TurretConstants.azimuthFlyCoupling;
         }
         public double getHoodAngleRad() {
-            return hood.hoodRingAngleRad() * TurretConstants.hoodRingToHoodReduction -
+            return hood.hoodAngleRad() * TurretConstants.totalHoodGearing -
                 azimuth.azimuthAngleRad() * TurretConstants.azimuthHoodCoupling +
                 TurretConstants.hoodMinAngle;
             // TODO: Store an offset?
         }
         public double getHoodVelocityRadPerSec() {
-            return hood.hoodRingVelocityRadPerSec() -
+            return hood.hoodVelocityRadPerSec() * TurretConstants.totalHoodGearing -
                 azimuth.azimuthVelocityRadPerSec() * TurretConstants.azimuthHoodCoupling;
         }
         public double getAzimuthAngleRad() {
@@ -102,6 +100,12 @@ public interface TurretIO {
         double azimuthAngleRad,
         /** The angle of the hood outer ring relative to the azimuth position. */
         double hoodAngleRad
+    ) {}
+
+    public static record TurretMPCOutputs(
+        double flywheelCurrent,
+        double azimuthCurrent,
+        double hoodCurrent
     ) {}
 
     /** Update the set of loggable inputs - data measured from the turret and passed into code. */

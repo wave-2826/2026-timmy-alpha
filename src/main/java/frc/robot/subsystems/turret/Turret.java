@@ -1,6 +1,7 @@
 package frc.robot.subsystems.turret;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -19,9 +20,6 @@ import frc.robot.Controls;
 import frc.robot.commands.tuning.TurretTuning;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.subsystems.turret.TurretIO.TurretIOPIDOutputs;
-import frc.robot.subsystems.turret.controller.TurretControllerIO;
-import frc.robot.subsystems.turret.controller.TurretControllerIO.TurretControllerIOInputs;
-import frc.robot.subsystems.turret.controller.TurretControllerIOInputsAutoLogged;
 
 /**
  * Our robot has a triple-coaxial turret - all motors are static relative to the robot frame.  
@@ -52,20 +50,15 @@ public class Turret extends SubsystemBase {
     }
 
     private final TurretIO io;
-    private final TurretControllerIO controllerIO;
 
     private final TurretIOInputs inputs = new TurretIOInputsAutoLogged();
-    private final TurretControllerIOInputs controllerInputs = new TurretControllerIOInputsAutoLogged();
 
     private LoggedDashboardChooser<ControlMode> controlModeChooser = new LoggedDashboardChooser<>("Turret/ControlMode");
 
     public TurretTarget target = null;
 
-    public Turret(TurretIO io, TurretControllerIO controllerIO) {
+    public Turret(TurretIO io) {
         this.io = io;
-        this.controllerIO = controllerIO;
-
-        controllerIO.init(inputs);
 
         controlModeChooser.addDefaultOption("PID", ControlMode.PID);
         controlModeChooser.addOption("MPC", ControlMode.MPC);
@@ -77,9 +70,6 @@ public class Turret extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Turret", (TurretIOInputsAutoLogged)inputs);
-
-        if(controlModeChooser.get() == ControlMode.MPC) controllerIO.getOutput(controllerInputs);
-        Logger.processInputs("Turret/Controller", (TurretControllerIOInputsAutoLogged)controllerInputs);
 
         if(DriverStation.isTest()) return;
 
@@ -93,15 +83,23 @@ public class Turret extends SubsystemBase {
                     TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
                         target.flywheelSpeedRadPerSec,
                         target.azimuthAngleRad % (Math.PI * 2),
-                        (MathUtil.clamp(target.hoodAngleRad, 0, Math.PI / 2) - TurretConstants.hoodMinAngle) / TurretConstants.hoodRingToHoodReduction
+                        (
+                            MathUtil.clamp(
+                                target.hoodAngleRad,
+                                TurretConstants.hoodMinAngle,
+                                TurretConstants.hoodMaxAngle
+                            ) - TurretConstants.hoodMinAngle
+                        ) / TurretConstants.hoodRingToHoodReduction
                     );
                     io.setPIDOutputs(outputs);
                     break;
                 }
                 case MPC: {
-                    io.setMPCOutputs(controllerInputs.mpc);
+                    // Our singular goal:
+                    // Find the most efficient current setpoints to stop at the target
+                    // flywheel velocity, azimuth pos, and hood position as quickly as possible.
 
-                    controllerIO.run(target);
+                    // io.setMPCOutputs(controllerInputs.mpc);
                     break;
                 }
             }
@@ -116,7 +114,10 @@ public class Turret extends SubsystemBase {
             Logger.recordOutput("Turret/Measured/Azimuth", MathUtil.angleModulus(inputs.getAzimuthAngleRad()), Radians);
             Logger.recordOutput("Turret/Measured/AzimuthVelocity", inputs.getAzimuthVelocityRadPerSec(), RadiansPerSecond);
 
-            TurretVisualizer.getInstance().update(target.azimuthAngleRad, inputs.getAzimuthAngleRad());
+            TurretVisualizer.getInstance().update(
+                target.azimuthAngleRad, inputs.getAzimuthAngleRad(),
+                target.hoodAngleRad, inputs.getHoodAngleRad()
+            );
         }
     }
 
@@ -130,15 +131,22 @@ public class Turret extends SubsystemBase {
                 target = new TurretTarget(0.0, inputs.getAzimuthAngleRad(), TurretConstants.hoodMinAngle);
             }
 
-            target.flywheelSpeedRadPerSec = MathUtil.applyDeadband(-flywheelSpeedSupplier.getAsDouble(), 0.2) * TurretConstants.maxFlywheelSpeedRadPerSec;
-            
+            // target.flywheelSpeedRadPerSec = MathUtil.applyDeadband(-flywheelSpeedSupplier.getAsDouble(), 0.2) * TurretConstants.maxFlywheelSpeedRadPerSec;
+            target.flywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(3000);
+
             // target.azimuthAngleRad -= MathUtil.applyDeadband(azimuthSpeedSupplier.getAsDouble(), 0.2) * Math.PI * 0.02;
             // target.azimuthAngleRad %= Math.PI * 2;
             target.azimuthAngleRad = Math.sin(Timer.getFPGATimestamp() * 0.5) * Math.PI;
             // target.azimuthAngleRad = Math.PI / 2;
 
-            target.hoodAngleRad -= hoodSpeedSupplier.getAsDouble() * Math.PI * 0.008;
-            target.hoodAngleRad = MathUtil.clamp(target.hoodAngleRad, TurretConstants.hoodMinAngle, TurretConstants.hoodMaxAngle);
+            // target.hoodAngleRad -= hoodSpeedSupplier.getAsDouble() * Math.PI * 0.008;
+            // target.hoodAngleRad = MathUtil.clamp(target.hoodAngleRad, TurretConstants.hoodMinAngle, TurretConstants.hoodMaxAngle);
+
+            target.hoodAngleRad = MathUtil.interpolate(
+                TurretConstants.hoodMinAngle + 0.1,
+                TurretConstants.hoodMaxAngle - 0.1,
+                Math.sin(Timer.getFPGATimestamp() * 2) * 0.5 + 0.5
+            );
         }, () -> {
             target = null;
         }, this);

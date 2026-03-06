@@ -12,9 +12,6 @@ import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOReal;
 import frc.robot.subsystems.turret.TurretIOSim;
-import frc.robot.subsystems.turret.controller.TurretControllerIO;
-import frc.robot.subsystems.turret.controller.TurretControllerMainThread;
-import frc.robot.subsystems.turret.controller.TurretControllerThreaded;
 import frc.robot.subsystems.intake.*;
 import frc.robot.commands.AutoCommands;
 import frc.robot.commands.AutoCommands.AutoPaths;
@@ -64,7 +61,7 @@ public class RobotContainer {
                     new VisionIOPhotonVision(VisionConstants.camera0Name, robotToCamera0),
                     new VisionIOPhotonVision(VisionConstants.camera1Name, robotToCamera1));
                 intake = new Intake(new IntakeIOReal());
-                turret = new Turret(new TurretIOReal(), new TurretControllerMainThread());
+                turret = new Turret(new TurretIOReal());
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIOReal());
                 break;
@@ -81,7 +78,7 @@ public class RobotContainer {
                 vision = new Vision(
                     new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
                     new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
-                turret = new Turret(new TurretIOSim(), new TurretControllerMainThread());
+                turret = new Turret(new TurretIOSim());
                 intake = new Intake(new IntakeIO() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIO() {});
@@ -98,7 +95,7 @@ public class RobotContainer {
                     new ModuleIO() {});
                 vision = new Vision(new VisionIO() {}, new VisionIO() {});
                 intake = new Intake(new IntakeIO() {});
-                turret = new Turret(new TurretIO() {}, new TurretControllerIO() {});
+                turret = new Turret(new TurretIO() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIO() {});
                 break;
