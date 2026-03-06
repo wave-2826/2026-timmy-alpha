@@ -195,10 +195,11 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
     }
 
     @Override
-    public void setTurnPID(double kP, double kI, double kD) {
+    public void setTurnPID(double kP, double kI, double kD, double kS) {
         constants.SteerMotorGains.kP = kP;
         constants.SteerMotorGains.kI = kI;
         constants.SteerMotorGains.kD = kD;
+        constants.SteerMotorGains.kS = kS;
         configureMotors();
     }
 

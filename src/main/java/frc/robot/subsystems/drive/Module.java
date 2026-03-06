@@ -12,6 +12,7 @@ import frc.robot.util.tunables.LoggedTunableNumber;
 import static edu.wpi.first.units.Units.Meters;
 
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 public class Module {
     private static final LoggedTunableNumber driveP = new LoggedTunableNumber("Drive/DriveP");
@@ -23,6 +24,9 @@ public class Module {
 
     private static final LoggedTunableNumber turnP = new LoggedTunableNumber("Drive/TurnP");
     private static final LoggedTunableNumber turnD = new LoggedTunableNumber("Drive/TurnD");
+    private static final LoggedTunableNumber turnS = new LoggedTunableNumber("Drive/TurnS");
+
+    private static final LoggedNetworkBoolean driveToggle = new LoggedNetworkBoolean("Drive/DriveToggle", true);
 
     static {
         driveP.initDefault(DriveConstants.driveGains.kP);
@@ -34,6 +38,7 @@ public class Module {
 
         turnP.initDefault(DriveConstants.steerGains.kP);
         turnD.initDefault(DriveConstants.steerGains.kD);
+        turnS.initDefault(DriveConstants.steerGains.kS);
     }
 
     private final ModuleIO io;
@@ -69,8 +74,8 @@ public class Module {
             driveS.hasChanged(hashCode()) || driveV.hasChanged(hashCode()) || driveA.hasChanged(hashCode())) {
             io.setDrivePID(driveP.get(), 0, driveD.get(), driveS.get(), driveV.get(), driveA.get());
         }
-        if(turnP.hasChanged(hashCode()) || turnD.hasChanged(hashCode())) {
-            io.setTurnPID(turnP.get(), 0, turnD.get());
+        if(turnP.hasChanged(hashCode()) || turnD.hasChanged(hashCode()) || turnS.hasChanged(hashCode()) ) {
+            io.setTurnPID(turnP.get(), 0, turnD.get(), turnS.get());
         }
 
         io.updateInputs(inputs);
@@ -99,12 +104,12 @@ public class Module {
      * @return
      */
     private OptimizePair optimizeState(SwerveModuleState state, Rotation2d currentAngle, double accelerationMps2) {
-        // var delta = state.angle.minus(currentAngle);
-        // if(Math.abs(delta.getDegrees()) > 90.0) {
-        //     state.speedMetersPerSecond *= -1;
-        //     state.angle = state.angle.rotateBy(Rotation2d.kPi);
-        //     accelerationMps2 *= -1;
-        // }
+        var delta = state.angle.minus(currentAngle);
+        if(Math.abs(delta.getDegrees()) > 90.0) {
+            state.speedMetersPerSecond *= -1;
+            state.angle = state.angle.rotateBy(Rotation2d.kPi);
+            accelerationMps2 *= -1;
+        }
         return new OptimizePair(state, accelerationMps2);
     }
 

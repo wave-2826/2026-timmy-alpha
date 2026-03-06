@@ -263,7 +263,8 @@ public class FieldConstants {
     
     public enum FieldType {
         ANDYMARK("andymark"),
-        WELDED("welded");
+        WELDED("welded"),
+        HOME("home");
         
         private final String jsonFolder;
         public String getJsonFolder() {

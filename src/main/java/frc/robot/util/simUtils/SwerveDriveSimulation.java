@@ -207,8 +207,19 @@ public class SwerveDriveSimulation {
 
     /**
      * Call this every simulation tick with the simulation timestep (seconds).
+     * Hybrid kinematics-physics model:
+     * - Kinematics provides desired module velocities (what we want)
+     * - Motor forces determine actual velocities (what we can achieve)
+     * - Forces are constrained by motor capability and grip limits
      */
     public void update(double dtSeconds) {
+        // Calculate desired module velocities from robot kinematics
+        // These are targets, but actual motion depends on motor forces
+        ChassisSpeeds chassisSpeeds = new ChassisSpeeds(
+            velocity.getX(), velocity.getY(), angularVelocity
+        );
+        var moduleStates = kinematics.toSwerveModuleStates(chassisSpeeds);
+        
         // Update modules and sum forces
         // Force (N) in world coordinates
         Translation2d totalForce = new Translation2d();
@@ -217,12 +228,19 @@ public class SwerveDriveSimulation {
 
         for(int i = 0; i < moduleSimulations.length; i++) {
             SwerveModuleSimulation module = moduleSimulations[i];
-            Translation2d moduleVel = velocity.plus(new Translation2d(
-                -angularVelocity * (moduleTranslations[i].getY()),
-                angularVelocity * (moduleTranslations[i].getX())
-            ));
+            
+            // Module velocity desired by kinematics, converted to world coordinates
+            double desiredModuleSpeedMPS = moduleStates[i].speedMetersPerSecond;
+            Rotation2d desiredModuleAngleWorld = moduleStates[i].angle.plus(pose.getRotation());
+            Translation2d desiredModuleVelWorld = new Translation2d(
+                desiredModuleSpeedMPS * desiredModuleAngleWorld.getCos(),
+                desiredModuleSpeedMPS * desiredModuleAngleWorld.getSin()
+            );
+            
+            // Get the actual force this module can produce given its desired velocity
+            // (Motor will try to reach desired velocity, but may be limited by grip/motor capability)
             Translation2d moduleForce = module.updateSimulationSubTickGetModuleForce(
-                moduleVel, pose.getRotation(), gravityForceOnEachModule);
+                desiredModuleVelWorld, pose.getRotation(), gravityForceOnEachModule);
 
             totalForce = new Translation2d(
                 totalForce.getX() + moduleForce.getX(),
@@ -230,20 +248,23 @@ public class SwerveDriveSimulation {
             );
 
             // Torque = r x F (2D cross product)
+            // Use actual module position (not desired angle) for torque calculation
             totalTorque += moduleTranslations[i].cross(moduleForce);
         }
 
-        // Simple friction; only linear and angular damping
-        double linearDamping = 1.4;
-        double angularDamping = 1.4;
-        Translation2d linearFriction = new Translation2d(-velocity.getX() * linearDamping, -velocity.getY() * linearDamping);
-        double frictionTorque = -angularVelocity * angularDamping;
+        // Aerodynamic/rolling resistance damping (NOT conflicting with wheel forces)
+        // This represents air resistance and rolling friction, not wheel grip
+        // Use smaller damping since wheels are already generating forces
+        double aeroDamping = 0.3;  // Much smaller than before
+        double angularDamping = 0.3;
+        Translation2d aeroDrag = new Translation2d(-velocity.getX() * aeroDamping, -velocity.getY() * aeroDamping);
+        double angularDrag = -angularVelocity * angularDamping;
 
         totalForce = new Translation2d(
-            totalForce.getX() + linearFriction.getX(),
-            totalForce.getY() + linearFriction.getY()
+            totalForce.getX() + aeroDrag.getX(),
+            totalForce.getY() + aeroDrag.getY()
         );
-        totalTorque += frictionTorque;
+        totalTorque += angularDrag;
 
         // Update velocity based on total linear force (F = m*a)
         double mass = config.robotMass.in(Kilograms);

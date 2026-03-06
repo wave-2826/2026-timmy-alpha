@@ -39,7 +39,7 @@ public final class Simulation {
         .withGyro(COTS.ofPigeon2())
         .withSwerveModule(new SwerveModuleSimulation.SwerveModuleSimulationConfig(
             DCMotor.getKrakenX60(1),
-            DCMotor.getFalcon500(1),
+            DCMotor.getKrakenX60(1),
             DriveConstants.driveGearRatio,
             DriveConstants.steerGearRatio,
             DriveConstants.driveFrictionVoltage,

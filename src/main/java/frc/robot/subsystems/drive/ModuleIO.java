@@ -46,7 +46,7 @@ public interface ModuleIO {
     public default void setDrivePID(double kP, double kI, double kD, double kS, double kV, double kA) {}
 
     /** Set P gain, I gain, D gain, and derivative filter for closed loop control on turn motor. */
-    public default void setTurnPID(double kP, double kI, double kD) {}
+    public default void setTurnPID(double kP, double kI, double kD, double kS) {}
 
     /** Temporarily override the drive motor current limit for slip current characterization. */
     public default void setSlipMeasurementCurrentLimit(Current current) {}

@@ -72,9 +72,9 @@ public class Controls {
 
         // Reset gyro or odometry if in simulation
         final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
-            : () -> drive.setPose(new Pose2d(RobotState.getInstance().getPose().getTranslation(),
-                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Rotation2d.kZero
-                    : Rotation2d.k180deg)); // Zero gyro
+                : () -> drive.setPose(new Pose2d(RobotState.getInstance().getPose().getTranslation(),
+                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Rotation2d.kZero
+                        : Rotation2d.k180deg)); // Zero gyro
         final Runnable resetOdometry = Constants.isSim
             ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
             : () -> drive.setPose(

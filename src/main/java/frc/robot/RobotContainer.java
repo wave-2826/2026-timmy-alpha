@@ -110,7 +110,7 @@ public class RobotContainer {
         for (AutoPaths path : AutoCommands.AutoPaths.values()) {
             var name = path.name();
             name = name.replaceAll("_", " ");
-            autoChooser.addOption(name, AutoCommands.runCodeCommand(path));
+            autoChooser.addOption(name, AutoCommands.runCodeCommand(path, drive));
         }
 
         Controls.getInstance().configureControls(this);
