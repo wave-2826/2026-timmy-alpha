@@ -24,7 +24,6 @@ public class Module {
 
     private static final LoggedTunableNumber turnP = new LoggedTunableNumber("Drive/TurnP");
     private static final LoggedTunableNumber turnD = new LoggedTunableNumber("Drive/TurnD");
-    private static final LoggedTunableNumber turnS = new LoggedTunableNumber("Drive/TurnS");
 
     private static final LoggedNetworkBoolean driveToggle = new LoggedNetworkBoolean("Drive/DriveToggle", true);
 
@@ -38,8 +37,7 @@ public class Module {
 
         turnP.initDefault(DriveConstants.steerGains.kP);
         turnD.initDefault(DriveConstants.steerGains.kD);
-        turnS.initDefault(DriveConstants.steerGains.kS);
-    }
+        }
 
     private final ModuleIO io;
     private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
@@ -74,8 +72,8 @@ public class Module {
             driveS.hasChanged(hashCode()) || driveV.hasChanged(hashCode()) || driveA.hasChanged(hashCode())) {
             io.setDrivePID(driveP.get(), 0, driveD.get(), driveS.get(), driveV.get(), driveA.get());
         }
-        if(turnP.hasChanged(hashCode()) || turnD.hasChanged(hashCode()) || turnS.hasChanged(hashCode()) ) {
-            io.setTurnPID(turnP.get(), 0, turnD.get(), turnS.get());
+        if(turnP.hasChanged(hashCode()) || turnD.hasChanged(hashCode()) ) {
+            io.setTurnPID(turnP.get(), 0, turnD.get());
         }
 
         io.updateInputs(inputs);

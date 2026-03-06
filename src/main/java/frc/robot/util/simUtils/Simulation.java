@@ -82,7 +82,7 @@ public final class Simulation {
         for(int i = 0; i < subTicks; i++) {
             fuel.stepSimSubtick();
             driveSimulation.update(simulationDtSeconds);
-            SimulatedBattery.simulationSubTick();
+            // SimulatedBattery.simulationSubTick();
 
             // TODO: also run other sim IO with subticks
         }
