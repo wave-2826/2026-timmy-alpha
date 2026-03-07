@@ -147,6 +147,9 @@ public class SwerveDriveSimulation {
         this.pose = initialPoseOnField;
         this.moduleTranslations = config.moduleTranslations;
         this.gyroSimulation = config.gyroSimulationFactory.get();
+        // Initialize gyro to match the starting pose so odometry and field-relative
+        // commands work correctly from the very first tick
+        this.gyroSimulation.setRotation(initialPoseOnField.getRotation());
         this.kinematics = new SwerveDriveKinematics(moduleTranslations);
     }
 
@@ -162,15 +165,18 @@ public class SwerveDriveSimulation {
      * - Forces are constrained by motor capability and grip limits
      */
     public void update(double dtSeconds) {
-        setRobotSpeeds(ChassisSpeeds.fromRobotRelativeSpeeds(
-            getDriveTrainSimulatedChassisSpeedsRobotRelative(),
-            gyroSimulation.getGyroReading()
-        ));
+        // Get robot-relative speeds from module states
+        ChassisSpeeds robotRel = getDriveTrainSimulatedChassisSpeedsRobotRelative();
+        
+        // Store them directly (don't convert to field-relative, since Pose2d.exp() 
+        // expects robot-relative speeds)
+        setRobotSpeeds(robotRel);
 
-        pose = pose.exp(new ChassisSpeeds(
-            velocity.getX(), velocity.getY(),
-            angularVelocity
-        ).toTwist2d(dtSeconds));
+        // Integrate the pose using robot-relative speeds. Pose2d.exp() applies
+        // the twist in the robot's frame and properly updates the heading.
+        pose = pose.exp(robotRel.toTwist2d(dtSeconds));
+
+        
 
         // Wall collision based on corners in field coordinates
         double halfLength = config.bumperLengthX.in(Meters) / 2.0;
@@ -226,6 +232,9 @@ public class SwerveDriveSimulation {
         this.pose = robotPose;
         this.velocity = new Translation2d();
         this.angularVelocity = 0.0;
+        // Sync the gyro to the new orientation so field-relative conversions
+        // in the rest of the codebase stay consistent
+        gyroSimulation.setRotation(robotPose.getRotation());
     }
 
     private void setRobotSpeeds(ChassisSpeeds givenSpeeds) {
