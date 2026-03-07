@@ -3,10 +3,13 @@ package frc.robot.util.simUtils;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Seconds;
 
+import java.util.function.Supplier;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Time;
@@ -36,23 +39,14 @@ public final class Simulation {
         .withCustomModuleTranslations(DriveConstants.moduleTranslations)
         .withBumperSize(Inches.of(31), Inches.of(37))
         .withTrackLengthTrackWidth(DriveConstants.wheelBaseX, DriveConstants.trackWidthY)
-        .withGyro(COTS.ofPigeon2())
-        .withSwerveModule(new SwerveModuleSimulation.SwerveModuleSimulationConfig(
-            DCMotor.getKrakenX60(1),
-            DCMotor.getKrakenX60(1),
-            DriveConstants.driveGearRatio,
-            DriveConstants.steerGearRatio,
-            DriveConstants.driveFrictionVoltage,
-            DriveConstants.steerFrictionVoltage,
-            DriveConstants.wheelRadius,
-            DriveConstants.steerInertia,
-            DriveConstants.wheelCOF));
+        .withGyro(COTS.ofPigeon2());
     
     private FuelSim fuel;
 
     private Simulation() {
         fuel = new FuelSim();
         fuel.enableAirResistance();
+        fuel.setLoggingFrequency(50);
     }
 
     public SwerveDriveSimulation configureSimulation() {

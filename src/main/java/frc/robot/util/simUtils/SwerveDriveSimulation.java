@@ -7,10 +7,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.measure.*;
 import frc.robot.FieldConstants;
-import frc.robot.util.simUtils.SwerveModuleSimulation.SwerveModuleSimulationConfig;
 
 import java.util.Arrays;
 import java.util.OptionalDouble;
@@ -21,26 +20,6 @@ import java.util.function.Supplier;
  */
 public class SwerveDriveSimulation {
     public static class COTS {
-        public static SwerveModuleSimulationConfig ofMark4(
-            DCMotor driveMotor, DCMotor steerMotor, double wheelCOF, int gearRatioLevel) {
-            return new SwerveModuleSimulationConfig(
-                driveMotor,
-                steerMotor,
-                switch (gearRatioLevel) {
-                    case 1 -> 8.14;
-                    case 2 -> 6.75;
-                    case 3 -> 6.12;
-                    case 4 -> 5.14;
-                    default -> throw new IllegalStateException("Unknown gearing level: " + gearRatioLevel);
-                },
-                12.8,
-                Volts.of(0.1),
-                Volts.of(0.2),
-                Inches.of(2),
-                KilogramSquareMeters.of(0.03),
-                wheelCOF);
-        }
-
         public static Supplier<GyroSimulation> ofPigeon2() {
             return () -> new GyroSimulation(0.5, 0.02);
         }
@@ -49,7 +28,6 @@ public class SwerveDriveSimulation {
     public static class DriveTrainSimulationConfig {
         public Mass robotMass;
         public Distance bumperLengthX, bumperWidthY;
-        public Supplier<SwerveModuleSimulation>[] swerveModuleSimulationFactories;
         public Supplier<GyroSimulation> gyroSimulationFactory;
         public Translation2d[] moduleTranslations;
 
@@ -63,9 +41,6 @@ public class SwerveDriveSimulation {
          * @param bumperWidthY the width of the bumper (distance from left to right).
          * @param trackLengthX the distance between the front and rear wheels.
          * @param trackWidthY the distance between the left and right wheels.
-         * @param swerveModuleSimulationFactory the factory that creates appropriate swerve module simulation for the
-         *     drivetrain. You can specify one factory to apply the same configuration over all modules or specify four
-         *     factories in the order (FL, FR, BL, BR).
          * @param gyroSimulationFactory the factory that creates appropriate gyro simulation for the drivetrain.
          */
         public DriveTrainSimulationConfig(
@@ -74,22 +49,15 @@ public class SwerveDriveSimulation {
                 Distance bumperWidthY,
                 Distance trackLengthX,
                 Distance trackWidthY,
-                Supplier<GyroSimulation> gyroSimulationFactory,
-                @SuppressWarnings("unchecked")
-                Supplier<SwerveModuleSimulation>... swerveModuleSimulationFactory
+                Supplier<GyroSimulation> gyroSimulationFactory
         ) {
             this.robotMass = robotMass;
             this.bumperLengthX = bumperLengthX;
             this.bumperWidthY = bumperWidthY;
             this.withTrackLengthTrackWidth(trackLengthX, trackWidthY);
-
-            if(swerveModuleSimulationFactory.length == 1) this.withSwerveModule(swerveModuleSimulationFactory[0]);
-            else if(swerveModuleSimulationFactory.length == 4) this.withSwerveModules(swerveModuleSimulationFactory);
-            else throw new IllegalArgumentException("Module simulation factories length must be 1 or 4, provided " + swerveModuleSimulationFactory.length);
             this.gyroSimulationFactory = gyroSimulationFactory;
         }
 
-        @SuppressWarnings("unchecked")
         public static DriveTrainSimulationConfig Default() {
             return new DriveTrainSimulationConfig(
                 Kilograms.of(45),
@@ -97,8 +65,7 @@ public class SwerveDriveSimulation {
                 Meters.of(.76),
                 Meters.of(0.52),
                 Meters.of(0.52),
-                COTS.ofPigeon2(),
-                COTS.ofMark4(DCMotor.getFalcon500(1), DCMotor.getFalcon500(1), 1.9, 2));
+                COTS.ofPigeon2());
         }
 
         public DriveTrainSimulationConfig withRobotMass(Mass robotMass) {
@@ -126,24 +93,6 @@ public class SwerveDriveSimulation {
 
         public DriveTrainSimulationConfig withCustomModuleTranslations(Translation2d[] moduleTranslations) {
             this.moduleTranslations = moduleTranslations;
-            return this;
-        }
-
-        public DriveTrainSimulationConfig withSwerveModules(
-            @SuppressWarnings("unchecked")
-            Supplier<SwerveModuleSimulation>... swerveModuleSimulationFactory
-        ) {
-            if(swerveModuleSimulationFactory.length == 1) return withSwerveModule(swerveModuleSimulationFactory[0]);
-            if(swerveModuleSimulationFactory.length != moduleTranslations.length) throw new IllegalArgumentException("Module simulation factories length must be 1 or 4, provided " + swerveModuleSimulationFactory.length);
-
-            this.swerveModuleSimulationFactories = swerveModuleSimulationFactory;
-            return this;
-        }
-
-        @SuppressWarnings("unchecked")
-        public DriveTrainSimulationConfig withSwerveModule(Supplier<SwerveModuleSimulation> swerveModuleSimulationFactory) {
-            this.swerveModuleSimulationFactories = new Supplier[moduleTranslations.length];
-            Arrays.fill(this.swerveModuleSimulationFactories, swerveModuleSimulationFactory);
             return this;
         }
 
@@ -181,11 +130,9 @@ public class SwerveDriveSimulation {
         }
     }
 
-    private final SwerveModuleSimulation[] moduleSimulations;
     protected final GyroSimulation gyroSimulation;
     protected final Translation2d[] moduleTranslations;
     protected final SwerveDriveKinematics kinematics;
-    private final double gravityForceOnEachModule;
     public final DriveTrainSimulationConfig config;
 
     // Simple physics state
@@ -193,16 +140,18 @@ public class SwerveDriveSimulation {
     private Translation2d velocity = new Translation2d();
     private double angularVelocity = 0.0;
 
+    protected Supplier<SwerveModuleState[]> getModuleStates = null;
+
     public SwerveDriveSimulation(DriveTrainSimulationConfig config, Pose2d initialPoseOnField) {
         this.config = config;
         this.pose = initialPoseOnField;
         this.moduleTranslations = config.moduleTranslations;
-        this.moduleSimulations = Arrays.stream(config.swerveModuleSimulationFactories)
-                .map(Supplier::get)
-                .toArray(SwerveModuleSimulation[]::new);
         this.gyroSimulation = config.gyroSimulationFactory.get();
         this.kinematics = new SwerveDriveKinematics(moduleTranslations);
-        this.gravityForceOnEachModule = config.robotMass.in(Kilograms) * 9.8 / moduleSimulations.length;
+    }
+
+    public void setModuleStateSupplier(Supplier<SwerveModuleState[]> getModuleStates) {
+        this.getModuleStates = getModuleStates;
     }
 
     /**
@@ -213,76 +162,15 @@ public class SwerveDriveSimulation {
      * - Forces are constrained by motor capability and grip limits
      */
     public void update(double dtSeconds) {
-        // Calculate desired module velocities from robot kinematics
-        // These are targets, but actual motion depends on motor forces
-        ChassisSpeeds chassisSpeeds = new ChassisSpeeds(
-            velocity.getX(), velocity.getY(), angularVelocity
-        );
-        var moduleStates = kinematics.toSwerveModuleStates(chassisSpeeds);
-        
-        // Update modules and sum forces
-        // Force (N) in world coordinates
-        Translation2d totalForce = new Translation2d();
-        // Torque (N*m) around origin of robot, positive is CCW
-        double totalTorque = 0.0;
+        setRobotSpeeds(ChassisSpeeds.fromRobotRelativeSpeeds(
+            getDriveTrainSimulatedChassisSpeedsRobotRelative(),
+            gyroSimulation.getGyroReading()
+        ));
 
-        for(int i = 0; i < moduleSimulations.length; i++) {
-            SwerveModuleSimulation module = moduleSimulations[i];
-            
-            // Module velocity desired by kinematics, converted to world coordinates
-            double desiredModuleSpeedMPS = moduleStates[i].speedMetersPerSecond;
-            Rotation2d desiredModuleAngleWorld = moduleStates[i].angle.plus(pose.getRotation());
-            Translation2d desiredModuleVelWorld = new Translation2d(
-                desiredModuleSpeedMPS * desiredModuleAngleWorld.getCos(),
-                desiredModuleSpeedMPS * desiredModuleAngleWorld.getSin()
-            );
-            
-            // Get the actual force this module can produce given its desired velocity
-            // (Motor will try to reach desired velocity, but may be limited by grip/motor capability)
-            Translation2d moduleForce = module.updateSimulationSubTickGetModuleForce(
-                desiredModuleVelWorld, pose.getRotation(), gravityForceOnEachModule);
-
-            totalForce = new Translation2d(
-                totalForce.getX() + moduleForce.getX(),
-                totalForce.getY() + moduleForce.getY()
-            );
-
-            // Torque = r x F (2D cross product)
-            // Use actual module position (not desired angle) for torque calculation
-            totalTorque += moduleTranslations[i].cross(moduleForce);
-        }
-
-        // Aerodynamic/rolling resistance damping (NOT conflicting with wheel forces)
-        // This represents air resistance and rolling friction, not wheel grip
-        // Use smaller damping since wheels are already generating forces
-        double aeroDamping = 0.3;  // Much smaller than before
-        double angularDamping = 0.3;
-        Translation2d aeroDrag = new Translation2d(-velocity.getX() * aeroDamping, -velocity.getY() * aeroDamping);
-        double angularDrag = -angularVelocity * angularDamping;
-
-        totalForce = new Translation2d(
-            totalForce.getX() + aeroDrag.getX(),
-            totalForce.getY() + aeroDrag.getY()
-        );
-        totalTorque += angularDrag;
-
-        // Update velocity based on total linear force (F = m*a)
-        double mass = config.robotMass.in(Kilograms);
-        velocity = new Translation2d(
-            velocity.getX() + (totalForce.getX() / mass) * dtSeconds,
-            velocity.getY() + (totalForce.getY() / mass) * dtSeconds
-        );
-
-        // Update angular velocity (T = I*alpha)
-        double inertia = mass * Math.pow(config.driveBaseRadius().in(Meters), 2);
-        angularVelocity += (totalTorque / inertia) * dtSeconds;
-
-        // Update pose
-        pose = new Pose2d(
-            pose.getTranslation().getX() + velocity.getX() * dtSeconds,
-            pose.getTranslation().getY() + velocity.getY() * dtSeconds,
-            pose.getRotation().plus(Rotation2d.fromRadians(angularVelocity * dtSeconds))
-        );
+        pose = pose.exp(new ChassisSpeeds(
+            velocity.getX(), velocity.getY(),
+            angularVelocity
+        ).toTwist2d(dtSeconds));
 
         // Wall collision based on corners in field coordinates
         double halfLength = config.bumperLengthX.in(Meters) / 2.0;
@@ -340,7 +228,7 @@ public class SwerveDriveSimulation {
         this.angularVelocity = 0.0;
     }
 
-    public void setRobotSpeeds(ChassisSpeeds givenSpeeds) {
+    private void setRobotSpeeds(ChassisSpeeds givenSpeeds) {
         this.velocity = new Translation2d(givenSpeeds.vxMetersPerSecond, givenSpeeds.vyMetersPerSecond);
         this.angularVelocity = givenSpeeds.omegaRadiansPerSecond;
     }
@@ -350,44 +238,14 @@ public class SwerveDriveSimulation {
     }
 
     public ChassisSpeeds getDriveTrainSimulatedChassisSpeedsRobotRelative() {
-        return ChassisSpeeds.fromFieldRelativeSpeeds(
-            velocity.getX(), velocity.getY(), angularVelocity, pose.getRotation()
-        );
-    }
-
-    public SwerveModuleSimulation[] getModules() {
-        return moduleSimulations;
+        return kinematics.toChassisSpeeds(getModuleStates.get());
     }
 
     public GyroSimulation getGyroSimulation() {
         return this.gyroSimulation;
     }
 
-    // The rest of your methods (maxLinearVelocity, etc.) can remain unchanged.
-    public LinearVelocity maxLinearVelocity() {
-        return moduleSimulations[0].config.maximumGroundSpeed();
-    }
-
-    public LinearAcceleration maxLinearAcceleration(Current statorCurrentLimit) {
-        return moduleSimulations[0].config.maxAcceleration(config.robotMass, moduleSimulations.length, statorCurrentLimit);
-    }
-
     public Distance driveBaseRadius() {
         return config.driveBaseRadius();
-    }
-
-    public AngularVelocity maxAngularVelocity() {
-        return RadiansPerSecond.of(maxLinearVelocity().in(MetersPerSecond) / config.driveBaseRadius().in(Meters));
-    }
-
-    public AngularAcceleration maxAngularAcceleration(Current statorCurrentLimit) {
-        return RadiansPerSecondPerSecond.of(moduleSimulations[0]
-            .config
-            .getTheoreticalPropellingForcePerModule(
-                config.robotMass, moduleSimulations.length, statorCurrentLimit)
-            .in(Newtons)
-            * moduleTranslations[0].getNorm()
-            * moduleSimulations.length
-            / (config.robotMass.in(Kilograms) * Math.pow(config.driveBaseRadius().in(Meters), 2)));
     }
 }

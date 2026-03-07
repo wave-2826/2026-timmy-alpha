@@ -113,9 +113,9 @@ public class DriveConstants {
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     public static final Slot0Configs steerGains = new Slot0Configs()
-        .withKP(Constants.isSim ? 100 : 100)
+        .withKP(Constants.isSim ? 5 : 100)
         .withKI(Constants.isSim ? 0   : 0)
-        .withKD(Constants.isSim ? 10  : 10)
+        .withKD(Constants.isSim ? 0  : 10)
         .withKS(Constants.isSim ? 0.1 : 0.1)
         .withKV(Constants.isSim ? 0.0 : 0.0)
         .withKA(Constants.isSim ? 0   : 0)
@@ -124,11 +124,11 @@ public class DriveConstants {
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     public static final Slot0Configs driveGains = new Slot0Configs()
-        .withKP(Constants.isSim ? 3.0   : 3.0)
+        .withKP(Constants.isSim ? 0.1   : 3.0)
         .withKI(Constants.isSim ? 0     : 0)
         .withKD(Constants.isSim ? 0     : 0)
         .withKS(Constants.isSim ? 0     : 0)
-        .withKV(Constants.isSim ? 0.124 : 0.124);
+        .withKV(Constants.isSim ? 0.132 : 0.124);
 
     /** The type of motor used for the drive motor */
     private static final DriveMotorArrangement driveMotorType = DriveMotorArrangement.TalonFX_Integrated;

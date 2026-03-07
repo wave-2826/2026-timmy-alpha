@@ -7,7 +7,7 @@ function OpenIfNotRunning {
 
     $Running = Get-Process $Name -ErrorAction SilentlyContinue
     if($Running -eq $null) {
-        Start-Process $ProgramPath
+        Start-Process $ProgramPath -WindowStyle Normal | Out-Null
     } else {
         # Focus the program
         $procId = $Running.Where({ $_.MainWindowTitle }, 'First').Id

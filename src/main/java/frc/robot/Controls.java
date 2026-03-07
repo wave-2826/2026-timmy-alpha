@@ -36,6 +36,8 @@ public class Controls {
     private final LoggedTunableNumber endgameAlert1Time = new LoggedTunableNumber("Controls/EndgameAlert1Time", 30.0);
     private final LoggedTunableNumber endgameAlert2Time = new LoggedTunableNumber("Controls/EndgameAlert2Time", 20.0);
 
+    private final LoggedTunableNumber servoLength = new LoggedTunableNumber("Climber/Servo", 0.5);
+
     static LoggedNetworkBoolean shiftYours = new LoggedNetworkBoolean("YourShift"); 
 
     private static final Controls instance = new Controls();
@@ -51,13 +53,13 @@ public class Controls {
     /** Configures the controls. */
     public void configureControls(RobotContainer rc) {
         Drive drive = rc.drive;
-        Turret turret = rc.turret;
+        // Turret turret = rc.turret;
         Climber climber = rc.climber;
         Spindexer spindexer = rc.spindexer;
         Intake intake = rc.intake;
         
         // Default command, normal field-relative drive
-        drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> driver.getRightX()));
+        drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
         driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
         // driver.b().whileTrue(climber.extendBoth()).onTrue(intake.bringIntakeIn(1));
@@ -67,8 +69,12 @@ public class Controls {
         driver.rightBumper().onTrue(intake.runRollerPercent(0));
         intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
 
+        climber.setDefaultCommand(Commands.run(() -> {
+            climber.extendBothServos(() -> servoLength.get()).schedule();
+        }, climber));
+
         spindexer.setDefaultCommand(spindexer.runAllPercent(coDriver::getLeftTriggerAxis));
-        turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
+        // turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
 
         // Reset gyro or odometry if in simulation
         final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation

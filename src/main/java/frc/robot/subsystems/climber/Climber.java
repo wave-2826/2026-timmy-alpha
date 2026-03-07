@@ -4,6 +4,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import java.util.function.DoubleSupplier;
+
 import org.littletonrobotics.junction.Logger;
 
 public class Climber extends SubsystemBase {
@@ -48,28 +50,21 @@ public class Climber extends SubsystemBase {
         }).until(() -> ((inputs.left.motorPosition() + inputs.right.motorPosition()) / 2 <= Units.inchesToMeters(15)));
     }
 
-    /** Extend to a ceratin length in millimeters */
-    public Command extendLeftServo(int length) {
+    public Command extendLeftServo(DoubleSupplier length) {
         return runEnd(() -> {
-            if (!(length > ClimberConstants.servoLengthmm)) {
-                io.setLeftServoPosition(length/ClimberConstants.servoLengthmm);
-            }
-        }, null);
+            io.setLeftServoPosition(length.getAsDouble());
+        }, () -> {});
     }
-    /** Extend to a ceratin length in millimeters */
-    public Command extendRightServo(int length) {
+    public Command extendRightServo(DoubleSupplier length) {
         return runEnd(() -> {
-            if (!(length > ClimberConstants.servoLengthmm)) {
-                io.setRightServoPosition(length/ClimberConstants.servoLengthmm);
-            }
-        }, null);
+            io.setRightServoPosition(length.getAsDouble());
+        }, () -> {});
     }
-    /** Extend to a ceratin length in millimeters */
-    public Command extendBothServos(int length) {
+    public Command extendBothServos(DoubleSupplier length) {
         return runEnd(() -> {
             extendLeftServo(length);
             extendRightServo(length);
-        }, null);
+        }, () -> {});
     }
 
 }

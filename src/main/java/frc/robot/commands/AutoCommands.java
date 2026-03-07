@@ -36,7 +36,12 @@ public class AutoCommands {
         switch (path) {
             case RIGHT_SWIPE_OUTPOST:
                 return (
-                    new DriveToPose(drive, new Pose2d(new Translation2d(Units.feetToMeters(5), Units.feetToMeters(5)), new Rotation2d(Units.degreesToRadians(90))))
+                    Commands.sequence(
+                        new DriveToPose(drive, new Pose2d(new Translation2d(7.786, 1.146), Rotation2d.fromDegrees(35.083))),
+                        new DriveToPose(drive, new Pose2d(new Translation2d(7.786, 3.632), Rotation2d.fromDegrees(35.083))),
+                        new DriveToPose(drive, new Pose2d(new Translation2d(7.786, 1.146), Rotation2d.fromDegrees(35.083))),
+                        new DriveToPose(drive, new Pose2d(new Translation2d(4.364,0.382), Rotation2d.fromDegrees(90)))
+                    )
                 );
             case RIGHT_SWIPE_CLIMB_RIGHT:
             case RIGHT_SWIPE_CLIMB_LEFT:
@@ -54,9 +59,9 @@ public class AutoCommands {
     public static Command resetOdom(boolean isRightSide, Drive drive) {
         final Pose2d defaultpose;
         if (isRightSide == true) {
-            defaultpose = new Pose2d();
+            defaultpose = new Pose2d(new Translation2d(4.364,0.382), Rotation2d.fromDegrees(90));
         } else {
-            defaultpose = new Pose2d();
+            defaultpose = new Pose2d(new Translation2d(4.300,7.655), Rotation2d.kZero);
         }
         return (Constants.isSim
             ? Commands.run(() -> {

@@ -19,7 +19,7 @@ import frc.robot.commands.drive.DriveTuningCommands;
 import frc.robot.subsystems.climber.*;
 import frc.robot.subsystems.spindexer.*;
 import frc.robot.subsystems.vision.*;
-
+import frc.robot.util.simUtils.GyroSimulation;
 import frc.robot.util.simUtils.Simulation;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -60,21 +60,23 @@ public class RobotContainer {
                 vision = new Vision(
                     new VisionIOPhotonVision(VisionConstants.camera0Name, robotToCamera0),
                     new VisionIOPhotonVision(VisionConstants.camera1Name, robotToCamera1));
-                intake = new Intake(new IntakeIOReal());
-                turret = new Turret(new TurretIOReal());
-                climber = new Climber(new ClimberIO() {});
-                spindexer = new Spindexer(new SpindexerIOReal());
+                intake = new Intake(new IntakeIO() {});
+                turret = new Turret(new TurretIO() {});
+                climber = new Climber(new ClimberIOReal());
+                spindexer = new Spindexer(new SpindexerIO() {});
                 break;
             case SIM:
-                // Sim robot, instantiate physics sim IO implementations
                 var driveSimulation = Simulation.getInstance().configureSimulation();
 
+                // Sim robot, instantiate physics sim IO implementations
                 drive = new Drive(
                     new GyroIOSim(driveSimulation.getGyroSimulation()),
-                    new ModuleIOTalonFXSim(DriveConstants.frontLeftConfig, driveSimulation.getModules()[0]),
-                    new ModuleIOTalonFXSim(DriveConstants.frontRightConfig, driveSimulation.getModules()[1]),
-                    new ModuleIOTalonFXSim(DriveConstants.backLeftConfig, driveSimulation.getModules()[2]),
-                    new ModuleIOTalonFXSim(DriveConstants.backRightConfig, driveSimulation.getModules()[3]));
+                    new ModuleIOSim(0),
+                    new ModuleIOSim(1),
+                    new ModuleIOSim(2),
+                    new ModuleIOSim(3));
+                driveSimulation.setModuleStateSupplier(drive::getModuleStates);
+
                 vision = new Vision(
                     new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
                     new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
