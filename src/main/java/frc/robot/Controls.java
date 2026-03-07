@@ -53,7 +53,7 @@ public class Controls {
     /** Configures the controls. */
     public void configureControls(RobotContainer rc) {
         Drive drive = rc.drive;
-        // Turret turret = rc.turret;
+        Turret turret = rc.turret;
         Climber climber = rc.climber;
         Spindexer spindexer = rc.spindexer;
         Intake intake = rc.intake;
@@ -74,7 +74,7 @@ public class Controls {
         }, climber));
 
         spindexer.setDefaultCommand(spindexer.runAllPercent(coDriver::getLeftTriggerAxis));
-        // turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
+        turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
 
         // Reset gyro or odometry if in simulation
         final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation

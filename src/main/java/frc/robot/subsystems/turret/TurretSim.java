@@ -1,9 +1,7 @@
 package frc.robot.subsystems.turret;
 
-import org.littletonrobotics.junction.Logger;
-
 public class TurretSim {
-    public record TurretState(
+    public record SimTurretState(
         double flywheelMotorVelRps,
         double hoodMotorPosRad,
         double hoodMotorVelRps,
@@ -51,8 +49,8 @@ public class TurretSim {
         azimuthMotorVelRps = 0;
     }
     
-    public TurretState getState() {
-        return new TurretState(
+    public SimTurretState getState() {
+        return new SimTurretState(
             flywheelMotorVelRps,
             hoodMotorPosRad,
             hoodMotorVelRps,
@@ -61,27 +59,34 @@ public class TurretSim {
         );
     }
 
-    private double decreaseUnsignedMagnitude(double of, double amount) {
-        if(of > 0) return Math.max(of - amount, 0);
-        else return Math.min(of + amount, 0);
-    } 
+    // Small Coulomb friction in amps
+    private static final double coulombFrictionAmps = 2.0;
+
+    /** Apply Coulomb friction: subtract a fixed opposing current, clamped so it can't reverse. */
+    private double applyCoulombFriction(double current, double velocity) {
+        if(Math.abs(velocity) < 1e-3) {
+            // Static friction: absorb current up to the friction threshold
+            if(Math.abs(current) < coulombFrictionAmps) return 0.0;
+            return current - Math.copySign(coulombFrictionAmps, current);
+        }
+        // Kinetic friction: always opposes velocity
+        return current - Math.copySign(coulombFrictionAmps, velocity);
+    }
 
     /**
      * Iterate the turret simulation by the given time step, and return the current state.
      */
-    public TurretState updateAndGetState(double flywheelVoltage, double hoodVoltage, double azimuthVoltage, double dtSeconds) {
-        // Calculate the actual current drawn by each motor given the applied voltage and current velocity
+    public SimTurretState updateAndGetState(double flywheelVoltage, double hoodVoltage, double azimuthVoltage, double dtSeconds) {
+        // Calculate the actual current drawn by each motor given the applied voltage and current velocity.
+        // DCMotor.getCurrent already accounts for back-EMF, so at free speed the current naturally drops to zero.
         double flywheelCurrent = TurretConstants.flywheelSimMotor.getCurrent(flywheelMotorVelRps, flywheelVoltage);
         double azimuthCurrent = TurretConstants.azimuthSimMotor.getCurrent(azimuthMotorVelRps, azimuthVoltage);
         double hoodCurrent = TurretConstants.hoodSimMotor.getCurrent(hoodMotorVelRps, hoodVoltage);
 
-        double flywheelResistantCurrent = TurretController.FlywheelFF(flywheelMotorVelRps, azimuthMotorVelRps, hoodMotorVelRps);
-        double azimuthResistantCurrent  = TurretController.AzimuthFF(flywheelMotorVelRps, azimuthMotorVelRps, hoodMotorVelRps);
-        double hoodResistantCurrent     = TurretController.HoodFF(flywheelMotorVelRps, azimuthMotorVelRps, hoodMotorVelRps);
-
-        double flywheelAppliedCurrent = flywheelCurrent - flywheelResistantCurrent;
-        double azimuthAppliedCurrent  = azimuthCurrent  - azimuthResistantCurrent;
-        double hoodAppliedCurrent     = hoodCurrent     - hoodResistantCurrent;
+        // Apply small Coulomb friction
+        double flywheelAppliedCurrent = applyCoulombFriction(flywheelCurrent, flywheelMotorVelRps);
+        double azimuthAppliedCurrent  = applyCoulombFriction(azimuthCurrent, azimuthMotorVelRps);
+        double hoodAppliedCurrent     = applyCoulombFriction(hoodCurrent, hoodMotorVelRps);
 
         // Update the velocities based on the applied current
         // A * (Nm/A) / (Kg m^2) = rad/s^2
@@ -96,39 +101,33 @@ public class TurretSim {
         azimuthMotorPosRad += azimuthMotorVelRps * dtSeconds;
         hoodMotorPosRad += hoodMotorVelRps * dtSeconds;
 
-        // hood hard limits
+        // Hood hard limits
         // hoodPosRad = hoodMotorPosRad * totalHoodGearing - azimuthMotorPosRad * azimuthHoodCoupling + hoodMinAngle
-        // hoodVelRps = hoodMotorVelRps * totalHoodGearing - azimuthMotorVelRps * azimuthHoodCoupling
-        //
-        // when the hood hits a limit the mechanism velocity must be zero, which means both the hood
-        // motor and the azimuth motor (via coupling) are stalled against the hard stop
-        // we clamp hoodMotorPosRad to keep hoodPosRad() within [hoodMinAngle, hoodMaxAngle], then
-        // zero out whichever velocity components are still trying to drive further into the limit
-        // double hoodPos = getState().hoodPosRad();
-        // if(hoodPos > TurretConstants.hoodMaxAngle) {
-        //     // clamp motor position so hoodPosRad() == hoodMaxAngle exactly
-        //     hoodMotorPosRad = (TurretConstants.hoodMaxAngle - TurretConstants.hoodMinAngle
-        //         + azimuthMotorPosRad * TurretConstants.azimuthHoodCoupling)
-        //         / TurretConstants.totalHoodGearing;
-        //     // kill mechanism velocity still pushing toward the limit
-        //     double hoodMechVel = hoodMotorVelRps * TurretConstants.totalHoodGearing
-        //         - azimuthMotorVelRps * TurretConstants.azimuthHoodCoupling;
-        //     if(hoodMechVel > 0) {
-        //         hoodMotorVelRps = 0;
-        //         azimuthMotorVelRps = 0;
-        //     }
-        // } else if(hoodPos < TurretConstants.hoodMinAngle) {
-        //     // clamp motor position so hoodPosRad() == hoodMinAngle exactly
-        //     hoodMotorPosRad = azimuthMotorPosRad * TurretConstants.azimuthHoodCoupling /
-        //         TurretConstants.totalHoodGearing;
-        //     // kill any mechanism velocity still pushing toward the limit
-        //     double hoodMechVel = hoodMotorVelRps * TurretConstants.totalHoodGearing
-        //         - azimuthMotorVelRps * TurretConstants.azimuthHoodCoupling;
-        //     if(hoodMechVel < 0) {
-        //         hoodMotorVelRps = 0;
-        //         azimuthMotorVelRps = 0;
-        //     }
-        // }
+        // When the hood hits a limit we clamp hoodMotorPosRad and zero the hood motor velocity
+        // Technically the azimuth should be affected, but it's affected in a non-trivial way so we don't
+        // model it. Ideally, the hood would never hit anyway :)
+        double hoodPos = getState().hoodPosRad();
+        if (hoodPos > TurretConstants.hoodMaxAngle) {
+            hoodMotorPosRad = (TurretConstants.hoodMaxAngle - TurretConstants.hoodMinAngle
+                + azimuthMotorPosRad * TurretConstants.azimuthHoodCoupling)
+                / TurretConstants.totalHoodGearing;
+            double hoodMechVel = hoodMotorVelRps * TurretConstants.totalHoodGearing
+                - azimuthMotorVelRps * TurretConstants.azimuthHoodCoupling;
+            if (hoodMechVel > 0) {
+                // Only stall the hood motor, not azimuth
+                hoodMotorVelRps = azimuthMotorVelRps * TurretConstants.azimuthHoodCoupling
+                    / TurretConstants.totalHoodGearing;
+            }
+        } else if (hoodPos < TurretConstants.hoodMinAngle) {
+            hoodMotorPosRad = azimuthMotorPosRad * TurretConstants.azimuthHoodCoupling
+                / TurretConstants.totalHoodGearing;
+            double hoodMechVel = hoodMotorVelRps * TurretConstants.totalHoodGearing
+                - azimuthMotorVelRps * TurretConstants.azimuthHoodCoupling;
+            if (hoodMechVel < 0) {
+                hoodMotorVelRps = azimuthMotorVelRps * TurretConstants.azimuthHoodCoupling
+                    / TurretConstants.totalHoodGearing;
+            }
+        }
 
         return getState();
     }

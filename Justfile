@@ -11,6 +11,8 @@ simulate:
 
 [linux]
 simulate:
+    # Delete all but the newest hs_*.log file; java crashes on linux every time we stop it
+    ls -t hs_*.log 2>/dev/null | tail -n +2 | xargs -r rm --
     sed -i 's/simMode = Mode.REPLAY;/simMode = Mode.SIM;/g' {{ConstantsFile}}
     ./gradlew simulateJava
 

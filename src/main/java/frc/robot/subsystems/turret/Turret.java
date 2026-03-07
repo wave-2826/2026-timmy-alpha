@@ -64,8 +64,8 @@ public class Turret extends SubsystemBase {
     public Turret(TurretIO io) {
         this.io = io;
 
-        controlModeChooser.addDefaultOption("PID", ControlMode.PID);
-        controlModeChooser.addOption("LQR", ControlMode.LQR);
+        controlModeChooser.addOption("PID", ControlMode.PID);
+        controlModeChooser.addDefaultOption("LQR", ControlMode.LQR);
 
         TurretTuning.init();
     }
@@ -80,6 +80,15 @@ public class Turret extends SubsystemBase {
         if(target == null) {
             controllerInitialised = false;
             io.stop();
+
+            Logger.recordOutput("Turret/Target/Azimuth", 0.0, Radians);
+            Logger.recordOutput("Turret/Target/Hood", 0.0, Radians);
+            Logger.recordOutput("Turret/Target/Flywheel", 0.0, RadiansPerSecond);
+
+            TurretVisualizer.getInstance().update(
+                0.0, inputs.getAzimuthAngleRad(),
+                0.0, inputs.getHoodAngleRad()
+            );
         } else {
             switch(controlModeChooser.get()) {
                 case NONE:
@@ -115,17 +124,17 @@ public class Turret extends SubsystemBase {
             Logger.recordOutput("Turret/Target/Hood", target.hoodAngleRad, Radians);
             Logger.recordOutput("Turret/Target/Flywheel", target.flywheelSpeedRadPerSec, RadiansPerSecond);
 
-            Logger.recordOutput("Turret/Measured/FlywheelVelocity", inputs.getFlywheelVelocityRadPerSecond(), RadiansPerSecond);
-            Logger.recordOutput("Turret/Measured/Hood", inputs.getHoodAngleRad(), Radians);
-            Logger.recordOutput("Turret/Measured/HoodVelocity", inputs.getHoodVelocityRadPerSec(), RadiansPerSecond);
-            Logger.recordOutput("Turret/Measured/Azimuth", MathUtil.angleModulus(inputs.getAzimuthAngleRad()), Radians);
-            Logger.recordOutput("Turret/Measured/AzimuthVelocity", inputs.getAzimuthVelocityRadPerSec(), RadiansPerSecond);
-
             TurretVisualizer.getInstance().update(
                 target.azimuthAngleRad, inputs.getAzimuthAngleRad(),
                 target.hoodAngleRad, inputs.getHoodAngleRad()
             );
         }
+
+        Logger.recordOutput("Turret/Measured/FlywheelVelocity", inputs.getFlywheelVelocityRadPerSecond(), RadiansPerSecond);
+        Logger.recordOutput("Turret/Measured/Hood", inputs.getHoodAngleRad(), Radians);
+        Logger.recordOutput("Turret/Measured/HoodVelocity", inputs.getHoodVelocityRadPerSec(), RadiansPerSecond);
+        Logger.recordOutput("Turret/Measured/Azimuth", MathUtil.angleModulus(inputs.getAzimuthAngleRad()), Radians);
+        Logger.recordOutput("Turret/Measured/AzimuthVelocity", inputs.getAzimuthVelocityRadPerSec(), RadiansPerSecond);
     }
 
     public Command runManual(
