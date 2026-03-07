@@ -38,6 +38,8 @@ public class SparkSimThatActuallyWorks {
     private final SimDouble busVoltage;
     private final SimDouble motorCurrent;
     private final SimDouble setpoint;
+
+    private final SimDouble iAccumulator;
     
     private final SimDouble arbFF;
     private final SimEnum arbFFUnits;
@@ -54,6 +56,7 @@ public class SparkSimThatActuallyWorks {
         return ControlType.values()[controlMode.get()];
     }
 
+    // TODO: update when uvw config changes
     private final MovingAverageFilterSim velocityAverage = new MovingAverageFilterSim(2, 0.016);
 
     private SparkBaseConfigAccessor configAcc;
@@ -70,7 +73,7 @@ public class SparkSimThatActuallyWorks {
             posWrapMin = configAcc.closedLoop.getPositionWrappingMinInput(),
             posWrapMax = configAcc.closedLoop.getPositionWrappingMaxInput();
         boolean posWrapEnabled = configAcc.closedLoop.getPositionWrappingEnabled();
-            
+        
         if(controller == null || controller.getPeriod() != dt) {
             controller = new PIDController(kP, kI, kD, dt);
             controller.setIntegratorRange(-kIMaxAcc, kIMaxAcc);
@@ -80,13 +83,17 @@ public class SparkSimThatActuallyWorks {
             controller.setPID(kP, kI, kD);
             controller.reset();
         }
-        if(controller.getIZone() != kIZone) {
-            controller.setIZone(kIZone);
+
+        double controllerIZone = kIZone == 0 ? Double.POSITIVE_INFINITY : kIZone;
+        if(controller.getIZone() != controllerIZone) {
+            controller.setIZone(controllerIZone);
             controller.reset();
         }
-        if(controllerIntegratorRange != kIMaxAcc) {
-            controller.setIntegratorRange(-kIMaxAcc, kIMaxAcc);
-            controllerIntegratorRange = kIMaxAcc;
+
+        double controllerIMaxAcc = kIMaxAcc == 0 ? Double.POSITIVE_INFINITY : kIMaxAcc;
+        if(controllerIntegratorRange != controllerIMaxAcc) {
+            controller.setIntegratorRange(-controllerIMaxAcc, controllerIMaxAcc);
+            controllerIntegratorRange = controllerIMaxAcc;
             controller.reset();
         }
 
@@ -106,6 +113,8 @@ public class SparkSimThatActuallyWorks {
         SimDeviceJNI.createSimValueDouble(id, "Motor Current", SimDeviceJNI.kOutput, 0);
         SimDeviceJNI.createSimValueDouble(id, "Setpoint", SimDeviceJNI.kOutput, 0);
         
+        SimDeviceJNI.createSimValueDouble(id, "I Accumulator", SimDeviceJNI.kOutput, 0);
+
         SimDeviceJNI.createSimValueDouble(id, "Arbitrary Feedforward", SimDeviceJNI.kOutput, 0);
         SimDeviceJNI.createSimValueEnum(id, "ArbFF Units", SimDeviceJNI.kBidir, new String[]{
             "kVoltage",
@@ -141,20 +150,22 @@ public class SparkSimThatActuallyWorks {
         }
 
         int id = setupSimDeviceJNI();
-        SimDeviceSim sparkSim = new SimDeviceSim(id);
+        SimDeviceSim simGUIDevice = new SimDeviceSim(id);
 
-        appliedOutput = sparkSim.getDouble("Applied Output");
-        position = sparkSim.getDouble("Position");
-        velocity = sparkSim.getDouble("Velocity");
-        busVoltage = sparkSim.getDouble("Bus Voltage");
-        motorCurrent = sparkSim.getDouble("Motor Current");
-        setpoint = sparkSim.getDouble("Setpoint");
+        appliedOutput = simGUIDevice.getDouble("Applied Output");
+        position = simGUIDevice.getDouble("Position");
+        velocity = simGUIDevice.getDouble("Velocity");
+        busVoltage = simGUIDevice.getDouble("Bus Voltage");
+        motorCurrent = simGUIDevice.getDouble("Motor Current");
+        setpoint = simGUIDevice.getDouble("Setpoint");
+
+        iAccumulator = simGUIDevice.getDouble("I Accumulator");
         
-        arbFF = sparkSim.getDouble("Arbitrary Feedforward");
-        arbFFUnits = sparkSim.getEnum("ArbFF Units");
+        arbFF = simGUIDevice.getDouble("Arbitrary Feedforward");
+        arbFFUnits = simGUIDevice.getEnum("ArbFF Units");
         
-        closedLoopSlot = sparkSim.getInt("Closed Loop Slot");
-        controlMode = sparkSim.getEnum("Control Mode");
+        closedLoopSlot = simGUIDevice.getInt("Closed Loop Slot");
+        controlMode = simGUIDevice.getEnum("Control Mode");
 
         internalSim = new SparkSim(spark, simMotor);
     }
@@ -240,16 +251,12 @@ public class SparkSimThatActuallyWorks {
         updateControllerIfNeeded(dt);
 
         // Velocity input is the system simulated input.
-        double internalVelocity = NoiseGenerator.hallSensorVelocity(simVelocity);
+        double velocityRPM = simVelocity / velocityFactor;
+        double internalVelocity = NoiseGenerator.hallSensorVelocity(velocityRPM) * velocityFactor;
 
         // technically velocityAverage should be updated with the uvw constants, but whatever
         velocityAverage.put(internalVelocity, dt);
-        internalVelocity = velocityAverage.get();
-
-        // First set the states that are given
-        velocity.set(internalVelocity);
-
-        double velocityRPM = simVelocity / velocityFactor;
+        velocity.set(velocityAverage.get());
 
         position.set(position.get() + ((velocityRPM / 60) * dt) * positionFactor);
         busVoltage.set(vbus);
@@ -293,6 +300,8 @@ public class SparkSimThatActuallyWorks {
                 appliedOutput = 0;
                 break;
         }
+
+        iAccumulator.set(controller.getAccumulatedError());
 
         switch(getArbFFUnits()) {
             case kPercentOut:
@@ -383,7 +392,7 @@ public class SparkSimThatActuallyWorks {
     }
 
     public double getSetpoint() {
-        return setpoint.get() * getPositionFactor();
+        return setpoint.get();
     }
 
     public SparkAbsoluteEncoderSim getAbsoluteEncoderSim() {

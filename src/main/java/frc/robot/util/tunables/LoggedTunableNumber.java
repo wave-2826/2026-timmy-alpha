@@ -19,7 +19,7 @@ import frc.robot.Robot;
  * dashboard. From 6328 Mechanical Advantage.
  */
 public class LoggedTunableNumber implements DoubleSupplier {
-    private static final String tableKey = "/Tuning";
+    public static final String tableKey = "/Tuning";
 
     private final String key;
     private boolean hasDefault = false;

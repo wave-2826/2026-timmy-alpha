@@ -1,5 +1,6 @@
 package frc.robot.subsystems.turret;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Num;
@@ -12,9 +13,12 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N5;
 import edu.wpi.first.math.system.LinearSystem;
 import edu.wpi.first.math.system.LinearSystemLoop;
+import frc.robot.Constants;
 import frc.robot.generated.TurretTuningData;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.subsystems.turret.TurretIO.TurretMPCOutputs;
+import frc.robot.util.tunables.LoggedTunableNumber;
+import frc.robot.util.tunables.LoggedTunableVector;
 
 /**
  * The problem formulation (I already made this writeup to talk about it, so I guess it can go in the code):
@@ -102,29 +106,30 @@ public class TurretController {
     // 5 outputs: full-state measurement (we observe the entire state vector)
 
     // LQR / Kalman filter tuning
-    // Q cost weights – larger = tighter regulation of that state
-    private static final double lqrQAzimuthPos        = 20.0;  // rad
-    private static final double lqrQAzimuthVel        = 1.0;   // rad/s
-    private static final double lqrQHoodPos           = 20.0;  // rad
-    private static final double lqrQHoodVel           = 1.0;   // rad/s
-    private static final double lqrQFlywheelVel       = 5.0;   // rad/s
-    // R cost weights – larger = softer use of that input
-    private static final double lqrRAzimuthCurrent    = 1.0;   // A
-    private static final double lqrRHoodCurrent       = 1.0;   // A
-    private static final double lqrRFlywheelCurrent   = 1.0;   // A
-    // Kalman process / measurement noise (standard deviations; tuned empirically)
-    private static final double kalmanQAzimuthPos     = 0.01;
-    private static final double kalmanQAzimuthVel     = 0.5;
-    private static final double kalmanQHoodPos        = 0.01;
-    private static final double kalmanQHoodVel        = 0.5;
-    private static final double kalmanQFlywheelVel    = 1.0;
-    private static final double kalmanRAzimuthPos     = 0.005;
-    private static final double kalmanRAzimuthVel     = 0.1;
-    private static final double kalmanRHoodPos        = 0.005;
-    private static final double kalmanRHoodVel        = 0.1;
-    private static final double kalmanRFlywheelVel    = 0.2;
+
+    // State cost (max-error tolerances in the form 1/qMax^2)
+    private static final LoggedTunableVector<N5> qWeights = new LoggedTunableVector<>(
+        "Turret/LQR_Q",
+        VecBuilder.fill(
+            5,   // azimuth - deg
+            6, // azimuth vel - deg/s
+            5,  // hood - deg
+            6, // hood vel - deg/s
+            500  // flywheel vel - deg/s
+        ).times(Math.PI * 2 / 360)
+    );
+    // R cost weights (control effort tolerance). Decrease this to more heavily penalize
+    // control effort, or make the controller less aggressive
+    private static final LoggedTunableVector<N3> rWeights = new LoggedTunableVector<>(
+        "Turret/LQR_R",
+        VecBuilder.fill(30, 30, 30)
+    );
+    // Kalman process / measurement noise (should be tuned empirically)
+    // deg and deg/sec
+    private static final Vector<N5> stateStdDevs = VecBuilder.fill(10, 10, 10, 10, 50).times(Math.PI * 2 / 360);
+    private static final Vector<N5> measureStdDevs = VecBuilder.fill(0.1, 0.1, 1.0, 0.1, 1.0).times(Math.PI * 2 / 360);
     // Latency compensation
-    private static final double lqrLatencyCompSec     = 0.05;
+    private static final LoggedTunableNumber lqrLatencyCompSec = new LoggedTunableNumber("Turret/LQR_LatencyComp", Constants.isSim ? 0.0 : 0.05);
 
     private static final double loopPeriod = 0.02;
 
@@ -142,10 +147,10 @@ public class TurretController {
     private static final double BHood = KtHood / TurretConstants.hoodMotorInertiaKgM2;
 
     // State-space objects
-    private final LinearSystem<N5, N3, N5> plant;
-    private final KalmanFilter<N5, N3, N5> observer;
-    private final LinearQuadraticRegulator<N5, N3, N5> lqr;
-    private final LinearSystemLoop<N5, N3, N5> loop;
+    private LinearSystem<N5, N3, N5> plant;
+    private KalmanFilter<N5, N3, N5> observer;
+    private LinearQuadraticRegulator<N5, N3, N5> lqr;
+    private LinearSystemLoop<N5, N3, N5> loop;
 
     public TurretController() {
         // θ_a  θ'_a   θ_h  θ'_h   ω_f
@@ -155,15 +160,15 @@ public class TurretController {
         // All velocity rows are zero in A; dynamics driven entirely by B*u + feedforward
 
         var B = new Matrix<>(Nat.N5(), Nat.N3());
-        
+
         // Rows: [θ_a, θ'_a, θ_h, θ'_h, ω_f]
         // Columns: [I_azi, I_hood, I_fly]
         // θ'_azi  accelerated by azimuth current
         B.set(1, 0, BAzimuth * TurretConstants.totalAzimuthGearing); 
-        // Coaxial coupling: azimuth current also accelerates hood
-        B.set(3, 0, BAzimuth * TurretConstants.azimuthHoodCoupling);
-        // Coaxial coupling: azimuth current also accelerates flywheel
-        B.set(4, 0, BAzimuth * TurretConstants.azimuthFlyCoupling);
+        // // Coaxial coupling: azimuth current also accelerates hood
+        // B.set(3, 0, BAzimuth * TurretConstants.azimuthHoodCoupling);
+        // // Coaxial coupling: azimuth current also accelerates flywheel
+        // B.set(4, 0, BAzimuth * TurretConstants.azimuthFlyCoupling);
 
         // θ'_hood accelerated by hood current
         B.set(3, 1, BHood * TurretConstants.totalHoodGearing);
@@ -175,53 +180,38 @@ public class TurretController {
 
         plant = new LinearSystem<>(A, B, C, D);
 
+        constructSystem();
+    }
+
+    void constructSystem() {
         // ------ Kalman filter ------
-        // Process noise standard deviations (model uncertainty)
-        var stateStdDevs = VecBuilder.fill(kalmanQAzimuthPos, kalmanQAzimuthVel, kalmanQHoodPos, kalmanQHoodVel, kalmanQFlywheelVel);
-        // Measurement noise standard deviations (sensor uncertainty)
-        var measureStdDevs = VecBuilder.fill(kalmanRAzimuthPos, kalmanRAzimuthVel, kalmanRHoodPos, kalmanRHoodVel, kalmanRFlywheelVel);
         observer = new KalmanFilter<>(Nat.N5(), Nat.N5(), plant, stateStdDevs, measureStdDevs, loopPeriod);
 
         // ------ LQR ------
-        // State cost (max-error tolerances in the form 1/qMax^2)
-        var qWeights = VecBuilder.fill(lqrQAzimuthPos, lqrQAzimuthVel, lqrQHoodPos, lqrQHoodVel, lqrQFlywheelVel);
-        // Input cost (max-input tolerances)
-        var rWeights = VecBuilder.fill(lqrRAzimuthCurrent, lqrRHoodCurrent, lqrRFlywheelCurrent);
-        lqr = new LinearQuadraticRegulator<>(plant, qWeights, rWeights, loopPeriod);
+        lqr = new LinearQuadraticRegulator<>(plant, qWeights.get(), rWeights.get(), loopPeriod);
 
-        lqr.latencyCompensate(plant, loopPeriod, lqrLatencyCompSec);
+        System.out.println(lqr.getK());
+
+        lqr.latencyCompensate(plant, loopPeriod, lqrLatencyCompSec.get());
 
         loop = new LinearSystemLoop<>(
             plant,
             lqr,
             observer,
-            u -> u, // We clamp manually after FF
+            u -> desaturateInputVector(u, VecBuilder.fill(
+                TurretConstants.azimuthCurrentLimit,
+                TurretConstants.hoodCurrentLimit,
+                TurretConstants.flywheelCurrentLimit * 2
+            )),
             loopPeriod
         );
     }
 
     /**
      * Reset the observer the system's measured state
-     * @param azimuthAngleRad Measured azimuth angle (radians, mechanism)
-     * @param azimuthVelocityRad Measured azimuth velocity (rad/s, mechanism)
-     * @param hoodAngleRad Measured hood angle (radians, mechanism)
-     * @param hoodVelocityRad Measured hood velocity (rad/s, mechanism)
-     * @param flywheelVelocityRad Measured flywheel velocity (rad/s, flywheel)
      */
-    public void reset(
-        double azimuthAngleRad,
-        double azimuthVelocityRad,
-        double hoodAngleRad,
-        double hoodVelocityRad,
-        double flywheelVelocityRad
-    ) {
-        loop.reset(VecBuilder.fill(
-            azimuthAngleRad,
-            azimuthVelocityRad,
-            hoodAngleRad,
-            hoodVelocityRad,
-            flywheelVelocityRad
-        ));
+    public void reset(TurretIOInputs inputs) {
+        loop.reset(createStateVectorFromInputs(inputs));
     }
 
     private static Vector<N5> createStateVectorFromInputs(TurretIOInputs inputs) {
@@ -250,20 +240,26 @@ public class TurretController {
      * @return        Motor current commands for each axis.
      */
     public TurretMPCOutputs calculate(TurretIOInputs inputs, Turret.TurretTarget target) {
+        if(
+            qWeights.hasChanged(hashCode()) ||
+            rWeights.hasChanged(hashCode()) ||
+            lqrLatencyCompSec.hasChanged(hashCode())
+        ) constructSystem();
+
         // Get motor-shaft velocities instead
         double flyMotorVel  = inputs.topFlywheel.velocityRadPerSec();
         double aziMotorVel  = inputs.azimuth.internalEncoderVelocity();
         double hoodMotorVel = inputs.hood.velocityRadPerSec();
 
         // Empirical feedforward currents
-        // The models return steady-state current for the given operating point.
+        // The models return steady-state current for the given operating point
         double ffAzimuth  = AzimuthFF(flyMotorVel, aziMotorVel, hoodMotorVel);
         double ffHood     = HoodFF(flyMotorVel, aziMotorVel, hoodMotorVel);
         double ffFlywheel = FlywheelFF(flyMotorVel, aziMotorVel, hoodMotorVel);
 
         // Build reference vector
         // x_ref = [θ_azi_target, 0 vel, θ_hood_target, 0 vel, ω_fly_target]
-        // We command zero velocity at the target (to hold positions / velocity setpoint).
+        // We command zero velocity at the target (to hold positions / velocity setpoint)
         var reference = VecBuilder.fill(
             target.azimuthAngleRad, 0.0,
             target.hoodAngleRad, 0.0,
@@ -273,24 +269,25 @@ public class TurretController {
 
         // Correct the observer with current measurements
         var measurement = createStateVectorFromInputs(inputs);
-        loop.correct(measurement);
+        observer.correct(loop.getU(), measurement);
 
         // LQR correction and integrate observer
-        loop.predict(loopPeriod);
+        var error = loop.getNextR().minus(observer.getXhat());
+        error.set(0, 0, MathUtil.angleModulus(error.get(0, 0))); // Wrap azimuth angle error
+        var lqrOutput = lqr.getK().times(error);
+
+        var u = lqrOutput.plus(loop.getFeedforward().calculate(loop.getNextR()));
+        observer.predict(loop.clampInput(u), loopPeriod);
 
         // LQR output (correction on top of feedforward)
-        var uCorrection = loop.getU();
-        var u = VecBuilder.fill(
-            ffAzimuth  + uCorrection.get(0, 0),
-            ffHood     + uCorrection.get(1, 0),
-            ffFlywheel + uCorrection.get(2, 0)
+        var uOutput = VecBuilder.fill(
+            /*ffAzimuth  + */u.get(0, 0),
+            /*ffHood     + */u.get(1, 0),
+            /*ffFlywheel + */u.get(2, 0)
         );
 
-        var currents = desaturateInputVector(u, VecBuilder.fill(
-            TurretConstants.azimuthCurrentLimit,
-            TurretConstants.hoodCurrentLimit,
-            TurretConstants.flywheelCurrentLimit
-        ));
+        // var currents = loop.clampInput(uOutput);
+        var currents = uOutput;
         return new TurretMPCOutputs(
             currents.get(2, 0), // flywheel current
             currents.get(0, 0), // azimuth current
@@ -302,39 +299,39 @@ public class TurretController {
      * Feedforward for the azimuth motor: steady-state current at the given operating point.
      * We normalise inputs to positive velocity, query the model, then re-apply the sign.
      */
-    private static double AzimuthFF(double flyMotorVel, double aziMotorVel, double hoodMotorVel) {
-        double sign = Math.signum(aziMotorVel);
+    public static double AzimuthFF(double flyMotorVel, double aziMotorVel, double hoodMotorVel) {
+        double sign = Math.tanh(10 * aziMotorVel);
         if(sign == 0.0) return 0.0;
         return TurretTuningData.AzimuthCurrentModel.calculate(
-            flyMotorVel * -sign,
-            aziMotorVel * -sign,
-            hoodMotorVel * -sign
-        ) * sign;
+            flyMotorVel * sign,
+            aziMotorVel * sign,
+            hoodMotorVel * sign
+        );
     }
 
     /**
      * Feedforward for the hood motor: steady-state current at the given operating point.
      */
-    private static double HoodFF(double flyMotorVel, double aziMotorVel, double hoodMotorVel) {
-        double sign = Math.signum(hoodMotorVel);
+    public static double HoodFF(double flyMotorVel, double aziMotorVel, double hoodMotorVel) {
+        double sign = Math.tanh(10 * hoodMotorVel);
         if(sign == 0.0) return 0.0;
         return TurretTuningData.HoodCurrentModel.calculate(
-            flyMotorVel * -sign,
-            aziMotorVel * -sign,
-            hoodMotorVel * -sign
+            flyMotorVel * sign,
+            aziMotorVel * sign,
+            hoodMotorVel * sign
         ) * sign;
     }
 
     /**
      * Feedforward for the flywheel motor: steady-state current at the given operating point.
      */
-    private static double FlywheelFF(double flyMotorVel, double aziMotorVel, double hoodMotorVel) {
-        double sign = Math.signum(flyMotorVel);
+    public static double FlywheelFF(double flyMotorVel, double aziMotorVel, double hoodMotorVel) {
+        double sign = Math.tanh(10 * flyMotorVel);
         if(sign == 0.0) return 0.0;
         return TurretTuningData.FlywheelCurrentModel.calculate(
-            flyMotorVel * -sign,
-            aziMotorVel * -sign,
-            hoodMotorVel * -sign
+            flyMotorVel * sign,
+            aziMotorVel * sign,
+            hoodMotorVel * sign
         ) * sign;
     }
 
@@ -356,8 +353,7 @@ public class TurretController {
             double ratio = Math.abs(u.get(i, 0) / maxMagnitde.get(i));
             if(ratio > scalar) scalar = ratio;
         }
-
-        return u.times(scalar);
+        return u.div(scalar);
     }
 }
 
