@@ -111,18 +111,18 @@ public class TurretController {
     private static final LoggedTunableVector<N5> qWeights = new LoggedTunableVector<>(
         "Turret/LQR_Q",
         VecBuilder.fill(
-            5,   // azimuth - deg
-            6, // azimuth vel - deg/s
-            5,  // hood - deg
-            6, // hood vel - deg/s
-            500  // flywheel vel - deg/s
-        ).times(Math.PI * 2 / 360)
+            0.002, // azimuth - rad
+            0.105, // azimuth vel - rad/s
+            0.005, // hood - rad
+            0.105, // hood vel - rad/s
+            2      // flywheel vel - rad/s
+        )
     );
     // R cost weights (control effort tolerance). Decrease this to more heavily penalize
     // control effort, or make the controller less aggressive
     private static final LoggedTunableVector<N3> rWeights = new LoggedTunableVector<>(
         "Turret/LQR_R",
-        VecBuilder.fill(30, 30, 30)
+        VecBuilder.fill(50, 50, 50)
     );
     // Kalman process / measurement noise (should be tuned empirically)
     // deg and deg/sec
@@ -165,15 +165,17 @@ public class TurretController {
         // Columns: [I_azi, I_hood, I_fly]
         // θ'_azi  accelerated by azimuth current
         B.set(1, 0, BAzimuth * TurretConstants.totalAzimuthGearing); 
-        // // Coaxial coupling: azimuth current also accelerates hood
-        // B.set(3, 0, BAzimuth * TurretConstants.azimuthHoodCoupling);
-        // // Coaxial coupling: azimuth current also accelerates flywheel
-        // B.set(4, 0, BAzimuth * TurretConstants.azimuthFlyCoupling);
+        // Coaxial coupling: azimuth current also accelerates hood
+        B.set(3, 0, BAzimuth * TurretConstants.azimuthHoodCoupling);
+        // Coaxial coupling: azimuth current also accelerates flywheel
+        B.set(4, 0, BAzimuth * TurretConstants.azimuthFlyCoupling);
 
         // θ'_hood accelerated by hood current
         B.set(3, 1, BHood * TurretConstants.totalHoodGearing);
         // ω'_fly  accelerated by flywheel current
-        B.set(4, 2, BFlywheel * TurretConstants.totalFlywheelGearing);
+        // Negated because we define positive flywheel velocity = shooting direction,
+        // which is opposite to the motor direction through the negative gear ratio.
+        B.set(4, 2, BFlywheel * -TurretConstants.totalFlywheelGearing);
 
         var C = Matrix.eye(Nat.N5()); // Just output the full state
         var D = new Matrix<>(Nat.N5(), Nat.N3()); // No direct feedthrough
@@ -189,8 +191,6 @@ public class TurretController {
 
         // ------ LQR ------
         lqr = new LinearQuadraticRegulator<>(plant, qWeights.get(), rWeights.get(), loopPeriod);
-
-        System.out.println(lqr.getK());
 
         lqr.latencyCompensate(plant, loopPeriod, lqrLatencyCompSec.get());
 
@@ -271,23 +271,28 @@ public class TurretController {
         var measurement = createStateVectorFromInputs(inputs);
         observer.correct(loop.getU(), measurement);
 
-        // LQR correction and integrate observer
+        // LQR correction: u = K * error  (feedback only, no plant feedforward)
+        // The empirical FF models already capture the steady-state operating-point
+        // current, so adding the plant's linear feedforward on top would double-count.
         var error = loop.getNextR().minus(observer.getXhat());
         error.set(0, 0, MathUtil.angleModulus(error.get(0, 0))); // Wrap azimuth angle error
-        var lqrOutput = lqr.getK().times(error);
+        var lqrCorrection = lqr.getK().times(error);
 
-        var u = lqrOutput.plus(loop.getFeedforward().calculate(loop.getNextR()));
-        observer.predict(loop.clampInput(u), loopPeriod);
-
-        // LQR output (correction on top of feedforward)
+        // Combine: empirical feedforward + LQR correction
         var uOutput = VecBuilder.fill(
-            /*ffAzimuth  + */u.get(0, 0),
-            /*ffHood     + */u.get(1, 0),
-            /*ffFlywheel + */u.get(2, 0)
+            ffAzimuth  + lqrCorrection.get(0, 0),
+            ffHood     + lqrCorrection.get(1, 0),
+            ffFlywheel + lqrCorrection.get(2, 0)
         );
 
-        // var currents = loop.clampInput(uOutput);
-        var currents = uOutput;
+        var currents = loop.clampInput(uOutput);
+
+        // Predict observer forward using only the LQR correction (the part the
+        // plant model knows about). The empirical FF compensates for unmodeled
+        // dynamics (friction, coupling losses) and would cause the observer to
+        // predict phantom acceleration if included.
+        observer.predict(loop.clampInput(lqrCorrection), loopPeriod);
+
         return new TurretMPCOutputs(
             currents.get(2, 0), // flywheel current
             currents.get(0, 0), // azimuth current
@@ -336,7 +341,7 @@ public class TurretController {
     }
 
   /**
-   * Renormalize all inputs if any exceeds the maximum magnitude.
+   * Renormalize all inputs if any exceed the maximum magnitude.
    * Based on StateSpaceUtil.desaturateInputVector but takes a vector instead.
    *
    * @param u The input vector.

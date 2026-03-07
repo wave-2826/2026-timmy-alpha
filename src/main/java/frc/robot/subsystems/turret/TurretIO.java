@@ -73,11 +73,16 @@ public interface TurretIO {
         public HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0, 0.0, 0.0);
 
 
+        /**
+         * Get the flywheel mechanism velocity in rad/s. Positive = shooting direction.
+         * The physical gearing inverts the motor direction, so we negate totalFlywheelGearing
+         * to keep a consistent positive-current to positive-velocity convention.
+         */
         public double getFlywheelVelocityRadPerSecond() {
             return (
                 topFlywheel.velocityRadPerSec() + bottomFlywheel.velocityRadPerSec()
-            ) / 2 * TurretConstants.totalFlywheelGearing +
-                azimuth.velocityRadPerSec() * TurretConstants.azimuthFlyCoupling;
+            ) / 2 * -TurretConstants.totalFlywheelGearing +
+                azimuth.velocityRadPerSec() * -TurretConstants.azimuthFlyCoupling;
         }
         public double getHoodAngleRad() {
             return hood.angleRad() * TurretConstants.totalHoodGearing -
@@ -90,10 +95,10 @@ public interface TurretIO {
                 azimuth.velocityRadPerSec() * TurretConstants.azimuthHoodCoupling;
         }
         public double getAzimuthAngleRad() {
-            return azimuth.angleRad();
+            return azimuth.angleRad() * TurretConstants.totalAzimuthGearing;
         }
         public double getAzimuthVelocityRadPerSec() {
-            return azimuth.velocityRadPerSec();
+            return azimuth.velocityRadPerSec() * TurretConstants.totalAzimuthGearing;
         }
     }
 
