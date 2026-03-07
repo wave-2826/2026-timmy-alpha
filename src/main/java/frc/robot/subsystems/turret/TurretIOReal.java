@@ -55,7 +55,9 @@ public class TurretIOReal implements TurretIO {
         flywheelBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(flywheelCurrentLimit);
         flywheelBaseConfig.encoder
             .positionConversionFactor(2.0 * Math.PI) // rotations -> radians
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0); // RPM -> rad/s
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0) // RPM -> rad/s
+            .uvwAverageDepth(2)
+            .uvwMeasurementPeriod(16);
         var topFlywheelConfig = new SparkFlexConfig().apply(flywheelBaseConfig);
         var bottomFlywheelConfig = new SparkFlexConfig().apply(flywheelBaseConfig);
         bottomFlywheelConfig.follow(topFlywheelMotor, true);
@@ -113,9 +115,9 @@ public class TurretIOReal implements TurretIO {
             bottomFlywheelVelocity, bottomFlywheelCurrent
         );
 
-        var azimuthAngle = getIfOk(azimuthMotor, azimuthAbsEncoder::getPosition, 0);
+        var azimuthAngle = getIfOk(azimuthMotor, azimuthAbsEncoder::getPosition, 0) / TurretConstants.totalAzimuthGearing;
         var azimuthInternalAngle = getIfOk(azimuthMotor, azimuthEncoder::getPosition, 0);
-        var azimuthVelocity = getIfOk(azimuthMotor, azimuthAbsEncoder::getVelocity, 0);
+        var azimuthVelocity = getIfOk(azimuthMotor, azimuthAbsEncoder::getVelocity, 0) / TurretConstants.totalAzimuthGearing;
         var azimuthInternalVelocity = getIfOk(azimuthMotor, azimuthEncoder::getVelocity, 0);
         var azimuthCurrent = getIfOk(azimuthMotor, azimuthMotor::getOutputCurrent, 0);
         var azimuthApplied = getIfOk(azimuthMotor, azimuthMotor::getAppliedOutput, 0);
@@ -152,19 +154,9 @@ public class TurretIOReal implements TurretIO {
 
     @Override
     public void setMPCOutputs(TurretMPCOutputs outputs) {
-        // ugh wwhat
-        flywheelController.setSetpoint(
-            outputs.flywheelCurrent(),
-            // topFlywheelMotor.getEncoder().getVelocity() / TurretConstants.flywheelSimMotor.KvRadPerSecPerVolt,
-            ControlType.kCurrent, ClosedLoopSlot.kSlot1);
-        azimuthController.setSetpoint(
-            outputs.azimuthCurrent(),
-            // azimuthMotor.getEncoder().getVelocity() / TurretConstants.azimuthSimMotor.KvRadPerSecPerVolt,
-            ControlType.kCurrent, ClosedLoopSlot.kSlot1);
-        hoodController.setSetpoint(
-            outputs.hoodCurrent(),
-            // hoodMotor.getEncoder().getVelocity() / TurretConstants.hoodSimMotor.KvRadPerSecPerVolt,
-            ControlType.kCurrent, ClosedLoopSlot.kSlot1);
+        flywheelController.setSetpoint(outputs.flywheelCurrent(), ControlType.kCurrent, ClosedLoopSlot.kSlot1);
+        azimuthController.setSetpoint(outputs.azimuthCurrent(), ControlType.kCurrent, ClosedLoopSlot.kSlot1);
+        hoodController.setSetpoint(outputs.hoodCurrent(), ControlType.kCurrent, ClosedLoopSlot.kSlot1);
     }
 
     @Override

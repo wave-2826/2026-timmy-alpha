@@ -24,11 +24,11 @@ public interface TurretIO {
         public record AzimuthMotorInputs(
             /** Whether the motor is connected */
             boolean connected,
-            /** The measured absolute mechanism azimuth angle. */
+            /** The measured azimuth motor angle, but based on the absolute encoder. */
             double angleRad,
             /** The azimuth motor's internal encoder angle. */
             double internalEncoderAngle,
-            /** The measured absolute mechanism velocity in rad/sec. */
+            /** The measured absolute motor velocity in rad/sec, but based on the absolute encoder. */
             double velocityRadPerSec,
             /** The azimuth motor's internal encoder velocity in rad/sec. */
             double internalEncoderVelocity,
@@ -76,7 +76,8 @@ public interface TurretIO {
         public double getFlywheelVelocityRadPerSecond() {
             return (
                 topFlywheel.velocityRadPerSec() + bottomFlywheel.velocityRadPerSec()
-            ) / 2 + azimuth.velocityRadPerSec() * TurretConstants.azimuthFlyCoupling;
+            ) / 2 * TurretConstants.totalFlywheelGearing +
+                azimuth.velocityRadPerSec() * TurretConstants.azimuthFlyCoupling;
         }
         public double getHoodAngleRad() {
             return hood.angleRad() * TurretConstants.totalHoodGearing -

@@ -3,6 +3,9 @@ package frc.robot;
 import com.ctre.phoenix6.SignalLogger;
 import com.revrobotics.util.StatusLogger;
 
+import edu.wpi.first.hal.FRCNetComm.tInstances;
+import edu.wpi.first.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.MathShared;
 import edu.wpi.first.math.MathSharedStore;
 import edu.wpi.first.math.MathUsageId;
@@ -155,6 +158,9 @@ public class Robot extends LoggedRobot {
             // this does before using it anywhere.
             Threads.setCurrentThreadPriority(true, 10);
         }
+
+        // De-anonymize ourselves
+        HAL.report(tResourceType.kResourceType_Language, tInstances.kLanguage_Rust);
     }
 
     /**

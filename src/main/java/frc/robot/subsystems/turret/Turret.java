@@ -64,8 +64,8 @@ public class Turret extends SubsystemBase {
     public Turret(TurretIO io) {
         this.io = io;
 
-        controlModeChooser.addOption("PID", ControlMode.PID);
-        controlModeChooser.addDefaultOption("LQR", ControlMode.LQR);
+        controlModeChooser.addDefaultOption("PID", ControlMode.PID);
+        controlModeChooser.addOption("LQR", ControlMode.LQR);
 
         TurretTuning.init();
     }
@@ -102,7 +102,7 @@ public class Turret extends SubsystemBase {
                 case LQR: {
                     // Seed the observer the first time we enter LQR mode so it
                     // starts from the real measured state rather than zero.
-                    if (!controllerInitialised) {
+                    if(!controllerInitialised) {
                         controller.reset(inputs);
                         controllerInitialised = true;
                     }
