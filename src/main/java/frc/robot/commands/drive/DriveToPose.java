@@ -43,7 +43,6 @@ public class DriveToPose extends Command {
     private static final LoggedTunableNumber thetaTolerance = new LoggedTunableNumber(//
         "DriveToPose/ThetaTolerance", 1);
 
-    // Drive and turn constraints when the elevator is at the bottom
     private static final LoggedTunableNumber driveMaxVelocity = new LoggedTunableNumber(//
         "DriveToPose/DriveMaxVelocity", DriveConstants.maxSpeedMetersPerSec);
     private static final LoggedTunableNumber driveMaxAcceleration = new LoggedTunableNumber(//
@@ -52,20 +51,6 @@ public class DriveToPose extends Command {
         "DriveToPose/ThetaMaxVelocity", Units.degreesToRadians(720.0));
     private static final LoggedTunableNumber thetaMaxAcceleration = new LoggedTunableNumber(//
         "DriveToPose/ThetaMaxAcceleration", Units.degreesToRadians(500));
-
-    // Drive and turn constraints when the elevator is at the top
-    private static final LoggedTunableNumber driveMaxVelocityTop = new LoggedTunableNumber(//
-        "DriveToPose/DriveMaxVelocityTop", DriveConstants.maxSpeedMetersPerSec);
-    private static final LoggedTunableNumber driveMaxAccelerationTop = new LoggedTunableNumber(//
-        "DriveToPose/DriveMaxAccelerationTop", 2.5);
-    private static final LoggedTunableNumber thetaMaxVelocityTop = new LoggedTunableNumber(//
-        "DriveToPose/ThetaMaxVelocityTop", Units.degreesToRadians(300.0));
-    private static final LoggedTunableNumber thetaMaxAccelerationTop = new LoggedTunableNumber(//
-        "DriveToPose/ThetaMaxAccelerationTop", Units.degreesToRadians(400));
-
-    // The minimum height (as a percentage) of the elevator before we start interpolating towards the top constraints
-    private static final LoggedTunableNumber elevatorMinExtension = new LoggedTunableNumber(//
-        "DriveToPose/ElevatorMinExtension", 0.4);
 
     private static final LoggedTunableNumber setpointMinVelocity = new LoggedTunableNumber(//
         "DriveToPose/SetpointMinVelocity", -0.5); // The most negative velocity we will command after velocity correction.
@@ -253,12 +238,13 @@ public class DriveToPose extends Command {
      */
     private void updateConstraints() {
         driveProfile = new TrapezoidProfile(new TrapezoidProfile.Constraints(
-            MathUtil.interpolate(driveMaxVelocity.get(), driveMaxVelocityTop.get(), 1),
-            MathUtil.interpolate(driveMaxAcceleration.get(), driveMaxAccelerationTop.get(), 1)));
-
+            driveMaxVelocity.get(),
+            driveMaxAcceleration.get()
+        ));
         thetaController.setConstraints(new TrapezoidProfile.Constraints(
-            MathUtil.interpolate(thetaMaxVelocity.get(), thetaMaxVelocityTop.get(), 1),
-            MathUtil.interpolate(thetaMaxAcceleration.get(), thetaMaxAccelerationTop.get(), 1)));
+            thetaMaxVelocity.get(),
+            thetaMaxAcceleration.get()
+        ));
     }
 
     /**

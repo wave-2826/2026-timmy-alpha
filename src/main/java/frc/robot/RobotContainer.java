@@ -7,7 +7,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIO;
-import frc.robot.subsystems.climber.ClimberIOReal;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
@@ -18,7 +17,6 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFXReal;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
-import frc.robot.subsystems.intake.IntakeIOReal;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOReal;
@@ -57,7 +55,6 @@ public class RobotContainer {
         var selected = autoChooser.getSendableChooser().getSelected();
         return selected == null || selected == "None";
     }
-
     private final LoggedDashboardChooser<Command> testChooser;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -120,7 +117,7 @@ public class RobotContainer {
         // Set up auto routines
         autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
-        for (AutoPaths path : AutoCommands.AutoPaths.values()) {
+        for(AutoPaths path : AutoCommands.AutoPaths.values()) {
             var name = path.name();
             name = name.replaceAll("_", " ");
             autoChooser.addOption(name, AutoCommands.runCodeCommand(path, drive));

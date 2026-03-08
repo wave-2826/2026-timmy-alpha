@@ -1,6 +1,5 @@
 package frc.robot;
 
-import java.util.HashMap;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -14,10 +13,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.wpilibj.Timer;
 import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.Vision.IndividualTagEstimate;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.poseEstimator.OdometrySwerveDrivePoseEstimator;
 
@@ -39,9 +35,6 @@ public class RobotState {
 
     private RobotState() {
         // Private constructor to enforce singleton
-        // for(int i = 1; i <= VisionConstants.aprilTagLayout.getTags().size(); i++) {
-        //     individualTagPoses.put(i, new IndividualTagEstimate(Pose2d.kZero, Double.POSITIVE_INFINITY, -1.0));
-        // }
     }
 
     public SwerveDriveKinematics kinematics = new SwerveDriveKinematics(DriveConstants.moduleTranslations);
@@ -100,54 +93,6 @@ public class RobotState {
     /** Gets a rough pose prediction in the specified number of seconds based on our velocity. */
     public Pose2d getLookaheadPose(double inSeconds) {
         return getEstimatedPose().exp(robotVelocity.toTwist2d(inSeconds));
-    }
-
-    /**
-     * A list of each of the individual tags we currently see. When multiple cameras see the same tag, we trust the
-     * camera with the lowest ambiguity.
-     * <p>
-     * TODO: We should test if it's more reliable to average the robotToTag transforms from all cameras in these cases.
-     */
-    private final HashMap<Integer, IndividualTagEstimate> individualTagPoses = new HashMap<>();
-
-    /** Gets a pose estimate of the robot based on a specific tag if one is available. */
-    public Optional<Pose2d> getIndividualTagRobotPose(int tagId) {
-        if(!individualTagPoses.containsKey(tagId)) { return Optional.empty(); }
-        var individualTagData = individualTagPoses.get(tagId);
-
-        // If stale, don't use the tag estimate
-        if(Timer.getTimestamp() - individualTagData.timestamp() >= Vision.perTagPersistenceTime.get()) {
-            return Optional.empty();
-        }
-
-        // Latency compensate
-        var movement = getOdometryMovementSince(individualTagData.timestamp());
-        return movement.map(m -> individualTagData.robotPose().plus(m));
-    }
-
-    /**
-     * Records the observation of an individual tag.
-     * @param timestamp
-     * @param tagId
-     */
-    public void addIndividualTagObservation(Pose2d robotPose, double timestamp, double ambiguity, int tagId) {
-        // Skip if current data for the tag is newer or it was captured at the same time with lower ambiguity
-        if(individualTagPoses.containsKey(tagId)) {
-            var estimate = individualTagPoses.get(tagId);
-            if(estimate.timestamp() > timestamp) { return; }
-            if(timestamp - estimate.timestamp() < 0.05 && estimate.ambiguity() <= ambiguity) { return; }
-        }
-
-        var movement = getOdometryMovementSince(timestamp);
-        if(movement.isEmpty()) { return; }
-
-        Rotation2d robotRotation = robotPose.transformBy(movement.get().inverse()).getRotation();
-
-        // Use the gyro angle at the capture time for the pose's rotation
-        robotPose = new Pose2d(robotPose.getTranslation(), robotRotation);
-
-        // Add transform to current odometry based pose for latency correction
-        individualTagPoses.put(tagId, new IndividualTagEstimate(robotPose, ambiguity, timestamp));
     }
 
     /** Returns the current odometry pose. */
