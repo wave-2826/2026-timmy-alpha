@@ -36,11 +36,11 @@ public class VisionConstants {
     // Robot to camera transforms
     public static Transform3d robotToCamera0 = new Transform3d(
         Units.inchesToMeters(-7.553), Units.inchesToMeters(16.257), Units.inchesToMeters(18.825),
-        new Rotation3d(0.0, Units.degreesToRadians(50), Units.degreesToRadians(115))
+        new Rotation3d(0.0, Units.degreesToRadians(0.0), Units.degreesToRadians(0.0))
     );
     public static Transform3d robotToCamera1 = new Transform3d(
         Units.inchesToMeters(-9.757), Units.inchesToMeters(14.053), Units.inchesToMeters(18.825),
-        new Rotation3d(0.0, Units.degreesToRadians(50), Units.degreesToRadians(-25))
+        new Rotation3d(0.0, Units.degreesToRadians(0.0), Units.degreesToRadians(0.0))
     );
 
     // Basic filtering thresholds
