@@ -49,10 +49,6 @@ public class Vision extends SubsystemBase {
         }
     }
 
-    public Vision(VisionIOPhotonVision visionIOPhotonVision, VisionIOPhotonVision visionIOPhotonVision2) {
-        //TODO Auto-generated constructor stub
-    }
-
     public int getCameraCount() {
         return io.length;
     }

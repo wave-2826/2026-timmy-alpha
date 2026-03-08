@@ -48,10 +48,10 @@ public class VisionTuningCommands {
 
     /** The transform of the calibration tag, relative to the robot base. */
     public static Transform3d heldTagTransform = new Transform3d(new Translation3d(
-        Units.inchesToMeters(-62.0625), // Distance out from PDH side
-        Units.inchesToMeters(0.0), // Distance left toward rio side
+        Units.inchesToMeters(0.0), // Distance out from PDH side
+        Units.inchesToMeters(60.75), // Distance left toward rio side
         Units.inchesToMeters(21.5) // Distance up
-    ), new Rotation3d(0., 0., Units.degreesToRadians(0)));
+    ), new Rotation3d(0., 0., Units.degreesToRadians(270)));
 
     public static Command measureCameraPositions(Vision vision) {
         TransformAverage[] averages = new TransformAverage[vision.getCameraCount()];
@@ -77,21 +77,6 @@ public class VisionTuningCommands {
                 System.out.print("Robot to camera " + cameraIndex + ": ");
                 printTransform(transform);
             }
-
-            Transform3d frontLeftTransform = adjustedTransforms[0];
-            Transform3d frontRightTransform = adjustedTransforms[1];
-            double frontWidth = frontLeftTransform.getY() - frontRightTransform.getY();
-            frontLeftTransform = new Transform3d(
-                new Translation3d(frontLeftTransform.getX(), frontWidth / 2, frontLeftTransform.getZ()),
-                frontLeftTransform.getRotation());
-            frontRightTransform = new Transform3d(
-                new Translation3d(frontRightTransform.getX(), -frontWidth / 2, frontRightTransform.getZ()),
-                frontRightTransform.getRotation());
-
-            System.out.print("Robot to front left camera (centered Y compensated): ");
-            printTransform(frontLeftTransform);
-            System.out.print("Robot to front right camera (centered Y compensated): ");
-            printTransform(frontRightTransform);
         });
     }
 

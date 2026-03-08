@@ -1,10 +1,10 @@
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.math.geometry.Translation3d;
+import frc.robot.FieldConstants;
 
 public class VisionConstants {
     /****** Simulation ******/
@@ -27,21 +27,15 @@ public class VisionConstants {
     /************************/
 
     // AprilTag layout
-    public static AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+    public static AprilTagFieldLayout aprilTagLayout = FieldConstants.defaultAprilTagType.getLayout();
 
     // Camera names, must match names configured on coprocessor
-    public static String camera0Name = "camera_0";
-    public static String camera1Name = "camera_1";
+    public static String camera0Name = "Abe";
+    public static String camera1Name = "Backup";
 
     // Robot to camera transforms
-    public static Transform3d robotToCamera0 = new Transform3d(
-        Units.inchesToMeters(-7.553), Units.inchesToMeters(16.257), Units.inchesToMeters(18.825),
-        new Rotation3d(0.0, Units.degreesToRadians(0.0), Units.degreesToRadians(0.0))
-    );
-    public static Transform3d robotToCamera1 = new Transform3d(
-        Units.inchesToMeters(-9.757), Units.inchesToMeters(14.053), Units.inchesToMeters(18.825),
-        new Rotation3d(0.0, Units.degreesToRadians(0.0), Units.degreesToRadians(0.0))
-    );
+    public static Transform3d robotToCamera0 = new Transform3d(new Translation3d(0.26299228917216877, 0.37463897857529405, 0.46437706895675346), new Rotation3d(0.019078617921454894, -0.32843832829994896, 0.22190482336538536));
+    public static Transform3d robotToCamera1 = new Transform3d(new Translation3d(0.19297534359942536, 0.22660469052086318, 0.4836127596115337), new Rotation3d(0.015612826506477587, -0.30580379815927905, 1.3097503000462243));
 
     // Basic filtering thresholds
     public static final double maxAmbiguity = 0.3;

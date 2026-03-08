@@ -115,10 +115,15 @@ public class TurretIOReal implements TurretIO {
             bottomFlywheelVelocity, bottomFlywheelCurrent
         );
 
-        var azimuthAngle = getIfOk(azimuthMotor, azimuthAbsEncoder::getPosition, 0) / TurretConstants.totalAzimuthGearing;
         var azimuthInternalAngle = getIfOk(azimuthMotor, azimuthEncoder::getPosition, 0);
-        var azimuthVelocity = getIfOk(azimuthMotor, azimuthAbsEncoder::getVelocity, 0) / TurretConstants.totalAzimuthGearing;
         var azimuthInternalVelocity = getIfOk(azimuthMotor, azimuthEncoder::getVelocity, 0);
+        
+        // var azimuthAngle = getIfOk(azimuthMotor, azimuthAbsEncoder::getPosition, 0) / TurretConstants.totalAzimuthGearing;
+        // var azimuthVelocity = getIfOk(azimuthMotor, azimuthAbsEncoder::getVelocity, 0) / TurretConstants.totalAzimuthGearing;
+        // Temporary until we get the sensor working
+        var azimuthAngle = azimuthInternalAngle;
+        var azimuthVelocity = azimuthInternalVelocity;
+
         var azimuthCurrent = getIfOk(azimuthMotor, azimuthMotor::getOutputCurrent, 0);
         var azimuthApplied = getIfOk(azimuthMotor, azimuthMotor::getAppliedOutput, 0);
         inputs.azimuth = new TurretIOInputs.AzimuthMotorInputs(
