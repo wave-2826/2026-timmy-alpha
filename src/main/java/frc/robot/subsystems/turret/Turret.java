@@ -115,7 +115,10 @@ public class Turret extends SubsystemBase {
                         controller.reset(inputs);
                         controllerInitialised = true;
                     }
-                    io.setMPCOutputs(controller.calculate(inputs, target));
+                    
+                    var outputs = controller.calculate(inputs, target);
+                    Logger.recordOutput("Turret/LQRSetpoints", outputs);
+                    io.setLQROutputs(outputs);
                     break;
                 }
             }

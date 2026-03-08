@@ -158,7 +158,7 @@ public class TurretIOReal implements TurretIO {
     }
 
     @Override
-    public void setMPCOutputs(TurretMPCOutputs outputs) {
+    public void setLQROutputs(TurretLQROutputs outputs) {
         flywheelController.setSetpoint(outputs.flywheelCurrent(), ControlType.kCurrent, ClosedLoopSlot.kSlot1);
         azimuthController.setSetpoint(outputs.azimuthCurrent(), ControlType.kCurrent, ClosedLoopSlot.kSlot1);
         hoodController.setSetpoint(outputs.hoodCurrent(), ControlType.kCurrent, ClosedLoopSlot.kSlot1);

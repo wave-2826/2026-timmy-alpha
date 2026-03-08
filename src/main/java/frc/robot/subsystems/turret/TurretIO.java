@@ -111,7 +111,7 @@ public interface TurretIO {
         double hoodAngleRad
     ) {}
 
-    public static record TurretMPCOutputs(
+    public static record TurretLQROutputs(
         double flywheelCurrent,
         double azimuthCurrent,
         double hoodCurrent
@@ -123,8 +123,8 @@ public interface TurretIO {
     /** Run the turret with the given outputs in PID control mode. */
     public default void setPIDOutputs(TurretIOPIDOutputs outputs) {}
 
-    /** Run the turret with the given outputs in MPC control mode. */
-    public default void setMPCOutputs(TurretMPCOutputs outputs) {}
+    /** Run the turret with the given outputs in LQR control mode. */
+    public default void setLQROutputs(TurretLQROutputs outputs) {}
 
     /** Stop all turret motion and hold position. */
     public default void stop() {}

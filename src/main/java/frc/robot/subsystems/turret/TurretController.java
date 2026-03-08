@@ -16,7 +16,7 @@ import edu.wpi.first.math.system.LinearSystemLoop;
 import frc.robot.Constants;
 import frc.robot.generated.TurretTuningData;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
-import frc.robot.subsystems.turret.TurretIO.TurretMPCOutputs;
+import frc.robot.subsystems.turret.TurretIO.TurretLQROutputs;
 import frc.robot.util.tunables.LoggedTunableNumber;
 import frc.robot.util.tunables.LoggedTunableVector;
 
@@ -239,7 +239,7 @@ public class TurretController {
      * @param target  Desired setpoint.
      * @return        Motor current commands for each axis.
      */
-    public TurretMPCOutputs calculate(TurretIOInputs inputs, Turret.TurretTarget target) {
+    public TurretLQROutputs calculate(TurretIOInputs inputs, Turret.TurretTarget target) {
         if(
             qWeights.hasChanged(hashCode()) ||
             rWeights.hasChanged(hashCode()) ||
@@ -293,7 +293,7 @@ public class TurretController {
         // predict phantom acceleration if included.
         observer.predict(loop.clampInput(lqrCorrection), loopPeriod);
 
-        return new TurretMPCOutputs(
+        return new TurretLQROutputs(
             currents.get(2, 0), // flywheel current
             currents.get(0, 0), // azimuth current
             currents.get(1, 0)  // hood current

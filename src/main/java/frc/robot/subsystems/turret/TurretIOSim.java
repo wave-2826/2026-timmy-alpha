@@ -59,10 +59,6 @@ public class TurretIOSim extends TurretIOReal {
             azimuthEncoderSim.setPosition(turretSim.getState().azimuthPosRad());
         }
 
-        Logger.recordOutput("TurretSim/Setpoints/FlySetpoint", flywheelMotorSim.getSetpoint());
-        Logger.recordOutput("TurretSim/Setpoints/HoodSetpoint", hoodMotorSim.getSetpoint());
-        Logger.recordOutput("TurretSim/Setpoints/AzimuthSetpoint", azimuthMotorSim.getSetpoint());
-
         var state = turretSim.getState();
         Logger.recordOutput("TurretSim/State", state);
         Logger.recordOutput("TurretSim/State/HoodPosRad", state.hoodPosRad());
