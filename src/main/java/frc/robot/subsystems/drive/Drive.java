@@ -67,7 +67,7 @@ public class Drive extends SubsystemBase {
 
         // Configure AutoBuilder for PathPlanner
         var robotState = RobotState.getInstance();
-        AutoBuilder.configure(robotState::getPose, this::setPose, this::getChassisSpeeds,
+        AutoBuilder.configure(robotState::getEstimatedPose, this::setPose, this::getChassisSpeeds,
             this::runVelocityWithFeedforward,
             Constants.isSim ? DriveConstants.simHolonomicDriveController : DriveConstants.realHolonomicDriveController,
             DriveConstants.pathplannerConfig, () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red, this);

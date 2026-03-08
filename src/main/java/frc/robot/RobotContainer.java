@@ -1,25 +1,39 @@
 package frc.robot;
 
-import static frc.robot.subsystems.vision.VisionConstants.*;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climber.ClimberIO;
+import frc.robot.subsystems.climber.ClimberIOReal;
+import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.drive.GyroIO;
+import frc.robot.subsystems.drive.GyroIOPigeon2;
+import frc.robot.subsystems.drive.GyroIOSim;
+import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.subsystems.drive.ModuleIOSim;
+import frc.robot.subsystems.drive.ModuleIOTalonFXReal;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOReal;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOReal;
 import frc.robot.subsystems.turret.TurretIOSim;
-import frc.robot.subsystems.intake.*;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionConstants;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.subsystems.spindexer.Spindexer;
+import frc.robot.subsystems.spindexer.SpindexerIO;
+import frc.robot.subsystems.spindexer.SpindexerIOReal;
 import frc.robot.commands.AutoCommands;
 import frc.robot.commands.AutoCommands.AutoPaths;
-import frc.robot.commands.drive.DriveTuningCommands;
-import frc.robot.subsystems.climber.*;
-import frc.robot.subsystems.spindexer.*;
-import frc.robot.subsystems.vision.*;
-import frc.robot.util.simUtils.GyroSimulation;
+import frc.robot.commands.tuning.TuningCommands;
 import frc.robot.util.simUtils.Simulation;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -58,12 +72,12 @@ public class RobotContainer {
                     new ModuleIOTalonFXReal(DriveConstants.backLeftConfig),
                     new ModuleIOTalonFXReal(DriveConstants.backRightConfig));
                 vision = new Vision(
-                    new VisionIOPhotonVision(VisionConstants.camera0Name, robotToCamera0),
-                    new VisionIOPhotonVision(VisionConstants.camera1Name, robotToCamera1));
-                intake = new Intake(new IntakeIO() {});
-                turret = new Turret(new TurretIO() {});
+                    new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.robotToCamera0),
+                    new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.robotToCamera1));
+                intake = new Intake(new IntakeIOReal());
+                turret = new Turret(new TurretIOReal());
                 climber = new Climber(new ClimberIOReal());
-                spindexer = new Spindexer(new SpindexerIO() {});
+                spindexer = new Spindexer(new SpindexerIOReal());
                 break;
             case SIM:
                 var driveSimulation = Simulation.getInstance().configureSimulation();
@@ -78,8 +92,8 @@ public class RobotContainer {
                 driveSimulation.setModuleStateSupplier(drive::getModuleStates);
 
                 vision = new Vision(
-                    new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
-                    new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
+                    new VisionIOPhotonVisionSim(VisionConstants.camera0Name, VisionConstants.robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
+                    new VisionIOPhotonVisionSim(VisionConstants.camera1Name, VisionConstants.robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
                 turret = new Turret(new TurretIOSim());
                 intake = new Intake(new IntakeIO() {});
                 climber = new Climber(new ClimberIO() {});
@@ -113,11 +127,7 @@ public class RobotContainer {
         }
 
         Controls.getInstance().configureControls(this);
-
-        testChooser = new LoggedDashboardChooser<>("Test Command");
-        testChooser.addDefaultOption("Zero module rotations", drive.rezeroModules());
-        testChooser.addOption("Auto tune turret", turret.runTuning());
-        DriveTuningCommands.addTuningCommandsToAutoChooser(drive, testChooser);
+        testChooser = TuningCommands.constructTuningChooser(this);
 
         if(Constants.isSim) Simulation.getInstance().resetSimulationField();
     }

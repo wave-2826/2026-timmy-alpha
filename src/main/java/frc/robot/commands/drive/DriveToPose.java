@@ -85,7 +85,7 @@ public class DriveToPose extends Command {
     private final Drive drive;
 
     private final Supplier<Pose2d> target;
-    private Supplier<Pose2d> pose = RobotState.getInstance()::getPose;
+    private Supplier<Pose2d> pose = RobotState.getInstance()::getEstimatedPose;
 
     private TrapezoidProfile driveProfile;
     private final PIDController driveController = new PIDController(0.0, 0.0, 0.0);

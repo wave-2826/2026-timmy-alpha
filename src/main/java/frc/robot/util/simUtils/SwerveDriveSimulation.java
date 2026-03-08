@@ -144,12 +144,12 @@ public class SwerveDriveSimulation {
 
     public SwerveDriveSimulation(DriveTrainSimulationConfig config, Pose2d initialPoseOnField) {
         this.config = config;
+        
         this.pose = initialPoseOnField;
-        this.moduleTranslations = config.moduleTranslations;
         this.gyroSimulation = config.gyroSimulationFactory.get();
-        // Initialize gyro to match the starting pose so odometry and field-relative
-        // commands work correctly from the very first tick
         this.gyroSimulation.setRotation(initialPoseOnField.getRotation());
+
+        this.moduleTranslations = config.moduleTranslations;
         this.kinematics = new SwerveDriveKinematics(moduleTranslations);
     }
 
@@ -158,25 +158,13 @@ public class SwerveDriveSimulation {
     }
 
     /**
-     * Call this every simulation tick with the simulation timestep (seconds).
-     * Hybrid kinematics-physics model:
-     * - Kinematics provides desired module velocities (what we want)
-     * - Motor forces determine actual velocities (what we can achieve)
-     * - Forces are constrained by motor capability and grip limits
+     * Call this every simulation tick with the simulation timestep
      */
     public void update(double dtSeconds) {
         // Get robot-relative speeds from module states
         ChassisSpeeds robotRel = getDriveTrainSimulatedChassisSpeedsRobotRelative();
-        
-        // Store them directly (don't convert to field-relative, since Pose2d.exp() 
-        // expects robot-relative speeds)
         setRobotSpeeds(robotRel);
-
-        // Integrate the pose using robot-relative speeds. Pose2d.exp() applies
-        // the twist in the robot's frame and properly updates the heading.
         pose = pose.exp(robotRel.toTwist2d(dtSeconds));
-
-        
 
         // Wall collision based on corners in field coordinates
         double halfLength = config.bumperLengthX.in(Meters) / 2.0;

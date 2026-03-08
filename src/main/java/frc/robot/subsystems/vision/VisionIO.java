@@ -10,7 +10,11 @@ public interface VisionIO {
     @AutoLog
     public static class VisionIOInputs {
         public boolean connected = false;
-        public Transform3d bestTagTransform = new Transform3d();
+        /**
+         * The best tag transform that maps camera space to object space. 
+         * Null if there are no tracked targets.
+         */
+        public Transform3d bestTagTransform = null;
         public TargetObservation latestTargetObservation = new TargetObservation(Rotation2d.kZero, Rotation2d.kZero);
         public PoseObservation[] poseObservations = new PoseObservation[0];
         /**

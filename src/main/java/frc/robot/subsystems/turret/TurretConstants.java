@@ -2,6 +2,7 @@ package frc.robot.subsystems.turret;
 
 import com.revrobotics.spark.ClosedLoopSlot;
 
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import frc.robot.util.SparkPIDConstants;
@@ -91,15 +92,20 @@ public class TurretConstants {
     /** kA for the flywheel system in volts per (rad/s^2). Calculated using the motor inertia reflected through the entire drivetrain. */
     public static final double flywheelMotorKA = flywheelMotorInertiaKgM2 / (flywheelSimMotor.KtNMPerAmp * 12); // uhh maybe?
     
+    /** The translation from the robot origin to the turret shot position. */
+    public static final Translation3d robotToTurret = new Translation3d(
+        Units.inchesToMeters(-4.06), Units.inchesToMeters(2.329), Units.inchesToMeters(16.3)
+    );
+
     // Limits
     public static final double maxFlywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(3000); // Tuned
     public static final double maxHoodRingSpeedRadPerSec = hoodSimMotor.freeSpeedRadPerSec * hoodMotorToRingReduction * hoodPlanetReduction * hoodRingToHoodReduction * 0.8;
     public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * aziMotorToRingReduction * 0.8;
 
     // Current limits
-    public static final int flywheelCurrentLimit = 67; // amps
-    public static final int azimuthCurrentLimit = 70; // amps
-    public static final int hoodCurrentLimit = 70; // amps
+    public static final int flywheelCurrentLimit = 67; // amps each
+    public static final int azimuthCurrentLimit = 50; // amps
+    public static final int hoodCurrentLimit = 50; // amps
 
     // PIDs
     public static final TunableSimpleMotorFF flywheelMotorFF = new TunableSimpleMotorFF("Turret/FlywheelFF")

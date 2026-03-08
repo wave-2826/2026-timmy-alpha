@@ -32,7 +32,7 @@ import frc.robot.subsystems.turret.TurretIO.TurretIOPIDOutputs;
  *   attached absolute encoder.
  */
 public class Turret extends SubsystemBase {
-    public class TurretTarget {
+    public static class TurretTarget {
         public double flywheelSpeedRadPerSec;
         public double azimuthAngleRad;
         public double hoodAngleRad;
