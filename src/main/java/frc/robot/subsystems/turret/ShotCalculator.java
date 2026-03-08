@@ -51,6 +51,14 @@ public class ShotCalculator {
 
     private static ShotMapData hubShots = new ShotMapData();
     private static ShotMapData passShots = new ShotMapData();
+    
+    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.02);
+    /**
+     * See https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html#the-drag-constant-k.
+     * For fuel, we found that the piece lost 19.4% of its velocity over 6.3s. The linear velocity drag can be represented as v(t) = v_0 * e^-kt or
+     * r = e^-kt => 0.806 = e^-k(6.3) => k = 0.0342
+     */
+    private static LoggedTunableNumber dragConstant = new LoggedTunableNumber("ShotCalculator/DragConstant", 0.0342);
 
     static {
         // TODO: These are just directly stolen from 6328... Tune ourselves!
@@ -121,8 +129,6 @@ public class ShotCalculator {
         TurretTarget target
     ) {}
 
-    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.02);
-
     private Translation2d getTargetPosition() {
         return AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
     }
@@ -155,12 +161,17 @@ public class ShotCalculator {
             * (TurretConstants.robotToTurret.getX() * Math.cos(robotAngle)
             - TurretConstants.robotToTurret.getY() * Math.sin(robotAngle));
 
-        double timeOfFlight;
+        double timeOfFlight, effectiveTimeOfFlight;
         Pose2d lookaheadPose = turretPosition;
         double lookaheadTurretToTargetDistance = turretToTargetDistance;
         for (int i = 0; i < 20; i++) {
             timeOfFlight = type.shotMapData.getTimeOfFlight(lookaheadTurretToTargetDistance);
-            Translation2d offset = new Translation2d(turretVelocityX * timeOfFlight, turretVelocityY * timeOfFlight);
+            // Calculate the effective time of flight, including induced linear drag. See
+            // https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html
+            // (Described in https://www.chiefdelphi.com/t/recursive-time-of-flight-fire-control-simulator-for-frc-docs-preview/513819/10)
+            effectiveTimeOfFlight = (1 - Math.exp(-dragConstant * timeOfFlight)) / dragConstant;
+
+            Translation2d offset = new Translation2d(turretVelocityX * effectiveTimeOfFlight, turretVelocityY * effectiveTimeOfFlight);
             lookaheadPose = new Pose2d(
                 turretPosition.getTranslation().plus(offset),
                 turretPosition.getRotation());
