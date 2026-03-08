@@ -48,7 +48,7 @@ public class VisionIOPhotonVision implements VisionIO {
                 inputs.bestTagTransform = result.getBestTarget().getBestCameraToTarget();
             } else {
                 inputs.latestTargetObservation = new TargetObservation(Rotation2d.kZero, Rotation2d.kZero);
-                inputs.bestTagTransform = new Transform3d();
+                inputs.bestTagTransform = null;
             }
 
             // Add pose observation

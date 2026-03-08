@@ -4,9 +4,6 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.function.Consumer;
 import org.littletonrobotics.junction.AutoLogOutput;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.util.FlippingUtil;
-
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -21,6 +18,7 @@ import edu.wpi.first.wpilibj.Timer;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.Vision.IndividualTagEstimate;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.poseEstimator.OdometrySwerveDrivePoseEstimator;
 
 /**
@@ -101,7 +99,7 @@ public class RobotState {
 
     /** Gets a rough pose prediction in the specified number of seconds based on our velocity. */
     public Pose2d getLookaheadPose(double inSeconds) {
-        return getPose().exp(robotVelocity.toTwist2d(inSeconds));
+        return getEstimatedPose().exp(robotVelocity.toTwist2d(inSeconds));
     }
 
     /**
@@ -154,7 +152,7 @@ public class RobotState {
 
     /** Returns the current odometry pose. */
     @AutoLogOutput(key = "Odometry/Robot")
-    public Pose2d getPose() {
+    public Pose2d getEstimatedPose() {
         return poseEstimator.getEstimatedPosition();
     }
 
@@ -164,14 +162,13 @@ public class RobotState {
      */
     @AutoLogOutput(key = "Odometry/IsOnRightSide")
     public boolean isOnRightSide() {
-        var bluePose = AutoBuilder.shouldFlip() ? FlippingUtil.flipFieldPose(RobotState.getInstance().getPose())
-            : RobotState.getInstance().getPose();
+        var bluePose = AllianceFlipUtil.apply(RobotState.getInstance().getEstimatedPose());
         return bluePose.getY() < FieldConstants.fieldWidthY / 2.;
     }
 
     /** Returns the current odometry rotation. */
     public Rotation2d getRotation() {
-        return getPose().getRotation();
+        return getEstimatedPose().getRotation();
     }
 
     /**

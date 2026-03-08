@@ -49,6 +49,10 @@ public class Vision extends SubsystemBase {
         }
     }
 
+    public Vision(VisionIOPhotonVision visionIOPhotonVision, VisionIOPhotonVision visionIOPhotonVision2) {
+        //TODO Auto-generated constructor stub
+    }
+
     public int getCameraCount() {
         return io.length;
     }
@@ -208,6 +212,9 @@ public class Vision extends SubsystemBase {
             allIndividualTagRobotPosesAccepted.toArray(new Pose3d[allIndividualTagRobotPosesAccepted.size()]));
     }
 
+    /**
+     * Get the best known transforms based on tags for each camera.
+     */
     public Transform3d[] getBestTagTransforms() {
         Transform3d[] results = new Transform3d[io.length];
         for(int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {

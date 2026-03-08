@@ -111,7 +111,7 @@ public class DriveTuningCommands {
     }
 
     /** Adds the drive tuning commands to the auto chooser. */
-    public static void addTuningCommandsToAutoChooser(Drive drive, LoggedDashboardChooser<Command> chooser) {
+    public static void addTuningCommandsToChooser(Drive drive, LoggedDashboardChooser<Command> chooser) {
         // We might want to run these at a competition
         chooser.addOption("TUNING | Drive Wheel Radius Characterization", wheelRadiusCharacterization(drive));
         chooser.addOption("TUNING | Drive Slip Current Measurement", slipCurrentMeasurement(drive));
