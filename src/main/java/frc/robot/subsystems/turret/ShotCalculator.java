@@ -9,10 +9,14 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import frc.robot.FieldConstants;
+import frc.robot.FieldConstants.LeftTrench;
+import frc.robot.FieldConstants.LinesVertical;
 import frc.robot.RobotState;
 import frc.robot.subsystems.turret.Turret.TurretTarget;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.FieldBounds;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
 public class ShotCalculator {
@@ -59,6 +63,10 @@ public class ShotCalculator {
      * r = e^-kt => 0.806 = e^-k(6.3) => k = 0.0342
      */
     private static LoggedTunableNumber dragConstant = new LoggedTunableNumber("ShotCalculator/DragConstant", 0.0342);
+    /**
+     * Bias on our shot target away from the robot position. Can make fuel bounces more consistent.
+     */
+    private static LoggedTunableNumber hubOutwardBiasInches = new LoggedTunableNumber("ShotCalculator/HubOutwardBiasInches", 6);
 
     static {
         // TODO: These are just directly stolen from 6328... Tune ourselves!
@@ -116,7 +124,8 @@ public class ShotCalculator {
     public enum ShotType {
         NONE(null),
         HUB(hubShots),
-        PASS(passShots);
+        PASS_LEFT(passShots),
+        PASS_RIGHT(passShots);
 
         private ShotMapData shotMapData;
         ShotType(ShotMapData shotMapData) {
@@ -129,14 +138,56 @@ public class ShotCalculator {
         TurretTarget target
     ) {}
 
-    private Translation2d getTargetPosition() {
-        return AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
+    private FieldBounds leftPassBounds = new FieldBounds(
+        LinesVertical.hubCenter + LeftTrench.depth / 2, FieldConstants.fieldLengthX,
+        FieldConstants.LinesHorizontal.center, FieldConstants.fieldWidthY
+    );
+    private FieldBounds rightPassBounds = new FieldBounds(
+        LinesVertical.hubCenter + LeftTrench.depth / 2, FieldConstants.fieldLengthX,
+        0, FieldConstants.LinesHorizontal.center
+    );
+    private FieldBounds oppHubNoShotZone = new FieldBounds(
+        FieldConstants.LinesVertical.neutralZoneFar, FieldConstants.fieldLengthX,
+        FieldConstants.LinesHorizontal.leftBumpEnd, FieldConstants.LinesHorizontal.rightBumpStart
+    );
+
+    private Translation2d getTargetPosition(ShotType type, Translation2d turretPosition) {
+        switch(type) {
+            case PASS_LEFT:
+                return AllianceFlipUtil.apply(new Translation2d(2.094, 1.372));
+            case PASS_RIGHT:
+                return AllianceFlipUtil.apply(new Translation2d(2.094, FieldConstants.fieldWidthY - 1.372));
+            default: // Hub shot
+                Translation2d hubCenter = AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
+                return hubCenter.plus(
+                    new Translation2d(Units.inchesToMeters(hubOutwardBiasInches.get()), 0.0)
+                        .rotateBy(hubCenter.minus(turretPosition).getAngle())
+                );
+        }
     }
 
     public ShotParameters calculate() {
-        ShotType type = ShotType.HUB;
-
         Pose2d estimatedPose = RobotState.getInstance().getEstimatedPose();
+
+        // Distance from turret to target
+        Pose2d turretPosition = estimatedPose.transformBy(
+            new Transform2d(TurretConstants.robotToTurret.toTranslation2d(), Rotation2d.kZero)
+        );
+
+        Pose2d zoneCheckPosition = AllianceFlipUtil.apply(turretPosition);
+        ShotType type = ShotType.HUB;
+        if(FieldConstants.Tower.bounds.contains(zoneCheckPosition)) {
+            type = ShotType.NONE;
+        } else if(FieldConstants.zoneSeparatorBounds.contains(zoneCheckPosition) || FieldConstants.oppZoneSeparatorBounds.contains(zoneCheckPosition)) {
+            type = ShotType.NONE;
+        } else if(oppHubNoShotZone.contains(zoneCheckPosition)) {
+            type = ShotType.NONE;
+        } else if(leftPassBounds.contains(zoneCheckPosition)) {
+            type = ShotType.PASS_LEFT;
+        } else if(rightPassBounds.contains(zoneCheckPosition)) {
+            type = ShotType.PASS_RIGHT;
+        }
+
         ChassisSpeeds robotRelativeVelocity = RobotState.getInstance().getRobotVelocity();
         estimatedPose = estimatedPose.exp(new Twist2d(
             robotRelativeVelocity.vxMetersPerSecond * phaseDelay.get(),
@@ -144,11 +195,7 @@ public class ShotCalculator {
             robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay.get()
         ));
 
-        // Distance from turret to target
-        Translation2d target = getTargetPosition();
-        Pose2d turretPosition = estimatedPose.transformBy(
-            new Transform2d(TurretConstants.robotToTurret.toTranslation2d(), Rotation2d.kZero)
-        );
+        Translation2d target = getTargetPosition(type, turretPosition.getTranslation());
         double turretToTargetDistance = target.getDistance(turretPosition.getTranslation());
 
         // Calculate field relative turret velocity
@@ -169,7 +216,7 @@ public class ShotCalculator {
             // Calculate the effective time of flight, including induced linear drag. See
             // https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html
             // (Described in https://www.chiefdelphi.com/t/recursive-time-of-flight-fire-control-simulator-for-frc-docs-preview/513819/10)
-            effectiveTimeOfFlight = (1 - Math.exp(-dragConstant * timeOfFlight)) / dragConstant;
+            effectiveTimeOfFlight = (1 - Math.exp(-dragConstant.get() * timeOfFlight)) / dragConstant.get();
 
             Translation2d offset = new Translation2d(turretVelocityX * effectiveTimeOfFlight, turretVelocityY * effectiveTimeOfFlight);
             lookaheadPose = new Pose2d(

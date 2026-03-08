@@ -14,6 +14,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.util.FieldBounds;
+
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -236,6 +238,10 @@ public class FieldConstants {
             (AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(15).get().getY())
                 - innerOpeningWidth / 2
                 - Units.inchesToMeters(0.75));
+              
+        public static final FieldBounds bounds = new FieldBounds(
+            0.0, frontFaceX, LinesHorizontal.center - width / 2, LinesHorizontal.center + width / 2
+        );
     }
     
     public static class Depot {
@@ -260,6 +266,9 @@ public class FieldConstants {
         // Relevant reference points on alliance side
         public static final Translation2d centerPoint = new Translation2d(0, AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
     }
+
+    public static final FieldBounds zoneSeparatorBounds = new FieldBounds(LinesVertical.hubCenter - LeftTrench.depth / 2, LinesVertical.hubCenter + LeftTrench.depth / 2, 0, FieldConstants.fieldWidthY);
+    public static final FieldBounds oppZoneSeparatorBounds = new FieldBounds(LinesVertical.oppHubCenter - LeftTrench.depth / 2, LinesVertical.oppHubCenter + LeftTrench.depth / 2, 0, FieldConstants.fieldWidthY);
     
     public enum FieldType {
         ANDYMARK("andymark"),
