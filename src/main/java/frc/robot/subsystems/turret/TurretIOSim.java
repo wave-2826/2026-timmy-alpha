@@ -37,8 +37,6 @@ public class TurretIOSim extends TurretIOReal {
             return;
         }
 
-        // TODO: subtick on main subtick loop
-
         for(int i = 0; i < subticks; i++) {
             var turretState = turretSim.updateAndGetState(
                 flywheelMotorSim.getAppliedOutput() * RoboRioSim.getVInVoltage(),
@@ -71,12 +69,4 @@ public class TurretIOSim extends TurretIOReal {
         inputs.topFlywheel = distributedFlywheel;
         inputs.bottomFlywheel = distributedFlywheel;
     }
-
-    // private double manualVoltageCompensation(double voltage) {
-    //     return voltage * 13.4 / RobotController.getBatteryVoltage();
-    // }
-    // private double getVoltage(DCMotor motor, double current, double speedRadiansPerSec) {
-    //     return manualVoltageCompensation(1.0 / motor.KvRadPerSecPerVolt * speedRadiansPerSec) +
-    //         motor.rOhms * current;
-    // }
 }

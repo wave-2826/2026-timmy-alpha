@@ -22,6 +22,8 @@ import static frc.robot.util.SparkUtil.checkFault;
 import static frc.robot.util.SparkUtil.getIfOk;
 
 public class TurretIOReal implements TurretIO {
+    private static final boolean DISABLE_AZIMUTH_ABS_ENCODER = true;
+
     public final SparkFlex topFlywheelMotor    = new SparkFlex(topFlywheelCanID, MotorType.kBrushless);
     public final SparkFlex bottomFlywheelMotor = new SparkFlex(bottomFlywheelCanID, MotorType.kBrushless);
     public final SparkFlex azimuthMotor        = new SparkFlex(azimuthCanID, MotorType.kBrushless);
@@ -50,6 +52,7 @@ public class TurretIOReal implements TurretIO {
         // Flywheel motors
         var flywheelBaseConfig = new SparkFlexConfig();
         flywheelBaseConfig.signals.apply(SparkUtil.defaultSignals);
+        flywheelBaseConfig.signals.iAccumulationAlwaysOn(true).iAccumulationPeriodMs(100);
         TurretConstants.flywheelMotorPID.applyConfigAndRegister(flywheelBaseConfig, topFlywheelMotor, bottomFlywheelMotor);
         flywheelBaseConfig.closedLoopRampRate(1.0);
         flywheelBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(flywheelCurrentLimit);
@@ -69,7 +72,8 @@ public class TurretIOReal implements TurretIO {
         azimuthConfig.signals.apply(SparkUtil.defaultSignals);
         azimuthConfig.signals
             .absoluteEncoderPositionAlwaysOn(true).absoluteEncoderPositionPeriodMs(50)
-            .absoluteEncoderVelocityAlwaysOn(true).absoluteEncoderVelocityPeriodMs(50);
+            .absoluteEncoderVelocityAlwaysOn(true).absoluteEncoderVelocityPeriodMs(50)
+            .iAccumulationAlwaysOn(true).iAccumulationPeriodMs(100);
         azimuthMotorPID.applyConfigAndRegister(azimuthConfig, azimuthMotor);
         azimuthConfig.closedLoop
             .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
@@ -89,6 +93,7 @@ public class TurretIOReal implements TurretIO {
         // Hood motor
         var hoodConfig = new SparkFlexConfig();
         hoodConfig.signals.apply(SparkUtil.defaultSignals);
+        hoodConfig.signals.iAccumulationAlwaysOn(true).iAccumulationPeriodMs(100);
         hoodMotorPID.applyConfigAndRegister(hoodConfig, hoodMotor);
         hoodConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(hoodCurrentLimit);
         hoodConfig.encoder
@@ -118,11 +123,14 @@ public class TurretIOReal implements TurretIO {
         var azimuthInternalAngle = getIfOk(azimuthMotor, azimuthEncoder::getPosition, 0);
         var azimuthInternalVelocity = getIfOk(azimuthMotor, azimuthEncoder::getVelocity, 0);
         
-        // var azimuthAngle = getIfOk(azimuthMotor, azimuthAbsEncoder::getPosition, 0) / TurretConstants.totalAzimuthGearing;
-        // var azimuthVelocity = getIfOk(azimuthMotor, azimuthAbsEncoder::getVelocity, 0) / TurretConstants.totalAzimuthGearing;
-        // Temporary until we get the sensor working
-        var azimuthAngle = azimuthInternalAngle;
-        var azimuthVelocity = azimuthInternalVelocity;
+        double azimuthAngle, azimuthVelocity;
+        if(DISABLE_AZIMUTH_ABS_ENCODER) {
+            azimuthAngle = azimuthInternalAngle;
+            azimuthVelocity = azimuthInternalVelocity;
+        } else {
+            azimuthAngle = getIfOk(azimuthMotor, azimuthAbsEncoder::getPosition, 0) / TurretConstants.totalAzimuthGearing;
+            azimuthVelocity = getIfOk(azimuthMotor, azimuthAbsEncoder::getVelocity, 0) / TurretConstants.totalAzimuthGearing;
+        }
 
         var azimuthCurrent = getIfOk(azimuthMotor, azimuthMotor::getOutputCurrent, 0);
         var azimuthApplied = getIfOk(azimuthMotor, azimuthMotor::getAppliedOutput, 0);
@@ -166,7 +174,8 @@ public class TurretIOReal implements TurretIO {
 
     @Override
     public void stop() {
-        flywheelController.setSetpoint(0.0, ControlType.kVelocity);
+        topFlywheelMotor.stopMotor();
+        bottomFlywheelMotor.stopMotor();
         azimuthMotor.stopMotor();
         hoodMotor.stopMotor();
     }
