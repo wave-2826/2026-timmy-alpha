@@ -21,22 +21,17 @@ public class Spindexer extends SubsystemBase {
         Logger.processInputs("Spindexer", inputs);
     }
 
-    public Command runSpinnerPercent(DoubleSupplier percent) {
-        return runEnd(() -> io.setSpinnerVoltage(percent.getAsDouble() * 12.0), () -> io.setSpinnerVoltage(0.0));
-    }
-
-    public Command runTransferPercent(DoubleSupplier percent) {
-        return runEnd(() -> io.setTransferVoltage(percent.getAsDouble() * 12.0), () -> io.setTransferVoltage(0.0));
-    }
-
-    public Command runAllPercent(DoubleSupplier percent) {
+    public Command runPercent(DoubleSupplier percent) {
         return runEnd(() -> {
-            double volts = percent.getAsDouble() * 12.0;
-            io.setSpinnerVoltage(-volts);
-            io.setTransferVoltage(volts);
+            setPower(percent.getAsDouble());
         }, () -> {
-            io.setSpinnerVoltage(0.0);
-            io.setTransferVoltage(0.0);
+            setPower(0.0);
         });
+    }
+
+    public void setPower(double percent) {
+        double volts = percent * 10.0;
+        io.setSpinnerVoltage(volts);
+        io.setTransferVoltage(volts);
     }
 }

@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.commands.AutoShoot;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.intake.Intake;
@@ -63,21 +64,22 @@ public class Controls {
         // driver.b().whileTrue(climber.extendBoth()).onTrue(intake.bringIntakeIn(1));
         driver.a().whileTrue(climber.retractBoth());
 
-        driver.leftBumper().onTrue(intake.deployIntake());//.onTrue(intake.runRollerPercent(20));
-        driver.rightBumper().onTrue(intake.runRollerPercent(0));
-        intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
+        // driver.leftBumper().onTrue(intake.deployIntake());//.onTrue(intake.runRollerPercent(20));
+        // driver.rightBumper().onTrue(intake.runRollerPercent(0));
+        // intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
 
         RobotModeTriggers.teleop().onTrue(climber.extendServos());
 
-        spindexer.setDefaultCommand(spindexer.runAllPercent(coDriver::getLeftTriggerAxis));
         // turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
         turret.setDefaultCommand(turret.runOscillationTest());
 
+        turret.setDefaultCommand(AutoShoot.autoShoot(turret, spindexer, driver::getRightTriggerAxis, coDriver::getRightTriggerAxis));
+
         // Reset gyro or odometry if in simulation
         final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
-                : () -> drive.setPose(new Pose2d(RobotState.getInstance().getEstimatedPose().getTranslation(),
-                    DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Rotation2d.kZero
-                        : Rotation2d.k180deg)); // Zero gyro
+            : () -> drive.setPose(new Pose2d(RobotState.getInstance().getEstimatedPose().getTranslation(),
+                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Rotation2d.kZero
+                    : Rotation2d.k180deg)); // Zero gyro
         final Runnable resetOdometry = Constants.isSim
             ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
             : () -> drive.setPose(

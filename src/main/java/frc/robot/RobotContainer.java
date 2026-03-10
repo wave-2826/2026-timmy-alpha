@@ -74,7 +74,7 @@ public class RobotContainer {
                     new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.robotToCamera0),
                     new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.robotToCamera1));
                 intake = new Intake(new IntakeIOReal());
-                turret = new Turret(new TurretIORealManualCurrent() {});
+                turret = new Turret(new TurretIO() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIOReal());
                 break;

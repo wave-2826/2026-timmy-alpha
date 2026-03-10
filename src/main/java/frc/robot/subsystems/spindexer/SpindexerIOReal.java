@@ -10,6 +10,9 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+
+import frc.robot.Constants;
+
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
@@ -22,7 +25,7 @@ public class SpindexerIOReal implements SpindexerIO {
   
     public SpindexerIOReal() {
         var spinnerConfig = new SparkFlexConfig();
-        spinnerConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(spinnerCurrentLimit).voltageCompensation(12.0);
+        spinnerConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(spinnerCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         spinnerConfig
             .encoder
             .positionConversionFactor(2.0 * Math.PI / spinnerMotorReduction) // Rotor Rotations -> Radians
@@ -30,7 +33,7 @@ public class SpindexerIOReal implements SpindexerIO {
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
         var tranferConfig = new SparkMaxConfig();
-        tranferConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(transferCurrentLimit).voltageCompensation(12.0);
+        tranferConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(transferCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         tranferConfig
             .encoder
             .positionConversionFactor(2.0 * Math.PI / transferMotorReduction) // Rotor Rotations -> Radians
@@ -59,12 +62,12 @@ public class SpindexerIOReal implements SpindexerIO {
     }
   
     @Override
-    public void setSpinnerVoltage(double power) {
-        spinnerMotor.setVoltage(power);
+    public void setSpinnerVoltage(double voltage) {
+        spinnerMotor.setVoltage(-voltage);
     }
 
     @Override
-    public void setTransferVoltage(double power) {
-        transferMotor.setVoltage(power);
+    public void setTransferVoltage(double voltage) {
+        transferMotor.setVoltage(-voltage);
     }
 }

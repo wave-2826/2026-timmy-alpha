@@ -108,14 +108,14 @@ public class DriveConstants {
 
     public static final Mass robotMass = Pound.of(140);
     public static final MomentOfInertia robotMomentOfInertia = KilogramSquareMeters.of(7.4702);
-    public static final double wheelCOF = 1.2;
+    public static final double wheelCOF = 0.65; // ouch
 
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     public static final Slot0Configs steerGains = new Slot0Configs()
-        .withKP(Constants.isSim ? 5 : 100)
+        .withKP(Constants.isSim ? 5 : 1600)
         .withKI(Constants.isSim ? 0   : 0)
-        .withKD(Constants.isSim ? 0  : 10)
+        .withKD(Constants.isSim ? 0  : 20)
         .withKS(Constants.isSim ? 0.1 : 0.1)
         .withKV(Constants.isSim ? 0.0 : 0.0)
         .withKA(Constants.isSim ? 0   : 0)
@@ -127,8 +127,8 @@ public class DriveConstants {
         .withKP(Constants.isSim ? 0.1   : 3.0)
         .withKI(Constants.isSim ? 0     : 0)
         .withKD(Constants.isSim ? 0     : 0)
-        .withKS(Constants.isSim ? 0     : 0)
-        .withKV(Constants.isSim ? 0.132 : 0.124);
+        .withKS(Constants.isSim ? 0     : 3.68789)
+        .withKV(Constants.isSim ? 0.132 : 1.42702);
 
     /** The type of motor used for the drive motor */
     private static final DriveMotorArrangement driveMotorType = DriveMotorArrangement.TalonFX_Integrated;
@@ -141,7 +141,7 @@ public class DriveConstants {
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    public static final Current slipCurrent = Amps.of(120.0);
+    public static final Current slipCurrent = Amps.of(46.12);
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null. Some configs will be overwritten.
     private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration();
@@ -161,7 +161,7 @@ public class DriveConstants {
 
     // Effective free speed (m/s) at 12 V applied output;
     // This needs to be tuned to your individual robot
-    public static final LinearVelocity linearFreeSpeed = MetersPerSecond.of(4.73); // "Magic" number from max speed measurement
+    public static final LinearVelocity linearFreeSpeed = MetersPerSecond.of(4.572); // "Magic" number from max speed measurement
 
     /** Spacing between wheel centers on the Y axis */
     public static final Distance trackWidthY = Inches.of(27.5);
@@ -179,7 +179,7 @@ public class DriveConstants {
 
     public static final double driveGearRatio = 6.746031746031747;
     public static final double steerGearRatio = 12.8;
-    public static final Distance wheelRadius = Inches.of(2);
+    public static final Distance wheelRadius = Inches.of(1.999);
 
     public static final int pigeonId = 9;
 
@@ -191,11 +191,11 @@ public class DriveConstants {
     public static final Voltage driveFrictionVoltage = Volts.of(0.2);
     
     public static final KinematicConstraints kinematicConstraints = new KinematicConstraints(
-        MetersPerSecondPerSecond.of(10) /* measuered "magic value" - max linear acceleration */,
-        RadiansPerSecondPerSecond.of(10 * (maxAngularSpeedRadPerSec / maxSpeedMetersPerSec)),
-        MetersPerSecondPerSecond.of(8), /* Skid acceleration limit */
-        MetersPerSecondPerSecond.of(5), /* Max tilt acceleration X */
-        MetersPerSecondPerSecond.of(10) /* Max tilt acceleration Y */
+        MetersPerSecondPerSecond.of(100) /* measuered "magic value" - max linear acceleration */,
+        RadiansPerSecondPerSecond.of(100 * (maxAngularSpeedRadPerSec / maxSpeedMetersPerSec)),
+        MetersPerSecondPerSecond.of(80), /* Skid acceleration limit */
+        MetersPerSecondPerSecond.of(50), /* Max tilt acceleration X */
+        MetersPerSecondPerSecond.of(100) /* Max tilt acceleration Y */
     );
     
     public static final SwerveModuleConfig frontLeftConfig =

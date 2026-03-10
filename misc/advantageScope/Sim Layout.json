@@ -1,10 +1,10 @@
 {
   "hubs": [
     {
-      "x": 0,
-      "y": 0,
-      "width": 1448,
-      "height": 947,
+      "x": -8,
+      "y": -8,
+      "width": 1722,
+      "height": 1034,
       "state": {
         "sidebar": {
           "width": 360,
@@ -20,34 +20,31 @@
             "/Turret/Controller/Mpc",
             "/Tuning",
             "/RealOutputs/TurretSim/State",
-            "/Turret",
             "/Turret/Controller",
             "/RealOutputs/Turret",
-            "/Tuning/Turret/Azimuth1",
             "/RealOutputs/TurretSim/Motors",
             "/RealOutputs/TurretSim/Setpoints",
-            "/Tuning/Turret/Azimuth",
             "/RealOutputs/Turret/Measured",
             "/RealOutputs/Turret/Setpoints",
-            "/Tuning/Turret/Hood",
-            "/Tuning/Turret/Flywheel",
-            "/Tuning/Turret/Flywheel1",
-            "/Tuning/Turret/Hood1",
             "/RealOutputs/Turret/Target",
-            "/Turret/Azimuth",
             "/Turret/TopFlywheel",
             "/Tuning/Turret/LQR_R",
-            "/Tuning/Turret/LQR_Q",
             "/RealOutputs/thing",
             "/RealOutputs/thing/ModelInput",
             "/SystemStats",
             "/Tuning/Turret",
             "/Turret/Hood",
-            "/Turret/BottomFlywheel"
+            "/Turret/BottomFlywheel",
+            "/URCL",
+            "/URCL/Spark-53",
+            "/RealOutputs/Turret/LQRSetpoints",
+            "/Tuning/Turret/Azimuth1",
+            "/Tuning/Turret/Flywheel1",
+            "/Tuning/Turret/Hood1"
           ]
         },
         "tabs": {
-          "selected": 5,
+          "selected": 2,
           "tabs": [
             {
               "type": 0,
@@ -119,7 +116,7 @@
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {
-                      "model": "WaveRobotics"
+                      "model": "2026 KitBot"
                     }
                   },
                   {
@@ -160,14 +157,14 @@
                 "cameraIndex": -2,
                 "orbitFov": 80,
                 "cameraPosition": [
-                  3.863559574479032,
-                  2.8141951602903563,
-                  0.008228488713845591
+                  -5.56051844519534,
+                  3.3028214371284044,
+                  0.6564308557193999
                 ],
                 "cameraTarget": [
-                  0,
-                  0.5,
-                  0
+                  -5.560517647169445,
+                  -0.7188064360271279,
+                  0.6564269140642371
                 ]
               },
               "controlsHeight": 200
@@ -369,41 +366,21 @@
                 "leftSources": [
                   {
                     "type": "stepped",
-                    "logKey": "/RealOutputs/TurretSim/Setpoints/FlySetpoint",
-                    "logType": "Number",
-                    "visible": false,
-                    "options": {
-                      "color": "#e5b31b",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "stepped",
-                    "logKey": "/RealOutputs/TurretSim/Setpoints/HoodSetpoint",
-                    "logType": "Number",
-                    "visible": false,
-                    "options": {
-                      "color": "#af2437",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "stepped",
-                    "logKey": "/RealOutputs/TurretSim/Setpoints/AzimuthSetpoint",
-                    "logType": "Number",
-                    "visible": true,
-                    "options": {
-                      "color": "#2b66a2",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "stepped",
                     "logKey": "/Turret/Azimuth/currentAmps",
                     "logType": "Number",
                     "visible": true,
                     "options": {
                       "color": "#80588e",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Turret/LQRSetpoints/azimuthCurrent",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2",
                       "size": "normal"
                     }
                   }
@@ -424,6 +401,41 @@
                 "rightFilter": 0
               },
               "controllerUUID": "kcsz4f9o271nwvf00rswuh0bdolykp8k",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "Line Graph",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "/URCL/Spark-53/PrimaryEncoderPosition",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [],
+                "discreteSources": [],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "rightUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "3gsdhziegmvlh9zz3pbx3gzlqd2fbz2p",
               "renderer": null,
               "controlsHeight": 200
             },
@@ -451,105 +463,6 @@
               "controlsHeight": 200
             },
             {
-              "type": 1,
-              "title": "Line Graph",
-              "controller": {
-                "leftSources": [
-                  {
-                    "type": "stepped",
-                    "logKey": "/RealOutputs/thing/AppliedCurrent",
-                    "logType": "Number",
-                    "visible": false,
-                    "options": {
-                      "color": "#e5b31b",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "stepped",
-                    "logKey": "/RealOutputs/thing/ResistantCurrent",
-                    "logType": "Number",
-                    "visible": false,
-                    "options": {
-                      "color": "#af2437",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "stepped",
-                    "logKey": "/RealOutputs/thing/ResistantCurrent",
-                    "logType": "Number",
-                    "visible": true,
-                    "options": {
-                      "color": "#c0b487",
-                      "size": "normal"
-                    }
-                  }
-                ],
-                "rightSources": [
-                  {
-                    "type": "stepped",
-                    "logKey": "/RealOutputs/TurretSim/Setpoints/AzimuthSetpoint",
-                    "logType": "Number",
-                    "visible": false,
-                    "options": {
-                      "color": "#80588e",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "stepped",
-                    "logKey": "/Turret/Azimuth/velocityRadPerSec",
-                    "logType": "Number",
-                    "visible": true,
-                    "options": {
-                      "color": "#2b66a2",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "stepped",
-                    "logKey": "/Turret/Hood/velocityRadPerSec",
-                    "logType": "Number",
-                    "visible": true,
-                    "options": {
-                      "color": "#e48b32",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "stepped",
-                    "logKey": "/Turret/BottomFlywheel/velocityRadPerSec",
-                    "logType": "Number",
-                    "visible": true,
-                    "options": {
-                      "color": "#858584",
-                      "size": "normal"
-                    }
-                  }
-                ],
-                "discreteSources": [],
-                "leftLockedRange": [
-                  -92.69380951305116,
-                  90.72336928194487
-                ],
-                "rightLockedRange": null,
-                "leftUnitConversion": {
-                  "autoTarget": null,
-                  "preset": null
-                },
-                "rightUnitConversion": {
-                  "autoTarget": null,
-                  "preset": null
-                },
-                "leftFilter": 0,
-                "rightFilter": 0
-              },
-              "controllerUUID": "3gsdhziegmvlh9zz3pbx3gzlqd2fbz2p",
-              "renderer": null,
-              "controlsHeight": 200
-            },
-            {
               "type": 8,
               "title": "Joysticks",
               "controller": [
@@ -569,18 +482,6 @@
       }
     }
   ],
-  "satellites": [
-    {
-      "x": 0,
-      "y": 0,
-      "width": 718,
-      "height": 947,
-      "state": {
-        "type": 10,
-        "visualizer": null
-      },
-      "uuid": "jkmlvosb012asesk4gmpsa5bsd74r40a"
-    }
-  ],
+  "satellites": [],
   "version": "26.0.0"
 }

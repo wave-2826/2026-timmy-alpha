@@ -19,7 +19,6 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import frc.robot.Controls;
 import frc.robot.commands.tuning.TurretTuning;
-import frc.robot.subsystems.turret.ShotCalculator.ShotType;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.subsystems.turret.TurretIO.TurretIOPIDOutputs;
 
@@ -197,19 +196,6 @@ public class Turret extends SubsystemBase {
         return flywheelError < TurretConstants.flywheelToleranceRadPerSec
             && azimuthError < TurretConstants.azimuthToleranceRad
             && hoodError < TurretConstants.hoodToleranceRad;
-    }
-
-    public Command runAutomatic() {
-        return Commands.runEnd(() -> {
-            var parameters = ShotCalculator.getInstance().calculate();
-            if(parameters.shotType() != ShotType.NONE) {
-                target = parameters.target();
-            } else {
-                target = null;
-            }
-        }, () -> {
-            target = null;
-        }, this);
     }
 
     public Command runTuning() {
