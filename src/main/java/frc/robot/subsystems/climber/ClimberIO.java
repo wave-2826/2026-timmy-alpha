@@ -5,22 +5,20 @@ import org.littletonrobotics.junction.AutoLog;
 public interface ClimberIO {
   @AutoLog
   public static class ClimberIOInputs {
-    public record climbMotorInputs(
+    public record ClimberMotorInputs(
       /** Whether the motor is connected */
       boolean connected,
       /** The motor current draw. */
-      double motorCurrentAmps,
-      /** The motor's position according to the encoder in meters */
-      double motorPosition
+      double currentAmps,
+      /** The motor's position, according to the encoder, in meters */
+      double position
     ) {}
-    climbMotorInputs right = new climbMotorInputs(false, 0, 0);
-    climbMotorInputs left = new climbMotorInputs(false, 0, 0);
-    public record servoInputs(
-      /** The postition of the servo */
-      double servoposition
-    ) {}
-    servoInputs rightServeo = new servoInputs(0);
-    servoInputs leftServeo = new servoInputs(0);
+
+    ClimberMotorInputs right = new ClimberMotorInputs(false, 0, 0);
+    ClimberMotorInputs left = new ClimberMotorInputs(false, 0, 0);
+    
+    double rightServeoPosition = 0;
+    double leftServeoPosition = 0;
   }
 
   /** Update the set of loggable inputs. */

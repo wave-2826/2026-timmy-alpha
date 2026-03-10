@@ -13,11 +13,13 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 
 import java.util.function.DoubleSupplier;
 
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import frc.robot.Controls;
 import frc.robot.commands.tuning.TurretTuning;
+import frc.robot.subsystems.turret.ShotCalculator.ShotType;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.subsystems.turret.TurretIO.TurretIOPIDOutputs;
 
@@ -150,22 +152,61 @@ public class Turret extends SubsystemBase {
                 target = new TurretTarget(0.0, inputs.getAzimuthAngleRad(), TurretConstants.hoodMinAngle);
             }
 
-            // target.flywheelSpeedRadPerSec = MathUtil.applyDeadband(-flywheelSpeedSupplier.getAsDouble(), 0.2) * TurretConstants.maxFlywheelSpeedRadPerSec;
+            target.flywheelSpeedRadPerSec = MathUtil.applyDeadband(flywheelSpeedSupplier.getAsDouble(), 0.2) * TurretConstants.maxFlywheelSpeedRadPerSec;
+            
+            target.azimuthAngleRad -= MathUtil.applyDeadband(azimuthSpeedSupplier.getAsDouble(), 0.2) * Math.PI * 0.02;
+            target.azimuthAngleRad %= Math.PI * 2;
+
+            target.hoodAngleRad -= hoodSpeedSupplier.getAsDouble() * Math.PI * 0.008;
+            target.hoodAngleRad = MathUtil.clamp(target.hoodAngleRad, TurretConstants.hoodMinAngle, TurretConstants.hoodMaxAngle);
+        }, () -> {
+            target = null;
+        }, this);
+    }
+
+    public Command runOscillationTest() {
+        return Commands.runEnd(() -> {
+            if(target == null) {
+                target = new TurretTarget(0.0, inputs.getAzimuthAngleRad(), TurretConstants.hoodMinAngle);
+            }
+
             target.flywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(3000);
-
-            // target.azimuthAngleRad -= MathUtil.applyDeadband(azimuthSpeedSupplier.getAsDouble(), 0.2) * Math.PI * 0.02;
-            // target.azimuthAngleRad %= Math.PI * 2;
             target.azimuthAngleRad = Math.sin(Timer.getFPGATimestamp() * 0.5) * Math.PI;
-            // target.azimuthAngleRad = Math.PI / 2;
-
-            // target.hoodAngleRad -= hoodSpeedSupplier.getAsDouble() * Math.PI * 0.008;
-            // target.hoodAngleRad = MathUtil.clamp(target.hoodAngleRad, TurretConstants.hoodMinAngle, TurretConstants.hoodMaxAngle);
-
             target.hoodAngleRad = MathUtil.interpolate(
                 TurretConstants.hoodMinAngle + 0.1,
                 TurretConstants.hoodMaxAngle - 0.1,
                 Math.sin(Timer.getFPGATimestamp() * 2) * 0.5 + 0.5
             );
+        }, () -> {
+            target = null;
+        }, this);
+    }
+
+    @AutoLogOutput(key = "Turret/AtSetpoint")
+    public boolean atSetpoint() {
+        if(target == null) return true;
+
+        double flywheelError = Math.abs(inputs.getFlywheelVelocityRadPerSecond() - target.flywheelSpeedRadPerSec);
+        double azimuthError = Math.abs(MathUtil.angleModulus(inputs.getAzimuthAngleRad() - target.azimuthAngleRad));
+        double hoodError = Math.abs(inputs.getHoodAngleRad() - target.hoodAngleRad);
+
+        Logger.recordOutput("Turret/Errors/Flywheel", flywheelError, RadiansPerSecond);
+        Logger.recordOutput("Turret/Errors/Azimuth", azimuthError, Radians);
+        Logger.recordOutput("Turret/Errors/Hood", hoodError, Radians);
+
+        return flywheelError < TurretConstants.flywheelToleranceRadPerSec
+            && azimuthError < TurretConstants.azimuthToleranceRad
+            && hoodError < TurretConstants.hoodToleranceRad;
+    }
+
+    public Command runAutomatic() {
+        return Commands.runEnd(() -> {
+            var parameters = ShotCalculator.getInstance().calculate();
+            if(parameters.shotType() != ShotType.NONE) {
+                target = parameters.target();
+            } else {
+                target = null;
+            }
         }, () -> {
             target = null;
         }, this);

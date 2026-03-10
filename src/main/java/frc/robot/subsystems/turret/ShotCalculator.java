@@ -188,6 +188,11 @@ public class ShotCalculator {
             type = ShotType.PASS_RIGHT;
         }
 
+        Logger.recordOutput("LaunchCalculator/ShotType", type);
+        if(type == ShotType.NONE) {
+            return new ShotParameters(ShotType.NONE, new TurretTarget(0, 0, 0));
+        }
+
         ChassisSpeeds robotRelativeVelocity = RobotState.getInstance().getRobotVelocity();
         estimatedPose = estimatedPose.exp(new Twist2d(
             robotRelativeVelocity.vxMetersPerSecond * phaseDelay.get(),
@@ -224,9 +229,9 @@ public class ShotCalculator {
                 turretPosition.getRotation());
             lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
         }
-    
+        
         Logger.recordOutput("LaunchCalculator/LookaheadPose", lookaheadPose);
-        Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);    
+        Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);  
 
         Rotation2d turretAngle = target.minus(lookaheadPose.getTranslation()).getAngle();
         double hoodAngleRad = type.shotMapData.getHood(lookaheadTurretToTargetDistance);

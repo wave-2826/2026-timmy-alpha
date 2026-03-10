@@ -125,4 +125,9 @@ public class TurretConstants {
         .addRealRobotGains(new SparkPIDConstants(1.2, 0.0, 0.2))
         .addRealRobotGains(new SparkPIDConstants(0.001, 0.5, 0.0, ClosedLoopSlot.kSlot1)) // Current PID
         .copyRealGainsInSim();
+    
+    // Control tolerances
+    public static final double flywheelToleranceRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(200);
+    public static final double azimuthToleranceRad = Units.degreesToRadians(2);
+    public static final double hoodToleranceRad = Units.degreesToRadians(2);
 }

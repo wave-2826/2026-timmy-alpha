@@ -28,6 +28,7 @@ import frc.robot.util.SparkUtil;
 import frc.robot.util.ThreadPriorityDummyLogReceiver;
 import frc.robot.util.simUtils.Simulation;
 import frc.robot.util.tunables.TunableSparkPID;
+import frc.robot.util.Elastic;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -158,6 +159,10 @@ public class Robot extends LoggedRobot {
             // this does before using it anywhere.
             Threads.setCurrentThreadPriority(true, 10);
         }
+
+        // https://www.chiefdelphi.com/t/elastic-2026-the-next-dimension/506888/79
+        // This is.. unfortunate
+        Elastic.selectTab("Teleoperated");
 
         // De-anonymize ourselves
         HAL.report(tResourceType.kResourceType_Language, tInstances.kLanguage_Rust);

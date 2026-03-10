@@ -1,10 +1,9 @@
 package frc.robot.subsystems.climber;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
-import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
 
@@ -30,6 +29,8 @@ public class Climber extends SubsystemBase {
         return runEnd(() -> io.setLeftPower(percent * 12.0), () -> io.setLeftPower(0.0));
     }
 
+    // TODO: run separately? not sure why we would average here
+    
     public Command extendBoth() {
         return runEnd(() -> {
             runLeftPercent(50);
@@ -37,7 +38,7 @@ public class Climber extends SubsystemBase {
         }, () -> {
             runLeftPercent(0);
             runRightPercent(0);
-        }).until(() -> ((inputs.left.motorPosition() + inputs.right.motorPosition()) / 2 >= Units.inchesToMeters(25)));
+        }).until(() -> ((inputs.left.position() + inputs.right.position()) / 2 >= Units.inchesToMeters(25)));
     }
 
     public Command retractBoth() {
@@ -47,24 +48,20 @@ public class Climber extends SubsystemBase {
         }, () -> {
             runLeftPercent(0);
             runRightPercent(0);
-        }).until(() -> ((inputs.left.motorPosition() + inputs.right.motorPosition()) / 2 <= Units.inchesToMeters(15)));
+        }).until(() -> ((inputs.left.position() + inputs.right.position()) / 2 <= Units.inchesToMeters(15)));
     }
 
-    public Command extendLeftServo(DoubleSupplier length) {
-        return runEnd(() -> {
-            io.setLeftServoPosition(length.getAsDouble());
-        }, () -> {});
+    public Command extendLeftServo(double position) {
+        return run(() -> {
+            io.setLeftServoPosition(position);
+        }).until(() -> MathUtil.isNear(position, inputs.leftServeoPosition, 0.05));
     }
-    public Command extendRightServo(DoubleSupplier length) {
-        return runEnd(() -> {
-            io.setRightServoPosition(length.getAsDouble());
-        }, () -> {});
+    public Command extendRightServo(double position) {
+        return run(() -> {
+            io.setRightServoPosition(position);
+        }).until(() -> MathUtil.isNear(position, inputs.rightServeoPosition, 0.05));
     }
-    public Command extendBothServos(DoubleSupplier length) {
-        return runEnd(() -> {
-            extendLeftServo(length);
-            extendRightServo(length);
-        }, () -> {});
+    public Command extendServos() {
+        return extendLeftServo(0.5).alongWith(extendRightServo(0.5));
     }
-
 }

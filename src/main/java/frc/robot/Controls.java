@@ -36,8 +36,6 @@ public class Controls {
     private final LoggedTunableNumber endgameAlert1Time = new LoggedTunableNumber("Controls/EndgameAlert1Time", 30.0);
     private final LoggedTunableNumber endgameAlert2Time = new LoggedTunableNumber("Controls/EndgameAlert2Time", 20.0);
 
-    private final LoggedTunableNumber servoLength = new LoggedTunableNumber("Climber/Servo", 0.5);
-
     static LoggedNetworkBoolean shiftYours = new LoggedNetworkBoolean("YourShift"); 
 
     private static final Controls instance = new Controls();
@@ -69,12 +67,11 @@ public class Controls {
         driver.rightBumper().onTrue(intake.runRollerPercent(0));
         intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
 
-        climber.setDefaultCommand(Commands.run(() -> {
-            climber.extendBothServos(() -> servoLength.get()).schedule();
-        }, climber));
+        RobotModeTriggers.teleop().onTrue(climber.extendServos());
 
         spindexer.setDefaultCommand(spindexer.runAllPercent(coDriver::getLeftTriggerAxis));
-        turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
+        // turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
+        turret.setDefaultCommand(turret.runOscillationTest());
 
         // Reset gyro or odometry if in simulation
         final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
