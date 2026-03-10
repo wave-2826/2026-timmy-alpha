@@ -17,9 +17,11 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFXReal;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
+import frc.robot.subsystems.intake.IntakeIOReal;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOReal;
+import frc.robot.subsystems.turret.TurretIORealManualCurrent;
 import frc.robot.subsystems.turret.TurretIOSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
@@ -71,8 +73,8 @@ public class RobotContainer {
                 vision = new Vision(
                     new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.robotToCamera0),
                     new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.robotToCamera1));
-                intake = new Intake(new IntakeIO() {});
-                turret = new Turret(new TurretIOReal());
+                intake = new Intake(new IntakeIOReal());
+                turret = new Turret(new TurretIORealManualCurrent() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIOReal());
                 break;

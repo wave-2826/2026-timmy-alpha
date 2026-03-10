@@ -26,12 +26,12 @@ import java.nio.file.Path;
 * perspective of the blue alliance station
 */
 public class FieldConstants {
-    public static final FieldType fieldType = FieldType.HOME;
+    public static final FieldType fieldType = FieldType.ANDYMARK;
+    public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.HOME;
     
     // AprilTag related constants
     public static final int aprilTagCount = AprilTagLayoutType.OFFICIAL.getLayout().getTags().size();
     public static final double aprilTagWidth = Units.inchesToMeters(6.5);
-    public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.OFFICIAL;
     
     // Field dimensions
     public static final double fieldLengthX = AprilTagLayoutType.OFFICIAL.getLayout().getFieldLength();
@@ -272,8 +272,7 @@ public class FieldConstants {
     
     public enum FieldType {
         ANDYMARK("andymark"),
-        WELDED("welded"),
-        HOME("home");
+        WELDED("welded");
         
         private final String jsonFolder;
         public String getJsonFolder() {
@@ -287,6 +286,7 @@ public class FieldConstants {
     
     public enum AprilTagLayoutType {
         OFFICIAL("2026-official"),
+        HOME("home"),
         NONE("2026-none");
         
         private final String name;
