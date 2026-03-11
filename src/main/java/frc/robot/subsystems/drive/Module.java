@@ -9,8 +9,6 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
-import static edu.wpi.first.units.Units.Meters;
-
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
@@ -18,26 +16,21 @@ public class Module {
     private static final LoggedTunableNumber driveP = new LoggedTunableNumber("Drive/DriveP");
     private static final LoggedTunableNumber driveD = new LoggedTunableNumber("Drive/DriveD");
 
-    private static final LoggedTunableNumber driveS = new LoggedTunableNumber("Drive/DriveS");
-    private static final LoggedTunableNumber driveV = new LoggedTunableNumber("Drive/DriveV");
     private static final LoggedTunableNumber driveA = new LoggedTunableNumber("Drive/DriveA");
 
     private static final LoggedTunableNumber turnP = new LoggedTunableNumber("Drive/TurnP");
     private static final LoggedTunableNumber turnD = new LoggedTunableNumber("Drive/TurnD");
 
-    private static final LoggedNetworkBoolean driveToggle = new LoggedNetworkBoolean("Drive/DriveToggle", true);
+    private static final LoggedNetworkBoolean turnOffDriveMotors = new LoggedNetworkBoolean("Drive/TurnOffDriveMotors", false);
 
     static {
         driveP.initDefault(DriveConstants.driveGains.kP);
         driveD.initDefault(DriveConstants.driveGains.kD);
-
-        driveS.initDefault(DriveConstants.driveGains.kS);
-        driveV.initDefault(DriveConstants.driveGains.kV);
         driveA.initDefault(DriveConstants.driveGains.kA);
 
         turnP.initDefault(DriveConstants.steerGains.kP);
         turnD.initDefault(DriveConstants.steerGains.kD);
-        }
+    }
 
     private final ModuleIO io;
     private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
@@ -65,12 +58,28 @@ public class Module {
             case "BackRight" -> -45.0;
             default -> 0.0;
         });
+
+        // Reset tunables' hasChanged since we'll configure anyway
+        driveP.hasChanged(hashCode());
+        driveD.hasChanged(hashCode());
+        driveA.hasChanged(hashCode());
+        turnP.hasChanged(hashCode());
+        turnD.hasChanged(hashCode());
+        
+        Drive.tuningResults.onChange(() -> setDrivePID());
+    }
+
+    private void setDrivePID() {
+        io.setDrivePID(
+            driveP.get(), 0, driveD.get(),
+            Drive.tuningResults.feedforwardResults.kS(), Drive.tuningResults.feedforwardResults.kV(),
+            driveA.get()
+        );
     }
 
     public void periodic() {
-        if(driveP.hasChanged(hashCode()) || driveD.hasChanged(hashCode()) ||
-            driveS.hasChanged(hashCode()) || driveV.hasChanged(hashCode()) || driveA.hasChanged(hashCode())) {
-            io.setDrivePID(driveP.get(), 0, driveD.get(), driveS.get(), driveV.get(), driveA.get());
+        if(driveP.hasChanged(hashCode()) || driveD.hasChanged(hashCode()) || driveA.hasChanged(hashCode())) {
+            setDrivePID();
         }
         if(turnP.hasChanged(hashCode()) || turnD.hasChanged(hashCode()) ) {
             io.setTurnPID(turnP.get(), 0, turnD.get());
@@ -83,7 +92,7 @@ public class Module {
         int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
         odometryPositions = new SwerveModulePosition[sampleCount];
         for (int i = 0; i < sampleCount; i++) {
-            double positionMeters = inputs.odometryDrivePositionsRad[i] * DriveConstants.wheelRadius.in(Meters);
+            double positionMeters = inputs.odometryDrivePositionsRad[i] * Drive.tuningResults.wheelRadiusResults.radiusMeters();
             Rotation2d angle = inputs.odometryTurnPositions[i];
             odometryPositions[i] = new SwerveModulePosition(positionMeters, angle);
         }
@@ -121,11 +130,14 @@ public class Module {
         state.cosineScale(inputs.turnAbsolutePosition);
 
         // Apply setpoints
-        // TODO: Tuning toggle to disable drive wheels
-        io.setDriveVelocity(
-            state.speedMetersPerSecond / DriveConstants.wheelRadius.in(Meters),
-            accelerationMps2 / DriveConstants.wheelRadius.in(Meters)
-        );
+        if(turnOffDriveMotors.get()) {
+            io.setDriveVelocity(0.0, 0.0);
+        } else {
+            io.setDriveVelocity(
+                state.speedMetersPerSecond / Drive.tuningResults.wheelRadiusResults.radiusMeters(),
+                accelerationMps2 / Drive.tuningResults.wheelRadiusResults.radiusMeters()
+            );
+        }
         io.setTurnPosition(state.angle);
     }
 
@@ -154,12 +166,12 @@ public class Module {
 
     /** Returns the current drive position of the module in meters. */
     public double getPositionMeters() {
-        return inputs.drivePositionRad * DriveConstants.wheelRadius.in(Meters);
+        return inputs.drivePositionRad * Drive.tuningResults.wheelRadiusResults.radiusMeters();
     }
 
     /** Returns the current drive velocity of the module in meters per second. */
     public double getVelocityMetersPerSec() {
-        return inputs.driveVelocityRadPerSec * DriveConstants.wheelRadius.in(Meters);
+        return inputs.driveVelocityRadPerSec * Drive.tuningResults.wheelRadiusResults.radiusMeters();
     }
 
     /** Returns the module position (turn angle and drive position). */
@@ -183,7 +195,7 @@ public class Module {
     }
 
     /** Returns the module position in radians. */
-    public double getWheelRadiusCharacterizationPosition() {
+    public double getModuleCharacterizationPosiiton() {
         return inputs.drivePositionRad;
     }
 
@@ -197,7 +209,7 @@ public class Module {
         return inputs.uncorrectedTurnAbsolute.unaryMinus();
     }
 
-    /** Sets the current limit on the drive motor temporarily for slip current measurement. */
+    /** Sets the current limit on the drive motor temporarily for slip current measurement. Pass null to reset. */
     public void setSlipMeasurementCurrentLimit(Current limit) {
         io.setSlipMeasurementCurrentLimit(limit);
     }

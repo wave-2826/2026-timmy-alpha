@@ -1,0 +1,35 @@
+{
+  "wheelRadiusResults": {
+    "radiusMeters": 0.0507746,
+    "radiusInches": 1.999
+  },
+  "feedforwardResults": {
+    "kS": 3.68789,
+    "kV": 1.42702
+  },
+  "slipResults": {
+    "slipCurrentAmps": 43.055,
+    "slipSetpointAmps": 43.28841825,
+    "wheelCOF": 0.9670595939443565,
+    "moduleSlipCurrentsAmps": [
+      69.3,
+      49.9,
+      20.240000000000002,
+      32.78
+    ],
+    "moduleSlipSetpointsAmps": [
+      69.62687700000001,
+      50.07664199999999,
+      20.438380000000006,
+      33.011774
+    ]
+  },
+  "moduleZeroingResults": {
+    "moduleOffsetsRadians": [
+      -2.906722,
+      0.984103,
+      -0.414148,
+      -0.293685
+    ]
+  }
+}

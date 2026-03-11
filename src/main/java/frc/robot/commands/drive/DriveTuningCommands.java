@@ -2,7 +2,6 @@ package frc.robot.commands.drive;
 
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Kilogram;
-import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.io.FileReader;
@@ -11,6 +10,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import org.littletonrobotics.junction.Logger;
@@ -19,6 +19,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.Strictness;
+import com.google.gson.annotations.Expose;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -36,6 +38,10 @@ import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.Container;
+import frc.robot.util.Elastic;
+import frc.robot.util.GsonClassAdapter;
+import frc.robot.util.Elastic.Notification;
+import frc.robot.util.Elastic.Notification.NotificationLevel;
 
 /**
  * A collection of commands for tuning the drive subsystem. All drive tuning commands print their results and save them
@@ -53,32 +59,52 @@ public class DriveTuningCommands {
     private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.5; // Rad/Sec
     private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
 
+    public static final double MOI_START_DELAY = 1.0; // Secs
+    public static final double MOI_CURRENT = 5.0; // Amps
+    public static final double MOI_MAX_YAW_VEL = Units.degreesToRadians(360); // Rad/Sec
+
     /** The path to the JSON file where we save our tuning results. */
     public static final String TUNING_RESULTS_FILE = Constants.currentMode == Constants.Mode.REAL
         ? "/U/tuning_results.json" // On a real robot, this is a USB stick
         : "./logs/tuning_results.json"; // In simulation, this is a local file
 
     /** A set of tuning results that we can load from and save to a JSON file. */
-    @SuppressWarnings("unused") // This is used for serialization and deserialization
-    private static class TuningResults {
-        public double wheelRadiusMeters = 0.0; // Meters
-        public double kS = 0.0; // Volts
-        public double kV = 0.0; // Volts/(m/s)
-        public double slipCurrentAmps = 0.0; // Amps
-        public double slipVoltageVolts = 0.0; // Volts
-        public double wheelCOF = 0.0; // Coefficient of friction
-        public double[] moduleSlipCurrentsAmps = new double[4]; // Amps
-        public double[] moduleSlipSetpointsAmps = new double[4]; // Volts
+    public static class TuningResults {
+        public static record WheelRadiusTuningResults(double radiusMeters, double radiusInches) {}
+        public static record FeedforwardTuningResults(double kS, double kV) {}
+        public static record SlipTuningResults(
+            double slipCurrentAmps,
+            double slipSetpointAmps,
+            double wheelCOF,
+            double[] moduleSlipCurrentsAmps,
+            double[] moduleSlipSetpointsAmps
+        ) {}
+        public static record ModuleZeroingResults(double[] moduleOffsetsRadians) {}
+        public static record MOIResults(double moiKgM2) {}
+
+        public WheelRadiusTuningResults wheelRadiusResults = new WheelRadiusTuningResults(0.0, 0.0);
+        public FeedforwardTuningResults feedforwardResults = new FeedforwardTuningResults(0.0, 0.0);
+        public SlipTuningResults slipResults = new SlipTuningResults(0.0, 0.0, 0.0, new double[4], new double[4]);
+        public ModuleZeroingResults moduleZeroingResults = new ModuleZeroingResults(new double[4]);
+        public MOIResults moiResults = new MOIResults(0.0);
+
+        // Skip serialization
+        @Expose(serialize = false)
+        private static GsonBuilder builder = new GsonBuilder()
+            .setPrettyPrinting()
+            .setStrictness(Strictness.LENIENT) // Read past comments
+            .serializeNulls()
+            .serializeSpecialFloatingPointValues()
+            // Allow serializing records
+            .registerTypeAdapter(Class.class, new GsonClassAdapter());
 
         public static TuningResults load() {
             var file = Filesystem.getOperatingDirectory().toPath().resolve(TUNING_RESULTS_FILE).toFile();
+            
             // Make sure the parent directory exists
             file.getParentFile().mkdirs();
-
             if(!file.exists()) return new TuningResults(); // If the file doesn't exist, return an empty result
 
-            var builder = new GsonBuilder();
-            builder.setPrettyPrinting();
             var gson = builder.create();
             try(var fileReader = new FileReader(file)) {
                 return gson.fromJson(fileReader, TuningResults.class);
@@ -88,21 +114,68 @@ public class DriveTuningCommands {
             }
         }
 
+        public String generateReadableResultsComment() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("/*");
+            
+            builder.append("\nTuning Results:\n");
+            builder.append(String.format("  Wheel Radius: %.5f meters (%.5f inches)\n",
+                wheelRadiusResults.radiusMeters, wheelRadiusResults.radiusInches));
+            builder.append(String.format("  Feedforward: kS = %.5f, kV = %.5f\n",
+                feedforwardResults.kS, feedforwardResults.kV));
+            builder.append(String.format("  Slip Current: %.5f A (Setpoint: %.5f A)\n",
+                slipResults.slipCurrentAmps, slipResults.slipSetpointAmps));
+            builder.append(String.format("  Estimated Wheel COF: %.5f\n", slipResults.wheelCOF));
+
+            String[] moduleNames = { "Front Left", "Front Right", "Back Left", "Back Right" };
+            builder.append("  Module Slip Currents (A):\n");
+            for (int i = 0; i < slipResults.moduleSlipCurrentsAmps.length; i++) {
+                builder.append(String.format("    %s: %.5f (Setpoint: %.5f)\n",
+                    moduleNames[i],
+                    slipResults.moduleSlipCurrentsAmps[i],
+                    slipResults.moduleSlipSetpointsAmps[i]));
+            }
+
+            builder.append("  Module Zero Offsets (radians):\n");
+            for (int i = 0; i < moduleZeroingResults.moduleOffsetsRadians.length; i++) {
+                builder.append(String.format("    %s: %.5f\n",
+                    moduleNames[i],
+                    moduleZeroingResults.moduleOffsetsRadians[i]));
+            }
+            
+            builder.append("*/");
+            return builder.toString();
+        }
+
+        private ArrayList<Runnable> onChangeCallbacks = new ArrayList<>();
+
         public void save() {
-            var builder = new GsonBuilder();
-            builder.setPrettyPrinting();
             var gson = builder.create();
             try(var fileWriter = new java.io.FileWriter(TUNING_RESULTS_FILE)) {
                 gson.toJson(this, fileWriter);
+                fileWriter.write("\n");
+                fileWriter.write(generateReadableResultsComment());
                 System.out.println("Saved tuning results to " + TUNING_RESULTS_FILE);
             } catch(IOException e) {
                 e.printStackTrace();
             }
+
+            for(var callback : onChangeCallbacks) {
+                callback.run();
+            }
+        }
+
+        /** Registers a callback to be run whenever new tuning results are saved. */
+        public void nowAndOnChange(Runnable callback) {
+            callback.run();
+            onChangeCallbacks.add(callback);
+        }
+
+        /** Registers a callback to be run whenever new tuning results are saved, but does not run it immediately. */
+        public void onChange(Runnable callback) {
+            onChangeCallbacks.add(callback);
         }
     }
-
-    /** The tuning results that we can load from and save to a JSON file. */
-    private static TuningResults tuningResults = TuningResults.load();
 
     private static SysIdRoutine sysIdRoutine = null;
     private static SysIdRoutine angularSysIdRoutine = null;
@@ -114,11 +187,13 @@ public class DriveTuningCommands {
     public static void addTuningCommandsToChooser(Drive drive, LoggedDashboardChooser<Command> chooser) {
         // We might want to run these at a competition
         chooser.addOption("Drive: Wheel Radius Characterization", wheelRadiusCharacterization(drive));
-        chooser.addOption("Drive: Slip Current Measurement", slipCurrentMeasurement(drive));
+        chooser.addOption("Drive: Slip Current Measurement (toward intake)", slipCurrentMeasurement(drive, false));
+        chooser.addOption("Drive: Slip Current Measurement (away from intake)", slipCurrentMeasurement(drive, true));
 
         // These only apply to when we're doing "real" tuning
         if(Robot.tuningMode()) {
             chooser.addOption("Drive: Simple FF Characterization", feedforwardCharacterization(drive));
+            chooser.addOption("Drive: MOI Characterization", momentOfInertiaCharacterization(drive));
 
             chooser.addOption("Drive: SysId (Quasistatic Forward)",
                 sysIdQuasistatic(drive, SysIdRoutine.Direction.kForward));
@@ -138,6 +213,33 @@ public class DriveTuningCommands {
             chooser.addOption("Drive: Angular SysId (Dynamic Reverse)",
                 sysIdDynamicAngular(drive, SysIdRoutine.Direction.kReverse));
         }
+    }
+
+    /** Recollect zero offsets for modules. */
+    public Command collectModuleOffsets(Drive drive) {
+        double[] offsetAverages = new double[4];
+        Container<Integer> averageSamples = new Container<>(0);
+        return Commands.runEnd(() -> {
+            for(int i = 0; i < 4; i++) {
+                offsetAverages[i] += drive.getZeroOffset(i).getRadians();
+            }
+            averageSamples.value += 1;
+        }, () -> {
+            try {
+                System.out.println("********** Module Zeroing Results **********");
+                for(int i = 0; i < 4; i++) {
+                    offsetAverages[i] /= averageSamples.value;
+                    Drive.tuningResults.moduleZeroingResults.moduleOffsetsRadians[i] = offsetAverages[i];
+                    System.out.println(String.format("Module %d zero offset: %.5f radians", i, offsetAverages[i]));
+                }
+                System.out.flush();
+
+                Drive.tuningResults.save();
+                Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Module zeroing", "Successfully saved module offsets to moduleOffsets.txt!"));
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }, drive);
     }
 
     /**
@@ -191,10 +293,10 @@ public class DriveTuningCommands {
                 System.out.println("********** Drive FF Characterization Results **********");
                 System.out.println("\tkS: " + formatter.format(kS));
                 System.out.println("\tkV: " + formatter.format(kV));
+                System.out.flush();;
 
-                tuningResults.kS = kS;
-                tuningResults.kV = kV;
-                tuningResults.save();
+                Drive.tuningResults.feedforwardResults = new TuningResults.FeedforwardTuningResults(kS, kV);
+                Drive.tuningResults.save();
             }));
     }
 
@@ -231,7 +333,10 @@ public class DriveTuningCommands {
 
                 // Record starting measurement
                 Commands.runOnce(() -> {
-                    state.positions = drive.getWheelRadiusCharacterizationPositions();
+                    state.positions = new double[4];
+                    for(int i = 0; i < 4; i++) {
+                        state.positions[i] = drive.getModuleCharacterizationPosiiton(i);
+                    }
                     state.lastAngle = robotState.getRotation();
                     state.gyroDelta = 0.0;
                 }),
@@ -245,7 +350,11 @@ public class DriveTuningCommands {
 
                 // When cancelled, calculate and print results
                 .finallyDo(() -> {
-                    double[] positions = drive.getWheelRadiusCharacterizationPositions();
+                    var positions = new double[4];
+                    for(int i = 0; i < 4; i++) {
+                        positions[i] = drive.getModuleCharacterizationPosiiton(i);
+                    }
+
                     double wheelDelta = 0.0;
                     for(int i = 0; i < 4; i++) wheelDelta += Math.abs(positions[i] - state.positions[i]) / 4.0;
                     double wheelRadius = (state.gyroDelta * DriveConstants.driveBaseRadius) / wheelDelta;
@@ -256,9 +365,10 @@ public class DriveTuningCommands {
                     System.out.println("\tGyro Delta: " + formatter.format(state.gyroDelta) + " radians");
                     System.out.println("\tWheel Radius: " + formatter.format(wheelRadius) + " meters, "
                         + formatter.format(Units.metersToInches(wheelRadius)) + " inches");
+                    System.out.flush();
 
-                    tuningResults.wheelRadiusMeters = wheelRadius;
-                    tuningResults.save();
+                    Drive.tuningResults.wheelRadiusResults = new TuningResults.WheelRadiusTuningResults(wheelRadius, Units.metersToInches(wheelRadius));
+                    Drive.tuningResults.save();
                 })));
     }
 
@@ -270,9 +380,10 @@ public class DriveTuningCommands {
     /**
      * Measures the current at which the robot slips by progressively increasing the wheel voltage and measuring when
      * their velocity jumps. Also estimates the wheel's coefficient of friction. The robot _must_ be placed against a
-     * wall for this to work.
+     * wall for this to work.  
+     * Depends on wheel radius tuning.
      */
-    public static Command slipCurrentMeasurement(Drive drive) {
+    public static Command slipCurrentMeasurement(Drive drive, boolean reverseDirection) {
         SlipCurrentModuleResult[] moduleResults = new SlipCurrentModuleResult[4];
 
         int currentLimitForSlipMeasurement = 100; // Amps
@@ -294,14 +405,14 @@ public class DriveTuningCommands {
             Commands.defer(() -> {
                 Command[] commands = new Command[4];
                 for(int i = 0; i < 4; i++) {
-                    commands[i] = slipCurrentWheel(drive, i, moduleResults[i]);
+                    commands[i] = slipCurrentWheel(drive, i, moduleResults[i], reverseDirection);
                 }
                 return Commands.parallel(commands);
             }, Set.of()),
 
             // Restore the current limit and print results
             Commands.runOnce(() -> {
-                drive.setSlipMeasurementCurrentLimit(DriveConstants.slipCurrent);
+                drive.setSlipMeasurementCurrentLimit(null);
 
                 double averageSlipCurrent = 0.0;
                 double averageSlipSetpoint = 0.0;
@@ -312,8 +423,16 @@ public class DriveTuningCommands {
 
                 NumberFormat formatter = new DecimalFormat("#0.000");
 
+                double minimumSlipCurrent = Double.MAX_VALUE;
+                for(int i = 0; i < 4; i++) {
+                    if(moduleResults[i].slipCurrent < minimumSlipCurrent) {
+                        minimumSlipCurrent = moduleResults[i].slipCurrent;
+                    }
+                }
+
                 System.out.println("********** Drive Slip Current Measurement Results **********");
                 System.out.println("\tAverage slip Current: " + formatter.format(averageSlipCurrent) + " amps");
+                System.out.println("\tMinimum slip Current: " + formatter.format(minimumSlipCurrent) + " amps");
                 System.out.println("\tAverage slip Setpoint: " + formatter.format(averageSlipSetpoint) + " amps");
                 String[] moduleNames = new String[] {
                     "Front left", "Front right", "Back left", "Back right"
@@ -329,44 +448,56 @@ public class DriveTuningCommands {
                 double motorTorque = averageSlipCurrent * DCMotor.getKrakenX60Foc(1).KtNMPerAmp;
                 double totalTorqueNm = 4 * DriveConstants.driveGearRatio * motorTorque;
                 double robotMassN = DriveConstants.robotMass.in(Kilogram) * 9.81;
-                double wheelCOF = totalTorqueNm / (robotMassN * DriveConstants.wheelRadius.in(Meters));
+                double wheelCOF = totalTorqueNm / (robotMassN * Drive.tuningResults.wheelRadiusResults.radiusMeters());
                 NumberFormat cofFormatter = new DecimalFormat("#0.0000");
                 System.out.println("\tEstimated wheel COF: " + cofFormatter.format(wheelCOF));
+                System.out.flush();
 
                 // Save results
-                tuningResults.slipCurrentAmps = averageSlipCurrent;
-                tuningResults.slipVoltageVolts = averageSlipSetpoint;
-                tuningResults.wheelCOF = wheelCOF;
-                for(int i = 0; i < 4; i++) {
-                    tuningResults.moduleSlipCurrentsAmps[i] = moduleResults[i].slipCurrent;
-                    tuningResults.moduleSlipSetpointsAmps[i] = moduleResults[i].slipSetpoint;
-                }
-                tuningResults.save();
+                Drive.tuningResults.slipResults = new TuningResults.SlipTuningResults(
+                    minimumSlipCurrent,
+                    averageSlipSetpoint,
+                    wheelCOF,
+                    new double[] {
+                        moduleResults[0].slipCurrent,
+                        moduleResults[1].slipCurrent,
+                        moduleResults[2].slipCurrent,
+                        moduleResults[3].slipCurrent
+                    },
+                    new double[] {
+                        moduleResults[0].slipSetpoint,
+                        moduleResults[1].slipSetpoint,
+                        moduleResults[2].slipSetpoint,
+                        moduleResults[3].slipSetpoint
+                    }
+                );
+                Drive.tuningResults.save();
             })
         );
         command.addRequirements(drive);
         return command;
     }
 
-    private static Command slipCurrentWheel(Drive drive, int module, SlipCurrentModuleResult moduleResult) {
+    private static Command slipCurrentWheel(Drive drive, int module, SlipCurrentModuleResult moduleResult, boolean reverseDirection) {
         List<Double> currentSamples = new LinkedList<>();
         Timer timer = new Timer();
         Container<Double> startPosition = new Container<Double>(0.);
 
         return Commands.sequence(Commands.runOnce(() -> {
             currentSamples.clear();
-            startPosition.value = drive.getSlipMeasurementPosition(module);
+            startPosition.value = drive.getModuleCharacterizationPosiiton(module);
             timer.restart();
         }),
 
             // Accelerate and gather data
             Commands.run(() -> {
                 double setpoint = timer.get() * SLIP_RAMP_RATE + SLIP_START_SETPOINT;
+                if(reverseDirection) setpoint = -setpoint;
                 drive.runCharacterization(module, setpoint);
 
                 currentSamples.add(drive.getSlipMeasurementCurrent(module));
             }).until(() -> {
-                double distanceTraveled = Math.abs(drive.getSlipMeasurementPosition(module) - startPosition.value);
+                double distanceTraveled = Math.abs(drive.getModuleCharacterizationPosiiton(module) - startPosition.value);
                 return distanceTraveled > SLIP_TRAVEL_AMOUNT;
             }),
 
@@ -379,6 +510,43 @@ public class DriveTuningCommands {
 
                 System.out.println("Module " + module + " slip current measured.");
             }));
+    }
+
+    /** Characterizes the robot MOI. Depends on wheel radius tuning. */
+    public static Command momentOfInertiaCharacterization(Drive drive) {
+        List<Double> gyroAccelerations = new LinkedList<>();
+        return Commands.sequence(
+            Commands.run(() -> {
+                drive.runMOICharacterization(0.0);
+            }).withTimeout(MOI_START_DELAY),
+
+            Commands.run(() -> {
+                drive.runMOICharacterization(MOI_CURRENT);
+                gyroAccelerations.add(Math.abs(drive.getGyroAcceleration()));
+            }).until(() -> Math.abs(drive.getGyroVelocity()) > MOI_MAX_YAW_VEL),
+
+            Commands.runOnce(() -> {
+                drive.runMOICharacterization(0.0);
+
+                double averageGyroAcceleration = 0.0;
+                for(double sample : gyroAccelerations) {
+                    averageGyroAcceleration += sample / gyroAccelerations.size();
+                }
+
+                double wheelTorque = DriveConstants.driveGearRatio * MOI_CURRENT * DCMotor.getKrakenX60Foc(1).KtNMPerAmp;
+                double wheelForceAtGround = wheelTorque / Drive.tuningResults.wheelRadiusResults.radiusMeters();
+                double torqueOnRobot = wheelForceAtGround * DriveConstants.driveBaseRadius * 4;
+                double moi = torqueOnRobot / averageGyroAcceleration;
+
+                NumberFormat formatter = new DecimalFormat("#0.000");
+                System.out.println("********** Drive MOI Characterization Results **********");
+                System.out.println("\tAverage gyro acceleration: " + formatter.format(averageGyroAcceleration) + " radians/s^2");
+                System.out.println("\tEstimated MOI: " + formatter.format(moi) + " kg*m^2");
+                System.out.flush();
+
+                Drive.tuningResults.moiResults = new TuningResults.MOIResults(moi);
+            })
+        );
     }
 
     /** Configures the SysId routine if it hasn't been configured yet. */

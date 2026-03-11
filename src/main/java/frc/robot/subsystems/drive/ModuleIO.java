@@ -9,6 +9,7 @@ public interface ModuleIO {
     @AutoLog
     class ModuleIOInputs {
         public boolean driveConnected = false;
+        /* The drive position as radians of the wheel. */
         public double drivePositionRad = 0.0;
         public double driveVelocityRadPerSec = 0.0;
         public double driveAppliedVolts = 0.0;

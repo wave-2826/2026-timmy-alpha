@@ -1,8 +1,10 @@
 package frc.robot.util.simUtils;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import java.util.Queue;
 import java.util.Random;
@@ -52,6 +54,11 @@ public class GyroSimulation {
 
     public AngularVelocity getMeasuredAngularVelocity() {
         return RadiansPerSecond.of(measuredAngularVelocityRadPerSec);
+    }
+
+    public AngularAcceleration getMeasuredAngularAcceleration() {
+        double angularAccelerationRadPerSecSq = (measuredAngularVelocityRadPerSec - previousAngularVelocityRadPerSec) / Simulation.simulationDtSeconds;
+        return RadiansPerSecondPerSecond.of(angularAccelerationRadPerSecSq);
     }
 
     public Rotation2d[] getCachedGyroReadings() {

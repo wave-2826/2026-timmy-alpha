@@ -1,11 +1,11 @@
 package frc.robot.subsystems.drive;
 
+import static edu.wpi.first.units.Units.Amps;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -23,12 +23,13 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
+import frc.robot.subsystems.drive.DriveConstants.SwerveModuleConfig;
 import frc.robot.util.Elastic;
 import frc.robot.util.Elastic.Notification;
 import frc.robot.util.Elastic.Notification.NotificationLevel;
 
 public abstract class ModuleIOTalonFX implements ModuleIO {
-    protected final SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> constants;
+    protected SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> constants;
 
     protected final TalonFX driveTalon;
     protected final TalonFX turnTalon;
@@ -57,23 +58,22 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
     private final Debouncer turnEncoderConnectedDebounce = new Debouncer(0.5);
 
     protected ModuleIOTalonFX(
-        SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> constants
+        SwerveModuleConfig config
     ) {
-        this.constants = constants;
-
+        this.constants = config.createConstants();
+        
         driveTalon = new TalonFX(constants.DriveMotorId, DriveConstants.CANBus);
         turnTalon = new TalonFX(constants.SteerMotorId, DriveConstants.CANBus);
         cancoder = new CANcoder(constants.EncoderId, DriveConstants.CANBus);
-
+        
+        Drive.tuningResults.onChange(() -> {
+            this.constants = config.createConstants();
+            configureMotors();
+            configureEncoder();
+        });
+        
         configureMotors();
-
-        // Configure CANCoder
-        CANcoderConfiguration cancoderConfig = constants.EncoderInitialConfigs;
-        cancoderConfig.MagnetSensor.MagnetOffset = constants.EncoderOffset;
-        cancoderConfig.MagnetSensor.SensorDirection = constants.EncoderInverted
-                ? SensorDirectionValue.Clockwise_Positive
-                : SensorDirectionValue.CounterClockwise_Positive;
-        cancoder.getConfigurator().apply(cancoderConfig);
+        configureEncoder();
 
         // Create drive status signals
         drivePosition = driveTalon.getPosition();
@@ -133,6 +133,16 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         tryUntilOk(5, () -> turnTalon.getConfigurator().apply(turnConfig, 0.25));
 
         Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Swerve module", "Reconfigured motors"));
+    }
+
+    private void configureEncoder() {
+        // Configure CANCoder
+        CANcoderConfiguration cancoderConfig = constants.EncoderInitialConfigs;
+        cancoderConfig.MagnetSensor.MagnetOffset = constants.EncoderOffset;
+        cancoderConfig.MagnetSensor.SensorDirection = constants.EncoderInverted
+            ? SensorDirectionValue.Clockwise_Positive
+            : SensorDirectionValue.CounterClockwise_Positive;
+        cancoder.getConfigurator().apply(cancoderConfig);
     }
 
     @Override
@@ -204,8 +214,21 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
 
     @Override
     public void setSlipMeasurementCurrentLimit(Current current) {
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(
-            new CurrentLimitsConfigs().withStatorCurrentLimit(current), 0.25
-        ));
+        if(current == null) configureMotors();
+        else {
+            var config = new TalonFXConfiguration();
+            config.CurrentLimits
+                .withStatorCurrentLimit(current).withStatorCurrentLimitEnable(true)
+                .withSupplyCurrentLimit(current).withSupplyCurrentLimitEnable(true);
+            config.TorqueCurrent
+                .withPeakForwardTorqueCurrent(current).withPeakReverseTorqueCurrent(current.unaryMinus());
+            
+            var result = tryUntilOk(5, () -> driveTalon.getConfigurator().apply(config, 0.25));
+            if(!result.isOK()) {
+                System.out.println("Failed to set slip measurement current limit for module; error: " + result.getDescription());
+            } else {
+                System.out.println("Set slip measurement current limit to " + current.in(Amps) + "A for module");
+            }
+        }
     }
 }

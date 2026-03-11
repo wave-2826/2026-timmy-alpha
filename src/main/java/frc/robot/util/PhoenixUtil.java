@@ -16,6 +16,8 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
+import frc.robot.util.Elastic.Notification;
+import frc.robot.util.Elastic.Notification.NotificationLevel;
 import frc.robot.util.simUtils.SimulatedBattery;
 import frc.robot.util.simUtils.SimulatedMotorController;
 import frc.robot.util.simUtils.Simulation;
@@ -24,11 +26,15 @@ import java.util.function.Supplier;
 
 public final class PhoenixUtil {
     /** Attempts to run the command until no error is produced. */
-    public static void tryUntilOk(int maxAttempts, Supplier<StatusCode> command) {
-        for (int i = 0; i < maxAttempts; i++) {
-            var error = command.get();
-            if (error.isOK()) break;
+    public static StatusCode tryUntilOk(int maxAttempts, Supplier<StatusCode> command) {
+        StatusCode lastError = StatusCode.OK;
+        for(int i = 0; i < maxAttempts; i++) {
+            lastError = command.get();
+            if(lastError.isOK()) return lastError;
         }
+
+        Elastic.sendNotification(new Notification(NotificationLevel.ERROR, "Phoenix tryUntilOk failed", "Likely failed to configure a controller!"));
+        return lastError;
     }
 
     public static class TalonFXMotorControllerSim implements SimulatedMotorController {

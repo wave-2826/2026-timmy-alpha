@@ -19,7 +19,7 @@ public class ModuleIOTalonFXReal extends ModuleIOTalonFX {
     private final Queue<Double> turnPositionQueue;
 
     public ModuleIOTalonFXReal(SwerveModuleConfig config) {
-        super(config.constants());
+        super(config);
 
         this.timestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
         this.drivePositionQueue = PhoenixOdometryThread.getInstance().registerSignal(super.drivePosition);

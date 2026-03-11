@@ -1,6 +1,7 @@
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import edu.wpi.first.math.util.Units;
 import frc.robot.util.PhoenixUtil;
@@ -19,6 +20,9 @@ public class GyroIOSim implements GyroIO {
         inputs.yawPosition = gyroSimulation.getGyroReading();
         inputs.yawVelocityRadPerSec = Units.degreesToRadians(
                 gyroSimulation.getMeasuredAngularVelocity().in(RadiansPerSecond));
+        inputs.yawAccelerationRadPerSec2 = Units.degreesToRadians(
+            gyroSimulation.getMeasuredAngularAcceleration().in(RadiansPerSecondPerSecond)
+        );
 
         inputs.odometryYawTimestamps = PhoenixUtil.getSimulationOdometryTimeStamps();
         inputs.odometryYawPositions = gyroSimulation.getCachedGyroReadings();

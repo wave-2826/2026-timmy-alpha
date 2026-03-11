@@ -18,20 +18,12 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.RobotState;
-import frc.robot.util.Container;
-import frc.robot.util.Elastic;
+import frc.robot.commands.drive.DriveTuningCommands.TuningResults;
 import frc.robot.util.LocalADStarAK;
-import frc.robot.util.Elastic.Notification;
-import frc.robot.util.Elastic.Notification.NotificationLevel;
-
-import java.io.FileWriter;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -39,6 +31,17 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Drive extends SubsystemBase {
+    /**
+     * Tunings results store the following tuned information about the drivetrain:
+     * - Robot moment of inertia
+     * - Wheel COF
+     * - Slip current
+     * - Wheel radius
+     * - Module angle offsets
+     * - Drive feedforwards
+     */
+    public static TuningResults tuningResults = TuningResults.load();
+    
     private final RobotState robotState = RobotState.getInstance();
     
     static final Lock odometryLock = new ReentrantLock();
@@ -67,10 +70,10 @@ public class Drive extends SubsystemBase {
 
         // Configure AutoBuilder for PathPlanner
         var robotState = RobotState.getInstance();
-        AutoBuilder.configure(robotState::getEstimatedPose, this::setPose, this::getChassisSpeeds,
+        tuningResults.nowAndOnChange(() -> AutoBuilder.configure(robotState::getEstimatedPose, this::setPose, this::getChassisSpeeds,
             this::runVelocityWithFeedforward,
             Constants.isSim ? DriveConstants.simHolonomicDriveController : DriveConstants.realHolonomicDriveController,
-            DriveConstants.pathplannerConfig, () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red, this);
+            DriveConstants.pathplannerConfig.get(), () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red, this));
         Pathfinding.setPathfinder(new LocalADStarAK());
         PathPlannerLogging.setLogActivePathCallback((activePath) -> {
             Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
@@ -175,52 +178,6 @@ public class Drive extends SubsystemBase {
         Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
     }
 
-    /** Runs the drive in a straight line with the specified drive output. */
-    public void runCharacterization(double output) {
-        for(int i = 0; i < 4; i++) modules[i].runCharacterization(output);
-    }
-    /** Runs a particular module in a straight line with the specified drive output. */
-    public void runCharacterization(int module, double output) {
-        modules[module].runCharacterization(output);
-    }
-
-    /** Runs the drive to rotate with the specified drive output for angular system identification. */
-    public void runAngularCharacterization(double output) {
-        for(int i = 0; i < 4; i++) modules[i].runAngularCharacterization(output);
-    }
-
-    /** Sets the current limit on the drive motors temporarily for slip current measurement. */
-    public void setSlipMeasurementCurrentLimit(Current limit) {
-        for(int i = 0; i < 4; i++) modules[i].setSlipMeasurementCurrentLimit(limit);
-    }
-    /** Returns the drive motor current draw of a particular module in amps. */
-    public double getSlipMeasurementCurrent(int module) {
-        return modules[module].getSlipMeasurementCurrent();
-    }
-
-    /** Returns the position of each module in radians. */
-    public double[] getWheelRadiusCharacterizationPositions() {
-        double[] values = new double[4];
-        for (int i = 0; i < 4; i++) {
-            values[i] = modules[i].getWheelRadiusCharacterizationPosition();
-        }
-        return values;
-    }
-    
-    /** Returns the drive motor position of a particular module in radians. */
-    public double getSlipMeasurementPosition(int module) {
-        return modules[module].getWheelRadiusCharacterizationPosition();
-    }
-
-    /** Returns the average velocity of the modules in rotations/sec (Phoenix native units). */
-    public double getFFCharacterizationVelocity() {
-        double output = 0.0;
-        for (int i = 0; i < 4; i++) {
-            output += modules[i].getFFCharacterizationVelocity() / 4.0;
-        }
-        return output;
-    }
-
     /** Stops the drive. */
     public void stop() {
         runVelocity(new ChassisSpeeds(), false);
@@ -258,32 +215,6 @@ public class Drive extends SubsystemBase {
         return states;
     }
 
-    /** Recollect zero offsets for modules. */
-    public Command rezeroModules() {
-        double[] offsetAverages = new double[4];
-        Container<Integer> averageSamples = new Container<>(0);
-        return Commands.runEnd(() -> {
-            for(int i = 0; i < 4; i++) {
-                var module = modules[i];
-                offsetAverages[i] += module.getZeroOffset().getRadians();
-            }
-            averageSamples.value += 1;
-        }, () -> {
-            try {
-                FileWriter writer = new FileWriter("/U/moduleOffsets.txt");
-                for(int i = 0; i < 4; i++) {
-                    double averageOffset = offsetAverages[i] / averageSamples.value;
-                    var module = modules[i];
-                    writer.write(String.format("Module %s: %f radians\n", module.name, averageOffset));
-                }
-                writer.close();
-                Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Module zeroing", "Successfully saved module offsets to moduleOffsets.txt!"));
-            } catch(Exception e) {
-                e.printStackTrace();
-            }
-        }, this);
-    }
-
     /**
      * Resets the odometry to the specified pose. Used at the start of autonomous to tell the robot where it is.
      * @return
@@ -296,5 +227,59 @@ public class Drive extends SubsystemBase {
     @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
     private ChassisSpeeds getChassisSpeeds() {
         return robotState.kinematics.toChassisSpeeds(getModuleStates());
+    }
+
+    //////////////////// Characterization/tuning
+    
+
+    /** Runs the drive in a straight line with the specified drive output. */
+    public void runCharacterization(double output) {
+        for(int i = 0; i < 4; i++) modules[i].runCharacterization(output);
+    }
+    /** Runs a particular module in a straight line with the specified drive output. */
+    public void runCharacterization(int module, double output) {
+        modules[module].runCharacterization(output);
+    }
+
+    /** Runs the drive to rotate with the specified drive output for angular system identification. */
+    public void runAngularCharacterization(double output) {
+        for(int i = 0; i < 4; i++) modules[i].runAngularCharacterization(output);
+    }
+
+    /** Sets the current limit on the drive motors temporarily for slip current measurement. Pass null to reset. */
+    public void setSlipMeasurementCurrentLimit(Current limit) {
+        for(int i = 0; i < 4; i++) modules[i].setSlipMeasurementCurrentLimit(limit);
+    }
+    /** Returns the drive motor current draw of a particular module in amps. */
+    public double getSlipMeasurementCurrent(int module) {
+        return modules[module].getSlipMeasurementCurrent();
+    }
+    /** Runs the modules in a circle with a constant current for MOI characterization */
+    public void runMOICharacterization(double current) {
+        for(int i = 0; i < 4; i++) modules[i].runAngularCharacterization(current);
+    }
+    /** Gets the current gyro velocity for MOI characterization, in rad/sec */
+    public double getGyroVelocity() {
+        return gyroInputs.yawVelocityRadPerSec;
+    }
+    /** Gets the current gyro acceleration for MOI characterization, in rad/sec^2 */
+    public double getGyroAcceleration() {
+        return gyroInputs.yawAccelerationRadPerSec2;
+    }
+    /** Returns the drive motor position of a particular module in radians. */
+    public double getModuleCharacterizationPosiiton(int module) {
+        return modules[module].getModuleCharacterizationPosiiton();
+    }
+    /** Returns the zero offset of the given module */
+    public Rotation2d getZeroOffset(int module) {
+        return modules[module].getZeroOffset();
+    }
+    /** Returns the average velocity of the modules in rotations/sec (Phoenix native units). */
+    public double getFFCharacterizationVelocity() {
+        double output = 0.0;
+        for (int i = 0; i < 4; i++) {
+            output += modules[i].getFFCharacterizationVelocity() / 4.0;
+        }
+        return output;
     }
 }
