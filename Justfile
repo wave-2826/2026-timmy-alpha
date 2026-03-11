@@ -14,10 +14,7 @@ simulate:
     # Delete all but the newest hs_*.log file; java crashes on linux every time we stop it
     ls -t hs_*.log 2>/dev/null | tail -n +2 | xargs -r rm --
     sed -i 's/simMode = Mode.REPLAY;/simMode = Mode.SIM;/g' {{ConstantsFile}}
-    ./gradlew simulateJava  \
-        -Porg.gradle.java.installations.paths={{home_dir()}}/.jbr-jcef-17 \
-        -Porg.gradle.java.installations.auto-detect=false \
-        -Porg.gradle.java.installations.auto-download=false
+    ./gradlew simulateJava
 
 build-watch:
     ./gradlew classes -t
@@ -44,6 +41,3 @@ tune-turret:
 
 setup-hotswap:
     python ./misc/scripts/setup-hotswap.py
-
-test:
-    echo "{{home_dir()}}/.jbr-jcef-17"

@@ -1,6 +1,6 @@
 package frc.robot;
 
-import choreo.auto.AutoChooser;
+import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -52,10 +52,10 @@ public class RobotContainer {
     public final Turret turret;
 
     // Dashboard inputs
-    private final AutoChooser autoChooser;
+    private final LoggedDashboardChooser<Command> autoChooser;
     public boolean noAutoSelected() {
-        var selected = autoChooser.selectedCommand().getName();
-        return selected == null || selected.equals("None");
+        var selected = autoChooser.getSendableChooser().getSelected();
+        return selected == null || selected == "None";
     }
     private final LoggedDashboardChooser<Command> testChooser;
 
@@ -89,7 +89,6 @@ public class RobotContainer {
                     new ModuleIOSim(2),
                     new ModuleIOSim(3));
                 driveSimulation.setModuleStateSupplier(drive::getModuleStates);
-                Simulation.getInstance().setDrive(drive);
 
                 vision = new Vision(
                     new VisionIOPhotonVisionSim(VisionConstants.camera0Name, VisionConstants.robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
@@ -118,12 +117,12 @@ public class RobotContainer {
         }
 
         // Set up auto routines
-        autoChooser = new AutoChooser();
+        autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
         for(AutoPaths path : AutoCommands.AutoPaths.values()) {
             var name = path.name();
             name = name.replaceAll("_", " ");
-            autoChooser.addRoutine(name, () -> AutoCommands.runAuto(path, this));
+            autoChooser.addOption(name, AutoCommands.runCodeCommand(path, drive));
         }
 
         Controls.getInstance().configureControls(this);
@@ -133,7 +132,7 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return autoChooser.selectedCommand();
+        return autoChooser.get();
     }
     public Command getTestCommand() {
         return testChooser.get();

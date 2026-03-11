@@ -13,6 +13,8 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.wpilibj.Servo;
+
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 public class IntakeIOReal implements IntakeIO {
