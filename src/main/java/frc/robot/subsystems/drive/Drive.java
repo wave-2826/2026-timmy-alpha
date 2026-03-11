@@ -1,9 +1,5 @@
 package frc.robot.subsystems.drive;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.pathfinding.Pathfinding;
-import com.pathplanner.lib.util.DriveFeedforwards;
-import com.pathplanner.lib.util.PathPlannerLogging;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
@@ -18,12 +14,19 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.RobotState;
 import frc.robot.commands.drive.DriveTuningCommands.TuningResults;
-import frc.robot.util.LocalADStarAK;
+import frc.robot.util.Container;
+import frc.robot.util.Elastic;
+import frc.robot.util.Elastic.Notification;
+import frc.robot.util.Elastic.Notification.NotificationLevel;
+
+import java.io.FileWriter;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -67,20 +70,6 @@ public class Drive extends SubsystemBase {
 
         // Start odometry thread
         PhoenixOdometryThread.getInstance().start();
-
-        // Configure AutoBuilder for PathPlanner
-        var robotState = RobotState.getInstance();
-        tuningResults.nowAndOnChange(() -> AutoBuilder.configure(robotState::getEstimatedPose, this::setPose, this::getChassisSpeeds,
-            this::runVelocityWithFeedforward,
-            Constants.isSim ? DriveConstants.simHolonomicDriveController : DriveConstants.realHolonomicDriveController,
-            DriveConstants.pathplannerConfig.get(), () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red, this));
-        Pathfinding.setPathfinder(new LocalADStarAK());
-        PathPlannerLogging.setLogActivePathCallback((activePath) -> {
-            Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
-        });
-        PathPlannerLogging.setLogTargetPoseCallback((targetPose) -> {
-            Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
-        });
     }
 
     @Override
@@ -124,16 +113,6 @@ public class Drive extends SubsystemBase {
 
         // Update gyro alert
         gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
-    }
-
-    /**
-     * Runs the drive at the desired robot-relative velocity with the specified feedforwards.  
-     * Doesn't use kinematic constraints because feedfoward control should already be within the robot's capabilities.
-     *
-     * @param speeds
-     */
-    public void runVelocityWithFeedforward(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
-        runVelocity(speeds, feedforwards.accelerationsMPSSq(), false);
     }
 
     /**

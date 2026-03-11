@@ -10,6 +10,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.units.measure.*;
 import frc.robot.FieldConstants;
+import frc.robot.subsystems.drive.Drive;
 
 import java.util.Arrays;
 import java.util.OptionalDouble;
@@ -214,6 +215,11 @@ public class SwerveDriveSimulation {
 
         // Update gyro
         gyroSimulation.updateSimulationSubTick(angularVelocity);
+    }
+
+    // TODO: Make odom work this is just a band aid solution
+    public void updateOdom(Drive drive) {
+        drive.setPose(pose);
     }
 
     public void setSimulationWorldPose(Pose2d robotPose) {

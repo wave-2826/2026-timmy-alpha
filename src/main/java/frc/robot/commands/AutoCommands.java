@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import choreo.auto.AutoRoutine;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -14,6 +15,8 @@ import frc.robot.commands.drive.DriveToPose;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.simUtils.Simulation;
 import frc.robot.Constants;
+import frc.robot.RobotContainer;
+import frc.robot.Constants.Mode;
 
 public class AutoCommands {
     public static enum AutoPaths {
@@ -32,17 +35,9 @@ public class AutoCommands {
         LEFT_SWEEP_OUTPOST,
     };
     
-    public static Command runCodeCommand(AutoPaths path, Drive drive) {
+    public static AutoRoutine runAuto(AutoPaths path, RobotContainer rc) {
         switch (path) {
             case RIGHT_SWIPE_OUTPOST:
-                return (
-                    Commands.sequence(
-                        new DriveToPose(drive, new Pose2d(new Translation2d(7.786, 1.146), Rotation2d.fromDegrees(35.083))),
-                        new DriveToPose(drive, new Pose2d(new Translation2d(7.786, 3.632), Rotation2d.fromDegrees(35.083))),
-                        new DriveToPose(drive, new Pose2d(new Translation2d(7.786, 1.146), Rotation2d.fromDegrees(35.083))),
-                        new DriveToPose(drive, new Pose2d(new Translation2d(4.364,0.382), Rotation2d.fromDegrees(90)))
-                    )
-                );
             case RIGHT_SWIPE_CLIMB_RIGHT:
             case RIGHT_SWIPE_CLIMB_LEFT:
             case RIGHT_SWEEP_CLIMB_RIGHT:
@@ -63,13 +58,9 @@ public class AutoCommands {
         } else {
             defaultpose = new Pose2d(new Translation2d(4.300,7.655), Rotation2d.kZero);
         }
-        return (Constants.isSim
-            ? Commands.run(() -> {
+        return Commands.runEnd(() -> {
                 Simulation.getInstance().driveSimulation.setSimulationWorldPose(defaultpose);
                 drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()); // Reset odometry to actual robot pose during simulation
-            }) 
-            : Commands.run(() -> drive.setPose(
-                new Pose2d(defaultpose.getX(), defaultpose.getY(), DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Rotation2d.kZero.plus(defaultpose.getRotation()) : Rotation2d.k180deg.plus(defaultpose.getRotation())))) // Zero gyro
-            );
+            }, () -> {});
     }
 }

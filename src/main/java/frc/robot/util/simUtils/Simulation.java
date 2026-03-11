@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import frc.robot.Constants;
 import frc.robot.RobotState;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.simUtils.SwerveDriveSimulation.COTS;
 import frc.robot.util.simUtils.SwerveDriveSimulation.DriveTrainSimulationConfig;
@@ -32,6 +33,8 @@ public final class Simulation {
         if(instance == null) instance = new Simulation();
         return instance;
     }
+
+    Drive drive = null;
 
     public SwerveDriveSimulation driveSimulation = null;
     
@@ -68,6 +71,10 @@ public final class Simulation {
         fuel.spawnStartingFuel();
     }
 
+    public void setDrive(Drive drive) {
+        this.drive = drive;
+    }
+
     public void updateSimulation() {
         if(Constants.currentMode != Constants.Mode.SIM) return;
 
@@ -78,6 +85,8 @@ public final class Simulation {
             fuel.stepSimSubtick();
             driveSimulation.update(simulationDtSeconds);
             SimulatedBattery.simulationSubTick();
+
+            if(drive != null) driveSimulation.updateOdom(drive);
 
             // TODO: also run other sim IO with subticks
             
