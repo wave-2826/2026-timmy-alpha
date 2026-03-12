@@ -14,11 +14,14 @@ public class IntakeConstants {
     public static final int rollerCurrentLimit = 40;
     public static final int deployCurrentLimit = 25;
     
-    public static final double opeThatsaResetCurrent = deployCurrentLimit + 0.5;
+    public static final double deployStallCurrent = 15;
     
     public static final double pinionReduction = 5.;
-    public static final double pinionRadiusMeters = Units.inchesToMeters(2.857143/2); // input diameter
+    public static final double pinionRadiusMeters = Units.inchesToMeters(2.857143/2);
     public static final double trackLengthMeters = Units.inchesToMeters(14.75);
+
+    // Geometry
+    public static final double fullyExtendedIntakeDepth = Units.inchesToMeters(20); // TODO: collect from cad
 
     public static final TunableSparkPID rollerPID = new TunableSparkPID("Intake/Roller")
         .addRealRobotGains(new SparkPIDConstants(0.005, 0, 0))

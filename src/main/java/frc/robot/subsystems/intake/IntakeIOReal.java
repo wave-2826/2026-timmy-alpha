@@ -30,6 +30,8 @@ public class IntakeIOReal implements IntakeIO {
 
     protected final SparkClosedLoopController deployController;
 
+    protected boolean deployFollowing = true;
+
     public IntakeIOReal() {
         var rollerConfig = new SparkMaxConfig();
         rollerConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(rollerCurrentLimit).voltageCompensation(12.0);
@@ -44,7 +46,7 @@ public class IntakeIOReal implements IntakeIO {
         var deployBaseConfig = new SparkMaxConfig();
         deployBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(deployCurrentLimit).voltageCompensation(12.0);
         deployBaseConfig.encoder
-            .positionConversionFactor(2.0 * Math.PI * pinionRadiusMeters / pinionReduction)
+            .positionConversionFactor(2.0 * Math.PI * pinionRadiusMeters / pinionReduction) // Rotor Rotations -> Deploy Meters
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 * pinionRadiusMeters / pinionReduction)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
@@ -85,8 +87,17 @@ public class IntakeIOReal implements IntakeIO {
     }
 
     @Override
-    public void setDeployVoltage(double volts) {
+    public void setDeployVoltageL(double volts) {
         deployL.setVoltage(volts);
+    }
+
+    @Override
+    public void setDeployVoltageR(double volts) {
+        if(deployFollowing) {
+            deployR.pauseFollowerModeAsync();
+            deployFollowing = false;
+        }
+        deployR.setVoltage(volts);
     }
 
     @Override
@@ -96,12 +107,19 @@ public class IntakeIOReal implements IntakeIO {
     }
 
     @Override
-    public void setDeployPosition(double position) {
-        deployController.setSetpoint(position, ControlType.kPosition);
+    public void setDeployPosition(double positionMeters) {
+        if(!deployFollowing) {
+            deployR.resumeFollowerModeAsync();
+            deployFollowing = true;
+        }
+        deployController.setSetpoint(positionMeters, ControlType.kPosition);
     }
 
     @Override
     public void stopDeploy() {
-        deployController.setSetpoint(0, ControlType.kDutyCycle);
+        deployL.stopMotor();
+        if(!deployFollowing) {
+            deployR.stopMotor();
+        }
     }
 }

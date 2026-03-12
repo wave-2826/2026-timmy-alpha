@@ -1,17 +1,13 @@
 package frc.robot.util.simUtils;
 
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Seconds;
-
-import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
 
-import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -20,6 +16,8 @@ import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.util.simUtils.SwerveDriveSimulation.COTS;
 import frc.robot.util.simUtils.SwerveDriveSimulation.DriveTrainSimulationConfig;
 
@@ -35,6 +33,7 @@ public final class Simulation {
     }
 
     Drive drive = null;
+    HopperSim hopper = new HopperSim();
 
     public SwerveDriveSimulation driveSimulation = null;
     
@@ -43,7 +42,7 @@ public final class Simulation {
         .withCustomModuleTranslations(DriveConstants.moduleTranslations)
         .withBumperSize(Inches.of(31), Inches.of(37))
         .withTrackLengthTrackWidth(DriveConstants.wheelBaseX, DriveConstants.trackWidthY)
-        .withGyro(COTS.ofPigeon2());
+        .withGyro(COTS.pigeon2());
     
     private FuelSim fuel;
 
@@ -53,13 +52,26 @@ public final class Simulation {
         fuel.setLoggingFrequency(50);
     }
 
-    public SwerveDriveSimulation configureSimulation() {
+    public SwerveDriveSimulation configureSimulation(Intake intake) {
         driveSimulation = new SwerveDriveSimulation(drivetrainConfig, new Pose2d(3, 3, new Rotation2d()));
         RobotState.getInstance().resetSimulationPoseCallback = driveSimulation::setSimulationWorldPose;
 
         fuel.registerRobot(Units.inchesToMeters(7), driveSimulation);
+        double xMax = -drivetrainConfig.bumperLengthX.in(Meters) * 0.5;
+        // hacky but whatever
+        double halfWidth = drivetrainConfig.bumperWidthY.in(Meters) * 0.5 - Units.inchesToMeters(4);
+        fuel.registerIntake(
+            xMax - IntakeConstants.fullyExtendedIntakeDepth, xMax, -halfWidth, halfWidth,
+            () -> intake.isDeployed() && hopper.canIntake(),
+            this::intakeFuel
+        );
         
         return driveSimulation;
+    }
+
+    
+    private void intakeFuel() {
+        hopper.addFuel();
     }
 
     public void resetSimulationField() {

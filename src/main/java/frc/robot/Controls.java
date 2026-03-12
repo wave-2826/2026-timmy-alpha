@@ -66,7 +66,8 @@ public class Controls {
 
         // driver.leftBumper().onTrue(intake.deployIntake());//.onTrue(intake.runRollerPercent(20));
         // driver.rightBumper().onTrue(intake.runRollerPercent(0));
-        // intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
+        RobotModeTriggers.teleop().onTrue(intake.deployIntake());
+        intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
 
         RobotModeTriggers.teleop().onTrue(climber.extendServos());
 

@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  */
 public class SwerveDriveSimulation {
     public static class COTS {
-        public static Supplier<GyroSimulation> ofPigeon2() {
+        public static Supplier<GyroSimulation> pigeon2() {
             return () -> new GyroSimulation(0.5, 0.02);
         }
     }
@@ -66,7 +66,7 @@ public class SwerveDriveSimulation {
                 Meters.of(.76),
                 Meters.of(0.52),
                 Meters.of(0.52),
-                COTS.ofPigeon2());
+                COTS.pigeon2());
         }
 
         public DriveTrainSimulationConfig withRobotMass(Mass robotMass) {

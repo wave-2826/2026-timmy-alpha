@@ -458,7 +458,7 @@ public class FuelSim {
         }
 
         Pose3d launchPose = new Pose3d(this.robotPoseSupplier.get())
-                .plus(new Transform3d(new Translation3d(Meters.zero(), Meters.zero(), launchHeight), Rotation3d.kZero));
+            .plus(new Transform3d(new Translation3d(Meters.zero(), Meters.zero(), launchHeight), Rotation3d.kZero));
         ChassisSpeeds fieldSpeeds = this.robotFieldSpeedsSupplier.get();
 
         double horizontalVel = Math.cos(hoodAngle.in(Radians)) * launchVelocity.in(MetersPerSecond);
@@ -491,16 +491,16 @@ public class FuelSim {
         Translation2d posOffset;
         // find minimum distance to side and send corresponding collision response
         if((distanceToBottom >= distanceToTop
-                && distanceToBottom >= distanceToRight
-                && distanceToBottom >= distanceToLeft)) {
+            && distanceToBottom >= distanceToRight
+            && distanceToBottom >= distanceToLeft)) {
             posOffset = new Translation2d(distanceToBottom, 0);
         } else if((distanceToTop >= distanceToBottom
-                && distanceToTop >= distanceToRight
-                && distanceToTop >= distanceToLeft)) {
+            && distanceToTop >= distanceToRight
+            && distanceToTop >= distanceToLeft)) {
             posOffset = new Translation2d(-distanceToTop, 0);
         } else if((distanceToRight >= distanceToBottom
-                && distanceToRight >= distanceToTop
-                && distanceToRight >= distanceToLeft)) {
+            && distanceToRight >= distanceToTop
+            && distanceToRight >= distanceToLeft)) {
             posOffset = new Translation2d(0, distanceToRight);
         } else {
             posOffset = new Translation2d(0, -distanceToLeft);

@@ -71,13 +71,15 @@ public class RobotContainer {
                 vision = new Vision(
                     new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.robotToCamera0),
                     new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.robotToCamera1));
-                intake = new Intake(new IntakeIOReal());
+                intake = new Intake(new IntakeIO() {});
                 turret = new Turret(new TurretIO() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIOReal());
                 break;
             case SIM:
-                var driveSimulation = Simulation.getInstance().configureSimulation();
+                intake = new Intake(new IntakeIO() {});
+
+                var driveSimulation = Simulation.getInstance().configureSimulation(intake);
 
                 // Sim robot, instantiate physics sim IO implementations
                 drive = new Drive(
@@ -93,7 +95,6 @@ public class RobotContainer {
                     new VisionIOPhotonVisionSim(VisionConstants.camera0Name, VisionConstants.robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
                     new VisionIOPhotonVisionSim(VisionConstants.camera1Name, VisionConstants.robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
                 turret = new Turret(new TurretIOSim());
-                intake = new Intake(new IntakeIO() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIO() {});
                 

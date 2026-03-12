@@ -34,9 +34,11 @@ public interface IntakeIO {
     
     /** Run open loop at the specified voltage. */
     public default void setRollerVoltage(double volts) {}
-    public default void setDeployVoltage(double volts) {}
+    public default void setDeployVoltageL(double volts) {}
+    public default void setDeployVoltageR(double volts) {}
     
     public default void resetDeployEncoders() {}
+    /** Set the deploy position relative to when the deploy encoders were last reset. */
     public default void setDeployPosition(double position) {}
     public default void stopDeploy() {}
 }
