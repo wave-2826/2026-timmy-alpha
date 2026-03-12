@@ -12,10 +12,6 @@ import com.ctre.phoenix6.hardware.*;
 import com.ctre.phoenix6.signals.*;
 import com.ctre.phoenix6.swerve.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.*;
-import com.pathplanner.lib.config.ModuleConfig;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -212,23 +208,6 @@ public class DriveConstants {
         .map(SwerveModuleConfig::getTranslation)
         .toArray(Translation2d[]::new);
     
-    
-    public static final Supplier<RobotConfig> pathplannerConfig = () -> new RobotConfig(
-        robotMass, robotMomentOfInertia,
-        new ModuleConfig(
-            Meters.of(Drive.tuningResults.wheelRadiusResults.radiusMeters()),
-            linearFreeSpeed,
-            Drive.tuningResults.slipResults.wheelCOF(),
-            DCMotor.getKrakenX60Foc(1).withReduction(driveGearRatio),
-            Amps.of(Drive.tuningResults.slipResults.slipCurrentAmps()),
-            1
-        ),
-        moduleTranslations);
-
-    public static final PPHolonomicDriveController simHolonomicDriveController = new PPHolonomicDriveController(
-        new PIDConstants(13.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0));
-    public static final PPHolonomicDriveController realHolonomicDriveController = new PPHolonomicDriveController(
-        new PIDConstants(6.5, 0.0, 0.25), new PIDConstants(8.0, 1.0, 0.75));
 
     static final double odometryFrequency = CANBus.isNetworkFD() ? 250.0 : 100.0;
 
