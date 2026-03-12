@@ -17,7 +17,7 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
-import frc.robot.subsystems.turret.TurretIOReal;
+import frc.robot.subsystems.turret.TurretIOSpark;
 import frc.robot.util.Elastic;
 import frc.robot.util.SparkPIDConstants;
 import frc.robot.util.SparkUtil;
@@ -52,7 +52,7 @@ public class TurretTuning {
         // Run static initialization lol   
     }
 
-    TurretIOReal io;
+    TurretIOSpark io;
     CommandXboxController controller;
     private class Motor {
         SparkClosedLoopController controller;
@@ -68,7 +68,7 @@ public class TurretTuning {
     private Motor[] motors;
     private EventLoop triggerLoop = new EventLoop();
     
-    public TurretTuning(TurretIOReal io, CommandXboxController controller) {
+    public TurretTuning(TurretIOSpark io, CommandXboxController controller) {
         this.io = io;
         this.controller = controller;
         this.motors = new Motor[] {

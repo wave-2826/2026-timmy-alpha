@@ -70,6 +70,8 @@ public class DriveTuningCommands {
 
     /** A set of tuning results that we can load from and save to a JSON file. */
     public static class TuningResults {
+        // TODO: Defaults that make sense for sim so stuff doesn't break
+        
         public static record WheelRadiusTuningResults(double radiusMeters, double radiusInches) {}
         public static record FeedforwardTuningResults(double kS, double kV) {}
         public static record SlipTuningResults(

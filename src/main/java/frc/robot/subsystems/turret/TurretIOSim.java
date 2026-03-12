@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import frc.robot.util.simUtils.spark.SparkSimThatActuallyWorks;
 
-public class TurretIOSim extends TurretIOReal {
+public class TurretIOSim extends TurretIOSpark {
     private static int subticks = 5;
 
     // DC simulation motors

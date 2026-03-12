@@ -5,7 +5,6 @@ import com.revrobotics.spark.SparkBase.ControlType;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
 
@@ -14,7 +13,7 @@ import frc.robot.Constants;
  * instead of using the kCurrent control type; this is far worse and we ideally wouldn't use it, but
  * rev's current control PIDs are seemingly broken in some weird ways??
  */
-public class TurretIORealManualCurrent extends TurretIOReal {
+public class TurretIOSparkVoltage extends TurretIOSpark {
     private double manualVoltageCompensation(double voltage) {
         return voltage * 13.4 / RobotController.getBatteryVoltage();
     }
@@ -29,7 +28,7 @@ public class TurretIORealManualCurrent extends TurretIOReal {
     private PIDController azimuthCurrentPID = new PIDController(0, 0, 0, 1. / fastClosedLoopRate);
     private PIDController hoodCurrentPID = new PIDController(0, 0, 0, 1. / fastClosedLoopRate);
 
-    public TurretIORealManualCurrent() {
+    public TurretIOSparkVoltage() {
         super();
 
         TurretConstants.flywheelMotorPID.configureController(flywheelCurrentPID, ClosedLoopSlot.kSlot1);

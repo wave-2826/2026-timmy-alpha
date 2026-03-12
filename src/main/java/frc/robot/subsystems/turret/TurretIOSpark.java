@@ -21,7 +21,7 @@ import static frc.robot.util.SparkUtil.tryUntilOk;
 import static frc.robot.util.SparkUtil.checkFault;
 import static frc.robot.util.SparkUtil.getIfOk;
 
-public class TurretIOReal implements TurretIO {
+public class TurretIOSpark implements TurretIO {
     private static final boolean DISABLE_AZIMUTH_ABS_ENCODER = true;
 
     public final SparkFlex topFlywheelMotor    = new SparkFlex(topFlywheelCanID, MotorType.kBrushless);
@@ -39,7 +39,7 @@ public class TurretIOReal implements TurretIO {
     protected final SparkAbsoluteEncoder azimuthAbsEncoder = azimuthMotor.getAbsoluteEncoder();
     protected final RelativeEncoder hoodEncoder = hoodMotor.getEncoder();
 
-    public TurretIOReal() {
+    public TurretIOSpark() {
         configureAndReset();
     }
 
@@ -133,22 +133,20 @@ public class TurretIOReal implements TurretIO {
         }
 
         var azimuthCurrent = getIfOk(azimuthMotor, azimuthMotor::getOutputCurrent, 0);
-        var azimuthApplied = getIfOk(azimuthMotor, azimuthMotor::getAppliedOutput, 0);
         inputs.azimuth = new TurretIOInputs.AzimuthMotorInputs(
             !checkFault(),
-            azimuthAngle, azimuthInternalAngle,
-            azimuthVelocity, azimuthInternalVelocity,
-            azimuthCurrent, azimuthApplied
+            azimuthInternalAngle, azimuthInternalVelocity,
+            azimuthCurrent
         );
+        inputs.azimuthEncoder = new TurretIOInputs.AzimuthEncoderInputs(true, azimuthAngle, azimuthVelocity);
 
         var hoodAngle = getIfOk(hoodMotor, hoodEncoder::getPosition, 0);
         var hoodVelocity = getIfOk(hoodMotor, hoodEncoder::getVelocity, 0);
         var hoodCurrent = getIfOk(hoodMotor, hoodMotor::getOutputCurrent, 0);
-        var hoodApplied = getIfOk(hoodMotor, hoodMotor::getAppliedOutput, 0);
         inputs.hood = new TurretIOInputs.HoodMotorInputs(
             !checkFault(),
             hoodAngle, hoodVelocity,
-            hoodCurrent, hoodApplied
+            hoodCurrent
         );
     }
 

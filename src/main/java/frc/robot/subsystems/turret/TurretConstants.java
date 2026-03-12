@@ -1,10 +1,12 @@
 package frc.robot.subsystems.turret;
 
+import com.ctre.phoenix6.CANBus;
 import com.revrobotics.spark.ClosedLoopSlot;
 
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.SparkPIDConstants;
 import frc.robot.util.tunables.TunableSimpleMotorFF;
 import frc.robot.util.tunables.TunableSparkPID;
@@ -15,6 +17,9 @@ public class TurretConstants {
     public static final int bottomFlywheelCanID = 52;
     public static final int azimuthCanID = 53;
     public static final int hoodCanID = 54;
+    public static final int azimuthCancoderID = 55;
+
+    public static final CANBus CANBus = DriveConstants.CANBus;
 
     // Reductions; all are a ratio between output and input.
     // All stages have the same 31:200 reduction, but the hood and azimuth are further reduced by the bevel and planetary stages.
@@ -103,8 +108,8 @@ public class TurretConstants {
     public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * aziMotorToRingReduction * 0.8;
 
     // Current limits
-    public static final int flywheelCurrentLimit = 67; // amps each
-    public static final int azimuthCurrentLimit = 50; // amps
+    public static final int flywheelCurrentLimit = 70; // amps each
+    public static final int azimuthCurrentLimit = 60; // amps
     public static final int hoodCurrentLimit = 50; // amps
 
     // PIDs
