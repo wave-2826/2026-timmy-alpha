@@ -14,7 +14,6 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
@@ -48,25 +47,23 @@ public class Drive extends SubsystemBase {
     private final Alert gyroDisconnectedAlert = new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
     public Drive(
-            GyroIO gyroIO,
-            ModuleIO flModuleIO,
-            ModuleIO frModuleIO,
-            ModuleIO blModuleIO,
-            ModuleIO brModuleIO) {
+        GyroIO gyroIO,
+        ModuleIO flModuleIO,
+        ModuleIO frModuleIO,
+        ModuleIO blModuleIO,
+        ModuleIO brModuleIO
+    ) {
         this.gyroIO = gyroIO;
-        modules[0] = new Module(flModuleIO, "FrontLeft");
-        modules[1] = new Module(frModuleIO, "FrontRight");
-        modules[2] = new Module(blModuleIO, "BackLeft");
-        modules[3] = new Module(brModuleIO, "BackRight");
+        modules[0] = new Module(flModuleIO, "FrontLeft",  DriveConstants.moduleTranslations[0]);
+        modules[1] = new Module(frModuleIO, "FrontRight", DriveConstants.moduleTranslations[1]);
+        modules[2] = new Module(blModuleIO, "BackLeft",   DriveConstants.moduleTranslations[2]);
+        modules[3] = new Module(brModuleIO, "BackRight",  DriveConstants.moduleTranslations[3]);
 
         // Usage reporting for swerve template
         HAL.report(tResourceType.kResourceType_RobotDrive, tInstances.kRobotDriveSwerve_AdvantageKit);
 
         // Start odometry thread
         PhoenixOdometryThread.getInstance().start();
-
-        // Configure AutoBuilder for PathPlanner
-        var robotState = RobotState.getInstance();
     }
 
     @Override
@@ -176,7 +173,10 @@ public class Drive extends SubsystemBase {
     public void stopWithX() {
         Rotation2d[] headings = new Rotation2d[4];
         for(int i = 0; i < 4; i++) {
-            headings[i] = modules[i].spinAngle.plus(Rotation2d.kCW_90deg);
+            // Snap the spin angle to the nearest 90 degrees (offset by 45 deg) and add 90 to get the X pattern
+            double angle = modules[i].spinAngle.getRadians();
+            double nearest90 = Math.round((angle - Math.PI / 4) / (Math.PI / 2)) * (Math.PI / 2) + Math.PI / 4;
+            headings[i] = Rotation2d.fromRadians(nearest90 + Math.PI / 2);
         }
         robotState.kinematics.resetHeadings(headings);
         stop();
@@ -237,8 +237,8 @@ public class Drive extends SubsystemBase {
         for(int i = 0; i < 4; i++) modules[i].setSlipMeasurementCurrentLimit(limit);
     }
     /** Returns the drive motor current draw of a particular module in amps. */
-    public double getSlipMeasurementCurrent(int module) {
-        return modules[module].getSlipMeasurementCurrent();
+    public double getCharacterizationCurrent(int module) {
+        return modules[module].getCharacterizationCurrent();
     }
     /** Runs the modules in a circle with a constant current for MOI characterization */
     public void runMOICharacterization(double current) {

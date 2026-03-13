@@ -170,12 +170,12 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
     }
 
     @Override
-    public void setDriveOpenLoop(double output) {
+    public void setDriveOpenLoopCurrent(double output) {
         driveTalon.setControl(torqueCurrentRequest.withOutput(output));
     }
 
     @Override
-    public void setTurnOpenLoop(double output) {
+    public void setTurnOpenLoopCurrent(double output) {
         turnTalon.setControl(torqueCurrentRequest.withOutput(output));
     }
 

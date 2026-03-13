@@ -60,7 +60,9 @@ public class DriveTuningCommands {
     private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
 
     public static final double MOI_START_DELAY = 1.0; // Secs
-    public static final double MOI_CURRENT = 5.0; // Amps
+    public static final double MOI_STATIC_CURRENT_ROTATION_SPEED = Units.degreesToRadians(30); // Rad/Sec
+    public static final double MOI_STATIC_CURRENT_COLLECTION_TIME = 3.0; // Secs
+    public static final double MOI_CURRENT = 15.0; // Amps
     public static final double MOI_MAX_YAW_VEL = Units.degreesToRadians(360); // Rad/Sec
 
     /** The path to the JSON file where we save our tuning results. */
@@ -149,7 +151,7 @@ public class DriveTuningCommands {
             return builder.toString();
         }
 
-        private ArrayList<Runnable> onChangeCallbacks = new ArrayList<>();
+        private transient ArrayList<Runnable> onChangeCallbacks = new ArrayList<>();
 
         public void save() {
             var gson = builder.create();
@@ -497,7 +499,7 @@ public class DriveTuningCommands {
                 if(reverseDirection) setpoint = -setpoint;
                 drive.runCharacterization(module, setpoint);
 
-                currentSamples.add(drive.getSlipMeasurementCurrent(module));
+                currentSamples.add(drive.getCharacterizationCurrent(module));
             }).until(() -> {
                 double distanceTraveled = Math.abs(drive.getModuleCharacterizationPosiiton(module) - startPosition.value);
                 return distanceTraveled > SLIP_TRAVEL_AMOUNT;
@@ -517,38 +519,52 @@ public class DriveTuningCommands {
     /** Characterizes the robot MOI. Depends on wheel radius tuning. */
     public static Command momentOfInertiaCharacterization(Drive drive) {
         List<Double> gyroAccelerations = new LinkedList<>();
+        List<Double> staticCurrentDraws = new ArrayList<>();
         return Commands.sequence(
             Commands.run(() -> {
                 drive.runMOICharacterization(0.0);
             }).withTimeout(MOI_START_DELAY),
 
+            // Briefly turn slowly in place to collect the static current draw
+            Commands.run(() -> {
+                drive.runVelocity(new ChassisSpeeds(0.0, 0.0, MOI_STATIC_CURRENT_ROTATION_SPEED), false);
+                double averageCurrent = 0.0;
+                for(int i = 0; i < 4; i++) {
+                    averageCurrent += drive.getCharacterizationCurrent(i) / 4.0;
+                }
+                staticCurrentDraws.add(averageCurrent);
+            }).withTimeout(MOI_STATIC_CURRENT_COLLECTION_TIME),
+
             Commands.run(() -> {
                 drive.runMOICharacterization(MOI_CURRENT);
                 gyroAccelerations.add(Math.abs(drive.getGyroAcceleration()));
-            }).until(() -> Math.abs(drive.getGyroVelocity()) > MOI_MAX_YAW_VEL),
+            }).until(() -> Math.abs(drive.getGyroVelocity()) > MOI_MAX_YAW_VEL)
+        ).finallyDo(() -> {
+            drive.runMOICharacterization(0.0);
 
-            Commands.runOnce(() -> {
-                drive.runMOICharacterization(0.0);
+            double averageGyroAcceleration = 0.0;
+            for(double sample : gyroAccelerations) {
+                averageGyroAcceleration += sample / gyroAccelerations.size();
+            }
 
-                double averageGyroAcceleration = 0.0;
-                for(double sample : gyroAccelerations) {
-                    averageGyroAcceleration += sample / gyroAccelerations.size();
-                }
+            // Get the median static current draw
+            staticCurrentDraws.sort(Double::compare);
+            double medianStaticCurrent = staticCurrentDraws.get(staticCurrentDraws.size() / 2);
+            double effectiveCurrent = MOI_CURRENT - medianStaticCurrent;
 
-                double wheelTorque = DriveConstants.driveGearRatio * MOI_CURRENT * DCMotor.getKrakenX60Foc(1).KtNMPerAmp;
-                double wheelForceAtGround = wheelTorque / Drive.tuningResults.wheelRadiusResults.radiusMeters();
-                double torqueOnRobot = wheelForceAtGround * DriveConstants.driveBaseRadius * 4;
-                double moi = torqueOnRobot / averageGyroAcceleration;
+            double wheelTorque = DriveConstants.driveGearRatio * effectiveCurrent * DCMotor.getKrakenX60Foc(1).KtNMPerAmp;
+            double wheelForceAtGround = wheelTorque / Drive.tuningResults.wheelRadiusResults.radiusMeters();
+            double torqueOnRobot = wheelForceAtGround * DriveConstants.driveBaseRadius * 4;
+            double moi = torqueOnRobot / averageGyroAcceleration;
 
-                NumberFormat formatter = new DecimalFormat("#0.000");
-                System.out.println("********** Drive MOI Characterization Results **********");
-                System.out.println("\tAverage gyro acceleration: " + formatter.format(averageGyroAcceleration) + " radians/s^2");
-                System.out.println("\tEstimated MOI: " + formatter.format(moi) + " kg*m^2");
-                System.out.flush();
+            NumberFormat formatter = new DecimalFormat("#0.000");
+            System.out.println("********** Drive MOI Characterization Results **********");
+            System.out.println("\tAverage gyro acceleration: " + formatter.format(averageGyroAcceleration) + " radians/s^2");
+            System.out.println("\tEstimated MOI: " + formatter.format(moi) + " kg*m^2");
+            System.out.flush();
 
-                Drive.tuningResults.moiResults = new TuningResults.MOIResults(moi);
-            })
-        );
+            Drive.tuningResults.moiResults = new TuningResults.MOIResults(moi);
+        });
     }
 
     /** Configures the SysId routine if it hasn't been configured yet. */

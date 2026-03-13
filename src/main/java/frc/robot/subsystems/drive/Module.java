@@ -1,6 +1,7 @@
 package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
@@ -10,7 +11,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 public class Module {
     private static final LoggedTunableNumber driveP = new LoggedTunableNumber("Drive/DriveP");
@@ -21,7 +21,7 @@ public class Module {
     private static final LoggedTunableNumber turnP = new LoggedTunableNumber("Drive/TurnP");
     private static final LoggedTunableNumber turnD = new LoggedTunableNumber("Drive/TurnD");
 
-    private static final LoggedNetworkBoolean turnOffDriveMotors = new LoggedNetworkBoolean("Drive/TurnOffDriveMotors", false);
+    private static final LoggedTunableNumber speedScalar = new LoggedTunableNumber("Drive/SpeedScalar", 1.0);
 
     static {
         driveP.initDefault(DriveConstants.driveGains.kP);
@@ -43,21 +43,17 @@ public class Module {
 
     /** The angle at which this module will turn the robot clockwise. */
     public final Rotation2d spinAngle;
+    public final Rotation2d angleToCenter;
 
-    public Module(ModuleIO io, String name) {
+    public Module(ModuleIO io, String name, Translation2d translation) {
         this.name = name;
         this.io = io;
         driveDisconnectedAlert = new Alert("Disconnected drive motor on module " + name + ".", AlertType.kError);
         turnDisconnectedAlert = new Alert("Disconnected turn motor on module " + name + ".", AlertType.kError);
         turnEncoderDisconnectedAlert = new Alert("Disconnected turn encoder on module " + name + ".", AlertType.kError);
 
-        this.spinAngle = Rotation2d.fromDegrees(switch(name) {
-            case "FrontLeft" -> 135.0;
-            case "FrontRight" -> 45.0;
-            case "BackLeft" -> -135.0;
-            case "BackRight" -> -45.0;
-            default -> 0.0;
-        });
+        this.angleToCenter = new Rotation2d(translation.getY(), translation.getX());
+        this.spinAngle = angleToCenter.plus(Rotation2d.kCW_90deg);
 
         // Reset tunables' hasChanged since we'll configure anyway
         driveP.hasChanged(hashCode());
@@ -130,33 +126,29 @@ public class Module {
         state.cosineScale(inputs.turnAbsolutePosition);
 
         // Apply setpoints
-        if(turnOffDriveMotors.get()) {
-            io.setDriveVelocity(0.0, 0.0);
-        } else {
-            io.setDriveVelocity(
-                state.speedMetersPerSecond / Drive.tuningResults.wheelRadiusResults.radiusMeters(),
-                accelerationMps2 / Drive.tuningResults.wheelRadiusResults.radiusMeters()
-            );
-        }
+        io.setDriveVelocity(
+            state.speedMetersPerSecond / Drive.tuningResults.wheelRadiusResults.radiusMeters() * speedScalar.get(),
+            accelerationMps2 / Drive.tuningResults.wheelRadiusResults.radiusMeters()
+        );
         io.setTurnPosition(state.angle);
     }
 
     /** Runs the module with the specified output while controlling to zero degrees. */
     public void runCharacterization(double output) {
-        io.setDriveOpenLoop(output);
+        io.setDriveOpenLoopCurrent(output);
         io.setTurnPosition(new Rotation2d());
     }
 
     /** Characterize robot angular motion. */
     public void runAngularCharacterization(double output) {
-        io.setDriveOpenLoop(output);
+        io.setDriveOpenLoopCurrent(output);
         io.setTurnPosition(spinAngle);
     }
 
     /** Disables all outputs to motors. */
     public void stop() {
-        io.setDriveOpenLoop(0.0);
-        io.setTurnOpenLoop(0.0);
+        io.setDriveOpenLoopCurrent(0.0);
+        io.setTurnOpenLoopCurrent(0.0);
     }
 
     /** Returns the current turn angle of the module. */
@@ -214,7 +206,7 @@ public class Module {
         io.setSlipMeasurementCurrentLimit(limit);
     }
     /** Returns the drive motor current draw in amps. */
-    public double getSlipMeasurementCurrent() {
+    public double getCharacterizationCurrent() {
         return inputs.driveCurrentAmps;
     }
 }
