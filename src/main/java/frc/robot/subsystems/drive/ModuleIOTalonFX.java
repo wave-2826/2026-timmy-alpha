@@ -80,18 +80,20 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         drivePosition = driveTalon.getPosition();
         driveVelocity = driveTalon.getVelocity();
         driveAppliedVolts = driveTalon.getMotorVoltage();
-        driveCurrent = driveTalon.getSupplyCurrent();
+        driveCurrent = driveTalon.getStatorCurrent();
 
         // Create turn status signals
         turnAbsolutePosition = cancoder.getAbsolutePosition();
         turnVelocity = turnTalon.getVelocity();
         turnAppliedVolts = turnTalon.getMotorVoltage();
-        turnCurrent = turnTalon.getSupplyCurrent();
+        turnCurrent = turnTalon.getStatorCurrent();
 
         // Configure periodic frames
         BaseStatusSignal.setUpdateFrequencyForAll(DriveConstants.odometryFrequency, turnAbsolutePosition, drivePosition);
-        BaseStatusSignal.setUpdateFrequencyForAll(
-                50.0, driveVelocity, driveAppliedVolts, driveCurrent, turnVelocity, turnAppliedVolts, turnCurrent);
+        BaseStatusSignal.setUpdateFrequencyForAll(50.0,
+            driveVelocity, driveAppliedVolts, driveCurrent,
+            turnVelocity, turnAppliedVolts, turnCurrent
+        );
         ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon);
     }
 
@@ -171,8 +173,8 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
     }
 
     @Override
-    public void setDriveOpenLoopCurrent(double output) {
-        driveTalon.setControl(torqueCurrentRequest.withOutput(output));
+    public void setDriveOpenLoopCurrent(double current) {
+        driveTalon.setControl(torqueCurrentRequest.withOutput(current));
     }
 
     @Override

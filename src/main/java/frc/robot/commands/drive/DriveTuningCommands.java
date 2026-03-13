@@ -455,7 +455,7 @@ public class DriveTuningCommands {
                 }
 
                 // Estimate the wheel's coefficient of friction
-                double motorTorque = averageSlipCurrent * DCMotor.getKrakenX60Foc(1).KtNMPerAmp;
+                double motorTorque = averageSlipCurrent * DriveConstants.driveMotorModel.KtNMPerAmp;
                 double totalTorqueNm = 4 * DriveConstants.driveGearRatio * motorTorque;
                 double robotMassN = DriveConstants.robotMass.in(Kilogram) * 9.81;
                 double wheelCOF = totalTorqueNm / (robotMassN * Drive.tuningResults.wheelRadiusResults.radiusMeters());
@@ -559,7 +559,7 @@ public class DriveTuningCommands {
             double medianStaticCurrent = staticCurrentDraws.get(staticCurrentDraws.size() / 2);
             double effectiveCurrent = MOI_CURRENT - medianStaticCurrent;
 
-            double wheelTorque = DriveConstants.driveGearRatio * effectiveCurrent * DCMotor.getKrakenX60Foc(1).KtNMPerAmp;
+            double wheelTorque = DriveConstants.driveGearRatio * effectiveCurrent * DriveConstants.driveMotorModel.KtNMPerAmp;
             double wheelForceAtGround = wheelTorque / Drive.tuningResults.wheelRadiusResults.radiusMeters();
             double torqueOnRobot = wheelForceAtGround * DriveConstants.driveBaseRadius * 4;
             double moi = torqueOnRobot / averageGyroAcceleration;

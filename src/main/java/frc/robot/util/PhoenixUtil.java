@@ -5,21 +5,12 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.configs.ParentConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
-import com.ctre.phoenix6.sim.CANcoderSimState;
-import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.util.Elastic.Notification;
 import frc.robot.util.Elastic.Notification.NotificationLevel;
-import frc.robot.util.simUtils.SimulatedBattery;
-import frc.robot.util.simUtils.SimulatedMotorController;
 import frc.robot.util.simUtils.Simulation;
 
 import java.util.function.Supplier;
@@ -35,52 +26,6 @@ public final class PhoenixUtil {
 
         Elastic.sendNotification(new Notification(NotificationLevel.ERROR, "Phoenix tryUntilOk failed", "Likely failed to configure a controller!"));
         return lastError;
-    }
-
-    public static class TalonFXMotorControllerSim implements SimulatedMotorController {
-        private static int instances = 0;
-        public final int id;
-
-        private final TalonFXSimState talonFXSimState;
-
-        public TalonFXMotorControllerSim(TalonFX talonFX) {
-            this.id = instances++;
-
-            this.talonFXSimState = talonFX.getSimState();
-        }
-
-        @Override
-        public Voltage updateControlSignal(
-                Angle mechanismAngle,
-                AngularVelocity mechanismVelocity,
-                Angle encoderAngle,
-                AngularVelocity encoderVelocity) {
-            talonFXSimState.setRawRotorPosition(encoderAngle);
-            talonFXSimState.setRotorVelocity(encoderVelocity);
-            talonFXSimState.setSupplyVoltage(SimulatedBattery.getBatteryVoltage());
-            return talonFXSimState.getMotorVoltageMeasure();
-        }
-    }
-
-    public static class TalonFXMotorControllerWithRemoteCancoderSim extends TalonFXMotorControllerSim {
-        private final CANcoderSimState remoteCancoderSimState;
-
-        public TalonFXMotorControllerWithRemoteCancoderSim(TalonFX talonFX, CANcoder cancoder) {
-            super(talonFX);
-            this.remoteCancoderSimState = cancoder.getSimState();
-        }
-
-        @Override
-        public Voltage updateControlSignal(
-                Angle mechanismAngle,
-                AngularVelocity mechanismVelocity,
-                Angle encoderAngle,
-                AngularVelocity encoderVelocity) {
-            remoteCancoderSimState.setRawPosition(mechanismAngle);
-            remoteCancoderSimState.setVelocity(mechanismVelocity);
-
-            return super.updateControlSignal(mechanismAngle, mechanismVelocity, encoderAngle, encoderVelocity);
-        }
     }
 
     public static double[] getSimulationOdometryTimeStamps() {

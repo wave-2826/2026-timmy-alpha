@@ -240,7 +240,7 @@ public class Drive extends SubsystemBase {
     public void setSlipMeasurementCurrentLimit(Current limit) {
         for(int i = 0; i < 4; i++) modules[i].setSlipMeasurementCurrentLimit(limit);
     }
-    /** Returns the drive motor **supply** current draw of a particular module in amps. */
+    /** Returns the drive motor **stator** current draw of a particular module in amps. */
     public double getCharacterizationCurrent(int module) {
         return modules[module].getCharacterizationCurrent();
     }

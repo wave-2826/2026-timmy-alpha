@@ -35,10 +35,6 @@ public class SimulatedBattery {
         electricalAppliances.add(customElectricalAppliances);
     }
 
-    public static void addMotor(SimulatedMotor motor) {
-        addElectricalAppliances(motor::getSupplyCurrent);
-    }
-
     public static void simulationSubTick() {
         double totalCurrentAmps = getTotalCurrentDrawn().in(Amps);
         totalCurrentAmps = currentFilter.calculate(totalCurrentAmps);

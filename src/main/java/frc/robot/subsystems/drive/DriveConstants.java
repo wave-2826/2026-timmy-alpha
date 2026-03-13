@@ -17,6 +17,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.kinematicConstraints.KinematicConstraints;
@@ -177,6 +178,9 @@ public class DriveConstants {
     // Simulated voltage necessary to overcome friction
     public static final Voltage steerFrictionVoltage = Volts.of(0.2);
     public static final Voltage driveFrictionVoltage = Volts.of(0.2);
+    
+    public static final DCMotor driveMotorModel = DCMotor.getKrakenX60Foc(1);
+    public static final DCMotor turnMotorModel = DCMotor.getKrakenX60Foc(1);
     
     public static final KinematicConstraints kinematicConstraints = new KinematicConstraints(
         MetersPerSecondPerSecond.of(100) /* measuered "magic value" - max linear acceleration */,
