@@ -17,7 +17,6 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.kinematicConstraints.KinematicConstraints;

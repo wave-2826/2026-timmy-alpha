@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 public class ModuleIOSim implements ModuleIO {
     private static final DCMotor driveMotorModel = DCMotor.getKrakenX60Foc(1);
     private static final DCMotor turnMotorModel = DCMotor.getKrakenX60Foc(1);
-    
+
     private final DCMotorSim driveSim = new DCMotorSim(
         LinearSystemId.createDCMotorSystem(driveMotorModel, 0.025, DriveConstants.driveGearRatio),
         driveMotorModel
@@ -25,9 +25,23 @@ public class ModuleIOSim implements ModuleIO {
     private boolean driveClosedLoop = false;
     private boolean turnClosedLoop = false;
 
-    private PIDController driveController = new PIDController(0, 0, 0, 0.02);
-    private SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(0, 0, 0);
-    private PIDController turnController = new PIDController(0, 0, 0, 0.02);
+    private PIDController driveController = new PIDController(
+        DriveConstants.driveGains.kP,
+        DriveConstants.driveGains.kI,
+        DriveConstants.driveGains.kD,
+        0.02
+    );
+    private SimpleMotorFeedforward driveFeedforward = new SimpleMotorFeedforward(
+        Drive.tuningResults.feedforwardResults.kS(),
+        Drive.tuningResults.feedforwardResults.kV(),
+        DriveConstants.driveGains.kA
+    );
+    private PIDController turnController = new PIDController(
+        DriveConstants.steerGains.kP,
+        DriveConstants.steerGains.kI,
+        DriveConstants.steerGains.kD,
+        0.02
+    );
     
     private double driveFFVolts = 0;
     private double driveAppliedVolts = 0.0;
@@ -36,8 +50,6 @@ public class ModuleIOSim implements ModuleIO {
     public ModuleIOSim(int index) {
         // Enable wrapping for turn PID
         turnController.enableContinuousInput(-Math.PI, Math.PI);
-
-        // DriveConstants.
         
         // Set up turn sim (depends on index for correct reduction)
         turnSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(
@@ -80,15 +92,15 @@ public class ModuleIOSim implements ModuleIO {
     }
     
     @Override
-    public void setDriveOpenLoopCurrent(double output) {
+    public void setDriveOpenLoopCurrent(double current) {
         driveClosedLoop = false;
-        driveAppliedVolts = output;
+        driveAppliedVolts = current;
     }
 
     @Override
-    public void setTurnOpenLoopCurrent(double output) {
+    public void setTurnOpenLoopCurrent(double current) {
         turnClosedLoop = false;
-        turnAppliedVolts = output;
+        turnAppliedVolts = current;
     }
 
     @Override

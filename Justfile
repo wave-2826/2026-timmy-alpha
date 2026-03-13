@@ -1,5 +1,6 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 set ignore-comments
+set dotenv-load := true
 
 ConstantsFile := "src/main/java/frc/robot/Constants.java"
 
@@ -15,8 +16,8 @@ simulate:
     ls -t hs_*.log 2>/dev/null | tail -n +2 | xargs -r rm --
     sed -i 's/simMode = Mode.REPLAY;/simMode = Mode.SIM;/g' {{ConstantsFile}}
     ./gradlew simulateJava  \
-        -Porg.gradle.java.installations.paths={{home_dir()}}/.jbr-jcef-17 \
-        -Porg.gradle.java.installations.auto-detect=false \
+        -Porg.gradle.java.installations.paths={{env('JAVA_PATH', home_dir() / '.jbr-jcef-17')}} \
+        -Porg.gradle.java.installations.auto-detect={{env('JAVA_AUTODETECT', 'false')}} \
         -Porg.gradle.java.installations.auto-download=false
 
 build-watch:

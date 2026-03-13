@@ -86,9 +86,15 @@ public class DriveTuningCommands {
         public static record ModuleZeroingResults(double[] moduleOffsetsRadians) {}
         public static record MOIResults(double moiKgM2) {}
 
-        public WheelRadiusTuningResults wheelRadiusResults = new WheelRadiusTuningResults(0.0, 0.0);
-        public FeedforwardTuningResults feedforwardResults = new FeedforwardTuningResults(0.0, 0.0);
-        public SlipTuningResults slipResults = new SlipTuningResults(0.0, 0.0, 0.0, new double[4], new double[4]);
+        public WheelRadiusTuningResults wheelRadiusResults = new WheelRadiusTuningResults(0.0507746, 1.999);
+        public FeedforwardTuningResults feedforwardResults = new FeedforwardTuningResults(3.68789, 1.42702);
+        public SlipTuningResults slipResults = new SlipTuningResults(
+            43.055,
+            43.28841825,
+            0.9670595939443565,
+            new double[] { 69.3, 49.9, 20.240000000000002, 32.78 },
+            new double[] { 69.62687700000001, 50.07664199999999, 20.438380000000006, 33.011774 }
+        );
         public ModuleZeroingResults moduleZeroingResults = new ModuleZeroingResults(new double[4]);
         public MOIResults moiResults = new MOIResults(0.0);
 
