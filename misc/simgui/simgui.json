@@ -1,0 +1,108 @@
+{
+  "HALProvider": {
+    "Other Devices": {
+      "Custom Spark Sim top flywheel (51)": {
+        "header": {
+          "open": true
+        }
+      },
+      "SPARK Flex [53]": {
+        "header": {
+          "open": true
+        }
+      },
+      "Talon FX (v6)[10]/Fwd Limit": {
+        "header": {
+          "open": true
+        }
+      },
+      "Talon FX (v6)[20]/Rotor Sensor": {
+        "header": {
+          "open": true
+        }
+      }
+    }
+  },
+  "NTProvider": {
+    "types": {
+      "/AdvantageKit/RealOutputs/Alerts": "Alerts",
+      "/AdvantageKit/RealOutputs/Choreo Alerts": "Alerts",
+      "/AdvantageKit/RealOutputs/PathPlanner": "Alerts",
+      "/AdvantageKit/RealOutputs/PhotonAlerts": "Alerts",
+      "/AdvantageKit/RealOutputs/Turret/Mechanism": "Mechanism2d",
+      "/AdvantageKit/RealOutputs/Turret/Mechanism/Azimuth": "Mechanism2d",
+      "/AdvantageKit/RealOutputs/Turret/Mechanism/Hood": "Mechanism2d",
+      "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Alerts": "Alerts",
+      "/SmartDashboard/Auto Choices": "String Chooser",
+      "/SmartDashboard/Choreo Alerts": "Alerts",
+      "/SmartDashboard/PathPlanner": "Alerts",
+      "/SmartDashboard/PhotonAlerts": "Alerts",
+      "/SmartDashboard/Test Command": "String Chooser",
+      "/SmartDashboard/Turret/ControlMode": "String Chooser",
+      "/SmartDashboard/VisionSystemSim-main/Sim Field": "Field2d"
+    },
+    "windows": {
+      "/SmartDashboard/Alerts": {
+        "window": {
+          "visible": true
+        }
+      },
+      "/SmartDashboard/Test Command": {
+        "window": {
+          "visible": true
+        }
+      }
+    }
+  },
+  "NetworkTables": {
+    "Persistent Values": {
+      "open": false
+    },
+    "transitory": {
+      "SmartDashboard": {
+        "open": true
+      }
+    }
+  },
+  "Plot": {
+    "Plot <0>": {
+      "plots": [
+        {
+          "axis": [
+            {
+              "autoFit": true
+            }
+          ],
+          "backgroundColor": [
+            0.0,
+            0.0,
+            0.0,
+            0.8500000238418579
+          ],
+          "height": 538,
+          "series": [
+            {
+              "color": [
+                0.2980392277240753,
+                0.44705885648727417,
+                0.6901960968971252,
+                1.0
+              ],
+              "id": "Custom Spark Sim azimuth (53)-Setpoint"
+            },
+            {
+              "color": [
+                0.8666667342185974,
+                0.5176470875740051,
+                0.32156863808631897,
+                1.0
+              ],
+              "id": "Custom Spark Sim azimuth (53)-Motor Current"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

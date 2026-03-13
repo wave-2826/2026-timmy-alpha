@@ -35,7 +35,7 @@ public class AutoCommands {
         LEFT_SWEEP_OUTPOST,
     };
     
-    public static AutoRoutine runAuto(AutoPaths path, RobotContainer rc) {
+    public static Command runAuto(AutoPaths path, RobotContainer rc) {
         switch (path) {
             case RIGHT_SWIPE_OUTPOST:
             case RIGHT_SWIPE_CLIMB_RIGHT:
@@ -49,7 +49,7 @@ public class AutoCommands {
             case LEFT_SWEEP_CLIMB_LEFT:
             case LEFT_SWEEP_OUTPOST:
         }
-        return null;
+        return Commands.none();
     }
     public static Command resetOdom(boolean isRightSide, Drive drive) {
         final Pose2d defaultpose;

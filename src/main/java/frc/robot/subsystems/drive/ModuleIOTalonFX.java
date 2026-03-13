@@ -103,8 +103,8 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         driveConfig.Slot0 = constants.DriveMotorGains;
         driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = constants.SlipCurrent;
         driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -constants.SlipCurrent;
-        driveConfig.CurrentLimits.SupplyCurrentLimit = constants.SlipCurrent;
-        driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        driveConfig.CurrentLimits.StatorCurrentLimit = constants.SlipCurrent;
+        driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         driveConfig.MotorOutput.Inverted = constants.DriveMotorInverted
                 ? InvertedValue.Clockwise_Positive
                 : InvertedValue.CounterClockwise_Positive;
@@ -226,10 +226,8 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         else {
             var config = new TalonFXConfiguration();
             config.CurrentLimits
-                // .withStatorCurrentLimit(current).withStatorCurrentLimitEnable(true)
-                .withStatorCurrentLimitEnable(false)
-                .withSupplyCurrentLimit(current).withSupplyCurrentLimitEnable(true)
-                .withSupplyCurrentLowerTime(0);
+                .withStatorCurrentLimit(current).withStatorCurrentLimitEnable(true);
+                // .withSupplyCurrentLimit(current).withSupplyCurrentLimitEnable(true)
             config.TorqueCurrent
                 .withPeakForwardTorqueCurrent(current).withPeakReverseTorqueCurrent(current.unaryMinus());
             

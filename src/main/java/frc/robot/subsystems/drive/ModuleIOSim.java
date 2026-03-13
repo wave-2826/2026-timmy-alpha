@@ -1,5 +1,6 @@
 package frc.robot.subsystems.drive;
 
+import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -17,31 +18,30 @@ public class ModuleIOSim extends ModuleIOTalonFX {
 
     private final TalonFXSimState driveSimState = driveTalon.getSimState();
     private final TalonFXSimState turnSimState = turnTalon.getSimState();
+    private final CANcoderSimState cancoderSimState = cancoder.getSimState();
 
     private final DCMotorSim driveSim = new DCMotorSim(
         LinearSystemId.createDCMotorSystem(DriveConstants.driveMotorModel, 0.025, DriveConstants.driveGearRatio),
         DriveConstants.driveMotorModel
     );
-    private final DCMotorSim turnSim;
+    private final DCMotorSim turnSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(
+            DriveConstants.turnMotorModel,
+            0.004,
+            DriveConstants.steerGearRatio
+        ), DriveConstants.turnMotorModel);
     
     public ModuleIOSim(SwerveModuleConfig config) {
         super(config);
 
         driveSimState.setMotorType(TalonFXSimState.MotorType.KrakenX60);
         turnSimState.setMotorType(TalonFXSimState.MotorType.KrakenX60);
-
-        // Set up turn sim (depends on index for correct reduction)
-        turnSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(
-            DriveConstants.turnMotorModel,
-            0.004,
-            DriveConstants.steerGearRatio
-        ), DriveConstants.turnMotorModel);
     }
     
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
         driveSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
         turnSimState.setSupplyVoltage(RobotController.getBatteryVoltage());
+        cancoderSimState.setSupplyVoltage(RobotController.getBatteryVoltage()); // Not sure why it needs to know but...
         
         var driveMotorVoltage = driveSimState.getMotorVoltage();
         var turnMotorVoltage = turnSimState.getMotorVoltage();
@@ -53,11 +53,14 @@ public class ModuleIOSim extends ModuleIOTalonFX {
         driveSim.update(0.02);
         turnSim.update(0.02);
 
-        driveSimState.setRawRotorPosition(driveSim.getAngularPositionRad() * DriveConstants.driveGearRatio);
-        driveSimState.setRotorVelocity(driveSim.getAngularVelocityRadPerSec() * DriveConstants.driveGearRatio);
+        driveSimState.setRawRotorPosition(driveSim.getAngularPositionRad());
+        driveSimState.setRotorVelocity(driveSim.getAngularVelocityRadPerSec());
 
-        turnSimState.setRawRotorPosition(turnSim.getAngularPositionRad() * DriveConstants.steerGearRatio);
-        turnSimState.setRotorVelocity(turnSim.getAngularVelocityRadPerSec() * DriveConstants.steerGearRatio);
+        turnSimState.setRawRotorPosition(turnSim.getAngularPositionRad());
+        turnSimState.setRotorVelocity(turnSim.getAngularVelocityRadPerSec());
+
+        cancoderSimState.setRawPosition(turnSim.getAngularPositionRad());
+        cancoderSimState.setVelocity(turnSim.getAngularVelocityRadPerSec());
         
         super.updateInputs(inputs);
     }
