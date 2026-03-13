@@ -36,6 +36,7 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
     protected final CANcoder cancoder;
 
     // Torque-current control requests
+    protected final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(true);
     protected final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0);
     protected final PositionTorqueCurrentFOC positionTorqueCurrentRequest = new PositionTorqueCurrentFOC(0.0);
     protected final VelocityTorqueCurrentFOC velocityTorqueCurrentRequest = new VelocityTorqueCurrentFOC(0.0);
@@ -79,13 +80,13 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         drivePosition = driveTalon.getPosition();
         driveVelocity = driveTalon.getVelocity();
         driveAppliedVolts = driveTalon.getMotorVoltage();
-        driveCurrent = driveTalon.getStatorCurrent();
+        driveCurrent = driveTalon.getSupplyCurrent();
 
         // Create turn status signals
         turnAbsolutePosition = cancoder.getAbsolutePosition();
         turnVelocity = turnTalon.getVelocity();
         turnAppliedVolts = turnTalon.getMotorVoltage();
-        turnCurrent = turnTalon.getStatorCurrent();
+        turnCurrent = turnTalon.getSupplyCurrent();
 
         // Configure periodic frames
         BaseStatusSignal.setUpdateFrequencyForAll(DriveConstants.odometryFrequency, turnAbsolutePosition, drivePosition);
@@ -100,8 +101,8 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         driveConfig.Slot0 = constants.DriveMotorGains;
         driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = constants.SlipCurrent;
         driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -constants.SlipCurrent;
-        driveConfig.CurrentLimits.StatorCurrentLimit = constants.SlipCurrent;
-        driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
+        driveConfig.CurrentLimits.SupplyCurrentLimit = constants.SlipCurrent;
+        driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
         driveConfig.MotorOutput.Inverted = constants.DriveMotorInverted
                 ? InvertedValue.Clockwise_Positive
                 : InvertedValue.CounterClockwise_Positive;
@@ -175,8 +176,13 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
     }
 
     @Override
-    public void setTurnOpenLoopCurrent(double output) {
-        turnTalon.setControl(torqueCurrentRequest.withOutput(output));
+    public void setDriveOpenLoopVoltage(double output) {
+        driveTalon.setControl(voltageRequest.withOutput(output));
+    }
+
+    @Override
+    public void setTurnOpenLoopVoltage(double output) {
+        turnTalon.setControl(voltageRequest.withOutput(output));
     }
 
     @Override
@@ -218,8 +224,10 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         else {
             var config = new TalonFXConfiguration();
             config.CurrentLimits
-                .withStatorCurrentLimit(current).withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(current).withSupplyCurrentLimitEnable(true);
+                // .withStatorCurrentLimit(current).withStatorCurrentLimitEnable(true)
+                .withStatorCurrentLimitEnable(false)
+                .withSupplyCurrentLimit(current).withSupplyCurrentLimitEnable(true)
+                .withSupplyCurrentLowerTime(0);
             config.TorqueCurrent
                 .withPeakForwardTorqueCurrent(current).withPeakReverseTorqueCurrent(current.unaryMinus());
             

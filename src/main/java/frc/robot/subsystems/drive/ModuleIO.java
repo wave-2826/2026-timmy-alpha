@@ -13,6 +13,7 @@ public interface ModuleIO {
         public double drivePositionRad = 0.0;
         public double driveVelocityRadPerSec = 0.0;
         public double driveAppliedVolts = 0.0;
+        /* Supply current */
         public double driveCurrentAmps = 0.0;
 
         public boolean turnConnected = false;
@@ -21,6 +22,7 @@ public interface ModuleIO {
         public Rotation2d uncorrectedTurnAbsolute = new Rotation2d();
         public double turnVelocityRadPerSec = 0.0;
         public double turnAppliedVolts = 0.0;
+        /* Supply current */
         public double turnCurrentAmps = 0.0;
 
         public double[] odometryTimestamps = new double[] {};
@@ -33,9 +35,8 @@ public interface ModuleIO {
 
     /** Run the drive motor at the specified open loop current in amps. */
     public default void setDriveOpenLoopCurrent(double currentAmps) {}
-
-    /** Run the turn motor at the specified open loop current in amps. */
-    public default void setTurnOpenLoopCurrent(double currentAmps) {}
+    public default void setDriveOpenLoopVoltage(double voltageVolts) {}
+    public default void setTurnOpenLoopVoltage(double voltageVolts) {}
 
     /** Run the drive motor at the specified velocity. */
     public default void setDriveVelocity(double velocityRadPerSec, double accelerationRadPerSec2) {}

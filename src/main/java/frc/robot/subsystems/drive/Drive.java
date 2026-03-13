@@ -219,12 +219,16 @@ public class Drive extends SubsystemBase {
     
 
     /** Runs the drive in a straight line with the specified drive output. */
-    public void runCharacterization(double output) {
-        for(int i = 0; i < 4; i++) modules[i].runCharacterization(output);
+    public void runCharacterizationCurrent(double output) {
+        for(int i = 0; i < 4; i++) modules[i].runCharacterizationCurrent(output);
     }
-    /** Runs a particular module in a straight line with the specified drive output. */
-    public void runCharacterization(int module, double output) {
-        modules[module].runCharacterization(output);
+    /** Runs a particular module in a straight line with the specified drive stator current. */
+    public void runCharacterizationCurrent(int module, double current) {
+        modules[module].runCharacterizationCurrent(current);
+    }
+    /** Runs a particular module in a straight line with the specified drive voltage. */
+    public void runCharacterizationVoltage(int module, double voltage) {
+        modules[module].runCharacterizationVoltage(voltage);
     }
 
     /** Runs the drive to rotate with the specified drive output for angular system identification. */
@@ -236,7 +240,7 @@ public class Drive extends SubsystemBase {
     public void setSlipMeasurementCurrentLimit(Current limit) {
         for(int i = 0; i < 4; i++) modules[i].setSlipMeasurementCurrentLimit(limit);
     }
-    /** Returns the drive motor current draw of a particular module in amps. */
+    /** Returns the drive motor **supply** current draw of a particular module in amps. */
     public double getCharacterizationCurrent(int module) {
         return modules[module].getCharacterizationCurrent();
     }
@@ -253,7 +257,7 @@ public class Drive extends SubsystemBase {
         return gyroInputs.yawAccelerationRadPerSec2;
     }
     /** Returns the drive motor position of a particular module in radians. */
-    public double getModuleCharacterizationPosiiton(int module) {
+    public double getModuleCharacterizationPosition(int module) {
         return modules[module].getModuleCharacterizationPosiiton();
     }
     /** Returns the zero offset of the given module */

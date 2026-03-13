@@ -94,11 +94,18 @@ public class ModuleIOSim implements ModuleIO {
     @Override
     public void setDriveOpenLoopCurrent(double current) {
         driveClosedLoop = false;
+        // TODO?
         driveAppliedVolts = current;
     }
 
     @Override
-    public void setTurnOpenLoopCurrent(double current) {
+    public void setDriveOpenLoopVoltage(double voltageVolts) {
+        driveClosedLoop = false;
+        driveAppliedVolts = voltageVolts;
+    }
+
+    @Override
+    public void setTurnOpenLoopVoltage(double current) {
         turnClosedLoop = false;
         turnAppliedVolts = current;
     }

@@ -4,6 +4,7 @@ import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.util.tunables.LoggedTunableNumber;
 
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
@@ -11,6 +12,8 @@ import org.littletonrobotics.junction.Logger;
 public class Intake extends SubsystemBase {
     private final IntakeIO io;
     private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
+
+    private static final LoggedTunableNumber intakeRollerPercent = new LoggedTunableNumber("Intake/RollerPercent", 0.5);
     
     public Intake(IntakeIO io) {
         this.io = io;
@@ -22,8 +25,16 @@ public class Intake extends SubsystemBase {
         Logger.processInputs("Intake", inputs);
         
     }
+
+    public Command enable() {
+        return runRollerPercent(intakeRollerPercent.get());
+    }
+
+    public Command disable() {
+        return runRollerPercent(0);
+    }
     
-    public Command runRollerPercent(double percent) {
+    private Command runRollerPercent(double percent) {
         return runOnce(() -> io.setRollerVoltage(percent/100 * 12.0));
     }
     
@@ -44,9 +55,9 @@ public class Intake extends SubsystemBase {
     public Command deployIntake() {
         final double deployVoltage = 3.0;
         return Commands.parallel(
-            Commands.runEnd(() -> io.setDeployVoltageL(deployVoltage), () -> io.setDeployVoltageL(0.0))
+            Commands.runEnd(() -> io.setDeployVoltageL(-deployVoltage), () -> io.setDeployVoltageL(0.0))
                 .until(() -> deployLCurrentFilter.calculate(inputs.deployL.currentAmps()) > IntakeConstants.deployStallCurrent),
-            Commands.runEnd(() -> io.setDeployVoltageR(deployVoltage), () -> io.setDeployVoltageR(0.0))
+            Commands.runEnd(() -> io.setDeployVoltageR(-deployVoltage), () -> io.setDeployVoltageR(0.0))
                 .until(() -> deployRCurrentFilter.calculate(inputs.deployR.currentAmps()) > IntakeConstants.deployStallCurrent)
         ).withTimeout(1.0).andThen(() -> {
             io.resetDeployEncoders();

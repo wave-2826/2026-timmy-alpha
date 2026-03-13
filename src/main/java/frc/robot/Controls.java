@@ -58,15 +58,15 @@ public class Controls {
         Intake intake = rc.intake;
         
         // Default command, normal field-relative drive
-        drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
+        drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> driver.getRightX()));
         driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
         // driver.b().whileTrue(climber.extendBoth()).onTrue(intake.bringIntakeIn(1));
         driver.a().whileTrue(climber.retractBoth());
 
-        // driver.leftBumper().onTrue(intake.deployIntake());//.onTrue(intake.runRollerPercent(20));
-        // driver.rightBumper().onTrue(intake.runRollerPercent(0));
-        RobotModeTriggers.teleop().onTrue(intake.deployIntake());
+        driver.leftBumper().onTrue(intake.deployIntake().alongWith(intake.enable()));
+        driver.rightBumper().onTrue(intake.disable());
+        RobotModeTriggers.autonomous().onTrue(intake.deployIntake());
         intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
 
         RobotModeTriggers.teleop().onTrue(climber.extendServos());

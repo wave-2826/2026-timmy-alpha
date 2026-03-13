@@ -133,9 +133,14 @@ public class Module {
         io.setTurnPosition(state.angle);
     }
 
-    /** Runs the module with the specified output while controlling to zero degrees. */
-    public void runCharacterization(double output) {
-        io.setDriveOpenLoopCurrent(output);
+    /** Runs the module with the drive stator curent output while controlling to zero degrees. */
+    public void runCharacterizationCurrent(double current) {
+        io.setDriveOpenLoopCurrent(current);
+        io.setTurnPosition(new Rotation2d());
+    }
+        /** Runs the module with the specified drive voltage while controlling to zero degrees. */
+    public void runCharacterizationVoltage(double voltage) {
+        io.setDriveOpenLoopVoltage(voltage);
         io.setTurnPosition(new Rotation2d());
     }
 
@@ -148,7 +153,7 @@ public class Module {
     /** Disables all outputs to motors. */
     public void stop() {
         io.setDriveOpenLoopCurrent(0.0);
-        io.setTurnOpenLoopCurrent(0.0);
+        io.setTurnOpenLoopVoltage(0.0);
     }
 
     /** Returns the current turn angle of the module. */
