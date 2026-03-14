@@ -34,7 +34,7 @@ public class IntakeIOReal implements IntakeIO {
 
     public IntakeIOReal() {
         var rollerConfig = new SparkMaxConfig();
-        rollerConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(rollerCurrentLimit).voltageCompensation(12.0);
+        rollerConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(rollerCurrentLimit).voltageCompensation(12.0);
         rollerConfig
             .encoder
             .positionConversionFactor(
