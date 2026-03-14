@@ -35,7 +35,7 @@
     "y":0.34925
    },
    "mass":62.55038782300001,
-   "inertia":6.0,
+   "inertia":7.2,
    "gearing":6.75,
    "radius":0.0508,
    "vmax":607.3745796940267,
@@ -64,9 +64,9 @@
   "splits":[0]
  },
  "events":[
-   {"name":"Deploy Climb", "from":{"target":0, "targetTimestamp":null, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"sequential", "data":{"commands":[
+   {"name":"Deploy Climb", "from":{"target":0, "targetTimestamp":0.0, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"sequential", "data":{"commands":[
        {"type":"named", "data":{"name":"Undeploy Intake"}},
        {"type":"wait", "data":{"waitTime":{"exp":"3 s", "val":3.0}}},
        {"type":"named", "data":{"name":"Deploy Climb"}}]}}},
-   {"name":"Climb Down", "from":{"target":1, "targetTimestamp":null, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"named", "data":{"name":"Climb Down"}}}]
+   {"name":"Climb Down", "from":{"target":1, "targetTimestamp":0.41706, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"named", "data":{"name":"Climb Down"}}}]
 }
