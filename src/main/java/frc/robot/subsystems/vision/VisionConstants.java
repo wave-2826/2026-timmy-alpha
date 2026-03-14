@@ -29,9 +29,14 @@ public class VisionConstants {
     // AprilTag layout
     public static AprilTagFieldLayout aprilTagLayout = FieldConstants.defaultAprilTagType.getLayout();
 
+    private static record CameraConfiguration(
+        String name,
+        Transform3d position
+    ) {}
+
     // Camera names, must match names configured on coprocessor
-    public static String camera0Name = "Abe";
-    public static String camera1Name = "Backup";
+    public static String camera0Name = "2826_OV9281_Ena";
+    public static String camera1Name = "2826_OV9281_Fin";
 
     // Robot to camera transforms
     public static Transform3d robotToCamera0 = new Transform3d(new Translation3d(0.26299228917216877, 0.37463897857529405, 0.46437706895675346), new Rotation3d(0.019078617921454894, -0.32843832829994896, 0.22190482336538536));
