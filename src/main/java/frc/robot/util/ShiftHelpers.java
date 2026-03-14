@@ -9,8 +9,9 @@ public class ShiftHelpers {
 
     public static boolean blueWonAuto() {
         String matchInfo = DriverStation.getGameSpecificMessage();
-        if (!overrideFMS.toString().isEmpty()) {
-            matchInfo = overrideFMS.toString().toUpperCase();
+        String override = overrideFMS.toString().trim().toUpperCase();
+        if (!override.isEmpty()) {
+            matchInfo = override;
         }
         if (matchInfo != null && matchInfo.length() > 0) {
             return matchInfo.charAt(0) == 'B';

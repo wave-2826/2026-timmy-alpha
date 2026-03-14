@@ -1,11 +1,16 @@
 package frc.robot;
 
-import choreo.auto.AutoChooser;
+import java.util.logging.Logger;
+
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.commands.AutoRoutines;
+import frc.robot.commands.tuning.TuningCommands;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIO;
 import frc.robot.subsystems.drive.Drive;
@@ -19,6 +24,9 @@ import frc.robot.subsystems.drive.ModuleIOTalonFXReal;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOReal;
+import frc.robot.subsystems.spindexer.Spindexer;
+import frc.robot.subsystems.spindexer.SpindexerIO;
+import frc.robot.subsystems.spindexer.SpindexerIOReal;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOSim;
@@ -27,14 +35,11 @@ import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.subsystems.spindexer.Spindexer;
-import frc.robot.subsystems.spindexer.SpindexerIO;
-import frc.robot.subsystems.spindexer.SpindexerIOReal;
-import frc.robot.commands.AutoCommands;
-import frc.robot.commands.AutoCommands.AutoPaths;
-import frc.robot.commands.tuning.TuningCommands;
+import frc.robot.util.Elastic;
+import frc.robot.util.Elastic.Notification;
+import frc.robot.util.Elastic.Notification.NotificationLevel;
+import frc.robot.util.LoggedAutoChooser;
 import frc.robot.util.simUtils.Simulation;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a "declarative" paradigm, very
@@ -51,11 +56,8 @@ public class RobotContainer {
     public final Turret turret;
 
     // Dashboard inputs
-    private final LoggedDashboardChooser<Command> autoChooser;
-    public boolean noAutoSelected() {
-        var selected = autoChooser.get().getName();
-        return selected == null || selected.equals("None");
-    }
+    private final AutoRoutines routines;
+    private final LoggedAutoChooser autoChooser;
     private final LoggedDashboardChooser<Command> testChooser;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -118,14 +120,13 @@ public class RobotContainer {
         }
 
         // Set up auto routines
-        autoChooser = new LoggedDashboardChooser<>("Auto");
-        autoChooser.addDefaultOption("None", Commands.none().withName("None"));
+        autoChooser = new LoggedAutoChooser("Auto Choices");
+        RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+        RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() -> Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Running Auto...", autoChooser.getSelectedName()))));
 
-        for(AutoPaths path : AutoCommands.AutoPaths.values()) {
-            var name = path.name();
-            name = name.replaceAll("_", " ");
-            autoChooser.addOption(name, AutoCommands.runAuto(path, this));
-        }
+        routines = new AutoRoutines(this, autoChooser);
+
+
 
         Controls.getInstance().configureControls(this);
         testChooser = TuningCommands.constructTuningChooser(this);
@@ -133,10 +134,15 @@ public class RobotContainer {
         if(Constants.isSim) Simulation.getInstance().resetSimulationField();
     }
 
-    public Command getAutonomousCommand() {
-        return autoChooser.get();
-    }
     public Command getTestCommand() {
         return testChooser.get();
+    }
+
+    public boolean noAutoSelected() {
+        if (autoChooser.getSelectedName() != "Nothing") {
+            return false;
+        } else {
+            return true;
+        }
     }
 }

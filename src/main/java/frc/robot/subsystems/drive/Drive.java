@@ -19,11 +19,18 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.RobotState;
 import frc.robot.commands.drive.DriveTuningCommands.TuningResults;
+
+import static edu.wpi.first.units.Units.Kilogram;
+
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+
+import choreo.Choreo.TrajectoryLogger;
+import choreo.auto.AutoFactory;
+import choreo.trajectory.SwerveSample;
 import frc.robot.util.DriveFeedforwards;
 
 public class Drive extends SubsystemBase {
@@ -45,6 +52,14 @@ public class Drive extends SubsystemBase {
     private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
     private final Module[] modules = new Module[4]; // FL, FR, BL, BR
     private final Alert gyroDisconnectedAlert = new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
+
+    /**
+     * If the trajectory following callback was run this tick. Reset at the end of each loop iteration so we know when
+     * to continue pathing to the latest known pose.
+     */
+    private boolean trajectoryUpdatedThisTick = false;
+    /** The latest trajectory target. See trajectoryUpdatedThisTick. If null, no trajectory has been followed yet. */
+    private Pose2d latestTrajectoryTarget = null;
 
     public Drive(
         GyroIO gyroIO,
@@ -213,6 +228,53 @@ public class Drive extends SubsystemBase {
     @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
     private ChassisSpeeds getChassisSpeeds() {
         return robotState.kinematics.toChassisSpeeds(getModuleStates());
+    }
+
+
+    /**
+     * Creates a new auto factory for this drivetrain with the given trajectory logger.
+     *
+     * @param trajLogger Logger for the trajectory
+     * @return AutoFactory for this drivetrain
+     */
+    public AutoFactory createAutoFactory(TrajectoryLogger<SwerveSample> trajLogger) {
+        var robotState = RobotState.getInstance();
+        return new AutoFactory(robotState::getEstimatedPose, this::setPose, this::followPath, true, this, trajLogger);
+    }
+
+        /**
+     * Follows the given field-centric path sample with PID.
+     *
+     * @param sample Sample along the path to follow
+     */
+    public void followPath(SwerveSample sample) {
+        trajectoryUpdatedThisTick = true;
+        latestTrajectoryTarget = sample.getPose();
+
+        var baseSpeeds = sample.getChassisSpeeds();
+
+        double[] accelerations = new double[modules.length];
+        for(int i = 0; i < modules.length; i++) {
+            double accelerationX = sample.moduleForcesX()[i] / DriveConstants.robotMass.in(Kilogram);
+            double accelerationY = sample.moduleForcesY()[i] / DriveConstants.robotMass.in(Kilogram);
+            accelerations[i] = Math.sqrt(accelerationX * accelerationX + accelerationY * accelerationY);
+        }
+
+        followPathToTarget(latestTrajectoryTarget, accelerations, baseSpeeds);
+    }
+
+    public void followPathToTarget(Pose2d targetPose, double[] accelerations, ChassisSpeeds baseSpeeds) {
+        var pose = RobotState.getInstance().getEstimatedPose();
+
+        Logger.recordOutput("Odometry/CurrentPose", pose);
+        Logger.recordOutput("Odometry/TargetPose", targetPose);
+
+        baseSpeeds.vxMetersPerSecond += DriveConstants.xController.calculate(pose.getX(), targetPose.getX());
+        baseSpeeds.vyMetersPerSecond += DriveConstants.yController.calculate(pose.getY(), targetPose.getY());
+        baseSpeeds.omegaRadiansPerSecond += DriveConstants.thetaController.calculate(pose.getRotation().getRadians(),
+            targetPose.getRotation().getRadians());
+        runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(baseSpeeds, RobotState.getInstance().getRotation()),
+            accelerations,false);
     }
 
     //////////////////// Characterization/tuning
