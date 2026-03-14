@@ -13,7 +13,7 @@ public interface ModuleIO {
         public double drivePositionRad = 0.0;
         public double driveVelocityRadPerSec = 0.0;
         public double driveAppliedVolts = 0.0;
-        /* Supply current */
+        /* Stator current */
         public double driveCurrentAmps = 0.0;
 
         public boolean turnConnected = false;
@@ -22,7 +22,7 @@ public interface ModuleIO {
         public Rotation2d uncorrectedTurnAbsolute = new Rotation2d();
         public double turnVelocityRadPerSec = 0.0;
         public double turnAppliedVolts = 0.0;
-        /* Supply current */
+        /* Stator current */
         public double turnCurrentAmps = 0.0;
 
         public double[] odometryTimestamps = new double[] {};

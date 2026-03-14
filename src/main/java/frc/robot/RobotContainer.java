@@ -5,6 +5,7 @@ import choreo.auto.AutoChooser;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIO;
 import frc.robot.subsystems.drive.Drive;
@@ -50,9 +51,9 @@ public class RobotContainer {
     public final Turret turret;
 
     // Dashboard inputs
-    private final AutoChooser autoChooser;
+    private final LoggedDashboardChooser<Command> autoChooser;
     public boolean noAutoSelected() {
-        var selected = autoChooser.selectedCommand().getName();
+        var selected = autoChooser.get().getName();
         return selected == null || selected.equals("None");
     }
     private final LoggedDashboardChooser<Command> testChooser;
@@ -84,10 +85,10 @@ public class RobotContainer {
                 // Sim robot, instantiate physics sim IO implementations
                 drive = new Drive(
                     new GyroIOSim(driveSimulation.getGyroSimulation()),
-                    new ModuleIOSim(0),
-                    new ModuleIOSim(1),
-                    new ModuleIOSim(2),
-                    new ModuleIOSim(3));
+                    new ModuleIOSim(DriveConstants.frontLeftConfig),
+                    new ModuleIOSim(DriveConstants.frontRightConfig),
+                    new ModuleIOSim(DriveConstants.backLeftConfig),
+                    new ModuleIOSim(DriveConstants.backRightConfig));
                 driveSimulation.setModuleStateSupplier(drive::getModuleStates);
                 Simulation.getInstance().setDrive(drive);
 
@@ -117,12 +118,13 @@ public class RobotContainer {
         }
 
         // Set up auto routines
-        autoChooser = new AutoChooser();
+        autoChooser = new LoggedDashboardChooser<>("Auto");
+        autoChooser.addDefaultOption("None", Commands.none().withName("None"));
 
         for(AutoPaths path : AutoCommands.AutoPaths.values()) {
             var name = path.name();
             name = name.replaceAll("_", " ");
-            autoChooser.addRoutine(name, () -> AutoCommands.runAuto(path, this));
+            autoChooser.addOption(name, AutoCommands.runAuto(path, this));
         }
 
         Controls.getInstance().configureControls(this);
@@ -132,7 +134,7 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return autoChooser.selectedCommand();
+        return autoChooser.get();
     }
     public Command getTestCommand() {
         return testChooser.get();

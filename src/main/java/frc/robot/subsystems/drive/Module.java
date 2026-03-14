@@ -52,8 +52,8 @@ public class Module {
         turnDisconnectedAlert = new Alert("Disconnected turn motor on module " + name + ".", AlertType.kError);
         turnEncoderDisconnectedAlert = new Alert("Disconnected turn encoder on module " + name + ".", AlertType.kError);
 
-        this.angleToCenter = new Rotation2d(translation.getY(), translation.getX());
-        this.spinAngle = angleToCenter.plus(Rotation2d.kCW_90deg);
+        this.angleToCenter = translation.getAngle();
+        this.spinAngle = angleToCenter.rotateBy(Rotation2d.fromDegrees(-90));
 
         // Reset tunables' hasChanged since we'll configure anyway
         driveP.hasChanged(hashCode());

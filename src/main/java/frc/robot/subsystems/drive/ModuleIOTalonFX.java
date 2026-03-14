@@ -80,18 +80,20 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         drivePosition = driveTalon.getPosition();
         driveVelocity = driveTalon.getVelocity();
         driveAppliedVolts = driveTalon.getMotorVoltage();
-        driveCurrent = driveTalon.getSupplyCurrent();
+        driveCurrent = driveTalon.getStatorCurrent();
 
         // Create turn status signals
         turnAbsolutePosition = cancoder.getAbsolutePosition();
         turnVelocity = turnTalon.getVelocity();
         turnAppliedVolts = turnTalon.getMotorVoltage();
-        turnCurrent = turnTalon.getSupplyCurrent();
+        turnCurrent = turnTalon.getStatorCurrent();
 
         // Configure periodic frames
         BaseStatusSignal.setUpdateFrequencyForAll(DriveConstants.odometryFrequency, turnAbsolutePosition, drivePosition);
-        BaseStatusSignal.setUpdateFrequencyForAll(
-                50.0, driveVelocity, driveAppliedVolts, driveCurrent, turnVelocity, turnAppliedVolts, turnCurrent);
+        BaseStatusSignal.setUpdateFrequencyForAll(50.0,
+            driveVelocity, driveAppliedVolts, driveCurrent,
+            turnVelocity, turnAppliedVolts, turnCurrent
+        );
         ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon);
     }
 
@@ -101,8 +103,8 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         driveConfig.Slot0 = constants.DriveMotorGains;
         driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = constants.SlipCurrent;
         driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -constants.SlipCurrent;
-        driveConfig.CurrentLimits.SupplyCurrentLimit = constants.SlipCurrent;
-        driveConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        driveConfig.CurrentLimits.StatorCurrentLimit = constants.SlipCurrent;
+        driveConfig.CurrentLimits.StatorCurrentLimitEnable = true;
         driveConfig.MotorOutput.Inverted = constants.DriveMotorInverted
                 ? InvertedValue.Clockwise_Positive
                 : InvertedValue.CounterClockwise_Positive;
@@ -171,8 +173,8 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
     }
 
     @Override
-    public void setDriveOpenLoopCurrent(double output) {
-        driveTalon.setControl(torqueCurrentRequest.withOutput(output));
+    public void setDriveOpenLoopCurrent(double current) {
+        driveTalon.setControl(torqueCurrentRequest.withOutput(current));
     }
 
     @Override
@@ -224,10 +226,8 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         else {
             var config = new TalonFXConfiguration();
             config.CurrentLimits
-                // .withStatorCurrentLimit(current).withStatorCurrentLimitEnable(true)
-                .withStatorCurrentLimitEnable(false)
-                .withSupplyCurrentLimit(current).withSupplyCurrentLimitEnable(true)
-                .withSupplyCurrentLowerTime(0);
+                .withStatorCurrentLimit(current).withStatorCurrentLimitEnable(true);
+                // .withSupplyCurrentLimit(current).withSupplyCurrentLimitEnable(true)
             config.TorqueCurrent
                 .withPeakForwardTorqueCurrent(current).withPeakReverseTorqueCurrent(current.unaryMinus());
             

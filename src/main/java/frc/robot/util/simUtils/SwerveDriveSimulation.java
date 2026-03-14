@@ -45,12 +45,12 @@ public class SwerveDriveSimulation {
          * @param gyroSimulationFactory the factory that creates appropriate gyro simulation for the drivetrain.
          */
         public DriveTrainSimulationConfig(
-                Mass robotMass,
-                Distance bumperLengthX,
-                Distance bumperWidthY,
-                Distance trackLengthX,
-                Distance trackWidthY,
-                Supplier<GyroSimulation> gyroSimulationFactory
+            Mass robotMass,
+            Distance bumperLengthX,
+            Distance bumperWidthY,
+            Distance trackLengthX,
+            Distance trackWidthY,
+            Supplier<GyroSimulation> gyroSimulationFactory
         ) {
             this.robotMass = robotMass;
             this.bumperLengthX = bumperLengthX;
