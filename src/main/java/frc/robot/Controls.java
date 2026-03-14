@@ -104,8 +104,6 @@ public class Controls {
         RobotModeTriggers.teleop().and(DriverStation::isFMSAttached).onTrue(Commands.runOnce(() -> {
             Elastic.selectTab("Teleoperated");
         }));
-
-        shiftYours.set(ShiftHelpers.currentShiftIsYours());
     }
 
     private HashMap<Integer, Double> driverRumbleCommands = new HashMap<>();
@@ -134,6 +132,7 @@ public class Controls {
         int coDriverPort = coDriver.getHID().getPort();
         driverDisconnectedAlert.set(!DriverStation.isJoystickConnected(driverPort) || !DriverStation.getJoystickIsXbox(driverPort));
         coDriverDisconnectedAlert.set(!DriverStation.isJoystickConnected(coDriverPort) || !DriverStation.getJoystickIsXbox(coDriverPort));
+        shiftYours.set(ShiftHelpers.currentShiftIsYours());
     }
 
 }
