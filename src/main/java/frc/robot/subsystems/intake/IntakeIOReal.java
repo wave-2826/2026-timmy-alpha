@@ -13,6 +13,8 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import frc.robot.Constants;
+
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 public class IntakeIOReal implements IntakeIO {
@@ -34,7 +36,7 @@ public class IntakeIOReal implements IntakeIO {
 
     public IntakeIOReal() {
         var rollerConfig = new SparkMaxConfig();
-        rollerConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(rollerCurrentLimit).voltageCompensation(12.0);
+        rollerConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(rollerCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         rollerConfig
             .encoder
             .positionConversionFactor(
@@ -44,7 +46,7 @@ public class IntakeIOReal implements IntakeIO {
             .uvwAverageDepth(2);
         
         var deployBaseConfig = new SparkMaxConfig();
-        deployBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(deployCurrentLimit).voltageCompensation(12.0);
+        deployBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(deployCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         deployBaseConfig.encoder
             .positionConversionFactor(2.0 * Math.PI * pinionRadiusMeters / pinionReduction) // Rotor Rotations -> Deploy Meters
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 * pinionRadiusMeters / pinionReduction)
@@ -52,6 +54,7 @@ public class IntakeIOReal implements IntakeIO {
             .uvwAverageDepth(2);
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
+        
         deployLConfig.inverted(true);
         deployRConfig.follow(deployL, true);
 

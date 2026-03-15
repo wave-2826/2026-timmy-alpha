@@ -52,8 +52,8 @@ public class DriveTuningCommands {
     private static final double FF_RAMP_RATE = 1.0; // Amps/Sec
 
     private static final double SLIP_START_DELAY = 1.0; // Secs
-    private static final double SLIP_START_SETPOINT = 0.5; // Amps
-    private static final double SLIP_RAMP_RATE = 1.0; // Amps/Sec
+    private static final double SLIP_START_SETPOINT = 5.0; // Amps
+    private static final double SLIP_RAMP_RATE = 1.5; // Amps/Sec
     private static final double SLIP_TRAVEL_AMOUNT = Units.degreesToRadians(10); // Rad
 
     private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.5; // Rad/Sec
@@ -63,13 +63,14 @@ public class DriveTuningCommands {
     public static final double MOI_STATIC_CURRENT_ROTATION_SPEED = Units.degreesToRadians(15); // Rad/Sec
     public static final double MOI_STATIC_CURRENT_COLLECTION_TIME = 4.0; // Secs
     public static final double MOI_CURRENT = 10.0; // Amps
-    public static final double MOI_MAX_YAW_VEL = Units.degreesToRadians(180); // Rad/Sec
+    public static final double MOI_MAX_YAW_VEL = Units.degreesToRadians(260); // Rad/Sec
 
     /** The path to the JSON file where we save our tuning results. */
     public static final String TUNING_RESULTS_FILE = Constants.currentMode == Constants.Mode.REAL
         ? "/U/tuning_results.json" // On a real robot, this is a USB stick
         : "./logs/tuning_results.json"; // In simulation, this is a local file
 
+    // TODO - REALLY TODO - log this and make it work in replay
     /** A set of tuning results that we can load from and save to a JSON file. */
     public static class TuningResults {
         // TODO: Defaults that make sense for sim so stuff doesn't break
@@ -451,16 +452,19 @@ public class DriveTuningCommands {
 
                 NumberFormat formatter = new DecimalFormat("#0.000");
 
-                double minimumSlipCurrent = Double.MAX_VALUE;
-                for(int i = 0; i < 4; i++) {
-                    if(moduleResults[i].slipCurrent < minimumSlipCurrent) {
-                        minimumSlipCurrent = moduleResults[i].slipCurrent;
-                    }
-                }
+                // Who knows if this means anything physical, but it works (?)
+                double[] slipCurrents = new double[] {
+                    moduleResults[0].slipCurrent,
+                    moduleResults[1].slipCurrent,
+                    moduleResults[2].slipCurrent,
+                    moduleResults[3].slipCurrent
+                };
+                slipCurrents = java.util.Arrays.stream(slipCurrents).sorted().toArray();
+                double secondHighestSlipCurrnet = slipCurrents[slipCurrents.length - 2];
 
                 System.out.println("********** Drive Slip Current Measurement Results **********");
+                System.out.println("\tSlip Current: " + formatter.format(secondHighestSlipCurrnet) + " amps");
                 System.out.println("\tAverage slip Current: " + formatter.format(averageSlipCurrent) + " amps");
-                System.out.println("\tMinimum slip Current: " + formatter.format(minimumSlipCurrent) + " amps");
                 System.out.println("\tAverage slip Voltage: " + formatter.format(averageSlipVoltage) + " volts");
                 String[] moduleNames = new String[] {
                     "Front left", "Front right", "Back left", "Back right"
@@ -482,24 +486,24 @@ public class DriveTuningCommands {
                 System.out.flush();
 
                 // Save results
-                // Drive.tuningResults.slipResults = new TuningResults.SlipTuningResults(
-                //     minimumSlipCurrent,
-                //     averageSlipVoltage,
-                //     wheelCOF,
-                //     new double[] {
-                //         moduleResults[0].slipCurrent,
-                //         moduleResults[1].slipCurrent,
-                //         moduleResults[2].slipCurrent,
-                //         moduleResults[3].slipCurrent
-                //     },
-                //     new double[] {
-                //         moduleResults[0].slipVoltage,
-                //         moduleResults[1].slipVoltage,
-                //         moduleResults[2].slipVoltage,
-                //         moduleResults[3].slipVoltage
-                //     }
-                // );
-                // Drive.tuningResults.save();
+                Drive.tuningResults.slipResults = new TuningResults.SlipTuningResults(
+                    secondHighestSlipCurrnet,
+                    averageSlipVoltage,
+                    wheelCOF,
+                    new double[] {
+                        moduleResults[0].slipCurrent,
+                        moduleResults[1].slipCurrent,
+                        moduleResults[2].slipCurrent,
+                        moduleResults[3].slipCurrent
+                    },
+                    new double[] {
+                        moduleResults[0].slipSetpoint,
+                        moduleResults[1].slipSetpoint,
+                        moduleResults[2].slipSetpoint,
+                        moduleResults[3].slipSetpoint
+                    }
+                );
+                Drive.tuningResults.save();
             })
         ).alongWith(require(drive));
     }
@@ -507,7 +511,8 @@ public class DriveTuningCommands {
     private static Command slipCurrentWheel(Drive drive, int module, SlipCurrentModuleResult moduleResult, boolean reverseDirection) {
         List<Double> currentSamples = new LinkedList<>();
         Timer timer = new Timer();
-        Container<Double> startPosition = new Container<Double>(0.);
+        Container<Double> startPosition = new Container<>(0.);
+        Container<Boolean> stopEarly = new Container<>(false);
 
         return Commands.sequence(
             Commands.runOnce(() -> {
@@ -519,11 +524,18 @@ public class DriveTuningCommands {
             // Accelerate and gather data
             Commands.run(() -> {
                 double setpoint = timer.get() * SLIP_RAMP_RATE + SLIP_START_SETPOINT;
+                if(setpoint > 90) {
+                    System.out.println("Wheel " + module + " didn't slip! Capping value.");
+                    stopEarly.value = true;
+                }
+
                 if(reverseDirection) setpoint = -setpoint;
                 drive.runCharacterizationCurrent(module, setpoint);
 
                 currentSamples.add(drive.getCharacterizationCurrent(module));
             }).until(() -> {
+                if(stopEarly.value) return true;
+
                 double distanceTraveled = Math.abs(drive.getModuleCharacterizationPosition(module) - startPosition.value);
                 return distanceTraveled > SLIP_TRAVEL_AMOUNT;
             }),
@@ -585,6 +597,7 @@ public class DriveTuningCommands {
             double medianStaticCurrent = staticCurrentDraws.get(staticCurrentDraws.size() / 2);
             double effectiveCurrent = MOI_CURRENT - medianStaticCurrent;
 
+            // TODO: check that this is right? it produces wierd numbers
             double wheelTorque = DriveConstants.driveGearRatio * effectiveCurrent * DriveConstants.driveMotorModel.KtNMPerAmp;
             double wheelForceAtGround = wheelTorque / Drive.tuningResults.wheelRadiusResults.radiusMeters();
             double torqueOnRobot = wheelForceAtGround * DriveConstants.driveBaseRadius * 4;

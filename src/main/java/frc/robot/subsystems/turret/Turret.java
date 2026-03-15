@@ -199,12 +199,7 @@ public class Turret extends SubsystemBase {
     }
 
     public Command runTuning() {
-        if(!(io instanceof TurretIOSpark)) {
-            // TODO: This is really temporary sob
-            return Commands.none();
-        }
-        
-        TurretTuning tuning = new TurretTuning((TurretIOSpark)io, Controls.getInstance().coDriver);
+        TurretTuning tuning = new TurretTuning(io, inputs, Controls.getInstance().coDriver);
         return Commands.runOnce(tuning::start).andThen(Commands.runEnd(tuning::run, tuning::stop, this));
     }
 }

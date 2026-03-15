@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
+import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -22,7 +23,10 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 public class TurretIOTalonFX implements TurretIO {
+    private static final boolean DISABLE_AZIMUTH_ABS_ENCODER = true;
+
     protected final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0).withUseTimesync(true);
+    protected final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withEnableFOC(true).withUseTimesync(true);
     protected final Follower followerRequest;
 
     protected final TalonFX topFlywheelTalon = new TalonFX(TurretConstants.topFlywheelCanID, TurretConstants.CANBus);
@@ -61,6 +65,9 @@ public class TurretIOTalonFX implements TurretIO {
         baseConfig.MotorOutput.ControlTimesyncFreqHz = 250;
         applyTorqueCurrentLimit(baseConfig, TurretConstants.flywheelCurrentLimit);
 
+        // Velocity PID - only for tuning
+        baseConfig.Slot1.withKP(0.001).withKV(0.02);
+
         tryUntilOk(5, () -> topFlywheelTalon.getConfigurator().apply(baseConfig, 0.25));
         tryUntilOk(5, () -> bottomFlywheelTalon.getConfigurator().apply(baseConfig, 0.25));
 
@@ -68,10 +75,22 @@ public class TurretIOTalonFX implements TurretIO {
         azimuthConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         applyTorqueCurrentLimit(azimuthConfig, TurretConstants.azimuthCurrentLimit);
 
-        tryUntilOk(5, () -> azimuthTalon.getConfigurator().apply(baseConfig, 0.25));
+        if(!DISABLE_AZIMUTH_ABS_ENCODER) {
+            // TODO: azimuth feedback
+        }
+
+        // Velocity PID - only for tuning
+        azimuthConfig.Slot1.withKP(0.008).withKV(0.025);
+
+        tryUntilOk(5, () -> azimuthTalon.getConfigurator().apply(azimuthConfig, 0.25));
         
         var hoodConfig = azimuthConfig.clone();
         applyTorqueCurrentLimit(hoodConfig, TurretConstants.azimuthCurrentLimit);
+
+        // Velocity PID - only for tuning
+        hoodConfig.Slot1.withKP(0.001).withKV(0.02);
+
+        tryUntilOk(5, () -> hoodTalon.getConfigurator().apply(hoodConfig, 0.25));
 
         followerRequest = new Follower(topFlywheelTalon.getDeviceID(), MotorAlignmentValue.Opposed);
 
@@ -152,9 +171,18 @@ public class TurretIOTalonFX implements TurretIO {
     }
 
     @Override
-    public void setLQROutputs(TurretLQROutputs outputs) {
+    public void setVelocityOutputs(double flywheelVelocityRadPerSec, double azimuthVelocityRadPerSec,
+            double hoodVelocityRadPerSec) {
+        topFlywheelTalon.setControl(velocityRequest.withVelocity(flywheelVelocityRadPerSec).withSlot(1));
         bottomFlywheelTalon.setControl(followerRequest);
+        azimuthTalon.setControl(velocityRequest.withVelocity(azimuthVelocityRadPerSec).withSlot(1));
+        hoodTalon.setControl(velocityRequest.withVelocity(hoodVelocityRadPerSec).withSlot(1));
+    }
+
+    @Override
+    public void setLQROutputs(TurretLQROutputs outputs) {
         topFlywheelTalon.setControl(torqueCurrentRequest.withOutput(outputs.flywheelCurrent()));
+        bottomFlywheelTalon.setControl(followerRequest);
         azimuthTalon.setControl(torqueCurrentRequest.withOutput(outputs.azimuthCurrent()));
         hoodTalon.setControl(torqueCurrentRequest.withOutput(outputs.hoodCurrent()));
     }

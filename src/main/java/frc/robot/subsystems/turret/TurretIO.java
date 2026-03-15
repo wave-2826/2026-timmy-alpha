@@ -11,13 +11,13 @@ public interface TurretIO {
             /** The measured motor flywheel angular velocity. */
             double velocityRadPerSec,
             /** The motor current draw. */
-            double motorCurrentAmps
+            double currentAmps
         ) {
             FlywheelMotorInputs half() {
                 return new FlywheelMotorInputs(
                     connected,
                     velocityRadPerSec,
-                    motorCurrentAmps / 2
+                    currentAmps / 2
                 );
             }
         }
@@ -112,6 +112,9 @@ public interface TurretIO {
 
     /** Run the turret with the given outputs in PID control mode. */
     public default void setPIDOutputs(TurretIOPIDOutputs outputs) {}
+
+    /** Run the turret with the given velocities only. */
+    public default void setVelocityOutputs(double flywheelVelocityRadPerSec, double azimuthVelocityRadPerSec, double hoodVelocityRadPerSec) {}
 
     /** Run the turret with the given outputs in LQR control mode. */
     public default void setLQROutputs(TurretLQROutputs outputs) {}

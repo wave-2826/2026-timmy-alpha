@@ -26,7 +26,6 @@ public class VisionConstants {
     public static final boolean enableRawStreams = true;
     /************************/
 
-    // AprilTag layout
     public static AprilTagFieldLayout aprilTagLayout = FieldConstants.defaultAprilTagType.getLayout();
 
     private static record CameraConfiguration(

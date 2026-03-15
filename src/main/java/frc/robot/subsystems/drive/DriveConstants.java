@@ -107,7 +107,7 @@ public class DriveConstants {
     // Constant tuned data
 
     // ""Tuned"" with.. scales
-    public static final Mass robotMass = Pound.of(103.155);
+    public static final Mass robotMass = Pound.of(134.51);
     // ""Tuned"" through CAD
     public static final MomentOfInertia robotMomentOfInertia = KilogramSquareMeters.of(7.4702);
     // Effective free speed (m/s) at 12 V applied output; tuned with max speed measurement

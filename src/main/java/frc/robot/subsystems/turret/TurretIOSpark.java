@@ -164,6 +164,12 @@ public class TurretIOSpark implements TurretIO {
     }
 
     @Override
+    public void setVelocityOutputs(double flywheelVelocityRadPerSec, double azimuthVelocityRadPerSec,
+            double hoodVelocityRadPerSec) {
+        // TODO?
+    }
+
+    @Override
     public void setLQROutputs(TurretLQROutputs outputs) {
         flywheelController.setSetpoint(outputs.flywheelCurrent(), ControlType.kCurrent, ClosedLoopSlot.kSlot1);
         azimuthController.setSetpoint(outputs.azimuthCurrent(), ControlType.kCurrent, ClosedLoopSlot.kSlot1);

@@ -53,7 +53,7 @@ public class Intake extends SubsystemBase {
     }
     
     public Command deployIntake() {
-        final double deployVoltage = 3.0;
+        final double deployVoltage = 5+.0;
         return Commands.parallel(
             Commands.runEnd(() -> io.setDeployVoltageL(-deployVoltage), () -> io.setDeployVoltageL(0.0))
                 .until(() -> deployLCurrentFilter.calculate(inputs.deployL.currentAmps()) > IntakeConstants.deployStallCurrent),

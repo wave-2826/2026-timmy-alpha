@@ -1,36 +1,23 @@
 package frc.robot.commands.tuning;
 
-import com.revrobotics.PersistMode;
-import com.revrobotics.ResetMode;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkBase;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkBase.ControlType;
-import com.revrobotics.spark.config.SparkFlexConfig;
-
-import frc.robot.subsystems.turret.TurretIOSpark;
+import frc.robot.subsystems.turret.TurretIO;
+import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.util.Elastic;
-import frc.robot.util.SparkPIDConstants;
-import frc.robot.util.SparkUtil;
 import frc.robot.util.Elastic.Notification;
 import frc.robot.util.Elastic.Notification.NotificationLevel;
-import frc.robot.util.tunables.TunableSparkPID;
-
-import static frc.robot.util.SparkUtil.tryUntilOk;
 
 import java.io.FileWriter;
+import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /**
  * This class does NOT work for replay! It's only for testing and tuning purposes.
@@ -40,11 +27,6 @@ public class TurretTuning {
 
     private static double ENUMERATION_PERIOD = 2.5;
 
-    private static TunableSparkPID flywheelVelocityPID = new TunableSparkPID("TurretTuning/FlywheelPID")
-        .addRealRobotGains(new SparkPIDConstants(0.001, 0.0, 0.0, 0.02, ClosedLoopSlot.kSlot1));
-    private static TunableSparkPID azimuthVelocityPID = new TunableSparkPID("TurretTuning/AzimuthPID")
-        .addRealRobotGains(new SparkPIDConstants(0.008, 0.0, 0.0, 0.025, ClosedLoopSlot.kSlot1));
-
     /** File handle for the CSV file we're writing to. */
     FileWriter enumerationDataFile;
 
@@ -52,63 +34,43 @@ public class TurretTuning {
         // Run static initialization lol   
     }
 
-    TurretIOSpark io;
-    CommandXboxController controller;
+    private TurretIO io;
+    private CommandXboxController controller;
     private class Motor {
-        SparkClosedLoopController controller;
         String name;
-        SparkBase motor;
-        public Motor(String name, SparkBase motor) {
+        Supplier<Double> speedSupplier;
+        Supplier<Double> currentSupplier;
+        SlewRateLimiter speedLimiter = new SlewRateLimiter(1500); // rpm/s
+        double speedTarget = 0.0;
+        double manualSpeed = 0.0;
+
+        public Motor(String name, Supplier<Double> speedSupplier, Supplier<Double> currentSupplier) {
             this.name = name;
-            this.motor = motor;
-            this.controller = motor.getClosedLoopController();
+            this.speedSupplier = speedSupplier;
+            this.currentSupplier = currentSupplier;
         }
-        
+
+        public void setSetpoint(double speed) {
+            speedTarget = speed;
+        }
+        public double getTrueSetpoint() {
+            return speedLimiter.calculate(speedTarget);
+        }
     }
     private Motor[] motors;
     private EventLoop triggerLoop = new EventLoop();
     
-    public TurretTuning(TurretIOSpark io, CommandXboxController controller) {
+    public TurretTuning(TurretIO io, TurretIOInputs inputs, CommandXboxController controller) {
         this.io = io;
         this.controller = controller;
         this.motors = new Motor[] {
-            new Motor("Top Flywheel", io.topFlywheelMotor),
-            new Motor("Bottom Flywheel", io.bottomFlywheelMotor),
-            new Motor("Azimuth", io.azimuthMotor),
-            new Motor("Hood", io.hoodMotor)
+            new Motor("Top Flywheel", inputs.topFlywheel::velocityRadPerSec, inputs.topFlywheel::currentAmps),
+            new Motor("Azimuth", inputs.azimuth::internalEncoderVelocity, inputs.azimuth::currentAmps),
+            new Motor("Hood", inputs.hood::velocityRadPerSec, inputs.hood::currentAmps)
         };
     }
 
     public void start() {
-        var testMotorConfig = new SparkFlexConfig();
-        testMotorConfig.signals.outputCurrentPeriodMs(20).primaryEncoderVelocityAlwaysOn(true).primaryEncoderVelocityPeriodMs(20);
-        testMotorConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(80);
-        testMotorConfig.encoder
-            .positionConversionFactor(2.0 * Math.PI) // Rotor Rotations -> Radians
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0) // RPM -> rad/s
-            .uvwAverageDepth(8)
-            .uvwMeasurementPeriod(32);
-        testMotorConfig.disableFollowerMode();
-        testMotorConfig.closedLoopRampRate(0.5);
-        
-        var testAzimuthConfig = new SparkFlexConfig().apply(testMotorConfig);
-
-        flywheelVelocityPID.applyConfigAndRegister(testMotorConfig, io.topFlywheelMotor, io.bottomFlywheelMotor, io.hoodMotor);
-        tryUntilOk(io.topFlywheelMotor, 5, () -> io.topFlywheelMotor.configure(testMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters));
-        
-        var bottomFlywheelConfig = new SparkFlexConfig().apply(testMotorConfig).inverted(true);
-        tryUntilOk(io.bottomFlywheelMotor, 5, () -> io.bottomFlywheelMotor.configure(bottomFlywheelConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters));
-        tryUntilOk(io.hoodMotor, 5, () -> io.hoodMotor.configure(testMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters));
-        
-        azimuthVelocityPID.applyConfigAndRegister(testAzimuthConfig, io.azimuthMotor);
-        tryUntilOk(io.azimuthMotor, 5, () -> io.azimuthMotor.configure(testAzimuthConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters));
-
-        if(SparkUtil.checkFault()) {
-            Elastic.sendNotification(new Notification(NotificationLevel.WARNING, "Turret tuning", "Failed to configure"));
-        } else {
-            Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Turret tuning", "Successfully reconfigured"));
-        }
-
         controller.rightBumper(triggerLoop).onTrue(Commands.runOnce(this::nextMotor));
         controller.leftBumper(triggerLoop).onTrue(Commands.runOnce(this::previousMotor));
         controller.a(triggerLoop).onTrue(Commands.runOnce(this::resetAverage));
@@ -116,10 +78,10 @@ public class TurretTuning {
     }
 
     private void nextMotor() {
-        activeMotor = (activeMotor + 1) % 4;
+        activeMotor = (activeMotor + 1) % motors.length;
     }
     private void previousMotor() {
-        activeMotor = (activeMotor - 1 + 4) % 4;
+        activeMotor = (activeMotor - 1 + motors.length) % motors.length;
     }
 
     private void resetAverage() {
@@ -132,7 +94,7 @@ public class TurretTuning {
 
 
     /** The speeds enumerated on each motor; the total number of combinations is N^3 where N is the length of this array. */
-    private double[] azimuthEnumerationSpeeds = new double[] { 0, 200, 500, 750, 1000 };
+    private double[] azimuthEnumerationSpeeds = new double[] { 0, 200 / 2., 500 / 2., 750 / 2., 1000 / 2. };
     private double[] flywheelEnumerationSpeeds = new double[] { 0, 250, 1000, 1750, 2500 };
 
     /**
@@ -147,7 +109,7 @@ public class TurretTuning {
             int index = (n / (int)Math.pow(flywheelEnumerationSpeeds.length, i)) % flywheelEnumerationSpeeds.length;
             speeds[i] = enumerationSpeeds[i][index];
         }
-        return new double[] { speeds[0], speeds[0], speeds[2], speeds[1] };
+        return new double[] { speeds[0], speeds[2], speeds[1] };
     }
     
     private double enumerationStartTime = 0;
@@ -216,13 +178,6 @@ public class TurretTuning {
         enumerationDataFile = null;
     }
 
-    private static LoggedNetworkNumber[] motorSpeeds = {
-        new LoggedNetworkNumber("Tuning/TurretTuning/TopFlywheelVelocity", 0.0),
-        new LoggedNetworkNumber("Tuning/TurretTuning/BottomFlywheelVelocity", 0.0),
-        new LoggedNetworkNumber("Tuning/TurretTuning/AzimuthVelocity", 0.0),
-        new LoggedNetworkNumber("Tuning/TurretTuning/HoodVelocity", 0.0)
-    };
-
     private int averageSamples = 0;
     private double[] currentAverageSums = new double[4];
     private double[] velocityAverageSums = new double[4];
@@ -232,7 +187,7 @@ public class TurretTuning {
             double[] speeds = getSpeeds(enumerationIndex);
             return speeds[motorIndex];
         } else {
-            return motorSpeeds[motorIndex].get();
+            return motors[motorIndex].manualSpeed;
         }
     }
 
@@ -240,7 +195,7 @@ public class TurretTuning {
         triggerLoop.poll();
 
         double changePerSecond = -200; // rpm/s
-        motorSpeeds[activeMotor].set(MathUtil.applyDeadband(controller.getRightY(), 0.1) * 0.02 * changePerSecond + motorSpeeds[activeMotor].get());
+        motors[activeMotor].manualSpeed += MathUtil.applyDeadband(controller.getRightY(), 0.1) * 0.02 * changePerSecond;
 
         Logger.recordOutput("TurretTuning/ActiveMotor", motors[activeMotor].name);
 
@@ -251,6 +206,7 @@ public class TurretTuning {
             enumerating = false;
             stopEnumeration();
         }
+
         // Reset average period at the start of every cycle
         if(enumerating) {
             int newEnumerationIndex = (int)((Timer.getFPGATimestamp() - enumerationStartTime) / ENUMERATION_PERIOD);
@@ -274,10 +230,10 @@ public class TurretTuning {
             double motorSpeed = getMotorSpeed(i);
 
             double speed = Units.rotationsPerMinuteToRadiansPerSecond(motorSpeed);
-            motor.controller.setSetpoint(speed, ControlType.kVelocity, ClosedLoopSlot.kSlot1);
+            motor.setSetpoint(speed);
             
-            double current = motor.motor.getOutputCurrent();
-            double velocity = motor.motor.getEncoder().getVelocity();
+            double current = motor.currentSupplier.get();
+            double velocity = motor.speedSupplier.get();
 
             currentAverageSums[i] += current;
             velocityAverageSums[i] += velocity;
@@ -291,6 +247,12 @@ public class TurretTuning {
             totalAverageCurrent += currentAverageSums[i] / averageSamples;
         }
 
+        io.setVelocityOutputs(
+            motors[0].getTrueSetpoint(), // fly
+            motors[2].getTrueSetpoint(), // azimuth
+            motors[1].getTrueSetpoint()  // hood
+        );
+
         Logger.recordOutput("TurretTuning/TotalCurrent", totalCurrent);
         Logger.recordOutput("TurretTuning/TotalAverageCurrent", totalAverageCurrent);
 
@@ -298,8 +260,6 @@ public class TurretTuning {
     }
 
     public void stop() {
-        io.configureAndReset();
-
         if(enumerating) stopEnumeration();
 
         triggerLoop.clear();
