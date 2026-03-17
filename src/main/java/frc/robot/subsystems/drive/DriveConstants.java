@@ -117,7 +117,7 @@ public class DriveConstants {
     public static final Slot0Configs steerGains = new Slot0Configs()
         .withKP(Constants.isSim ? 500 : 1600)
         .withKI(Constants.isSim ? 0   : 0)
-        .withKD(Constants.isSim ? 50  : 20)
+        .withKD(Constants.isSim ? 5   : 20)
         .withKS(Constants.isSim ? 0.1 : 0.1)
         .withKV(Constants.isSim ? 0.0 : 0.0)
         .withKA(Constants.isSim ? 0   : 0)
@@ -127,7 +127,7 @@ public class DriveConstants {
      * Base drive gains. Intentionally doesn't include kS or kV - those are found in tuning.
      */
     public static final Slot0Configs driveGains = new Slot0Configs()
-        .withKP(Constants.isSim ? 0.1   : 3.0)
+        .withKP(Constants.isSim ? 100   : 3.0)
         .withKI(Constants.isSim ? 0     : 0)
         .withKD(Constants.isSim ? 0     : 0);
 
