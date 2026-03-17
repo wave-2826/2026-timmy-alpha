@@ -123,7 +123,7 @@ public class RobotContainer {
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() -> Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Running Auto...", autoChooser.getSelectedName()))));
 
-        routines = new AutoRoutines(this, autoChooser);
+        routines = new AutoRoutines(drive, intake, spindexer, climber, turret, autoChooser);
 
 
 

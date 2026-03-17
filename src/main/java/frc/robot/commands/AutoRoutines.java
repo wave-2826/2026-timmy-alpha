@@ -17,17 +17,9 @@ import frc.robot.util.LoggedAutoChooser;
 public class AutoRoutines {
     private final AutoFactory autoFactory;
     private final Drive drive;
-    private final Intake intake;
-    private final Climber climber;
-    private final Spindexer spindexer;
-    private final Turret turret;
 
-    public AutoRoutines(RobotContainer rc, LoggedAutoChooser autoChooser) {
-        drive = rc.drive;
-        intake = rc.intake;
-        climber = rc.climber;
-        spindexer = rc.spindexer;
-        turret = rc.turret;
+    public AutoRoutines(Drive drive, Intake intake, Spindexer spindexer, Climber climber, Turret turret, LoggedAutoChooser autoChooser) {
+        this.drive = drive;
 
         autoFactory = drive.createAutoFactory((traj, isStart) -> {
             Logger.recordOutput("Odometry/Trajectory", traj.getPoses());
@@ -35,8 +27,7 @@ public class AutoRoutines {
         });
 
         autoFactory.bind("Deploy Intake", intake.deployIntake());
-        autoFactory.bind("Start Intaking", intake.runRollerTeleop(() -> 0.20, () -> 0.0));
-        autoFactory.bind("Stop Intaking", intake.runRollerTeleop(() -> 0.0, () -> 0.0));
+        autoFactory.bind("Start Intaking", intake.runRollerTeleop(() -> 0.20, () -> 0.0).withTimeout(7));
         autoFactory.bind("Deploy Climb", Commands.none());
         autoFactory.bind("Climb Down", Commands.none());
 
@@ -73,6 +64,7 @@ public class AutoRoutines {
         AutoTrajectory traj4 = routine.trajectory("RightSwipeOutpost", 4);
         AutoTrajectory traj5 = routine.trajectory("RightSwipeOutpost", 5);
 
+        routine.active().onTrue(Commands.print("Started the routine!"));
         routine.active().onTrue(Commands.sequence(
             traj0.resetOdometry(),
             traj0.cmd(),
@@ -113,7 +105,7 @@ public class AutoRoutines {
         return routine;
     }
 
-        private AutoRoutine getRightSwipeClimbLeft() {
+    private AutoRoutine getRightSwipeClimbLeft() {
         var routine = autoFactory.newRoutine("Right Swipe Climb Left");
 
         AutoTrajectory traj0 = routine.trajectory("RightSwipeClimb", 0);
