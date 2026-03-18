@@ -194,8 +194,8 @@
   "splits":[0]
  },
  "events":[
-   {"name":"Deploy Intake", "from":{"target":2, "targetTimestamp":1.16941, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"sequential", "data":{"commands":[
-       {"type":"named", "data":{"name":"Deploy Intake"}},
-       {"type":"named", "data":{"name":"Start Intaking"}}]}}},
+   {"name":"deployIntake", "from":{"target":2, "targetTimestamp":1.16941, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"sequential", "data":{"commands":[
+       {"type":"named", "data":{"name":"deployIntake"}},
+       {"type":"named", "data":{"name":"startIntake"}}]}}},
    {"name":"Stop Intake", "from":{"target":3, "targetTimestamp":2.57186, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"named", "data":{"name":"Stop Intake"}}}]
 }

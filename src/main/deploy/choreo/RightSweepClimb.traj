@@ -192,8 +192,8 @@
   "splits":[0]
  },
  "events":[
-   {"name":"Deploy Intake", "from":{"target":1, "targetTimestamp":1.02457, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"sequential", "data":{"commands":[
-       {"type":"named", "data":{"name":"Deploy Intake"}},
-       {"type":"named", "data":{"name":"Start Intaking"}}]}}},
-   {"name":"Stop Intaking", "from":{"target":2, "targetTimestamp":2.45105, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"named", "data":{"name":"Stop Intaking"}}}]
+   {"name":"deployIntake", "from":{"target":1, "targetTimestamp":1.02457, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"sequential", "data":{"commands":[
+       {"type":"named", "data":{"name":"deployIntake"}},
+       {"type":"named", "data":{"name":"startIntake"}}]}}},
+   {"name":"stopIntake", "from":{"target":2, "targetTimestamp":2.45105, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"named", "data":{"name":"stopIntake"}}}]
 }
