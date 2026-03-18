@@ -53,11 +53,6 @@ public class Drive extends SubsystemBase {
     private final Module[] modules = new Module[4]; // FL, FR, BL, BR
     private final Alert gyroDisconnectedAlert = new Alert("Disconnected gyro, using kinematics as fallback.", AlertType.kError);
 
-    /**
-     * If the trajectory following callback was run this tick. Reset at the end of each loop iteration so we know when
-     * to continue pathing to the latest known pose.
-     */
-    private boolean trajectoryUpdatedThisTick = false;
     /** The latest trajectory target. See trajectoryUpdatedThisTick. If null, no trajectory has been followed yet. */
     private Pose2d latestTrajectoryTarget = null;
 
@@ -242,13 +237,12 @@ public class Drive extends SubsystemBase {
         return new AutoFactory(robotState::getEstimatedPose, this::setPose, this::followPath, true, this, trajLogger);
     }
 
-        /**
+    /**
      * Follows the given field-centric path sample with PID.
      *
      * @param sample Sample along the path to follow
      */
     public void followPath(SwerveSample sample) {
-        trajectoryUpdatedThisTick = true;
         latestTrajectoryTarget = sample.getPose();
 
         var baseSpeeds = sample.getChassisSpeeds();
@@ -321,6 +315,10 @@ public class Drive extends SubsystemBase {
     /** Returns the drive motor position of a particular module in radians. */
     public double getModuleCharacterizationPosition(int module) {
         return modules[module].getModuleCharacterizationPosiiton();
+    }
+    /** Returns the drive motor position of a particular module in radians. */
+    public double getModuleCharacterizationAcceleration(int module) {
+        return modules[module].getCharacterizationAcceleration();
     }
     /** Returns the zero offset of the given module */
     public Rotation2d getZeroOffset(int module) {

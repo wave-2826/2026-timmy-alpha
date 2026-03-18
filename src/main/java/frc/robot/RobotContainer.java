@@ -138,7 +138,7 @@ public class RobotContainer {
     }
 
     public boolean noAutoSelected() {
-        if (autoChooser.getSelectedName() != "Nothing") {
+        if(autoChooser.getSelectedName() != "Nothing") {
             return false;
         } else {
             return true;

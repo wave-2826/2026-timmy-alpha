@@ -217,11 +217,6 @@ public class SwerveDriveSimulation {
         gyroSimulation.updateSimulationSubTick(angularVelocity);
     }
 
-    // TODO: Make odom work this is just a band aid solution
-    public void updateOdom(Drive drive) {
-        drive.setPose(pose);
-    }
-
     public void setSimulationWorldPose(Pose2d robotPose) {
         this.pose = robotPose;
         this.velocity = new Translation2d();
