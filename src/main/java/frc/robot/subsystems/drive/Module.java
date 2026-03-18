@@ -201,6 +201,11 @@ public class Module {
         return Units.radiansToRotations(inputs.driveVelocityRadPerSec);
     }
 
+    /** Returns the module acceleration in rotations/sec^2 (Phoenix native units). */
+    public double getCharacterizationAcceleration() {
+        return Units.radiansToRotations(inputs.driveAccelerationRadPerSec2);
+    }
+
     /** Gets the zero offset of the module. This is the amount to be added to the encoder. */
     public Rotation2d getZeroOffset() {
         return inputs.uncorrectedTurnAbsolute.unaryMinus();

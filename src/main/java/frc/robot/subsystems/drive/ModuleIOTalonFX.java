@@ -20,6 +20,7 @@ import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
@@ -44,6 +45,7 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
     // Inputs from drive motor
     protected final StatusSignal<Angle> drivePosition;
     protected final StatusSignal<AngularVelocity> driveVelocity;
+    protected final StatusSignal<AngularAcceleration> driveAcceleration;
     protected final StatusSignal<Voltage> driveAppliedVolts;
     protected final StatusSignal<Current> driveCurrent;
 
@@ -79,6 +81,7 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         // Create drive status signals
         drivePosition = driveTalon.getPosition();
         driveVelocity = driveTalon.getVelocity();
+        driveAcceleration = driveTalon.getAcceleration();
         driveAppliedVolts = driveTalon.getMotorVoltage();
         driveCurrent = driveTalon.getStatorCurrent();
 
@@ -91,7 +94,7 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         // Configure periodic frames
         BaseStatusSignal.setUpdateFrequencyForAll(DriveConstants.odometryFrequency, turnAbsolutePosition, drivePosition);
         BaseStatusSignal.setUpdateFrequencyForAll(50.0,
-            driveVelocity, driveAppliedVolts, driveCurrent,
+            driveVelocity, driveAcceleration, driveAppliedVolts, driveCurrent,
             turnVelocity, turnAppliedVolts, turnCurrent
         );
         ParentDevice.optimizeBusUtilizationForAll(driveTalon, turnTalon);
@@ -159,6 +162,7 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         inputs.driveConnected = driveConnectedDebounce.calculate(driveStatus.isOK());
         inputs.drivePositionRad = Units.rotationsToRadians(drivePosition.getValueAsDouble()) / constants.DriveMotorGearRatio;
         inputs.driveVelocityRadPerSec = Units.rotationsToRadians(driveVelocity.getValueAsDouble()) / constants.DriveMotorGearRatio;
+        inputs.driveAccelerationRadPerSec2 = Units.rotationsToRadians(driveVelocity.getValueAsDouble()) / constants.DriveMotorGearRatio;
         inputs.driveAppliedVolts = driveAppliedVolts.getValueAsDouble();
         inputs.driveCurrentAmps = driveCurrent.getValueAsDouble();
 

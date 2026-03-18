@@ -12,6 +12,7 @@ public interface ModuleIO {
         /* The drive position as radians of the wheel. */
         public double drivePositionRad = 0.0;
         public double driveVelocityRadPerSec = 0.0;
+        public double driveAccelerationRadPerSec2 = 0.0;
         public double driveAppliedVolts = 0.0;
         /* Stator current */
         public double driveCurrentAmps = 0.0;

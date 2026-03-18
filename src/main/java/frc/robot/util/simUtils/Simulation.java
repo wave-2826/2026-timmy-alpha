@@ -98,8 +98,6 @@ public final class Simulation {
             driveSimulation.update(simulationDtSeconds);
             SimulatedBattery.simulationSubTick();
 
-            if(drive != null) driveSimulation.updateOdom(drive);
-
             // TODO: also run other sim IO with subticks
             
                
