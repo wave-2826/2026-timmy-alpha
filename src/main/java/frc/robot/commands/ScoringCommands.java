@@ -9,16 +9,21 @@ import frc.robot.subsystems.turret.ShotCalculator;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.ShotCalculator.ShotType;
 
-public class AutoShoot {
+public class ScoringCommands {
     /**
      * @param turret
      * @param spindexer
      * @param driverShoot The trigger on the driver controller which indicates the driver's intent to shoot
-     * @param coDriverUnstuckOverride The trigger on the co-driver controller which runs the spindexer
+     * @param codriverOverrideAxis The trigger on the co-driver controller which runs the spindexer
      * backward to "unstuck" balls in case something goes wrong.
      * @return
      */
-    public static Command autoShoot(Turret turret, Spindexer spindexer, DoubleSupplier driverShoot, DoubleSupplier coDriverUnstuckOverride) {
+    public static Command autoShoot(
+        Turret turret,
+        Spindexer spindexer,
+        DoubleSupplier driverShoot,
+        DoubleSupplier codriverOverrideAxis
+    ) {
         return Commands.runEnd(() -> {
             var parameters = ShotCalculator.getInstance().calculate();
             double spinPower;
@@ -30,8 +35,8 @@ public class AutoShoot {
                 spinPower = 0.0;
             }
 
-            double unstuckOverride = coDriverUnstuckOverride.getAsDouble();
-            spindexer.setPower(unstuckOverride > 0.1 ? unstuckOverride : spinPower);
+            double codriverOverride = codriverOverrideAxis.getAsDouble();
+            spindexer.setPower(Math.abs(codriverOverride) > 0.1 ? codriverOverride : spinPower);
         }, () -> {
             turret.target = null;
             spindexer.setPower(0.0);

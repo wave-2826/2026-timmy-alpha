@@ -1,8 +1,9 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
-import frc.robot.util.SparkPIDConstants;
-import frc.robot.util.tunables.TunableSparkPID;
+import frc.robot.util.GenericPIDConstants;
+import frc.robot.util.tunables.TunablePID;
 
 public class IntakeConstants {
     public static final int intakeRollerCanId = 30;
@@ -12,21 +13,22 @@ public class IntakeConstants {
     public static final double rollerMotorReduction = 1.0;
     
     public static final int rollerCurrentLimit = 40;
-    public static final int deployCurrentLimit = 25;
+    public static final int deployCurrentLimit = 20;
     
-    public static final double deployStallCurrent = 15;
+    /** The current we use to detect the motors at the end of their travel */
+    public static final double deployStallCurrent = 4;
     
-    public static final double pinionReduction = 5.;
+    public static final double pinionReduction = 25.;
     public static final double pinionRadiusMeters = Units.inchesToMeters(2.857143/2);
     public static final double trackLengthMeters = Units.inchesToMeters(14.75);
 
     // Geometry
     public static final double fullyExtendedIntakeDepth = Units.inchesToMeters(20); // TODO: collect from cad
 
-    public static final TunableSparkPID rollerPID = new TunableSparkPID("Intake/Roller")
-        .addRealRobotGains(new SparkPIDConstants(0.005, 0, 0))
-        .addSimGains(new SparkPIDConstants(0.005, 0, 0));
-    public static final TunableSparkPID deployPID = new TunableSparkPID("Intake/Deploy")
-        .addRealRobotGains(new SparkPIDConstants(5, 0, 0))
-        .addSimGains(new SparkPIDConstants(0.005, 0, 0));
+    public static final TunablePID rollerPID = new TunablePID("Intake/Roller")
+        .addRealRobotGains(new GenericPIDConstants(0.005, 0, 0, 1. / DCMotor.getNeoVortex(1).KvRadPerSecPerVolt))
+        .addSimGains(new GenericPIDConstants(0.005, 0, 0));
+    public static final TunablePID deployPID = new TunablePID("Intake/Deploy")
+        .addRealRobotGains(new GenericPIDConstants(5, 0, 0))
+        .addSimGains(new GenericPIDConstants(0.005, 0, 0));
 }

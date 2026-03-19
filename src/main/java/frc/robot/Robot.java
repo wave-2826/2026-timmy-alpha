@@ -27,7 +27,7 @@ import frc.robot.util.RioAlerts;
 import frc.robot.util.SparkUtil;
 import frc.robot.util.ThreadPriorityDummyLogReceiver;
 import frc.robot.util.simUtils.Simulation;
-import frc.robot.util.tunables.TunableSparkPID;
+import frc.robot.util.tunables.TunablePID;
 import frc.robot.util.Elastic;
 
 import java.lang.reflect.Field;
@@ -237,7 +237,7 @@ public class Robot extends LoggedRobot {
 
         LoggedTracer.record("Commands");
 
-        TunableSparkPID.periodic();
+        TunablePID.periodic();
         LoggedTracer.record("Tunables");
 
         // Alert-related updates

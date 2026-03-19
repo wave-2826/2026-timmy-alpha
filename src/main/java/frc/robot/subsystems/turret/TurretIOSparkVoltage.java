@@ -7,6 +7,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Constants;
+import frc.robot.util.GenericPIDConstants.PIDSlot;
 
 /**
  * A slight adjustment to real turret IO wherein we manually control current with an on-rio PID loop
@@ -31,9 +32,9 @@ public class TurretIOSparkVoltage extends TurretIOSpark {
     public TurretIOSparkVoltage() {
         super();
 
-        TurretConstants.flywheelMotorPID.configureController(flywheelCurrentPID, ClosedLoopSlot.kSlot1);
-        TurretConstants.azimuthMotorPID.configureController(azimuthCurrentPID, ClosedLoopSlot.kSlot1);
-        TurretConstants.hoodMotorPID.configureController(hoodCurrentPID, ClosedLoopSlot.kSlot1);
+        TurretConstants.flywheelMotorPID.configureController(flywheelCurrentPID, PIDSlot.Slot1);
+        TurretConstants.azimuthMotorPID.configureController(azimuthCurrentPID, PIDSlot.Slot1);
+        TurretConstants.hoodMotorPID.configureController(hoodCurrentPID, PIDSlot.Slot1);
     }
 
     double flySetpoint = 0;

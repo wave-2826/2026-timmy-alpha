@@ -55,7 +55,7 @@ public class IntakeIOReal implements IntakeIO {
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
         
-        deployLConfig.inverted(true);
+        deployLConfig.inverted(false);
         deployRConfig.follow(deployL, true);
 
         IntakeConstants.rollerPID.applyConfigAndRegister(rollerConfig, roller);
@@ -85,22 +85,22 @@ public class IntakeIOReal implements IntakeIO {
     }
   
     @Override
-    public void setRollerVoltage(double volts) {
-        roller.setVoltage(volts);
+    public void setRollerPower(double power) {
+        roller.getClosedLoopController().setSetpoint(power, ControlType.kDutyCycle);
     }
 
     @Override
-    public void setDeployVoltageL(double volts) {
-        deployL.setVoltage(volts);
+    public void setDeployPowerL(double power) {
+        deployL.getClosedLoopController().setSetpoint(power, ControlType.kDutyCycle);
     }
 
     @Override
-    public void setDeployVoltageR(double volts) {
+    public void setDeployPowerR(double power) {
         if(deployFollowing) {
             deployR.pauseFollowerModeAsync();
             deployFollowing = false;
         }
-        deployR.setVoltage(volts);
+        deployR.getClosedLoopController().setSetpoint(power, ControlType.kDutyCycle);
     }
 
     @Override

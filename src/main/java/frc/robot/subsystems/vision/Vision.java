@@ -18,9 +18,6 @@ import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
-    public static final LoggedTunableNumber perTagPersistenceTime = new LoggedTunableNumber(
-        "Vision/PerTagPersistenceTime", 0.05);
-
     private final VisionIO[] io;
     private final VisionIOInputsAutoLogged[] inputs;
     private final Alert[] disconnectedAlerts;

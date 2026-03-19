@@ -30,8 +30,8 @@ public class AutoRoutines {
         });
 
         autoFactory.bind("deployIntake", intake.deployIntake())
-            .bind("startIntake", intake.runRollerTeleop(() -> 0.20, () -> 0.0).withTimeout(7))
-            .bind("stopIntake", Commands.none())
+            .bind("startIntake", intake.runRollerPercent(0.20))
+            .bind("stopIntake", intake.runRollerPercent(0.0))
             .bind("climbUp", Commands.none())
             .bind("climbDown", Commands.none());
 

@@ -18,7 +18,7 @@ public interface IntakeIO {
             boolean connected,
             /** The motor current draw. */
             double currentAmps,
-            /** The motor's position according to the encoder in meters */
+            /** The motor's position according to the encoder in meters. Positive numbers are outward. */
             double motorPosition
         ) {}
         
@@ -32,13 +32,16 @@ public interface IntakeIO {
     /** Update the set of loggable inputs. */
     public default void updateInputs(IntakeIOInputs inputs) {}
     
-    /** Run open loop at the specified voltage. */
-    public default void setRollerVoltage(double volts) {}
-    public default void setDeployVoltageL(double volts) {}
-    public default void setDeployVoltageR(double volts) {}
+    /** Run open loop at the specified duty cycle. */
+    public default void setRollerPower(double power) {}
+    /** Run open loop at the specified duty cycle. Positive numbers are outward. */
+    public default void setDeployPowerL(double power) {}
+    /** Run open loop at the specified duty cycle. Positive numbers are outward. */
+    public default void setDeployPowerR(double power) {}
     
     public default void resetDeployEncoders() {}
-    /** Set the deploy position relative to when the deploy encoders were last reset. */
+    /** Set the deploy position relative to when the deploy encoders were last reset. Positive numbers are outward. */
     public default void setDeployPosition(double position) {}
+    /** Stops deploy. */
     public default void stopDeploy() {}
 }
