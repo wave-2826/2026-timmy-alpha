@@ -110,6 +110,7 @@ public class LoggedAutoChooser extends LoggedNetworkInput implements Sendable {
             // early return if the selected auto matches the active auto
             return nameAtGeneration;
         }
+
         boolean dsValid = DriverStation.isDisabled() && DriverStation.getAlliance().isPresent();
         if(dsValid || force) {
             if(!autoRoutines.containsKey(selected) && !selected.equals(NONE_NAME)) {
@@ -251,7 +252,7 @@ public class LoggedAutoChooser extends LoggedNetworkInput implements Sendable {
         builder.publishConstString("default", NONE_NAME);
         builder.addStringArrayProperty("options", () -> options, null);
         builder.addStringProperty("selected", null, this::select);
-        builder.addStringProperty("active", () -> select(selected), null);
+        builder.addStringProperty("active", () -> selected, null);
     }
 
     @Override

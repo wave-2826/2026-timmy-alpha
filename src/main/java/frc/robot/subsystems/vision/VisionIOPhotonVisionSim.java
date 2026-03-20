@@ -25,6 +25,11 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
         super(config);
         this.poseSupplier = poseSupplier;
 
+        if(config.position() == null) {
+            cameraSim = null;
+            return;
+        }
+
         // Initialize vision sim
         if(visionSim == null) {
             visionSim = new VisionSystemSim("main");
@@ -56,6 +61,10 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
 
     @Override
     public void updateInputs(VisionIOInputs inputs) {
+        if(cameraSim == null) {
+            return;
+        }
+        
         if(VisionConstants.enableVisionSimulation) {
             visionSim.update(poseSupplier.get());
             super.updateInputs(inputs);

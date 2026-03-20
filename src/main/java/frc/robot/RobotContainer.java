@@ -131,8 +131,6 @@ public class RobotContainer {
 
         routines = new AutoRoutines(drive, intake, spindexer, climber, turret, autoChooser);
 
-
-
         Controls.getInstance().configureControls(this);
         testChooser = TuningCommands.constructTuningChooser(this);
 

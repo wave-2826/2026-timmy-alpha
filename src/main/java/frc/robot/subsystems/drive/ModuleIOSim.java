@@ -21,7 +21,7 @@ public class ModuleIOSim extends ModuleIOTalonFX {
     private final CANcoderSimState cancoderSimState = cancoder.getSimState();
 
     private final DCMotorSim driveSim = new DCMotorSim(
-        LinearSystemId.createDCMotorSystem(DriveConstants.driveMotorModel, 0.025, DriveConstants.driveGearRatio),
+        LinearSystemId.createDCMotorSystem(DriveConstants.driveMotorModel, 0.01, DriveConstants.driveGearRatio),
         DriveConstants.driveMotorModel
     );
     private final DCMotorSim turnSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(

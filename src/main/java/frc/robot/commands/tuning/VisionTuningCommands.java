@@ -52,7 +52,8 @@ public class VisionTuningCommands {
     // Distance left toward rio side
     private static LoggedTunableNumber heldTagYIn = new LoggedTunableNumber("Vision/CalibrationTag/YInches", 60.75);
     // Distance up
-    private static LoggedTunableNumber heldTagZIn = new LoggedTunableNumber("Vision/CalibrationTag/ZInches", 21.5);
+    private static LoggedTunableNumber heldTagZIn = new LoggedTunableNumber("Vision/CalibrationTag/ZInches", 23.0 + 6.5 / 2.);
+    // Rotation clockwise from forward (facing PDH)
     private static LoggedTunableNumber heldTagYawDeg = new LoggedTunableNumber("Vision/CalibrationTag/YawDegrees", 270.0);
 
     /** The transform of the calibration tag, relative to the robot base. */

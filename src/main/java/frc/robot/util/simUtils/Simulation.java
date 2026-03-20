@@ -12,6 +12,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
@@ -99,13 +101,15 @@ public final class Simulation {
             SimulatedBattery.simulationSubTick();
 
             // TODO: also run other sim IO with subticks
-            
-               
         }
     }
 
     public void simulationInit() {
-        DriverStationSim.setDsAttached(true);
-        DriverStationSim.setEnabled(true);
+        CommandScheduler.getInstance().schedule(
+            Commands.waitSeconds(0.25).andThen(Commands.runOnce(() -> {
+                DriverStationSim.setDsAttached(true);
+                DriverStationSim.setEnabled(true);
+            })).ignoringDisable(true)
+        );
     }
 }
