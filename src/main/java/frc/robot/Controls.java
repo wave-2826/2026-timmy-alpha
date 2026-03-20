@@ -18,7 +18,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
-import frc.robot.commands.AutoShoot;
+import frc.robot.commands.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.intake.Intake;
@@ -41,12 +41,20 @@ public class Controls {
 
     private static final Controls instance = new Controls();
 
+    
+    public static enum CodriverMode { Normal, TurretControl };
+    private final Trigger normalCodriver;
+    private final Trigger turretControlCodriver;
+    private CodriverMode codriverMode = CodriverMode.Normal;
+
     public static Controls getInstance() {
         return instance;
     }
 
+    // singleton class
     private Controls() {
-        // This is a singleton
+        normalCodriver = new Trigger(() -> codriverMode == CodriverMode.Normal);
+        turretControlCodriver = new Trigger(() -> codriverMode == CodriverMode.TurretControl);
     }
 
     /** Configures the controls. */
@@ -63,18 +71,19 @@ public class Controls {
 
         // driver.b().whileTrue(climber.extendBoth()).onTrue(intake.bringIntakeIn(1));
         driver.a().whileTrue(climber.retractBoth());
+        coDriver.rightBumper().whileTrue(climber.manualControls(coDriver::getLeftY, coDriver::getRightY));
 
         driver.leftBumper().onTrue(intake.deployIntake().alongWith(intake.enable()));
         driver.rightBumper().onTrue(intake.disable());
         RobotModeTriggers.autonomous().onTrue(intake.deployIntake());
         intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
 
-        RobotModeTriggers.teleop().onTrue(climber.extendServos());
-
-        // turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
-        turret.setDefaultCommand(turret.runOscillationTest());
-
-        turret.setDefaultCommand(AutoShoot.autoShoot(turret, spindexer, driver::getRightTriggerAxis, coDriver::getRightTriggerAxis));
+        turret.setDefaultCommand(ScoringCommands.autoShoot(
+            turret, spindexer,
+            driver::getRightTriggerAxis,
+            coDriver::getRightY
+        ));
+        coDriver.start().whileTrue(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
 
         // Reset gyro or odometry if in simulation
         final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
@@ -89,14 +98,16 @@ public class Controls {
         driver.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
         driver.start().and(driver.leftStick()).debounce(0.5).onTrue(Commands.runOnce(resetOdometry, drive).ignoringDisable(true));
         
+        turretControlCodriver.whileTrue(controllerRumbleWhileRunning(coDriver, RumbleType.kRightRumble).withName("TurretCodriverControls"));
+
         // Endgame Alerts
         Trigger endgameAlert1Trigger = new Trigger(() -> DriverStation.isTeleopEnabled()
             && DriverStation.getMatchTime() > 0 && DriverStation.getMatchTime() <= endgameAlert1Time.get());
         Trigger endgameAlert2Trigger = new Trigger(() -> DriverStation.isTeleopEnabled()
             && DriverStation.getMatchTime() > 0 && DriverStation.getMatchTime() <= endgameAlert2Time.get());
 
-        endgameAlert1Trigger.onTrue(controllerRumbleWhileRunning(RumbleType.kBothRumble).withTimeout(0.5));
-        endgameAlert2Trigger.onTrue(controllerRumbleWhileRunning(RumbleType.kBothRumble).withTimeout(0.4).andThen(Commands.waitSeconds(0.3)).repeatedly().withTimeout(2.0));
+        endgameAlert1Trigger.onTrue(controllerRumbleWhileRunning(driver, RumbleType.kBothRumble).withTimeout(0.5));
+        endgameAlert2Trigger.onTrue(controllerRumbleWhileRunning(driver, RumbleType.kBothRumble).withTimeout(0.4).andThen(Commands.waitSeconds(0.3)).repeatedly().withTimeout(2.0));
 
         RobotModeTriggers.autonomous().and(DriverStation::isFMSAttached).onTrue(Commands.runOnce(() -> {
             Elastic.selectTab("Autonomous");
@@ -108,20 +119,20 @@ public class Controls {
 
     private HashMap<Integer, Double> driverRumbleCommands = new HashMap<>();
 
-    public void setDriverRumble(RumbleType type, double value, int hash) {
+    public void setRumble(CommandXboxController controller, RumbleType type, double value, int hash) {
         if(value == 0.0) {
             driverRumbleCommands.remove(hash);
         } else {
             driverRumbleCommands.put(hash, value);
         }
-        driver.setRumble(type, driverRumbleCommands.values().stream().reduce(0.0, Double::max));
+        controller.setRumble(type, driverRumbleCommands.values().stream().reduce(0.0, Double::max));
     }
 
-    public Command controllerRumbleWhileRunning(RumbleType type) {
+    public Command controllerRumbleWhileRunning(CommandXboxController controller, RumbleType type) {
         return Commands.startEnd(() -> {
-            setDriverRumble(type, 1.0, hashCode());
+            setRumble(controller, type, 1.0, hashCode());
         }, () -> {
-            setDriverRumble(type, 0.0, hashCode());
+            setRumble(controller, type, 0.0, hashCode());
         }).withName("ControllerRumbleWhileRunning");
     }
 

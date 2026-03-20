@@ -2,6 +2,8 @@ package frc.robot.subsystems.turret;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import edu.wpi.first.math.MathUtil;
+
 public interface TurretIO {
     @AutoLog
     public static class TurretIOInputs {
@@ -77,17 +79,19 @@ public interface TurretIO {
             return hood.angleRad() * TurretConstants.totalHoodGearing -
                 azimuthEncoder.angleRad() * TurretConstants.azimuthHoodCoupling +
                 TurretConstants.hoodMinAngle;
-            // TODO: Store an offset?
         }
         public double getHoodVelocityRadPerSec() {
             return hood.velocityRadPerSec() * TurretConstants.totalHoodGearing -
                 azimuthEncoder.velocityRadPerSec() * TurretConstants.azimuthHoodCoupling;
         }
         public double getAzimuthAngleRad() {
-            return azimuthEncoder.angleRad() * TurretConstants.totalAzimuthGearing;
+            // return azimuthEncoder.angleRad() * TurretConstants.totalAzimuthGearing;
+            return MathUtil.angleModulus(azimuth.internalEncoderAngle * TurretConstants.totalAzimuthGearing);
         }
+        /**  */
         public double getAzimuthVelocityRadPerSec() {
-            return azimuthEncoder.velocityRadPerSec() * TurretConstants.totalAzimuthGearing;
+            // return azimuthEncoder.velocityRadPerSec() * TurretConstants.totalAzimuthGearing;
+            return azimuth.internalEncoderVelocity * TurretConstants.totalAzimuthGearing;
         }
     }
 
@@ -118,6 +122,9 @@ public interface TurretIO {
 
     /** Run the turret with the given outputs in LQR control mode. */
     public default void setLQROutputs(TurretLQROutputs outputs) {}
+
+    /** Reset the azimuth and hood to their zero position (flywheel facing directly toward pdh side, hood all the way down) */
+    public default void resetAzimuthAndHood() {}
 
     /** Stop all turret motion and hold position. */
     public default void stop() {}

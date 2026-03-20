@@ -1,7 +1,7 @@
 package frc.robot.subsystems.climber;
 
-import frc.robot.util.SparkPIDConstants;
-import frc.robot.util.tunables.TunableSparkPID;
+import frc.robot.util.GenericPIDConstants;
+import frc.robot.util.tunables.TunablePID;
 
 public class ClimberConstants {
     public static final int leftCanId = 20;
@@ -11,12 +11,10 @@ public class ClimberConstants {
 
     public static final int currentLimit = 60;
 
-    public static final int leftServoPWM = 1;
-    public static final int rightServoPWM = 2;
+    public static final int leftServoPWM = 3;
+    public static final int rightServoPWM = 4;
 
-    public static final int servoLengthmm = 50;
-
-    public static final TunableSparkPID climbPID =  new TunableSparkPID("/Climb/Climb")
-    .addRealRobotGains(new SparkPIDConstants(0.005, 0, 0))
-    .addSimGains(new SparkPIDConstants(0.005, 0, 0));
+    public static final TunablePID climbPID =  new TunablePID("/Climb/Climb")
+        .addRealRobotGains(new GenericPIDConstants(0.005, 0, 0))
+        .addSimGains(new GenericPIDConstants(0.005, 0, 0));
 }

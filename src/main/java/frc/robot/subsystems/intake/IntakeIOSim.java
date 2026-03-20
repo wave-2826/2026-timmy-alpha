@@ -11,9 +11,4 @@ public class IntakeIOSim implements IntakeIO {
     public void updateInputs(IntakeIOInputs inputs) {
         
     }
-    
-    @Override
-    public void setRollerVoltage(double volts) {
-        appliedVolts = MathUtil.clamp(volts, -12.0, 12.0);
-    }
 }

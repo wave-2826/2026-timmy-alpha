@@ -76,68 +76,67 @@ public class Turret extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Turret", (TurretIOInputsAutoLogged)inputs);
 
-        if(DriverStation.isTest()) return;
+        if(!DriverStation.isTest()) {
+            if(target == null) {
+                controllerInitialised = false;
+                io.stop();
 
-        if(target == null) {
-            controllerInitialised = false;
-            io.stop();
+                Logger.recordOutput("Turret/Target/Azimuth", 0.0, Radians);
+                Logger.recordOutput("Turret/Target/Hood", 0.0, Radians);
+                Logger.recordOutput("Turret/Target/Flywheel", 0.0, RadiansPerSecond);
 
-            Logger.recordOutput("Turret/Target/Azimuth", 0.0, Radians);
-            Logger.recordOutput("Turret/Target/Hood", 0.0, Radians);
-            Logger.recordOutput("Turret/Target/Flywheel", 0.0, RadiansPerSecond);
-
-            TurretVisualizer.getInstance().update(
-                0.0, inputs.getAzimuthAngleRad(),
-                0.0, inputs.getHoodAngleRad()
-            );
-        } else {
-            switch(controlModeChooser.get()) {
-                case NONE:
-                    return;
-                case PID: {
-                    TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
-                        target.flywheelSpeedRadPerSec,
-                        target.azimuthAngleRad % (Math.PI * 2),
-                        (
-                            MathUtil.clamp(
-                                target.hoodAngleRad,
-                                TurretConstants.hoodMinAngle,
-                                TurretConstants.hoodMaxAngle
-                            ) - TurretConstants.hoodMinAngle
-                        ) / TurretConstants.hoodRingToHoodReduction
-                    );
-                    io.setPIDOutputs(outputs);
-                    break;
-                }
-                case LQR: {
-                    // Seed the observer the first time we enter LQR mode so it
-                    // starts from the real measured state rather than zero.
-                    if(!controllerInitialised) {
-                        controller.reset(inputs);
-                        controllerInitialised = true;
+                TurretVisualizer.getInstance().update(
+                    0.0, inputs.getAzimuthAngleRad(),
+                    0.0, inputs.getHoodAngleRad()
+                );
+            } else {
+                switch(controlModeChooser.get()) {
+                    case NONE:
+                        return;
+                    case PID: {
+                        TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
+                            target.flywheelSpeedRadPerSec,
+                            target.azimuthAngleRad % (Math.PI * 2),
+                            (
+                                MathUtil.clamp(
+                                    target.hoodAngleRad,
+                                    TurretConstants.hoodMinAngle,
+                                    TurretConstants.hoodMaxAngle
+                                ) - TurretConstants.hoodMinAngle
+                            ) / TurretConstants.hoodRingToHoodReduction
+                        );
+                        io.setPIDOutputs(outputs);
+                        break;
                     }
-                    
-                    var outputs = controller.calculate(inputs, target);
-                    Logger.recordOutput("Turret/LQRSetpoints", outputs);
-                    io.setLQROutputs(outputs);
-                    break;
+                    case LQR: {
+                        // Seed the observer the first time we enter LQR mode so it
+                        // starts from the real measured state rather than zero.
+                        if(!controllerInitialised) {
+                            controller.reset(inputs);
+                            controllerInitialised = true;
+                        }
+                        
+                        var outputs = controller.calculate(inputs, target);
+                        Logger.recordOutput("Turret/LQRSetpoints", outputs);
+                        io.setLQROutputs(outputs);
+                        break;
+                    }
                 }
+                
+                Logger.recordOutput("Turret/Target/Azimuth", target.azimuthAngleRad, Radians);
+                Logger.recordOutput("Turret/Target/Hood", target.hoodAngleRad, Radians);
+                Logger.recordOutput("Turret/Target/Flywheel", target.flywheelSpeedRadPerSec, RadiansPerSecond);
             }
-            
-            Logger.recordOutput("Turret/Target/Azimuth", target.azimuthAngleRad, Radians);
-            Logger.recordOutput("Turret/Target/Hood", target.hoodAngleRad, Radians);
-            Logger.recordOutput("Turret/Target/Flywheel", target.flywheelSpeedRadPerSec, RadiansPerSecond);
-
-            TurretVisualizer.getInstance().update(
-                target.azimuthAngleRad, inputs.getAzimuthAngleRad(),
-                target.hoodAngleRad, inputs.getHoodAngleRad()
-            );
         }
+        TurretVisualizer.getInstance().update(
+            target != null ? target.azimuthAngleRad : 0.0, inputs.getAzimuthAngleRad(),
+            target != null ? target.hoodAngleRad : 0.0, inputs.getHoodAngleRad()
+        );
 
         Logger.recordOutput("Turret/Measured/FlywheelVelocity", inputs.getFlywheelVelocityRadPerSecond(), RadiansPerSecond);
         Logger.recordOutput("Turret/Measured/Hood", inputs.getHoodAngleRad(), Radians);
         Logger.recordOutput("Turret/Measured/HoodVelocity", inputs.getHoodVelocityRadPerSec(), RadiansPerSecond);
-        Logger.recordOutput("Turret/Measured/Azimuth", MathUtil.angleModulus(inputs.getAzimuthAngleRad()), Radians);
+        Logger.recordOutput("Turret/Measured/Azimuth", inputs.getAzimuthAngleRad(), Radians);
         Logger.recordOutput("Turret/Measured/AzimuthVelocity", inputs.getAzimuthVelocityRadPerSec(), RadiansPerSecond);
     }
 
@@ -199,7 +198,7 @@ public class Turret extends SubsystemBase {
     }
 
     public Command runTuning() {
-        TurretTuning tuning = new TurretTuning(io, inputs, Controls.getInstance().coDriver);
+        TurretTuning tuning = new TurretTuning(io, () -> inputs, Controls.getInstance().coDriver);
         return Commands.runOnce(tuning::start).andThen(Commands.runEnd(tuning::run, tuning::stop, this));
     }
 }

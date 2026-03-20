@@ -41,7 +41,7 @@ template-subsystem:
     python ./misc/scripts/template-subsystem.py
 
 tune-turret:
-    python ./misc/turretTuning/analyze_data.py
+    cd ./misc/turretTuning/; python ./analyze_data.py
 
 setup-hotswap:
     python ./misc/scripts/setup-hotswap.py

@@ -34,15 +34,8 @@ public class Intake extends SubsystemBase {
         return runRollerPercent(0);
     }
     
-    private Command runRollerPercent(double percent) {
-        return runOnce(() -> io.setRollerVoltage(percent/100 * 12.0));
-    }
-    
-    public Command runRollerTeleop(DoubleSupplier forward, DoubleSupplier reverse) {
-        return runEnd(
-            () -> io.setRollerVoltage((forward.getAsDouble() - reverse.getAsDouble()) * 12.0),
-            () -> io.setRollerVoltage(0.0)
-        );
+    public Command runRollerPercent(double percent) {
+        return runOnce(() -> io.setRollerPower(percent));
     }
 
     private LinearFilter deployLCurrentFilter = LinearFilter.movingAverage(5);
@@ -53,20 +46,21 @@ public class Intake extends SubsystemBase {
     }
     
     public Command deployIntake() {
-        final double deployVoltage = 5+.0;
+        final double deployPower = 0.4;
         return Commands.parallel(
-            Commands.runEnd(() -> io.setDeployVoltageL(-deployVoltage), () -> io.setDeployVoltageL(0.0))
+            Commands.runEnd(() -> io.setDeployPowerL(deployPower), () -> io.setDeployPowerL(0.0))
                 .until(() -> deployLCurrentFilter.calculate(inputs.deployL.currentAmps()) > IntakeConstants.deployStallCurrent),
-            Commands.runEnd(() -> io.setDeployVoltageR(-deployVoltage), () -> io.setDeployVoltageR(0.0))
+            Commands.runEnd(() -> io.setDeployPowerR(deployPower), () -> io.setDeployPowerR(0.0))
                 .until(() -> deployRCurrentFilter.calculate(inputs.deployR.currentAmps()) > IntakeConstants.deployStallCurrent)
         ).withTimeout(1.0).andThen(() -> {
             io.resetDeployEncoders();
         });
     }
     
+    /** Set the intake position. Positive numbers are inward. */
     public Command setIntakePosition(DoubleSupplier position) {
         return run(() -> {
-            io.setDeployPosition(-position.getAsDouble());
+            io.setDeployPosition(position.getAsDouble());
         });
     }
     

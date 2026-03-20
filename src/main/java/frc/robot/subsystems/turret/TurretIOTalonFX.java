@@ -4,6 +4,7 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -27,6 +28,8 @@ public class TurretIOTalonFX implements TurretIO {
 
     protected final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0).withUseTimesync(true);
     protected final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withEnableFOC(true).withUseTimesync(true);
+    protected final PositionDutyCycle positionRequest = new PositionDutyCycle(0).withEnableFOC(true).withUseTimesync(true);
+    
     protected final Follower followerRequest;
 
     protected final TalonFX topFlywheelTalon = new TalonFX(TurretConstants.topFlywheelCanID, TurretConstants.CANBus);
@@ -124,6 +127,8 @@ public class TurretIOTalonFX implements TurretIO {
         ParentDevice.optimizeBusUtilizationForAll(
             topFlywheelTalon, bottomFlywheelTalon, azimuthTalon, hoodTalon, azimuthCancoder
         );
+
+        resetAzimuthAndHood();
     }
   
     @Override
@@ -167,16 +172,25 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void setPIDOutputs(TurretIOPIDOutputs outputs) {
-        // TODO
+        topFlywheelTalon.setControl(velocityRequest.withVelocity(outputs.flywheelSpeedRadPerSec()).withSlot(1));
+        bottomFlywheelTalon.setControl(followerRequest);
+
+        azimuthTalon.setControl(positionRequest.withPosition(
+            outputs.azimuthAngleRad() / TurretConstants.aziMotorToRingReduction
+        ).withSlot(0));
+        double hoodRingPos = outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction - outputs.azimuthAngleRad();
+        hoodTalon.setControl(positionRequest.withPosition(
+            hoodRingPos / TurretConstants.hoodMotorToRingReduction
+        ).withSlot(0));
     }
 
     @Override
     public void setVelocityOutputs(double flywheelVelocityRadPerSec, double azimuthVelocityRadPerSec,
             double hoodVelocityRadPerSec) {
-        topFlywheelTalon.setControl(velocityRequest.withVelocity(flywheelVelocityRadPerSec).withSlot(1));
+        topFlywheelTalon.setControl(velocityRequest.withVelocity(flywheelVelocityRadPerSec / (Math.PI * 2)).withSlot(1));
         bottomFlywheelTalon.setControl(followerRequest);
-        azimuthTalon.setControl(velocityRequest.withVelocity(azimuthVelocityRadPerSec).withSlot(1));
-        hoodTalon.setControl(velocityRequest.withVelocity(hoodVelocityRadPerSec).withSlot(1));
+        azimuthTalon.setControl(velocityRequest.withVelocity(azimuthVelocityRadPerSec / (Math.PI * 2)).withSlot(1));
+        hoodTalon.setControl(velocityRequest.withVelocity(hoodVelocityRadPerSec / (Math.PI * 2)).withSlot(1));
     }
 
     @Override
@@ -185,6 +199,12 @@ public class TurretIOTalonFX implements TurretIO {
         bottomFlywheelTalon.setControl(followerRequest);
         azimuthTalon.setControl(torqueCurrentRequest.withOutput(outputs.azimuthCurrent()));
         hoodTalon.setControl(torqueCurrentRequest.withOutput(outputs.hoodCurrent()));
+    }
+
+    @Override
+    public void resetAzimuthAndHood() {
+        tryUntilOk(5, () -> azimuthTalon.setPosition(0.0));
+        tryUntilOk(5, () -> hoodTalon.setPosition(0.0));
     }
 
     @Override

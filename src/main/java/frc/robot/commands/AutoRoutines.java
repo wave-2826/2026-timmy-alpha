@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import org.littletonrobotics.junction.Logger;
 
+import choreo.Choreo;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
@@ -17,19 +18,22 @@ import frc.robot.util.LoggedAutoChooser;
 public class AutoRoutines {
     private final AutoFactory autoFactory;
     private final Drive drive;
+    private final Intake intake;
 
     public AutoRoutines(Drive drive, Intake intake, Spindexer spindexer, Climber climber, Turret turret, LoggedAutoChooser autoChooser) {
         this.drive = drive;
+        this.intake = intake;
 
         autoFactory = drive.createAutoFactory((traj, isStart) -> {
             Logger.recordOutput("Odometry/Trajectory", traj.getPoses());
             Logger.recordOutput("Odometry/IsStart", isStart);
         });
 
-        autoFactory.bind("Deploy Intake", intake.deployIntake());
-        autoFactory.bind("Start Intaking", intake.runRollerTeleop(() -> 0.20, () -> 0.0).withTimeout(7));
-        autoFactory.bind("Deploy Climb", Commands.none());
-        autoFactory.bind("Climb Down", Commands.none());
+        autoFactory.bind("deployIntake", intake.deployIntake())
+            .bind("startIntake", intake.runRollerPercent(0.20))
+            .bind("stopIntake", intake.runRollerPercent(0.0))
+            .bind("climbUp", Commands.none())
+            .bind("climbDown", Commands.none());
 
         autoChooser.addRoutine("Right Swipe Outpost", this::getRightSwipeOutpost);
         autoChooser.addRoutine("Right Swipe Climb Right", this::getRightSwipeClimbRight);
@@ -55,24 +59,16 @@ public class AutoRoutines {
     }
 
     private AutoRoutine getRightSwipeOutpost() {
-        var routine = autoFactory.newRoutine("Right Swipe Outpost");
+        var routine = autoFactory.newRoutine("RightSwipeOutpost Auto");
 
-        AutoTrajectory traj0 = routine.trajectory("RightSwipeOutpost", 0);
-        AutoTrajectory traj1 = routine.trajectory("RightSwipeOutpost", 1);
-        AutoTrajectory traj2 = routine.trajectory("RightSwipeOutpost", 2);
-        AutoTrajectory traj3 = routine.trajectory("RightSwipeOutpost", 3);
-        AutoTrajectory traj4 = routine.trajectory("RightSwipeOutpost", 4);
-        AutoTrajectory traj5 = routine.trajectory("RightSwipeOutpost", 5);
+        AutoTrajectory traj0 = routine.trajectory("RightSwipeOutpost");
+
+        traj0.atTime("deployIntake").onTrue(intake.deployIntake());
 
         routine.active().onTrue(Commands.print("Started the routine!"));
         routine.active().onTrue(Commands.sequence(
             traj0.resetOdometry(),
-            traj0.cmd(),
-            traj1.cmd(),
-            traj2.cmd(),
-            traj3.cmd(),
-            traj4.cmd(),
-            traj5.cmd()
+            traj0.cmd()
         ));
 
         return routine;

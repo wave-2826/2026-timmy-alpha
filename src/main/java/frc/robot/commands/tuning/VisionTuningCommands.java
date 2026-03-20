@@ -9,6 +9,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.vision.Vision;
+import frc.robot.util.tunables.LoggedTunableNumber;
 
 public class VisionTuningCommands {
     private static class TransformAverage {
@@ -46,12 +47,22 @@ public class VisionTuningCommands {
         chooser.addOption("TUNING | Vision Camera Position Measurement", measureCameraPositions(vision));
     }
 
+    // Distance out from PDH side
+    private static LoggedTunableNumber heldTagXIn = new LoggedTunableNumber("Vision/CalibrationTag/XInches", 0.0);
+    // Distance left toward rio side
+    private static LoggedTunableNumber heldTagYIn = new LoggedTunableNumber("Vision/CalibrationTag/YInches", 60.75);
+    // Distance up
+    private static LoggedTunableNumber heldTagZIn = new LoggedTunableNumber("Vision/CalibrationTag/ZInches", 21.5);
+    private static LoggedTunableNumber heldTagYawDeg = new LoggedTunableNumber("Vision/CalibrationTag/YawDegrees", 270.0);
+
     /** The transform of the calibration tag, relative to the robot base. */
-    public static Transform3d heldTagTransform = new Transform3d(new Translation3d(
-        Units.inchesToMeters(0.0), // Distance out from PDH side
-        Units.inchesToMeters(60.75), // Distance left toward rio side
-        Units.inchesToMeters(21.5) // Distance up
-    ), new Rotation3d(0., 0., Units.degreesToRadians(270)));
+    private static Transform3d getHeldTagTransform() {
+        return new Transform3d(new Translation3d(
+            Units.inchesToMeters(heldTagXIn.get()),
+            Units.inchesToMeters(heldTagYIn.get()),
+            Units.inchesToMeters(heldTagZIn.get())
+        ), new Rotation3d(0., 0., Units.degreesToRadians(heldTagYawDeg.get())));
+    }
 
     public static Command measureCameraPositions(Vision vision) {
         TransformAverage[] averages = new TransformAverage[vision.getCameraCount()];
@@ -62,21 +73,31 @@ public class VisionTuningCommands {
             System.out.println("********** Vision camera position measurement started. **********");
         }, () -> {
             Transform3d[] transforms = vision.getBestTagTransforms();
+            System.out.print("Cameras seeing tags: [");
+            int seen = 0;
             for(int cameraIndex = 0; cameraIndex < vision.getCameraCount(); cameraIndex++) {
                 var transform = transforms[cameraIndex];
-                if(transform != null) averages[cameraIndex].add(transform);
+                if(transform != null) {
+                    averages[cameraIndex].add(transform);
+                    seen++;
+                    if(seen > 1) System.out.print(", ");
+                    System.out.print(vision.getCameraNames()[cameraIndex]);
+                }
             }
+            System.out.println("]");
         }, vision).finallyDo(() -> {
+            System.out.flush();
             System.out.println("********** Vision camera position measurement results **********");
             Transform3d[] adjustedTransforms = new Transform3d[4];
             for(int cameraIndex = 0; cameraIndex < vision.getCameraCount(); cameraIndex++) {
                 Transform3d averageTransform = averages[cameraIndex].getAverage();
-                Transform3d transform = heldTagTransform.plus(averageTransform.inverse());
+                Transform3d transform = getHeldTagTransform().plus(averageTransform.inverse());
                 adjustedTransforms[cameraIndex] = transform;
 
-                System.out.print("Robot to camera " + cameraIndex + ": ");
+                System.out.print("Robot to camera " + cameraIndex + " (" + vision.getCameraNames()[cameraIndex] + "): ");
                 printTransform(transform);
             }
+            System.out.flush();
         });
     }
 
