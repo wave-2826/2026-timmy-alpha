@@ -3,9 +3,9 @@ import polars as pd
 data = pd.read_csv("data/data.csv")
 
 # Average of "Bottom Flywheel Measured Velocity" and "Top Flywheel Measured Velocity"
-flywheel_vel = (data["Bottom Flywheel Measured Velocity"] + data["Top Flywheel Measured Velocity"]) / 2
+flywheel_vel = data["Flywheel Measured Velocity"]
 # Total of "Bottom Flywheel Current" and "Top Flywheel Current"
-flywheel_current = data["Bottom Flywheel Current"] + data["Top Flywheel Current"]
+flywheel_current = data["Flywheel Current"]
 
 azimuth_vel = data["Azimuth Measured Velocity"]
 azimuth_current = data["Azimuth Current"]

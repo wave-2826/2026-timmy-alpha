@@ -3,7 +3,6 @@ package frc.robot.subsystems.turret;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.DifferentialPositionDutyCycle;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
@@ -128,6 +127,8 @@ public class TurretIOTalonFX implements TurretIO {
         ParentDevice.optimizeBusUtilizationForAll(
             topFlywheelTalon, bottomFlywheelTalon, azimuthTalon, hoodTalon, azimuthCancoder
         );
+
+        resetAzimuthAndHood();
     }
   
     @Override
@@ -186,10 +187,10 @@ public class TurretIOTalonFX implements TurretIO {
     @Override
     public void setVelocityOutputs(double flywheelVelocityRadPerSec, double azimuthVelocityRadPerSec,
             double hoodVelocityRadPerSec) {
-        topFlywheelTalon.setControl(velocityRequest.withVelocity(flywheelVelocityRadPerSec).withSlot(1));
+        topFlywheelTalon.setControl(velocityRequest.withVelocity(flywheelVelocityRadPerSec / (Math.PI * 2)).withSlot(1));
         bottomFlywheelTalon.setControl(followerRequest);
-        azimuthTalon.setControl(velocityRequest.withVelocity(azimuthVelocityRadPerSec).withSlot(1));
-        hoodTalon.setControl(velocityRequest.withVelocity(hoodVelocityRadPerSec).withSlot(1));
+        azimuthTalon.setControl(velocityRequest.withVelocity(azimuthVelocityRadPerSec / (Math.PI * 2)).withSlot(1));
+        hoodTalon.setControl(velocityRequest.withVelocity(hoodVelocityRadPerSec / (Math.PI * 2)).withSlot(1));
     }
 
     @Override
@@ -198,6 +199,12 @@ public class TurretIOTalonFX implements TurretIO {
         bottomFlywheelTalon.setControl(followerRequest);
         azimuthTalon.setControl(torqueCurrentRequest.withOutput(outputs.azimuthCurrent()));
         hoodTalon.setControl(torqueCurrentRequest.withOutput(outputs.hoodCurrent()));
+    }
+
+    @Override
+    public void resetAzimuthAndHood() {
+        tryUntilOk(5, () -> azimuthTalon.setPosition(0.0));
+        tryUntilOk(5, () -> hoodTalon.setPosition(0.0));
     }
 
     @Override

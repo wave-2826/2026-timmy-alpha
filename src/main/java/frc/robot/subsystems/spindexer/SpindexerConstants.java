@@ -4,8 +4,8 @@ import frc.robot.util.GenericPIDConstants;
 import frc.robot.util.tunables.TunablePID;
 
 public class SpindexerConstants {
-    public static final int transferCanId = 41;
-    public static final int spinnerCanId = 40;
+    public static final int transferCanId = 40;
+    public static final int spinnerCanId = 41;
 
     public static final double spinnerMotorReduction = 9.0;
     public static final double transferMotorReduction = 15.0;

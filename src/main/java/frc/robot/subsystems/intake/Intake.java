@@ -60,7 +60,7 @@ public class Intake extends SubsystemBase {
     /** Set the intake position. Positive numbers are inward. */
     public Command setIntakePosition(DoubleSupplier position) {
         return run(() -> {
-            io.setDeployPosition(-position.getAsDouble());
+            io.setDeployPosition(position.getAsDouble());
         });
     }
     

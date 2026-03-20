@@ -78,13 +78,12 @@ public class Controls {
         RobotModeTriggers.autonomous().onTrue(intake.deployIntake());
         intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
 
-        // turret.setDefaultCommand(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
-        
         turret.setDefaultCommand(ScoringCommands.autoShoot(
             turret, spindexer,
             driver::getRightTriggerAxis,
             coDriver::getRightY
         ));
+        coDriver.start().whileTrue(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
 
         // Reset gyro or odometry if in simulation
         final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
