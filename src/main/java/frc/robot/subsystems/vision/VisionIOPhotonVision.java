@@ -15,7 +15,8 @@ import org.photonvision.PhotonCamera;
 /** IO implementation for real PhotonVision hardware. */
 public class VisionIOPhotonVision implements VisionIO {
     protected final PhotonCamera camera;
-    protected final Transform3d robotToCamera;
+    protected Transform3d robotToCamera;
+    protected boolean disabled = false;
     public final String name;
 
     /**
@@ -29,16 +30,14 @@ public class VisionIOPhotonVision implements VisionIO {
 
         if(robotToCamera == null) {
             DriverStation.reportWarning("Warning: camera " + config.name() + " does not have a configured position! This camera will be disabled.", false);
+            this.robotToCamera = new Transform3d();
+            this.disabled = true;
         }
     }
 
     @Override
     public void updateInputs(VisionIOInputs inputs) {
         inputs.connected = camera.isConnected();
-
-        if(robotToCamera == null) {
-            return;
-        }
 
         // Read new camera observations
         Set<Short> tagIds = new HashSet<>();
@@ -52,6 +51,8 @@ public class VisionIOPhotonVision implements VisionIO {
             } else {
                 inputs.bestTagTransform = null;
             }
+
+            if(disabled) continue;
 
             // Add pose observation
             if(result.multitagResult.isPresent()) { // Multitag result
