@@ -49,6 +49,7 @@ public class VisionConstants {
     public static CameraConfiguration cameraRightmost = new CameraConfiguration(
         "2826_OV9281_Gem",
         null
+        // new Transform3d(new Translation3d(0.03213258244051975, 0.9872044065530436, 0.4385792504840581), new Rotation3d(0.026775165361689657, -0.3906931417814905, 1.8521318555006274))
     );
 
     // Basic filtering thresholds

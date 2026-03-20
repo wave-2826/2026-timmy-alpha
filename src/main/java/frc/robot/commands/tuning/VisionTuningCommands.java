@@ -34,6 +34,10 @@ public class VisionTuningCommands {
             datapoints += 1;
         }
 
+        public boolean hasAverage() {
+            return datapoints > 0;
+        }
+
         public Transform3d getAverage() {
             if(datapoints == 0) return new Transform3d();
             return new Transform3d(new Translation3d(xSum / datapoints, ySum / datapoints, zSum / datapoints),
@@ -72,6 +76,13 @@ public class VisionTuningCommands {
                 averages[cameraIndex] = new TransformAverage();
             }
             System.out.println("********** Vision camera position measurement started. **********");
+
+            // If the held tag transform is facing away from the origin (by more than 180 deg), warn
+            var angleToOrigin = Math.atan2(getHeldTagTransform().getY(), getHeldTagTransform().getX());
+            var angleDiff = Math.abs(angleToOrigin - getHeldTagTransform().getRotation().getZ());
+            if(angleDiff > Math.PI) {
+                System.out.println("WARNING: The held tag transform is facing away from the origin! This is probably wrong");
+            }
         }, () -> {
             Transform3d[] transforms = vision.getBestTagTransforms();
             System.out.print("Cameras seeing tags: [");
@@ -91,6 +102,10 @@ public class VisionTuningCommands {
             System.out.println("********** Vision camera position measurement results **********");
             Transform3d[] adjustedTransforms = new Transform3d[4];
             for(int cameraIndex = 0; cameraIndex < vision.getCameraCount(); cameraIndex++) {
+                if(!averages[cameraIndex].hasAverage()) {
+                    System.out.println("Camera " + cameraIndex + " (" + vision.getCameraNames()[cameraIndex] + ") did not see any tags; no data to calculate position.");
+                    continue;
+                }
                 Transform3d averageTransform = averages[cameraIndex].getAverage();
                 Transform3d transform = getHeldTagTransform().plus(averageTransform.inverse());
                 adjustedTransforms[cameraIndex] = transform;
