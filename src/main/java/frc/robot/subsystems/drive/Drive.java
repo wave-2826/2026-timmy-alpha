@@ -234,7 +234,14 @@ public class Drive extends SubsystemBase {
      */
     public AutoFactory createAutoFactory(TrajectoryLogger<SwerveSample> trajLogger) {
         var robotState = RobotState.getInstance();
-        return new AutoFactory(robotState::getEstimatedPose, this::setPose, this::followPath, true, this, trajLogger);
+        return new AutoFactory(
+            robotState::getEstimatedPose,
+            this::setPose,
+            this::followPath,
+            true,
+            this,
+            trajLogger
+        );
     }
 
     /**

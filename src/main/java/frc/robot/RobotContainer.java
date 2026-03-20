@@ -11,7 +11,6 @@ import frc.robot.commands.AutoRoutines;
 import frc.robot.commands.tuning.TuningCommands;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.climber.ClimberIO;
-import frc.robot.subsystems.climber.ClimberIOReal;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
@@ -72,8 +71,11 @@ public class RobotContainer {
                     new ModuleIOTalonFXReal(DriveConstants.backLeftConfig),
                     new ModuleIOTalonFXReal(DriveConstants.backRightConfig));
                 vision = new Vision(
-                    new VisionIOPhotonVision(VisionConstants.camera0Name, VisionConstants.robotToCamera0),
-                    new VisionIOPhotonVision(VisionConstants.camera1Name, VisionConstants.robotToCamera1));
+                    new VisionIOPhotonVision(VisionConstants.cameraLeftmost),
+                    new VisionIOPhotonVision(VisionConstants.cameraFrontLeft),
+                    new VisionIOPhotonVision(VisionConstants.cameraFrontRight),
+                    new VisionIOPhotonVision(VisionConstants.cameraRightmost)
+                );
                 intake = new Intake(new IntakeIOReal() {});
                 turret = new Turret(new TurretIOTalonFX() {});
                 climber = new Climber(new ClimberIO() {});
@@ -95,8 +97,11 @@ public class RobotContainer {
                 Simulation.getInstance().setDrive(drive);
 
                 vision = new Vision(
-                    new VisionIOPhotonVisionSim(VisionConstants.camera0Name, VisionConstants.robotToCamera0, driveSimulation::getSimulatedDriveTrainPose),
-                    new VisionIOPhotonVisionSim(VisionConstants.camera1Name, VisionConstants.robotToCamera1, driveSimulation::getSimulatedDriveTrainPose));
+                    new VisionIOPhotonVisionSim(VisionConstants.cameraLeftmost, driveSimulation::getSimulatedDriveTrainPose),
+                    new VisionIOPhotonVisionSim(VisionConstants.cameraFrontLeft, driveSimulation::getSimulatedDriveTrainPose),
+                    new VisionIOPhotonVisionSim(VisionConstants.cameraFrontRight, driveSimulation::getSimulatedDriveTrainPose),
+                    new VisionIOPhotonVisionSim(VisionConstants.cameraRightmost, driveSimulation::getSimulatedDriveTrainPose)
+                );
                 turret = new Turret(new TurretIOSim());
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIO() {});

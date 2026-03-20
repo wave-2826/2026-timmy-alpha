@@ -28,18 +28,28 @@ public class VisionConstants {
 
     public static AprilTagFieldLayout aprilTagLayout = FieldConstants.defaultAprilTagType.getLayout();
 
-    private static record CameraConfiguration(
+    public static record CameraConfiguration(
         String name,
+        /** Nullable (if not calibrated; turns off camera) */
         Transform3d position
     ) {}
 
-    // Camera names, must match names configured on coprocessor
-    public static String camera0Name = "2826_OV9281_Ena";
-    public static String camera1Name = "2826_OV9281_Fin";
-
-    // Robot to camera transforms
-    public static Transform3d robotToCamera0 = new Transform3d(new Translation3d(0.26299228917216877, 0.37463897857529405, 0.46437706895675346), new Rotation3d(0.019078617921454894, -0.32843832829994896, 0.22190482336538536));
-    public static Transform3d robotToCamera1 = new Transform3d(new Translation3d(0.19297534359942536, 0.22660469052086318, 0.4836127596115337), new Rotation3d(0.015612826506477587, -0.30580379815927905, 1.3097503000462243));
+    public static CameraConfiguration cameraLeftmost = new CameraConfiguration(
+        "2826_OV9281_Ena",
+        new Transform3d(new Translation3d(0.26299228917216877, 0.37463897857529405, 0.46437706895675346), new Rotation3d(0.019078617921454894, -0.32843832829994896, 0.22190482336538536))
+    );
+    public static CameraConfiguration cameraFrontLeft = new CameraConfiguration(
+        "2826_OV9281_Fin",
+        new Transform3d(new Translation3d(0.19297534359942536, 0.22660469052086318, 0.4836127596115337), new Rotation3d(0.015612826506477587, -0.30580379815927905, 1.3097503000462243))
+    );
+    public static CameraConfiguration cameraFrontRight = new CameraConfiguration(
+        "2826_OV9281_Abe",
+        null
+    );
+    public static CameraConfiguration cameraRightmost = new CameraConfiguration(
+        "2826_OV9281_Gem",
+        null
+    );
 
     // Basic filtering thresholds
     public static final double maxAmbiguity = 0.3;

@@ -4,6 +4,8 @@ import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.wpilibj.DriverStation;
+
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,20 +20,25 @@ public class VisionIOPhotonVision implements VisionIO {
 
     /**
      * Creates a new VisionIOPhotonVision.
-     *
-     * @param name The configured name of the camera.
-     * @param robotToCamera The 3D position of the camera relative to the robot.
      */
-    public VisionIOPhotonVision(String name, Transform3d robotToCamera) {
-        camera = new PhotonCamera(name);
+    public VisionIOPhotonVision(CameraConfiguration config) {
+        camera = new PhotonCamera(config.name());
 
-        this.robotToCamera = robotToCamera;
-        this.name = name;
+        this.robotToCamera = config.position();
+        this.name = config.name();
+
+        if(robotToCamera == null) {
+            DriverStation.reportWarning("Warning: camera " + config.name() + " does not have a configured position! This camera will be disabled.", false);
+        }
     }
 
     @Override
     public void updateInputs(VisionIOInputs inputs) {
         inputs.connected = camera.isConnected();
+
+        if(robotToCamera == null) {
+            return;
+        }
 
         // Read new camera observations
         Set<Short> tagIds = new HashSet<>();

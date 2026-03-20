@@ -13,7 +13,8 @@ public class Intake extends SubsystemBase {
     private final IntakeIO io;
     private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
-    private static final LoggedTunableNumber intakeRollerPercent = new LoggedTunableNumber("Intake/RollerPercent", 0.5);
+    private static final LoggedTunableNumber intakeRollerPercent =
+        new LoggedTunableNumber("Intake/RollerPercent", 0.5);
     
     public Intake(IntakeIO io) {
         this.io = io;
@@ -28,6 +29,10 @@ public class Intake extends SubsystemBase {
 
     public Command enable() {
         return runRollerPercent(intakeRollerPercent.get());
+    }
+
+    public Command enableOutward() {
+        return runRollerPercent(-intakeRollerPercent.get());
     }
 
     public Command disable() {
