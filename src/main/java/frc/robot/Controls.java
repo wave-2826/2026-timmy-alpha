@@ -86,7 +86,7 @@ public class Controls {
         turretControlCodriver.whileTrue(spindexer.runPercent(coDriver::getLeftTriggerAxis, () -> coDriver.getLeftTriggerAxis() ));
         turretControlCodriver.and(coDriver.start().or(coDriver.back())).onTrue(turret.reset());
 
-        coDriver.leftBumper().onTrue(intake.enableOutward());
+        normalCodriver.whileTrue(intake.runRollerScaled(coDriver::getLeftY));
 
         // Reset gyro or odometry if in simulation
         final Runnable resetGyro = Constants.isSim

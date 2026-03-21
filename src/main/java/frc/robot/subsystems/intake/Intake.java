@@ -27,19 +27,23 @@ public class Intake extends SubsystemBase {
     }
 
     public Command enable() {
-        return runRollerScaled(1);
+        return runRollerScaledOnce(1);
     }
 
     public Command enableOutward() {
-        return runRollerScaled(-1);
+        return runRollerScaledOnce(-1);
     }
 
     public Command disable() {
-        return runRollerScaled(0);
+        return runRollerScaledOnce(0);
     }
     
-    public Command runRollerScaled(double percent) {
+    public Command runRollerScaledOnce(double percent) {
         return runOnce(() -> io.setRollerSpeed(percent * intakeRollerSpeed.get()));
+    }
+    
+    public Command runRollerScaled(DoubleSupplier percent) {
+        return run(() -> io.setRollerSpeed(percent.getAsDouble() * intakeRollerSpeed.get()));
     }
 
     private LinearFilter deployLCurrentFilter = LinearFilter.movingAverage(5);

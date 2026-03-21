@@ -39,12 +39,30 @@ public class AutoRoutines {
         
         autoChooser.addRoutine("Left Double Swipe", () -> this.getDoubleSwipe(false));
         autoChooser.addRoutine("Right Double Swipe", () -> this.getDoubleSwipe(true));
+        autoChooser.addRoutine("Left Single Swipe", () -> this.getSingleSwipe(false));
+        autoChooser.addRoutine("Right Single Swipe", () -> this.getSingleSwipe(true));
         autoChooser.addRoutine("Sweep Outpost (start left)", () -> this.getSweepOutpost());
         // autoChooser.addRoutine("Right Double Swipe (fallback)", () -> this.getDoubleSwipe(true));
     }
 
     private AutoRoutine getDoubleSwipe(boolean right) {
         var choreoTraj = right ? ChoreoTraj.RightDoubleSwipeGenerated : ChoreoTraj.LeftDoubleSwipe;
+        var routine = autoFactory.newRoutine(choreoTraj.name());
+        
+        AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
+
+        traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
+        
+        routine.active().onTrue(Commands.sequence(
+            traj.resetOdometry(),
+            traj.cmd()
+        ));
+
+        return routine;
+    }
+
+    private AutoRoutine getSingleSwipe(boolean right) {
+        var choreoTraj = right ? ChoreoTraj.RightDoubleSwipeGenerated$0 : ChoreoTraj.LeftDoubleSwipe$0;
         var routine = autoFactory.newRoutine(choreoTraj.name());
         
         AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
