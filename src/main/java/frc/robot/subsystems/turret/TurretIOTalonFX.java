@@ -82,13 +82,14 @@ public class TurretIOTalonFX implements TurretIO {
 
         // Velocity PID - only for tuning
         TurretConstants.azimuthMotorPID.applyConfigAndRegister(azimuthConfig, azimuthTalon);
-        azimuthConfig.Feedback.SensorToMechanismRatio = TurretConstants.totalAzimuthGearing;
+        azimuthConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.totalAzimuthGearing;
         azimuthConfig.ClosedLoopGeneral.ContinuousWrap = true;
 
         tryUntilOk(5, () -> azimuthTalon.getConfigurator().apply(azimuthConfig, 0.25));
         
-        var hoodConfig = azimuthConfig.clone();
-        applyTorqueCurrentLimit(hoodConfig, TurretConstants.azimuthCurrentLimit);
+        var hoodConfig = baseConfig.clone();
+        hoodConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        applyTorqueCurrentLimit(hoodConfig, TurretConstants.hoodCurrentLimit);
 
         // Velocity PID - only for tuning
         TurretConstants.hoodMotorPID.applyConfigAndRegister(hoodConfig, hoodTalon);
