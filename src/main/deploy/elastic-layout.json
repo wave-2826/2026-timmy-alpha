@@ -9,7 +9,7 @@
         "containers": [
           {
             "title": "FMSInfo",
-            "x": 1024.0,
+            "x": 256.0,
             "y": 0.0,
             "width": 384.0,
             "height": 128.0,
@@ -21,9 +21,9 @@
           },
           {
             "title": "Auto Choices",
-            "x": 1024.0,
-            "y": 128.0,
-            "width": 384.0,
+            "x": 256.0,
+            "y": 384.0,
+            "width": 256.0,
             "height": 128.0,
             "type": "ComboBox Chooser",
             "properties": {
@@ -35,9 +35,9 @@
           {
             "title": "Choreo Alerts",
             "x": 0.0,
-            "y": 384.0,
+            "y": 256.0,
             "width": 256.0,
-            "height": 384.0,
+            "height": 256.0,
             "type": "Alerts",
             "properties": {
               "topic": "/SmartDashboard/Choreo Alerts",
@@ -49,7 +49,7 @@
             "x": 0.0,
             "y": 0.0,
             "width": 256.0,
-            "height": 384.0,
+            "height": 256.0,
             "type": "Alerts",
             "properties": {
               "topic": "/SmartDashboard/PhotonAlerts",
@@ -59,9 +59,9 @@
           {
             "title": "Alerts",
             "x": 1024.0,
-            "y": 384.0,
+            "y": 0.0,
             "width": 384.0,
-            "height": 384.0,
+            "height": 512.0,
             "type": "Alerts",
             "properties": {
               "topic": "/SmartDashboard/Alerts",
@@ -69,23 +69,10 @@
             }
           },
           {
-            "title": "Test Command",
-            "x": 1024.0,
-            "y": 256.0,
-            "width": 384.0,
-            "height": 128.0,
-            "type": "ComboBox Chooser",
-            "properties": {
-              "topic": "/SmartDashboard/Test Command",
-              "period": 0.06,
-              "sort_options": false
-            }
-          },
-          {
             "title": "MatchTime",
-            "x": 512.0,
+            "x": 640.0,
             "y": 0.0,
-            "width": 512.0,
+            "width": 384.0,
             "height": 256.0,
             "type": "Match Time",
             "properties": {
@@ -99,9 +86,9 @@
           },
           {
             "title": "BatteryVoltage",
-            "x": 384.0,
-            "y": 640.0,
-            "width": 640.0,
+            "x": 256.0,
+            "y": 256.0,
+            "width": 768.0,
             "height": 128.0,
             "type": "Voltage View",
             "properties": {
@@ -118,7 +105,7 @@
           {
             "title": "RSLState",
             "x": 256.0,
-            "y": 640.0,
+            "y": 128.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Boolean Box",
@@ -136,7 +123,7 @@
             "title": "RollerSpeed",
             "x": 512.0,
             "y": 384.0,
-            "width": 384.0,
+            "width": 512.0,
             "height": 128.0,
             "type": "Number Slider",
             "properties": {

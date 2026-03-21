@@ -54,6 +54,36 @@ public record ChoreoTraj(
         new Pose2d(4.49238, 7.35992, Rotation2d.fromRadians(1.5708)),
         new Pose2d(0.77421, 0.65509, Rotation2d.fromRadians(0))
     );
+    public static final ChoreoTraj RightDoubleSwipeGenerated = new ChoreoTraj(
+        "RightDoubleSwipeGenerated",
+        OptionalInt.empty(),
+        9.17767,
+        new Pose2d(4.49254, 7.46487, Rotation2d.fromRadians(1.5708)),
+        new Pose2d(3.42683, 7.41656, Rotation2d.fromRadians(-1.60482))
+    );
+    /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
+    public static final ChoreoTraj RightDoubleSwipeGenerated$0 = new ChoreoTraj(
+        "RightDoubleSwipeGenerated",
+        OptionalInt.of(0),
+        4.11369,
+        new Pose2d(4.49254, 7.46487, Rotation2d.fromRadians(1.5708)),
+        new Pose2d(3.44291, 7.48501, Rotation2d.fromRadians(1.57031))
+    );
+    /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
+    public static final ChoreoTraj RightDoubleSwipeGenerated$1 = new ChoreoTraj(
+        "RightDoubleSwipeGenerated",
+        OptionalInt.of(1),
+        5.063980000000001,
+        new Pose2d(3.44291, 7.48501, Rotation2d.fromRadians(1.57031)),
+        new Pose2d(3.42683, 7.41656, Rotation2d.fromRadians(-1.60482))
+    );
+    public static final ChoreoTraj RightSweepOutpostGenerated = new ChoreoTraj(
+        "RightSweepOutpostGenerated",
+        OptionalInt.empty(),
+        4.17381,
+        new Pose2d(4.49238, 7.35992, Rotation2d.fromRadians(1.5708)),
+        new Pose2d(0.77421, 0.65509, Rotation2d.fromRadians(0))
+    );
 
     /**
      * A map between trajectory names and their corresponding data.
@@ -63,7 +93,11 @@ public record ChoreoTraj(
         Map.entry("LeftDoubleSwipe", LeftDoubleSwipe),
         Map.entry("LeftDoubleSwipe$0", LeftDoubleSwipe$0),
         Map.entry("LeftDoubleSwipe$1", LeftDoubleSwipe$1),
-        Map.entry("LeftSweepOutpost", LeftSweepOutpost)
+        Map.entry("LeftSweepOutpost", LeftSweepOutpost),
+        Map.entry("RightDoubleSwipeGenerated", RightDoubleSwipeGenerated),
+        Map.entry("RightDoubleSwipeGenerated$0", RightDoubleSwipeGenerated$0),
+        Map.entry("RightDoubleSwipeGenerated$1", RightDoubleSwipeGenerated$1),
+        Map.entry("RightSweepOutpostGenerated", RightSweepOutpostGenerated)
     );
 
     /**

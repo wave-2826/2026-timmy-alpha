@@ -20,7 +20,6 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.commands.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
-import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.util.Elastic;
 import frc.robot.util.simUtils.Simulation;

@@ -46,5 +46,5 @@ tune-turret:
 setup-hotswap:
     python ./misc/scripts/setup-hotswap.py
 
-test:
-    echo "{{home_dir()}}/.jbr-jcef-17"
+flip-autos:
+    python ./misc/scripts/flipAutos.py

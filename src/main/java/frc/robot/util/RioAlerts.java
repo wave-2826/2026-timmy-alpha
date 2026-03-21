@@ -1,9 +1,12 @@
 package frc.robot.util;
 
+import com.ctre.phoenix6.CANBus.CANBusStatus;
+
 import edu.wpi.first.hal.can.CANStatus;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.robot.subsystems.drive.DriveConstants;
 import edu.wpi.first.wpilibj.DriverStation;
 
 /** Handles alerts related to the RoboRIO (e.g. shorted rails, CAN issues, etc.) */
@@ -17,6 +20,7 @@ public class RioAlerts {
     private final Alert disabled3V3RailAlert = new Alert("RoboRIO: Disabled 3.3V rail!", AlertType.kError);
 
     private final Alert canBusFault = new Alert("RoboRIO: CAN bus fault!", AlertType.kError);
+    private final Alert fdCanBusFault = new Alert("RoboRIO: FD CAN bus fault!", AlertType.kError);
 
     /**
      * The minimum voltage for the battery to be considered low when the robot is disabled.
@@ -51,6 +55,9 @@ public class RioAlerts {
 
         CANStatus status = RobotController.getCANStatus();
         canBusFault.set(status.busOffCount > 0 || status.receiveErrorCount > 0 || status.transmitErrorCount > 0);
+
+        CANBusStatus fdStatus = DriveConstants.CANBus.getStatus();
+        fdCanBusFault.set(fdStatus.BusOffCount > 0 || fdStatus.REC > 0 || fdStatus.TEC > 0 || fdStatus.TxFullCount > 0);
 
         lowBatteryAlert.set(batteryLow());
     }
