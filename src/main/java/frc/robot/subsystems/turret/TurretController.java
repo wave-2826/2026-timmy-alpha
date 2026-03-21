@@ -125,8 +125,8 @@ public class TurretController {
     private static final LoggedTunableVector<N3> rWeights = new LoggedTunableVector<>(
         "Turret/LQR_R",
         VecBuilder.fill(
-            Constants.isSim ? 50 : 0.5,
-            Constants.isSim ? 50 : 0.5,
+            Constants.isSim ? 50 : 0.2,
+            Constants.isSim ? 50 : 0.2,
             Constants.isSim ? 50 : 5
         )
     );
@@ -135,7 +135,7 @@ public class TurretController {
     private static final Vector<N5> stateStdDevs = VecBuilder.fill(10, 10, 10, 10, 50).times(Math.PI * 2 / 360);
     private static final Vector<N5> measureStdDevs = VecBuilder.fill(0.1, 0.1, 1.0, 0.1, 1.0).times(Math.PI * 2 / 360);
     // Latency compensation
-    private static final LoggedTunableNumber lqrLatencyCompSec = new LoggedTunableNumber("Turret/LQR_LatencyComp", Constants.isSim ? 0.0 : 0.05);
+    private static final LoggedTunableNumber lqrLatencyCompSec = new LoggedTunableNumber("Turret/LQR_LatencyComp", Constants.isSim ? 0.0 : 0.03);
     private static final LoggedTunableNumber lqrFFContribution = new LoggedTunableNumber("Turret/LQRFFContribution", Constants.isSim ? 1.0 : 0.1);
 
     private static final double loopPeriod = 0.02;
