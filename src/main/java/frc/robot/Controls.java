@@ -82,6 +82,7 @@ public class Controls {
         ));
         coDriver.start().whileTrue(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
         coDriver.start().and(coDriver.back()).onTrue(turret.reset());
+        coDriver.leftBumper().onTrue(intake.enableOutward());
 
         // Reset gyro or odometry if in simulation
         final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
