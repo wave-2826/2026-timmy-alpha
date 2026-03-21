@@ -118,15 +118,15 @@ public class TurretConstants {
         .addGains(0.0, 12.0 / maxFlywheelSpeedRadPerSec, flywheelMotorKA);
     
     public static final TunablePID flywheelMotorPID = new TunablePID("Turret/Flywheel")
-        .addRealRobotGains(new GenericPIDConstants(0.012, 0.0, 0.0, 1 / flywheelSimMotor.KvRadPerSecPerVolt)) // velocity voltage
+        .addRealRobotGains(new GenericPIDConstants(0.2, 0.0, 0.0, 1 / flywheelSimMotor.KvRadPerSecPerVolt)) // velocity voltage
         .copyRealGainsInSim();
     
     public static final TunablePID azimuthMotorPID = new TunablePID("Turret/Azimuth")
-        .addRealRobotGains(new GenericPIDConstants(6, 0.0, 108)) // position voltage
+        .addRealRobotGains(new GenericPIDConstants(30, 0.0, 0)) // position voltage
         .copyRealGainsInSim();
     
     public static final TunablePID hoodMotorPID = new TunablePID("Turret/Hood")
-        .addRealRobotGains(new GenericPIDConstants(14.4, 0.0, 2.4)) // position voltage
+        .addRealRobotGains(new GenericPIDConstants(20, 0.0, 0)) // position voltage
         .copyRealGainsInSim();
     
     // Control tolerances
