@@ -163,7 +163,8 @@ public class RobotState {
         }
 
         // Apply update
-        poseEstimator.updateWithTime(timestamp, rawGyroRotation, modulePositions);
+        // poseEstimator.updateWithTime(timestamp, rawGyroRotation, modulePositions);
+        // tf are we even doing anymore
     }
 
     public void addDriveSpeeds(ChassisSpeeds speeds) {
