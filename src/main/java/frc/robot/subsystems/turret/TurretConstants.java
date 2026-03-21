@@ -7,7 +7,6 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.GenericPIDConstants;
-import frc.robot.util.GenericPIDConstants.PIDSlot;
 import frc.robot.util.tunables.TunableSimpleMotorFF;
 import frc.robot.util.tunables.TunablePID;
 
@@ -119,18 +118,15 @@ public class TurretConstants {
         .addGains(0.0, 12.0 / maxFlywheelSpeedRadPerSec, flywheelMotorKA);
     
     public static final TunablePID flywheelMotorPID = new TunablePID("Turret/Flywheel")
-        .addRealRobotGains(new GenericPIDConstants(0.0005, 0.0, 0.0)) // velocity
-        .addRealRobotGains(new GenericPIDConstants(0.001, 0.5, 0.0, PIDSlot.Slot1)) // Current PID
+        .addRealRobotGains(new GenericPIDConstants(0.0005, 0.0, 0.002)) // velocity duty cycle
         .copyRealGainsInSim();
     
     public static final TunablePID azimuthMotorPID = new TunablePID("Turret/Azimuth")
-        .addRealRobotGains(new GenericPIDConstants(0.7, 0.0, 0.2)) // position
-        .addRealRobotGains(new GenericPIDConstants(0.001, 0.5, 0.0, PIDSlot.Slot1)) // Current PID
+        .addRealRobotGains(new GenericPIDConstants(0.5, 0.0, 9)) // position duty cycle
         .copyRealGainsInSim();
     
     public static final TunablePID hoodMotorPID = new TunablePID("Turret/Hood")
-        .addRealRobotGains(new GenericPIDConstants(1.2, 0.0, 0.2)) // position
-        .addRealRobotGains(new GenericPIDConstants(0.001, 0.5, 0.0, PIDSlot.Slot1)) // Current PID
+        .addRealRobotGains(new GenericPIDConstants(1.2, 0.0, 0.2)) // position duty cycle
         .copyRealGainsInSim();
     
     // Control tolerances

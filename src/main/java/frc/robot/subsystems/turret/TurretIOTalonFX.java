@@ -175,7 +175,7 @@ public class TurretIOTalonFX implements TurretIO {
     public void setPIDOutputs(TurretIOPIDOutputs outputs) {
         topFlywheelTalon.setControl(velocityRequest.withVelocity(
             outputs.flywheelSpeedRadPerSec() / (2 * Math.PI)
-        ).withSlot(1));
+        ).withSlot(0));
         bottomFlywheelTalon.setControl(followerRequest);
 
         azimuthTalon.setControl(positionRequest.withPosition(

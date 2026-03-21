@@ -37,8 +37,8 @@ public interface TurretIO {
             /** Whether the motor is connected */
             boolean connected,
             /** 
-             * The measured hood motor angle.
-             * The actual hood angle is the difference between this and the azimuth ring angle (and a reduction).
+             * The measured hood motor ring angle.
+             * The actual hood angle is the difference between this and the azimuth ring angle (and reductions).
              */
             double angleRad,
             /** The measured velocity of the hood motor in rad/sec. */
@@ -76,7 +76,7 @@ public interface TurretIO {
                 azimuthEncoder.velocityRadPerSec() * -TurretConstants.azimuthFlyCoupling;
         }
         public double getHoodAngleRad() {
-            return hood.angleRad() * TurretConstants.totalHoodGearing -
+            return hood.angleRad() * TurretConstants.hoodRingToHoodReduction -
                 azimuthEncoder.angleRad() * TurretConstants.azimuthHoodCoupling +
                 TurretConstants.hoodMinAngle;
         }
