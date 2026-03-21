@@ -41,10 +41,10 @@ public class ScoringCommands {
             }
 
             double codriverOverride = codriverOverrideAxis.getAsDouble();
-            spindexer.setPower(Math.abs(codriverOverride) > 0.1 ? codriverOverride : spinPower);
+            spindexer.setPower(Math.abs(codriverOverride) > 0.1 ? codriverOverride : spinPower, 1.0);
         }, () -> {
             turret.target = null;
-            spindexer.setPower(0.0);
+            spindexer.setPower(0.0, 0.0);
         }, turret, spindexer);
     }
 }
