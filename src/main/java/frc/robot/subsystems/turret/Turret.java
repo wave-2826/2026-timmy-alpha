@@ -172,7 +172,7 @@ public class Turret extends SubsystemBase {
                 target = new TurretTarget(0.0, inputs.getAzimuthAngleRad(), TurretConstants.hoodMinAngle);
             }
 
-            target.flywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(3000);
+            target.flywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(2000);
             target.azimuthAngleRad = Math.sin(Timer.getFPGATimestamp() * 0.25) * Math.PI;
             target.hoodAngleRad = MathUtil.interpolate(
                 TurretConstants.hoodMinAngle + 0.1,

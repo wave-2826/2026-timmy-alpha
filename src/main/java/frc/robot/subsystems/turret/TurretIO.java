@@ -26,9 +26,9 @@ public interface TurretIO {
         public record AzimuthMotorInputs(
             /** Whether the motor is connected */
             boolean connected,
-            /** The azimuth motor's internal encoder angle in rad. */
+            /** The azimuth motor's internal encoder angle in rad (in mechanism rotations). */
             double internalEncoderAngle,
-            /** The azimuth motor's internal encoder velocity in rad/sec. */
+            /** The azimuth motor's internal encoder velocity in rad/sec (in mechanism rotations). */
             double internalEncoderVelocity,
             /** The motor current draw. */
             double currentAmps
@@ -86,12 +86,12 @@ public interface TurretIO {
         }
         public double getAzimuthAngleRad() {
             // return azimuthEncoder.angleRad() * TurretConstants.totalAzimuthGearing;
-            return MathUtil.angleModulus(azimuth.internalEncoderAngle * TurretConstants.totalAzimuthGearing);
+            return MathUtil.angleModulus(azimuth.internalEncoderAngle);
         }
         /**  */
         public double getAzimuthVelocityRadPerSec() {
             // return azimuthEncoder.velocityRadPerSec() * TurretConstants.totalAzimuthGearing;
-            return azimuth.internalEncoderVelocity * TurretConstants.totalAzimuthGearing;
+            return azimuth.internalEncoderVelocity;
         }
     }
 

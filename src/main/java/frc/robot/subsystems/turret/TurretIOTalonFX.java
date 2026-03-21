@@ -7,7 +7,6 @@ import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionDutyCycle;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityDutyCycle;
-import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -36,15 +35,15 @@ public class TurretIOTalonFX implements TurretIO {
     protected final TalonFX bottomFlywheelTalon = new TalonFX(TurretConstants.bottomFlywheelCanID, TurretConstants.CANBus);
     protected final TalonFX azimuthTalon = new TalonFX(TurretConstants.azimuthCanID, TurretConstants.CANBus);
     protected final TalonFX hoodTalon = new TalonFX(TurretConstants.hoodCanID, TurretConstants.CANBus);
-    protected final CANcoder azimuthCancoder = new CANcoder(TurretConstants.azimuthCancoderID, TurretConstants.CANBus);
+    // protected final CANcoder azimuthCancoder = new CANcoder(TurretConstants.azimuthCancoderID, TurretConstants.CANBus);
     
     protected final StatusSignal<AngularVelocity> topFlywheelVelocity;
     protected final StatusSignal<Current> topFlywheelCurrent;
     protected final StatusSignal<AngularVelocity> bottomFlywheelVelocity;
     protected final StatusSignal<Current> bottomFlywheelCurrent;
     
-    protected final StatusSignal<Angle> azimuthAbsAngle;
-    protected final StatusSignal<AngularVelocity> azimuthAbsVelocity;
+    // protected final StatusSignal<Angle> azimuthAbsAngle;
+    // protected final StatusSignal<AngularVelocity> azimuthAbsVelocity;
 
     protected final StatusSignal<Angle> azimuthInternalAngle;
     protected final StatusSignal<AngularVelocity> azimuthInternalVelocity;
@@ -84,6 +83,8 @@ public class TurretIOTalonFX implements TurretIO {
 
         // Velocity PID - only for tuning
         azimuthConfig.Slot1.withKP(0.008).withKV(0.025);
+        azimuthConfig.Feedback.SensorToMechanismRatio = TurretConstants.totalAzimuthGearing;
+        azimuthConfig.ClosedLoopGeneral.ContinuousWrap = true;
 
         tryUntilOk(5, () -> azimuthTalon.getConfigurator().apply(azimuthConfig, 0.25));
         
@@ -104,8 +105,8 @@ public class TurretIOTalonFX implements TurretIO {
         bottomFlywheelVelocity = bottomFlywheelTalon.getVelocity();
         bottomFlywheelCurrent = bottomFlywheelTalon.getStatorCurrent();
 
-        azimuthAbsAngle = azimuthCancoder.getAbsolutePosition();
-        azimuthAbsVelocity = azimuthCancoder.getVelocity();
+        // azimuthAbsAngle = azimuthCancoder.getAbsolutePosition();
+        // azimuthAbsVelocity = azimuthCancoder.getVelocity();
 
         azimuthInternalAngle = azimuthTalon.getPosition();
         azimuthInternalVelocity = azimuthTalon.getVelocity();
@@ -119,13 +120,13 @@ public class TurretIOTalonFX implements TurretIO {
         BaseStatusSignal.setUpdateFrequencyForAll(50.0,
             topFlywheelVelocity,
             bottomFlywheelVelocity, bottomFlywheelCurrent,
-            azimuthAbsAngle, azimuthAbsVelocity,
+            //azimuthAbsAngle, azimuthAbsVelocity,
             azimuthInternalAngle, azimuthInternalVelocity, azimuthCurrent,
             hoodAngle, hoodVelocity, hoodCurrent);
         // Leader update frequency so follower can track more accurately
         topFlywheelCurrent.setUpdateFrequency(250.0);
         ParentDevice.optimizeBusUtilizationForAll(
-            topFlywheelTalon, bottomFlywheelTalon, azimuthTalon, hoodTalon, azimuthCancoder
+            topFlywheelTalon, bottomFlywheelTalon, azimuthTalon, hoodTalon//, azimuthCancoder
         );
 
         resetAzimuthAndHood();
@@ -135,7 +136,7 @@ public class TurretIOTalonFX implements TurretIO {
     public void updateInputs(TurretIOInputs inputs) {
         var topFlywheelStatus = BaseStatusSignal.refreshAll(topFlywheelVelocity, topFlywheelCurrent);
         var bottomFlywheelStatus = BaseStatusSignal.refreshAll(bottomFlywheelVelocity, bottomFlywheelCurrent);
-        var azimuthEncoderStatus = BaseStatusSignal.refreshAll(azimuthAbsAngle, azimuthAbsVelocity);
+        // var azimuthEncoderStatus = BaseStatusSignal.refreshAll(azimuthAbsAngle, azimuthAbsVelocity);
         var azimuthMotorStatus = BaseStatusSignal.refreshAll(azimuthInternalAngle, azimuthInternalVelocity, azimuthCurrent);
         var hoodStatus = BaseStatusSignal.refreshAll(hoodAngle, hoodVelocity, hoodCurrent);
         
@@ -145,11 +146,12 @@ public class TurretIOTalonFX implements TurretIO {
             azimuthInternalVelocity.getValue().in(RadiansPerSecond),
             azimuthCurrent.getValue().in(Amps)
         );
-        inputs.azimuthEncoder = new TurretIOInputs.AzimuthEncoderInputs(
-            azimuthEncoderStatus.isOK(),
-            azimuthAbsAngle.getValue().in(Radians),
-            azimuthAbsVelocity.getValue().in(RadiansPerSecond)
-        );
+        // inputs.azimuthEncoder = new TurretIOInputs.AzimuthEncoderInputs(
+        //     azimuthEncoderStatus.isOK(),
+        //     azimuthAbsAngle.getValue().in(Radians),
+        //     azimuthAbsVelocity.getValue().in(RadiansPerSecond)
+        // );
+        inputs.azimuthEncoder = new TurretIOInputs.AzimuthEncoderInputs(false, 0, 0);
 
         inputs.topFlywheel = new TurretIOInputs.FlywheelMotorInputs(
             topFlywheelStatus.isOK(),
@@ -172,15 +174,17 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void setPIDOutputs(TurretIOPIDOutputs outputs) {
-        topFlywheelTalon.setControl(velocityRequest.withVelocity(outputs.flywheelSpeedRadPerSec()).withSlot(1));
+        topFlywheelTalon.setControl(velocityRequest.withVelocity(
+            outputs.flywheelSpeedRadPerSec() / (2 * Math.PI)
+        ).withSlot(1));
         bottomFlywheelTalon.setControl(followerRequest);
 
         azimuthTalon.setControl(positionRequest.withPosition(
-            outputs.azimuthAngleRad() / TurretConstants.aziMotorToRingReduction
+            outputs.azimuthAngleRad() / (2 * Math.PI)
         ).withSlot(0));
         double hoodRingPos = outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction - outputs.azimuthAngleRad();
         hoodTalon.setControl(positionRequest.withPosition(
-            hoodRingPos / TurretConstants.hoodMotorToRingReduction
+            (hoodRingPos / TurretConstants.hoodMotorToRingReduction) / (2 * Math.PI)
         ).withSlot(0));
     }
 
