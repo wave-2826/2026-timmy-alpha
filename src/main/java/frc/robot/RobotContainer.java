@@ -84,9 +84,11 @@ public class RobotContainer {
                 spindexer = new Spindexer(new SpindexerIOReal());
                 break;
             case SIM:
+                turret = new Turret(new TurretIOSim());
+                spindexer = new Spindexer(new SpindexerIOSim() {});
                 intake = new Intake(new IntakeIOSim() {});
 
-                var driveSimulation = Simulation.getInstance().configureSimulation(intake);
+                var driveSimulation = Simulation.getInstance().configureSimulation(intake, spindexer, turret);
 
                 // Sim robot, instantiate physics sim IO implementations
                 drive = new Drive(
@@ -104,9 +106,7 @@ public class RobotContainer {
                     new VisionIOPhotonVisionSim(VisionConstants.cameraFrontRight, driveSimulation::getSimulatedDriveTrainPose),
                     new VisionIOPhotonVisionSim(VisionConstants.cameraRightmost, driveSimulation::getSimulatedDriveTrainPose)
                 );
-                turret = new Turret(new TurretIOSim());
                 climber = new Climber(new ClimberIO() {});
-                spindexer = new Spindexer(new SpindexerIOSim() {});
                 
                 drive.setPose(new Pose2d(3, 3, new Rotation2d()));
                 break;
