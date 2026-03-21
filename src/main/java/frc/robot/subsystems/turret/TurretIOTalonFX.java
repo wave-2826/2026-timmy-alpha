@@ -181,8 +181,10 @@ public class TurretIOTalonFX implements TurretIO {
         azimuthTalon.setControl(positionRequest.withPosition(
             outputs.azimuthAngleRad() / (2 * Math.PI)
         ).withSlot(0));
-        double hoodRingPos = azimuthInternalAngle.getValue().in(Radians) +
-            outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction;
+        // TODO AAAAA
+        // double hoodRingPos = azimuthInternalAngle.getValue().in(Radians) +
+        //     outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction;
+        double hoodRingPos = azimuthInternalAngle.getValue().in(Radians);
         hoodTalon.setControl(positionRequest.withPosition(
             hoodRingPos / (2 * Math.PI)
         ).withSlot(0));

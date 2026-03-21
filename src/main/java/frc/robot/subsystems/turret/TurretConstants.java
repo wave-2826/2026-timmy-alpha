@@ -118,7 +118,7 @@ public class TurretConstants {
         .addGains(0.0, 12.0 / maxFlywheelSpeedRadPerSec, flywheelMotorKA);
     
     public static final TunablePID flywheelMotorPID = new TunablePID("Turret/Flywheel")
-        .addRealRobotGains(new GenericPIDConstants(0.0005, 0.0, 0.002)) // velocity duty cycle
+        .addRealRobotGains(new GenericPIDConstants(0.05, 0.0, 0.02)) // velocity duty cycle
         .copyRealGainsInSim();
     
     public static final TunablePID azimuthMotorPID = new TunablePID("Turret/Azimuth")

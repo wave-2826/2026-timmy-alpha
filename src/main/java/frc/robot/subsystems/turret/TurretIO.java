@@ -77,7 +77,7 @@ public interface TurretIO {
         }
         public double getHoodAngleRad() {
             return hood.angleRad() * TurretConstants.hoodRingToHoodReduction -
-                azimuthEncoder.angleRad() * TurretConstants.azimuthHoodCoupling +
+                getAzimuthAngleRad()  * TurretConstants.azimuthHoodCoupling +
                 TurretConstants.hoodMinAngle;
         }
         public double getHoodVelocityRadPerSec() {
