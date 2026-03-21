@@ -58,7 +58,7 @@ public class RobotContainer {
 
     // Dashboard inputs
     private final AutoRoutines routines;
-    private final LoggedAutoChooser autoChooser;
+    public final LoggedAutoChooser autoChooser;
     private final LoggedDashboardChooser<Command> testChooser;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */

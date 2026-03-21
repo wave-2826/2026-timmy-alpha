@@ -146,10 +146,11 @@ public class RobotState {
         Optional<Rotation2d> gyroRotation) {
         SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
         for(int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
-            moduleDeltas[moduleIndex] = new SwerveModulePosition(
-                modulePositions[moduleIndex].distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
-                modulePositions[moduleIndex].angle);
-            lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
+            modulePositions[moduleIndex] = new SwerveModulePosition(0.0, modulePositions[moduleIndex].angle);
+            // moduleDeltas[moduleIndex] = new SwerveModulePosition(
+            //     modulePositions[moduleIndex].distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
+            //     modulePositions[moduleIndex].angle);
+            // lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
         }
 
         // Update gyro angle
@@ -163,7 +164,7 @@ public class RobotState {
         }
 
         // Apply update
-        // poseEstimator.updateWithTime(timestamp, rawGyroRotation, modulePositions);
+        poseEstimator.updateWithTime(timestamp, rawGyroRotation, modulePositions);
         // tf are we even doing anymore
     }
 

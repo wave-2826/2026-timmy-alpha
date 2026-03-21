@@ -93,7 +93,7 @@ public class LoggedAutoChooser extends LoggedNetworkInput {
         periodic();
 
         // "This function should not be called by the user"... heh. try me.
-        Logger.registerDashboardInput(this);
+        // Logger.registerDashboardInput(this);
     }
     
     /**

@@ -248,6 +248,9 @@ public class Robot extends LoggedRobot {
         logReceiverQueueAlert.set(Logger.getReceiverQueueFault());
         LoggedTracer.record("Alerts");
 
+        // TODO: HACK uagghhh
+        robotContainer.autoChooser.periodic();
+
         // Miscellaneous logging
         NTClientLogger.log();
         LoggedTracer.record("Logging");
