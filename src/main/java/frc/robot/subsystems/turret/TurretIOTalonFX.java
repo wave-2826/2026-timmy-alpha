@@ -4,9 +4,9 @@ import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.PositionDutyCycle;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VelocityDutyCycle;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -26,8 +26,8 @@ public class TurretIOTalonFX implements TurretIO {
     private static final boolean DISABLE_AZIMUTH_ABS_ENCODER = true;
 
     protected final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0).withUseTimesync(true);
-    protected final VelocityDutyCycle velocityRequest = new VelocityDutyCycle(0).withEnableFOC(true).withUseTimesync(true);
-    protected final PositionDutyCycle positionRequest = new PositionDutyCycle(0).withEnableFOC(true).withUseTimesync(true);
+    protected final VelocityVoltage velocityRequest = new VelocityVoltage(0).withEnableFOC(true).withUseTimesync(true);
+    protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(true).withUseTimesync(true);
     
     protected final Follower followerRequest;
 
@@ -182,9 +182,8 @@ public class TurretIOTalonFX implements TurretIO {
             outputs.azimuthAngleRad() / (2 * Math.PI)
         ).withSlot(0));
         // TODO AAAAA
-        // double hoodRingPos = azimuthInternalAngle.getValue().in(Radians) +
-        //     outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction;
-        double hoodRingPos = azimuthInternalAngle.getValue().in(Radians);
+        double hoodRingPos = azimuthInternalAngle.getValue().in(Radians) +
+            outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction;
         hoodTalon.setControl(positionRequest.withPosition(
             hoodRingPos / (2 * Math.PI)
         ).withSlot(0));

@@ -78,9 +78,14 @@ public class Controls {
         //     coDriver::getRightY,
         //     coDriver.rightBumper()::getAsBoolean
         // ));
-        turret.setDefaultCommand(turret.runOscillationTest());
-        coDriver.start().whileTrue(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
-        coDriver.start().and(coDriver.back()).onTrue(turret.reset());
+        // turret.setDefaultCommand(turret.runOscillationTest());
+        turretControlCodriver.whileTrue(turret.runManual(
+            coDriver::getRightTriggerAxis,
+            coDriver::getLeftX
+        ));
+        turretControlCodriver.whileTrue(spindexer.runPercent(coDriver::getLeftTriggerAxis));
+        turretControlCodriver.and(coDriver.start().or(coDriver.back())).onTrue(turret.reset());
+
         coDriver.leftBumper().onTrue(intake.enableOutward());
 
         // Reset gyro or odometry if in simulation
@@ -95,6 +100,13 @@ public class Controls {
         driver.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
         
         turretControlCodriver.whileTrue(controllerRumbleWhileRunning(coDriver, RumbleType.kRightRumble).withName("TurretCodriverControls"));
+        coDriver.rightBumper().onTrue(Commands.runOnce(() -> {
+            if(codriverMode == CodriverMode.Normal) {
+                codriverMode = CodriverMode.TurretControl;
+            } else {
+                codriverMode = CodriverMode.Normal;
+            }
+        }));
 
         // Endgame Alerts
         Trigger endgameAlert1Trigger = new Trigger(() -> DriverStation.isTeleopEnabled()
