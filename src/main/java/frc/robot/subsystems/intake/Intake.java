@@ -13,7 +13,7 @@ public class Intake extends SubsystemBase {
     private final IntakeIO io;
     private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
-    private static final LoggedTunableNumber intakeRollerPercent = new LoggedTunableNumber("Intake/RollerPercent", 0.5);
+    private static final LoggedTunableNumber intakeRollerSpeed = new LoggedTunableNumber("Intake/RollerSpeed", 2100);
     
     public Intake(IntakeIO io) {
         this.io = io;
@@ -39,7 +39,7 @@ public class Intake extends SubsystemBase {
     }
     
     public Command runRollerScaled(double percent) {
-        return runOnce(() -> io.setRollerPower(percent * intakeRollerPercent.get()));
+        return runOnce(() -> io.setRollerSpeed(percent * intakeRollerSpeed.get()));
     }
 
     private LinearFilter deployLCurrentFilter = LinearFilter.movingAverage(5);

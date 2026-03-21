@@ -32,8 +32,8 @@ public interface IntakeIO {
     /** Update the set of loggable inputs. */
     public default void updateInputs(IntakeIOInputs inputs) {}
     
-    /** Run open loop at the specified duty cycle. */
-    public default void setRollerPower(double power) {}
+    /** Run open loop at the specified velocity in RPM. */
+    public default void setRollerSpeed(double velocityRPM) {}
     /** Run open loop at the specified duty cycle. Positive numbers are outward. */
     public default void setDeployPowerL(double power) {}
     /** Run open loop at the specified duty cycle. Positive numbers are outward. */

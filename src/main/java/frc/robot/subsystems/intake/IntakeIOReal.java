@@ -13,6 +13,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -86,8 +87,8 @@ public class IntakeIOReal implements IntakeIO {
     }
   
     @Override
-    public void setRollerPower(double power) {
-        roller.getClosedLoopController().setSetpoint(power, ControlType.kDutyCycle);
+    public void setRollerSpeed(double velocityRPM) {
+        roller.getClosedLoopController().setSetpoint(Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
     }
 
     @Override
