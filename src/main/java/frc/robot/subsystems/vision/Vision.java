@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.RobotState;
-import frc.robot.util.tunables.LoggedTunableNumber;
 
 import java.util.LinkedList;
 import java.util.List;

@@ -36,11 +36,13 @@ public class VisionConstants {
 
     public static CameraConfiguration cameraLeftmost = new CameraConfiguration(
         "2826_OV9281_Ena",
+        // TODO: Recalibrate
         new Transform3d(new Translation3d(0.26299228917216877, 0.37463897857529405, 0.46437706895675346), new Rotation3d(0.019078617921454894, -0.32843832829994896, 0.22190482336538536))
     );
     public static CameraConfiguration cameraFrontLeft = new CameraConfiguration(
         "2826_OV9281_Fin",
-        new Transform3d(new Translation3d(0.19297534359942536, 0.22660469052086318, 0.4836127596115337), new Rotation3d(0.015612826506477587, -0.30580379815927905, 1.3097503000462243))
+        // TODO: Recalibrate
+        new Transform3d(new Translation3d(0.19297534359942536, 0.43660469052086318, 0.4836127596115337), new Rotation3d(0.015612826506477587, -0.30580379815927905, 1.3097503000462243))
     );
     public static CameraConfiguration cameraFrontRight = new CameraConfiguration(
         "2826_OV9281_Abe",
@@ -48,8 +50,7 @@ public class VisionConstants {
     );
     public static CameraConfiguration cameraRightmost = new CameraConfiguration(
         "2826_OV9281_Gem",
-        null
-        // new Transform3d(new Translation3d(0.03213258244051975, 0.9872044065530436, 0.4385792504840581), new Rotation3d(0.026775165361689657, -0.3906931417814905, 1.8521318555006274))
+        new Transform3d(new Translation3d(0.15582344984686222, -0.4341147342006587, 0.4534495927084479), new Rotation3d(0.02516561369000825, -0.4091266208993857, -1.289064962108927))
     );
 
     // Basic filtering thresholds

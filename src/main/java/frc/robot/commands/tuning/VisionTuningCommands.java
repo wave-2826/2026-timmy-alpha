@@ -80,8 +80,8 @@ public class VisionTuningCommands {
 
             // If the held tag transform is facing away from the origin (by more than 180 deg), warn
             var angleToOrigin = Math.atan2(getHeldTagTransform().getY(), getHeldTagTransform().getX());
-            var angleDiff = MathUtil.angleModulus(angleToOrigin - getHeldTagTransform().getRotation().getZ() + Math.PI);
-            if(angleDiff > Math.PI) {
+            var angleDiff = MathUtil.angleModulus(angleToOrigin - getHeldTagTransform().getRotation().getZ());
+            if(Math.abs(angleDiff) < Math.PI / 2) {
                 System.out.println("WARNING: The held tag transform is facing away from the origin! This is probably wrong");
             }
         }, () -> {
