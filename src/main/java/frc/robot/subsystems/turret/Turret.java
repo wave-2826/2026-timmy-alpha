@@ -162,7 +162,7 @@ public class Turret extends SubsystemBase {
         }, this);
     }
     
-    public static LoggedTunableNumber manualFlywheelSpeed = new LoggedTunableNumber("Turret/ManualFlywheelSpeed", 2000.0);
+    public static LoggedTunableNumber manualFlywheelSpeed = new LoggedTunableNumber("Turret/ManualFlywheelSpeed", 4000.0);
     public static LoggedTunableNumber manualHoodOffset = new LoggedTunableNumber("Turret/ManualHoodAngleOffset", 0.0);
     public Command runManual(
         DoubleSupplier flywheelScalar,
