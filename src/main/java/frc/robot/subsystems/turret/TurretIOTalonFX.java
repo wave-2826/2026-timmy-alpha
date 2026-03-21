@@ -80,7 +80,6 @@ public class TurretIOTalonFX implements TurretIO {
             // TODO: azimuth feedback
         }
 
-        // Velocity PID - only for tuning
         TurretConstants.azimuthMotorPID.applyConfigAndRegister(azimuthConfig, azimuthTalon);
         azimuthConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.totalAzimuthGearing;
         azimuthConfig.ClosedLoopGeneral.ContinuousWrap = true;
@@ -91,8 +90,8 @@ public class TurretIOTalonFX implements TurretIO {
         hoodConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         applyTorqueCurrentLimit(hoodConfig, TurretConstants.hoodCurrentLimit);
 
-        // Velocity PID - only for tuning
         TurretConstants.hoodMotorPID.applyConfigAndRegister(hoodConfig, hoodTalon);
+        hoodConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.hoodMotorToRingReduction;
 
         tryUntilOk(5, () -> hoodTalon.getConfigurator().apply(hoodConfig, 0.25));
 
@@ -182,9 +181,9 @@ public class TurretIOTalonFX implements TurretIO {
         azimuthTalon.setControl(positionRequest.withPosition(
             outputs.azimuthAngleRad() / (2 * Math.PI)
         ).withSlot(0));
-        double hoodRingPos = outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction - outputs.azimuthAngleRad();
+        double hoodRingPos = outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction + outputs.azimuthAngleRad();
         hoodTalon.setControl(positionRequest.withPosition(
-            (hoodRingPos / TurretConstants.hoodMotorToRingReduction) / (2 * Math.PI)
+            hoodRingPos / (2 * Math.PI)
         ).withSlot(0));
     }
 
