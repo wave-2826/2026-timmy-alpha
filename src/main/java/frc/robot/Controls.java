@@ -83,7 +83,7 @@ public class Controls {
             coDriver::getRightTriggerAxis,
             coDriver::getLeftX
         ));
-        turretControlCodriver.whileTrue(spindexer.runPercent(coDriver::getLeftTriggerAxis, () -> 1));
+        turretControlCodriver.whileTrue(spindexer.runPercent(coDriver::getLeftTriggerAxis, () -> coDriver.getLeftTriggerAxis() ));
         turretControlCodriver.and(coDriver.start().or(coDriver.back())).onTrue(turret.reset());
 
         coDriver.leftBumper().onTrue(intake.enableOutward());
