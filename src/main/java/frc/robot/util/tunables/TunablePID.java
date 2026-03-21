@@ -251,21 +251,22 @@ public class TunablePID {
 
                 for(TalonFX talon : talons) {
                     if(hasSlotConfigured(PIDSlot.Slot0)) PhoenixUtil.tryUntilOk(5,
-                        () -> talon.getConfigurator().apply(getTalonSlotConfigs(PIDSlot.Slot0)
-                    ));
+                        () -> talon.getConfigurator().apply(getTalonSlotConfigs(PIDSlot.Slot0))
+                    );
                     if(hasSlotConfigured(PIDSlot.Slot1)) PhoenixUtil.tryUntilOk(5,
-                        () -> talon.getConfigurator().apply(getTalonSlotConfigs(PIDSlot.Slot1)
-                    ));
+                        () -> talon.getConfigurator().apply(getTalonSlotConfigs(PIDSlot.Slot1))
+                    );
                     if(hasSlotConfigured(PIDSlot.Slot2)) PhoenixUtil.tryUntilOk(5,
-                        () -> talon.getConfigurator().apply(getTalonSlotConfigs(PIDSlot.Slot2)
-                    ));
+                        () -> talon.getConfigurator().apply(getTalonSlotConfigs(PIDSlot.Slot2))
+                    );
                 }
 
                 for(ConfigurableController cc : controllers) {
                     if(c.slot == cc.slot) setControllerConfig(cc.controller, c);
                 }
 
-                Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Tunable PIDs", "Configured " + sparks.size() + " motors with updated PIDs!"));
+                var total = sparks.size() + talons.size() + controllers.size();
+                Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Tunable PIDs", "Configured " + total + " controllers with updated PIDs!"));
                 return;
             }
         }
