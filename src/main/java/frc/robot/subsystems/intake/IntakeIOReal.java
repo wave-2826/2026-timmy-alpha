@@ -92,9 +92,9 @@ public class IntakeIOReal implements IntakeIO {
   
     @Override
     public void setRollerSpeed(double velocityRPM) {
-        // roller.getClosedLoopController().setSetpoint(Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
+        roller.getClosedLoopController().setSetpoint(Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
         // HACK
-        roller.getClosedLoopController().setSetpoint(velocityRPM / 5000, ControlType.kDutyCycle);
+        // roller.getClosedLoopController().setSetpoint(velocityRPM / 5000, ControlType.kDutyCycle);
     }
 
     @Override
