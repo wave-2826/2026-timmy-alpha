@@ -54,6 +54,10 @@ public class IntakeIOReal implements IntakeIO {
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 * pinionRadiusMeters / pinionReduction)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
+        deployBaseConfig.closedLoop.maxMotion
+            // TODO: reasonable values
+            .cruiseVelocity(1.0) // m/s
+            .maxAcceleration(5.0); // m/s^2
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
         
@@ -117,7 +121,7 @@ public class IntakeIOReal implements IntakeIO {
             deployR.resumeFollowerModeAsync();
             deployFollowing = true;
         }
-        deployController.setSetpoint(positionMeters, ControlType.kPosition);
+        deployController.setSetpoint(positionMeters, ControlType.kMAXMotionPositionControl);
     }
 
     @Override
