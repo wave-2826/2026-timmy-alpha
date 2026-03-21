@@ -70,7 +70,7 @@ public class Controls {
 
         driver.leftBumper().onTrue(intake.deployIntake().alongWith(intake.enable()));
         driver.rightBumper().onTrue(intake.disable());
-        RobotModeTriggers.autonomous().onTrue(intake.deployIntake());
+
         intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
 
         turret.setDefaultCommand(ScoringCommands.autoShoot(
@@ -84,17 +84,15 @@ public class Controls {
         coDriver.leftBumper().onTrue(intake.enableOutward());
 
         // Reset gyro or odometry if in simulation
-        final Runnable resetGyro = Constants.isSim ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
-            : () -> drive.setPose(new Pose2d(RobotState.getInstance().getEstimatedPose().getTranslation(),
-                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Rotation2d.kZero
-                    : Rotation2d.k180deg)); // Zero gyro
-        final Runnable resetOdometry = Constants.isSim
-            ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose()) // Reset odometry to actual robot pose during simulation
-            : () -> drive.setPose(
-                new Pose2d(0, 0, DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Rotation2d.kZero : Rotation2d.k180deg)); // Zero gyro
-
+        final Runnable resetGyro = Constants.isSim
+            // Reset odometry to actual robot pose in sim
+            ? () -> drive.setPose(Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose())
+            : () -> drive.setPose(new Pose2d(
+                RobotState.getInstance().getEstimatedPose().getTranslation(),
+                DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue ? Rotation2d.kZero : Rotation2d.k180deg
+            ));
+        
         driver.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
-        driver.start().and(driver.leftStick()).debounce(0.5).onTrue(Commands.runOnce(resetOdometry, drive).ignoringDisable(true));
         
         turretControlCodriver.whileTrue(controllerRumbleWhileRunning(coDriver, RumbleType.kRightRumble).withName("TurretCodriverControls"));
 

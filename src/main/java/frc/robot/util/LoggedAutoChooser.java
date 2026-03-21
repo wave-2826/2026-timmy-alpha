@@ -14,6 +14,9 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.util.Elastic.Notification;
+import frc.robot.util.Elastic.Notification.NotificationLevel;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -114,6 +117,7 @@ public class LoggedAutoChooser extends LoggedNetworkInput implements Sendable {
         boolean dsValid = DriverStation.isDisabled() && DriverStation.getAlliance().isPresent();
         if(dsValid || force) {
             if(!autoRoutines.containsKey(selected) && !selected.equals(NONE_NAME)) {
+                Elastic.sendNotification(new Notification(NotificationLevel.ERROR, "Auto chooser", "Reset because routine doesn't exist"));
                 selected = NONE_NAME;
                 selectedNonexistentAuto.set(true);
             } else {
@@ -123,11 +127,19 @@ public class LoggedAutoChooser extends LoggedNetworkInput implements Sendable {
             nameAtGeneration = selected;
             generatedCommand = autoRoutines.get(nameAtGeneration).get().withName(nameAtGeneration);
         } else {
+            if(DriverStation.getAlliance().isPresent()) {
+                Elastic.sendNotification(new Notification(NotificationLevel.ERROR, "Auto chooser", "Reset because DS is in an invalid state (not disabled)"));
+            } else {
+                Elastic.sendNotification(new Notification(NotificationLevel.ERROR, "Auto chooser", "Reset because DS is in an invalid state (no alliance)"));
+            }
             allianceAtGeneration = Optional.empty();
             nameAtGeneration = NONE_NAME;
             selected = NONE_NAME;
             generatedCommand = Commands.none();
         }
+
+        Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Auto chooser", "Selected auto " + nameAtGeneration));
+
         return nameAtGeneration;
     }
 
@@ -249,11 +261,18 @@ public class LoggedAutoChooser extends LoggedNetworkInput implements Sendable {
     @Override
     public void initSendable(SendableBuilder builder) {
         builder.setSmartDashboardType("String Chooser");
+        builder.publishConstInteger(".instance", 0);
         builder.publishConstBoolean(".controllable", true);
         builder.publishConstString("default", NONE_NAME);
         builder.addStringArrayProperty("options", () -> options, null);
+        builder.addStringProperty("active", () -> {
+            if(selected != null) {
+                return selected;
+            } else {
+                return NONE_NAME;
+            }
+        }, null);
         builder.addStringProperty("selected", null, this::select);
-        builder.addStringProperty("active", () -> selected, null);
     }
 
     @Override

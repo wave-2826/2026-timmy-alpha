@@ -194,7 +194,7 @@ public class DriveConstants {
     
     public static final KinematicConstraints kinematicConstraints = new KinematicConstraints(
         MetersPerSecondPerSecond.of(24) /* measuered "magic value" - max linear acceleration */,
-        RadiansPerSecondPerSecond.of(20 * (maxAngularSpeedRadPerSec / maxSpeedMetersPerSec)),
+        RadiansPerSecondPerSecond.of(10 * (maxAngularSpeedRadPerSec / maxSpeedMetersPerSec)),
         MetersPerSecondPerSecond.of(18), /* Skid acceleration limit */
         MetersPerSecondPerSecond.of(14), /* Max tilt acceleration X */
         MetersPerSecondPerSecond.of(20) /* Max tilt acceleration Y */
