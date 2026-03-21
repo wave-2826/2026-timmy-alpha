@@ -32,6 +32,8 @@ public class SpindexerIOReal implements SpindexerIO {
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 / spinnerCurrentLimit)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
+        spinnerConfig.inverted(true);
+        
         var tranferConfig = new SparkMaxConfig();
         tranferConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(transferCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         tranferConfig

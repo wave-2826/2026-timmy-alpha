@@ -162,6 +162,12 @@ public class Turret extends SubsystemBase {
         }, this);
     }
 
+    public Command reset() {
+        return Commands.runOnce(() -> {
+            io.resetAzimuthAndHood();
+        });
+    }
+
     public Command runOscillationTest() {
         return Commands.runEnd(() -> {
             if(target == null) {
