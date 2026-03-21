@@ -1,25 +1,19 @@
 package frc.robot.subsystems.intake;
 
-import static frc.robot.subsystems.intake.IntakeConstants.rollerMotorReduction;
-
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.system.plant.LinearSystemId;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOInputs.DeployMotorInputs;
 import frc.robot.subsystems.intake.IntakeIO.IntakeIOInputs.RollerMotorInputs;
 
 // TODO: better intake sim implementation
 
 public class IntakeIOSim implements IntakeIO {
-    private DCMotor rollerMotor = DCMotor.getNeoVortex(1);
-    private DCMotorSim roller = new DCMotorSim(
-        LinearSystemId.createDCMotorSystem(rollerMotor, 0.2, IntakeConstants.rollerMotorReduction),
-        rollerMotor
-    );
+    // private DCMotor rollerMotor = DCMotor.getNeoVortex(1);
+    // private DCMotorSim roller = new DCMotorSim(
+    //     LinearSystemId.createDCMotorSystem(rollerMotor, 0.2, IntakeConstants.rollerMotorReduction),
+    //     rollerMotor
+    // );
 
-    private double rollerVoltage = 0.0;
+    private double rollerSpeed = 0.0;
     private double deployPos = 0.0;
     
     @Override
@@ -41,16 +35,15 @@ public class IntakeIOSim implements IntakeIO {
         //
     }
     @Override
-    public void setRollerPower(double power) {
-        //
+    public void setRollerSpeed(double velocityRPM) {
+        rollerSpeed = Units.radiansPerSecondToRotationsPerMinute(velocityRPM);
     }
     
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        if(!DriverStation.isEnabled()) rollerVoltage = 0.0;
-        
-        roller.setInputVoltage(rollerVoltage);
-        roller.update(0.02);
+        // if(!DriverStation.isEnabled()) rollerVoltage = 0.0;
+        // roller.setInputVoltage(rollerVoltage);
+        // roller.update(0.02);
 
         inputs.deployL = new DeployMotorInputs(
             true,
@@ -60,8 +53,8 @@ public class IntakeIOSim implements IntakeIO {
         inputs.deployR = inputs.deployL;
         inputs.roller = new RollerMotorInputs(
             true,
-            roller.getAngularVelocityRadPerSec(),
-            roller.getCurrentDrawAmps()
+            rollerSpeed,
+            0.0
         );
     }
 }
