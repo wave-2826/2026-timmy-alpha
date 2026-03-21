@@ -184,4 +184,8 @@ public class LoggedAutoChooser extends LoggedNetworkInput {
     public Command selectedCommand() {
         return lastCommand.withName(lastCommandName);
     }
+
+    public String getSelectedName() {
+        return lastCommandName;
+    }
 }

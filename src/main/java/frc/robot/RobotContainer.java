@@ -129,8 +129,7 @@ public class RobotContainer {
         // Set up auto routines
         autoChooser = new LoggedAutoChooser("Auto Choices");
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
-        RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() -> Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Running Auto...", autoChooser.getSelectedName()))));
-
+        
         routines = new AutoRoutines(this, autoChooser);
 
         Controls.getInstance().configureControls(this);
