@@ -56,8 +56,8 @@ public class IntakeIOReal implements IntakeIO {
             .uvwAverageDepth(2);
         deployBaseConfig.closedLoop.maxMotion
             // TODO: reasonable values
-            .cruiseVelocity(1.0) // m/s
-            .maxAcceleration(5.0); // m/s^2
+            .cruiseVelocity(0.8) // m/s
+            .maxAcceleration(3.0); // m/s^2
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
         
