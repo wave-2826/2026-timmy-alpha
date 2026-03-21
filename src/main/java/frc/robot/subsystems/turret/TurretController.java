@@ -114,9 +114,9 @@ public class TurretController {
         "Turret/LQR_Q",
         VecBuilder.fill(
             Constants.isSim ? 0.002 : 0.0005, // azimuth - rad
-            Constants.isSim ? 0.105 : 0.5, // azimuth vel - rad/s
+            Constants.isSim ? 0.105 : 0.2, // azimuth vel - rad/s
             Constants.isSim ? 0.005 : 0.005, // hood - rad
-            Constants.isSim ? 0.105 : 0.6, // hood vel - rad/s
+            Constants.isSim ? 0.105 : 0.2, // hood vel - rad/s
             Constants.isSim ? 2     : 30 // flywheel vel - rad/s
         )
     );
@@ -294,9 +294,9 @@ public class TurretController {
 
         // Combine: empirical feedforward + LQR correction
         var uOutput = VecBuilder.fill(
-            /* ffAzimuth  + */ lqrCorrection.get(0, 0),
-            /* ffHood     + */ lqrCorrection.get(1, 0),
-            /* ffFlywheel + */ lqrCorrection.get(2, 0)
+            ffAzimuth  + lqrCorrection.get(0, 0),
+            ffHood     + lqrCorrection.get(1, 0),
+            ffFlywheel + lqrCorrection.get(2, 0)
         );
 
         var currents = loop.clampInput(uOutput);
