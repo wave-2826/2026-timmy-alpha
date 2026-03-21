@@ -1,7 +1,6 @@
 package frc.robot.subsystems.turret;
 
 import com.ctre.phoenix6.CANBus;
-import com.revrobotics.spark.ClosedLoopSlot;
 
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -47,6 +46,8 @@ public class TurretConstants {
     // Constraints
     public static final double hoodMinAngle = Units.degreesToRadians(15);
     public static final double hoodMaxAngle = Units.degreesToRadians(43);
+
+    public static final double flywheelRadius = Units.inchesToMeters(2);
 
     // Inertias
     private static final double reflectInertia(double externalInertia, double ratioInternal) {

@@ -9,7 +9,7 @@
         "containers": [
           {
             "title": "FMSInfo",
-            "x": 1280.0,
+            "x": 1024.0,
             "y": 0.0,
             "width": 384.0,
             "height": 128.0,
@@ -21,7 +21,7 @@
           },
           {
             "title": "Auto Choices",
-            "x": 1280.0,
+            "x": 1024.0,
             "y": 128.0,
             "width": 384.0,
             "height": 128.0,
@@ -33,8 +33,44 @@
             }
           },
           {
+            "title": "Choreo Alerts",
+            "x": 0.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 384.0,
+            "type": "Alerts",
+            "properties": {
+              "topic": "/SmartDashboard/Choreo Alerts",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "PhotonAlerts",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 384.0,
+            "type": "Alerts",
+            "properties": {
+              "topic": "/SmartDashboard/PhotonAlerts",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Alerts",
+            "x": 1024.0,
+            "y": 384.0,
+            "width": 384.0,
+            "height": 384.0,
+            "type": "Alerts",
+            "properties": {
+              "topic": "/SmartDashboard/Alerts",
+              "period": 0.06
+            }
+          },
+          {
             "title": "Test Command",
-            "x": 1280.0,
+            "x": 1024.0,
             "y": 256.0,
             "width": 384.0,
             "height": 128.0,
@@ -46,27 +82,71 @@
             }
           },
           {
-            "title": "Alerts",
-            "x": 1280.0,
-            "y": 384.0,
-            "width": 384.0,
-            "height": 512.0,
-            "type": "Alerts",
+            "title": "MatchTime",
+            "x": 512.0,
+            "y": 0.0,
+            "width": 512.0,
+            "height": 256.0,
+            "type": "Match Time",
             "properties": {
-              "topic": "/SmartDashboard/Alerts",
-              "period": 0.06
+              "topic": "/AdvantageKit/DriverStation/MatchTime",
+              "period": 0.06,
+              "data_type": "double",
+              "time_display_mode": "Minutes and Seconds",
+              "red_start_time": 20,
+              "yellow_start_time": 30
             }
           },
           {
-            "title": "Choreo Alerts",
+            "title": "BatteryVoltage",
             "x": 384.0,
-            "y": 0.0,
-            "width": 256.0,
-            "height": 384.0,
-            "type": "Alerts",
+            "y": 640.0,
+            "width": 640.0,
+            "height": 128.0,
+            "type": "Voltage View",
             "properties": {
-              "topic": "/SmartDashboard/Choreo Alerts",
-              "period": 0.06
+              "topic": "/AdvantageKit/SystemStats/BatteryVoltage",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": 4.0,
+              "max_value": 13.0,
+              "divisions": 5,
+              "inverted": false,
+              "orientation": "horizontal"
+            }
+          },
+          {
+            "title": "RSLState",
+            "x": 256.0,
+            "y": 640.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/AdvantageKit/SystemStats/RSLState",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4293428277,
+              "false_color": 4278190080,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "RollerSpeed",
+            "x": 512.0,
+            "y": 384.0,
+            "width": 384.0,
+            "height": 128.0,
+            "type": "Number Slider",
+            "properties": {
+              "topic": "/Tuning/Intake/RollerSpeed",
+              "period": 0.06,
+              "data_type": "double",
+              "min_value": 0.0,
+              "max_value": 5000.0,
+              "divisions": 5,
+              "update_continuously": true
             }
           }
         ]
@@ -378,7 +458,7 @@
         "containers": [
           {
             "title": "photon-climber_Port_1182_Output_MJPEG_Server",
-            "x": 512.0,
+            "x": 384.0,
             "y": 0.0,
             "width": 512.0,
             "height": 384.0,
@@ -391,7 +471,7 @@
           },
           {
             "title": "photon-climber_Port_1186_Output_MJPEG_Server",
-            "x": 1024.0,
+            "x": 896.0,
             "y": 0.0,
             "width": 512.0,
             "height": 384.0,
@@ -404,7 +484,7 @@
           },
           {
             "title": "photon-rio_Port_1182_Output_MJPEG_Server",
-            "x": 512.0,
+            "x": 384.0,
             "y": 384.0,
             "width": 512.0,
             "height": 384.0,
@@ -417,7 +497,7 @@
           },
           {
             "title": "photon-rio_Port_1186_Output_MJPEG_Server",
-            "x": 1024.0,
+            "x": 896.0,
             "y": 384.0,
             "width": 512.0,
             "height": 384.0,

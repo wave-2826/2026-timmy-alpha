@@ -31,6 +31,22 @@ public record ChoreoTraj(
         new Pose2d(4.49254, 7.46487, Rotation2d.fromRadians(1.5708)),
         new Pose2d(3.42683, 7.41656, Rotation2d.fromRadians(-1.60482))
     );
+    /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
+    public static final ChoreoTraj LeftDoubleSwipe$0 = new ChoreoTraj(
+        "LeftDoubleSwipe",
+        OptionalInt.of(0),
+        4.11369,
+        new Pose2d(4.49254, 7.46487, Rotation2d.fromRadians(1.5708)),
+        new Pose2d(3.44291, 7.48501, Rotation2d.fromRadians(1.57031))
+    );
+    /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
+    public static final ChoreoTraj LeftDoubleSwipe$1 = new ChoreoTraj(
+        "LeftDoubleSwipe",
+        OptionalInt.of(1),
+        5.063980000000001,
+        new Pose2d(3.44291, 7.48501, Rotation2d.fromRadians(1.57031)),
+        new Pose2d(3.42683, 7.41656, Rotation2d.fromRadians(-1.60482))
+    );
     public static final ChoreoTraj LeftSweepOutpost = new ChoreoTraj(
         "LeftSweepOutpost",
         OptionalInt.empty(),
@@ -45,6 +61,8 @@ public record ChoreoTraj(
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
         Map.entry("LeftDoubleSwipe", LeftDoubleSwipe),
+        Map.entry("LeftDoubleSwipe$0", LeftDoubleSwipe$0),
+        Map.entry("LeftDoubleSwipe$1", LeftDoubleSwipe$1),
         Map.entry("LeftSweepOutpost", LeftSweepOutpost)
     );
 

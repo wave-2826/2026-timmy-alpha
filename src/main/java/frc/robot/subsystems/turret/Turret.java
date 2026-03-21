@@ -2,12 +2,15 @@ package frc.robot.subsystems.turret;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
@@ -196,6 +199,20 @@ public class Turret extends SubsystemBase {
         return flywheelError < TurretConstants.flywheelToleranceRadPerSec
             && azimuthError < TurretConstants.azimuthToleranceRad
             && hoodError < TurretConstants.hoodToleranceRad;
+    }
+
+    public LinearVelocity getShotVelocity() {
+        return MetersPerSecond.of(
+            inputs.getFlywheelVelocityRadPerSecond() * TurretConstants.flywheelRadius *
+            0.5 * // one fixed side
+            0.1 // 10% of tangential velocity imparted
+        );
+    }
+    public Angle getShotAngle() {
+        return Radians.of(inputs.getHoodAngleRad() + Math.PI);
+    }
+    public Angle getRobotRelativeYaw() {
+        return Radians.of(inputs.getAzimuthAngleRad());
     }
 
     public Command runTuning() {

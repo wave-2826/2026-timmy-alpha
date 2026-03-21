@@ -113,9 +113,9 @@ public class TurretController {
     private static final LoggedTunableVector<N5> qWeights = new LoggedTunableVector<>(
         "Turret/LQR_Q",
         VecBuilder.fill(
-            Constants.isSim ? 0.002 : 0.0005, // azimuth - rad
+            Constants.isSim ? 0.002 : 0.0003, // azimuth - rad
             Constants.isSim ? 0.105 : 0.2, // azimuth vel - rad/s
-            Constants.isSim ? 0.005 : 0.005, // hood - rad
+            Constants.isSim ? 0.005 : 0.0025, // hood - rad
             Constants.isSim ? 0.105 : 0.2, // hood vel - rad/s
             Constants.isSim ? 2     : 30 // flywheel vel - rad/s
         )
@@ -125,9 +125,9 @@ public class TurretController {
     private static final LoggedTunableVector<N3> rWeights = new LoggedTunableVector<>(
         "Turret/LQR_R",
         VecBuilder.fill(
-            Constants.isSim ? 50 : 3,
-            Constants.isSim ? 50 : 3,
-            Constants.isSim ? 50 : 3
+            Constants.isSim ? 50 : 0.85,
+            Constants.isSim ? 50 : 0.85,
+            Constants.isSim ? 50 : 5
         )
     );
     // Kalman process / measurement noise (should be tuned empirically)

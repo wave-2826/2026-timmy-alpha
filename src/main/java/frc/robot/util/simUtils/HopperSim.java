@@ -2,11 +2,14 @@ package frc.robot.util.simUtils;
 
 import static edu.wpi.first.units.Units.Meters;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.RobotState;
 import frc.robot.subsystems.drive.DriveConstants;
 
 public class HopperSim {
@@ -36,6 +39,13 @@ public class HopperSim {
         }
 
         return positions;
+    }
+
+    public void update() {
+        Logger.recordOutput("HopperSim/FuelPositions", getHopperFuelFieldPositions(new Pose3d(
+            RobotState.getInstance().getBestEstimatedPose()
+        )));
+        Logger.recordOutput("HopperSim/Fuel", fuelInHopper);
     }
 
     public void addFuel() {
