@@ -250,12 +250,15 @@ public class TunablePID {
                 }
 
                 for(TalonFX talon : talons) {
-                    TalonFXConfiguration config = new TalonFXConfiguration();
-                    if(hasSlotConfigured(PIDSlot.Slot0)) config.Slot0 = Slot0Configs.from(getTalonSlotConfigs(PIDSlot.Slot0));
-                    if(hasSlotConfigured(PIDSlot.Slot1)) config.Slot1 = Slot1Configs.from(getTalonSlotConfigs(PIDSlot.Slot1));
-                    if(hasSlotConfigured(PIDSlot.Slot2)) config.Slot2 = Slot2Configs.from(getTalonSlotConfigs(PIDSlot.Slot2));
-
-                    PhoenixUtil.tryUntilOk(5, () -> talon.getConfigurator().apply(config));
+                    if(hasSlotConfigured(PIDSlot.Slot0)) PhoenixUtil.tryUntilOk(5,
+                        () -> talon.getConfigurator().apply(getTalonSlotConfigs(PIDSlot.Slot0)
+                    ));
+                    if(hasSlotConfigured(PIDSlot.Slot1)) PhoenixUtil.tryUntilOk(5,
+                        () -> talon.getConfigurator().apply(getTalonSlotConfigs(PIDSlot.Slot1)
+                    ));
+                    if(hasSlotConfigured(PIDSlot.Slot2)) PhoenixUtil.tryUntilOk(5,
+                        () -> talon.getConfigurator().apply(getTalonSlotConfigs(PIDSlot.Slot2)
+                    ));
                 }
 
                 for(ConfigurableController cc : controllers) {
