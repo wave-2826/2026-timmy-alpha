@@ -6,6 +6,7 @@ import static edu.wpi.first.units.Units.Seconds;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -109,6 +110,7 @@ public final class Simulation {
             Commands.waitSeconds(0.25).andThen(Commands.runOnce(() -> {
                 DriverStationSim.setDsAttached(true);
                 DriverStationSim.setEnabled(true);
+                DriverStationSim.setAllianceStationId(AllianceStationID.Blue3);
             })).ignoringDisable(true)
         );
     }

@@ -28,21 +28,26 @@ public class AutoRoutines {
             Logger.recordOutput("Odometry/IsStart", isStart);
         });
 
-        autoFactory.bind("Intake", Commands.sequence(intake.deployIntake(), intake.enable()))
-            .bind("Intake Stop", intake.disable())
-            .bind("Outtake", intake.enableOutward());
-
+        // .bind("Intake Stop", intake.disable())
+        // .bind("Outtake", intake.enableOutward());
+        
         autoChooser.addRoutine("Left Double Swipe", () -> this.getDoubleSwipe(false));
         // autoChooser.addRoutine("Right Double Swipe (fallback)", () -> this.getDoubleSwipe(true));
     }
 
     private AutoRoutine getDoubleSwipe(boolean right) {
         var routine = autoFactory.newRoutine("LeftDoubleSwipe");
+        
         AutoTrajectory traj = ChoreoTraj.LeftDoubleSwipe.asAutoTraj(routine);
+
+        traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
+        
         routine.active().onTrue(Commands.sequence(
             traj.resetOdometry(),
             traj.cmd()
         ));
+
+        System.out.println("Got routine");
 
         return routine;
     }

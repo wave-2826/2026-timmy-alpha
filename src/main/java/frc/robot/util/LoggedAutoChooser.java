@@ -125,6 +125,7 @@ public class LoggedAutoChooser extends LoggedNetworkInput implements Sendable {
         } else {
             allianceAtGeneration = Optional.empty();
             nameAtGeneration = NONE_NAME;
+            selected = NONE_NAME;
             generatedCommand = Commands.none();
         }
         return nameAtGeneration;

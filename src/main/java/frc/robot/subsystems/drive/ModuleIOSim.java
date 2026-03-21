@@ -3,8 +3,10 @@ package frc.robot.subsystems.drive;
 import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.subsystems.drive.DriveConstants.SwerveModuleConfig;
 
@@ -63,5 +65,11 @@ public class ModuleIOSim extends ModuleIOTalonFX {
         cancoderSimState.setVelocity(turnSim.getAngularVelocityRadPerSec());
         
         super.updateInputs(inputs);
+
+        // Update odometry inputs (50Hz because high-frequency odometry in sim doesn't
+        // matter)
+        inputs.odometryTimestamps = new double[] {Timer.getFPGATimestamp()};
+        inputs.odometryDrivePositionsRad = new double[] {inputs.drivePositionRad};
+        inputs.odometryTurnPositions = new Rotation2d[] {inputs.turnAbsolutePosition};
     }
 }

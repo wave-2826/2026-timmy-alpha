@@ -220,9 +220,6 @@ public class SwerveDriveSimulation {
         this.pose = robotPose;
         this.velocity = new Translation2d();
         this.angularVelocity = 0.0;
-        // Sync the gyro to the new orientation so field-relative conversions
-        // in the rest of the codebase stay consistent
-        gyroSimulation.setRotation(robotPose.getRotation());
     }
 
     private void setRobotSpeeds(ChassisSpeeds givenSpeeds) {
