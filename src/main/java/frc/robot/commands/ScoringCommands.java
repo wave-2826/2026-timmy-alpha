@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj2.command.Command;
@@ -22,7 +23,8 @@ public class ScoringCommands {
         Turret turret,
         Spindexer spindexer,
         DoubleSupplier driverShoot,
-        DoubleSupplier codriverOverrideAxis
+        DoubleSupplier codriverOverrideAxis,
+        BooleanSupplier codriverStop
     ) {
         return Commands.runEnd(() -> {
             var parameters = ShotCalculator.getInstance().calculate();
@@ -31,8 +33,11 @@ public class ScoringCommands {
                 turret.target = parameters.target();
                 spinPower = turret.atSetpoint() ? 1.0 : 0.0;
             } else {
-                turret.target = null;
                 spinPower = 0.0;
+            }
+
+            if(codriverStop.getAsBoolean()) {
+                turret.target = null;
             }
 
             double codriverOverride = codriverOverrideAxis.getAsDouble();

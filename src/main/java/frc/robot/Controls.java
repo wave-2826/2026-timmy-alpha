@@ -61,17 +61,13 @@ public class Controls {
     public void configureControls(RobotContainer rc) {
         Drive drive = rc.drive;
         Turret turret = rc.turret;
-        Climber climber = rc.climber;
+        // Climber climber = rc.climber;
         Spindexer spindexer = rc.spindexer;
         Intake intake = rc.intake;
         
         // Default command, normal field-relative drive
         drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> driver.getRightX()));
         driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
-        // driver.b().whileTrue(climber.extendBoth()).onTrue(intake.bringIntakeIn(1));
-        driver.a().whileTrue(climber.retractBoth());
-        coDriver.rightBumper().whileTrue(climber.manualControls(coDriver::getLeftY, coDriver::getRightY));
 
         driver.leftBumper().onTrue(intake.deployIntake().alongWith(intake.enable()));
         driver.rightBumper().onTrue(intake.disable());
@@ -81,7 +77,8 @@ public class Controls {
         turret.setDefaultCommand(ScoringCommands.autoShoot(
             turret, spindexer,
             driver::getRightTriggerAxis,
-            coDriver::getRightY
+            coDriver::getRightY,
+            coDriver.rightBumper()::getAsBoolean
         ));
         coDriver.start().whileTrue(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
 
@@ -115,6 +112,11 @@ public class Controls {
         RobotModeTriggers.teleop().and(DriverStation::isFMSAttached).onTrue(Commands.runOnce(() -> {
             Elastic.selectTab("Teleoperated");
         }));
+
+        
+        // driver.b().whileTrue(climber.extendBoth()).onTrue(intake.bringIntakeIn(1));
+        // driver.a().whileTrue(climber.retractBoth());
+        // coDriver.rightBumper().whileTrue(climber.manualControls(coDriver::getLeftY, coDriver::getRightY));
     }
 
     private HashMap<Integer, Double> driverRumbleCommands = new HashMap<>();
