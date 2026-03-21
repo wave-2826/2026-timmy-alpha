@@ -67,8 +67,7 @@ public class TurretIOTalonFX implements TurretIO {
         baseConfig.MotorOutput.ControlTimesyncFreqHz = 250;
         applyTorqueCurrentLimit(baseConfig, TurretConstants.flywheelCurrentLimit);
 
-        // Velocity PID - only for tuning
-        baseConfig.Slot1.withKP(0.001).withKV(0.02);
+        TurretConstants.flywheelMotorPID.applyConfigAndRegister(baseConfig, topFlywheelTalon, bottomFlywheelTalon);
 
         tryUntilOk(5, () -> topFlywheelTalon.getConfigurator().apply(baseConfig, 0.25));
         tryUntilOk(5, () -> bottomFlywheelTalon.getConfigurator().apply(baseConfig, 0.25));
@@ -82,7 +81,7 @@ public class TurretIOTalonFX implements TurretIO {
         }
 
         // Velocity PID - only for tuning
-        azimuthConfig.Slot1.withKP(0.008).withKV(0.025);
+        TurretConstants.azimuthMotorPID.applyConfigAndRegister(azimuthConfig, azimuthTalon);
         azimuthConfig.Feedback.SensorToMechanismRatio = TurretConstants.totalAzimuthGearing;
         azimuthConfig.ClosedLoopGeneral.ContinuousWrap = true;
 
@@ -92,7 +91,7 @@ public class TurretIOTalonFX implements TurretIO {
         applyTorqueCurrentLimit(hoodConfig, TurretConstants.azimuthCurrentLimit);
 
         // Velocity PID - only for tuning
-        hoodConfig.Slot1.withKP(0.001).withKV(0.02);
+        TurretConstants.hoodMotorPID.applyConfigAndRegister(hoodConfig, hoodTalon);
 
         tryUntilOk(5, () -> hoodTalon.getConfigurator().apply(hoodConfig, 0.25));
 
