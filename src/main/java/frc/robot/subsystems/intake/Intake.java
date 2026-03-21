@@ -13,7 +13,7 @@ public class Intake extends SubsystemBase {
     private final IntakeIO io;
     private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
-    private static final LoggedTunableNumber intakeRollerSpeed = new LoggedTunableNumber("Intake/RollerSpeed", 2100);
+    private static final LoggedTunableNumber intakeRollerSpeed = new LoggedTunableNumber("Intake/RollerSpeed", 2600);
     
     public Intake(IntakeIO io) {
         this.io = io;
@@ -61,10 +61,10 @@ public class Intake extends SubsystemBase {
         });
     }
     
-    /** Set the intake position. Positive numbers are inward. */
+    /** Set the intake position. Positive numbers are outward. */
     public Command setIntakePosition(DoubleSupplier position) {
         return run(() -> {
-            io.setDeployPosition(position.getAsDouble());
+            io.setDeployPosition(-position.getAsDouble());
         });
     }
     
