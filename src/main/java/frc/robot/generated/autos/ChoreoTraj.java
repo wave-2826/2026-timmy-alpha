@@ -34,8 +34,8 @@ public record ChoreoTraj(
     public static final ChoreoTraj LeftSweepOutpost = new ChoreoTraj(
         "LeftSweepOutpost",
         OptionalInt.empty(),
-        4.34793,
-        new Pose2d(4.32822, 7.42661, Rotation2d.fromRadians(3.14159)),
+        4.17381,
+        new Pose2d(4.49238, 7.35992, Rotation2d.fromRadians(1.5708)),
         new Pose2d(0.77421, 0.65509, Rotation2d.fromRadians(0))
     );
 

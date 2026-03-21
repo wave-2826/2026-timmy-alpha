@@ -16,8 +16,8 @@ public class HopperSim {
     private static double hopperSizeX = DriveConstants.wheelBaseX.in(Meters);
     private static double hopperSizeY = DriveConstants.trackWidthY.in(Meters);
     private static double hopperSizeZ = Units.inchesToMeters(20);
-    private static double hopperCenterZ = Units.inchesToMeters(15);    
-    
+    private static double hopperCenterZ = Units.inchesToMeters(15);
+
     public boolean canIntake() {
         return fuelInHopper <= maxFuel;
     }
@@ -39,10 +39,20 @@ public class HopperSim {
     }
 
     public void addFuel() {
-        fuelInHopper += 1;
-
-        if(fuelInHopper > maxFuel) {
+        if(fuelInHopper >= maxFuel) {
             System.out.println("HopperSim: tried to intake fuel with no more space");
+            return;
         }
+
+        fuelInHopper += 1;
+    }
+
+    public boolean removeFuel() {
+        if(fuelInHopper <= 0) {
+            return false;
+        }
+
+        fuelInHopper -= 1;
+        return true;
     }
 }

@@ -84,11 +84,6 @@ public class Turret extends SubsystemBase {
                 Logger.recordOutput("Turret/Target/Azimuth", 0.0, Radians);
                 Logger.recordOutput("Turret/Target/Hood", 0.0, Radians);
                 Logger.recordOutput("Turret/Target/Flywheel", 0.0, RadiansPerSecond);
-
-                TurretVisualizer.getInstance().update(
-                    0.0, inputs.getAzimuthAngleRad(),
-                    0.0, inputs.getHoodAngleRad()
-                );
             } else {
                 switch(controlModeChooser.get()) {
                     case NONE:

@@ -4,9 +4,13 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
 
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import frc.robot.RobotState;
 
 public class TurretVisualizer {
     private static TurretVisualizer instance = null;
@@ -60,7 +64,29 @@ public class TurretVisualizer {
         hoodTargetDisplay.setAngle(Units.radiansToDegrees(targetHoodRad));
         hoodMeasuredDisplay.setAngle(Units.radiansToDegrees(measuredHoodRad));
 
+        var targetBallPathPitch = targetHoodRad + Math.PI;
+        var measuredBallPathPitch = measuredHoodRad + Math.PI;
+
+        var startPos = new Pose3d(RobotState.getInstance().getBestEstimatedPose())
+            .getTranslation().plus(TurretConstants.robotToTurret);
+        var endPosTarget = startPos.plus(new Translation3d(1, 0, 0).rotateBy(new Rotation3d(
+            0,
+            targetBallPathPitch,
+            targetAzimuthRad
+        )));
+        var endPosMeasured = startPos.plus(new Translation3d(1, 0, 0).rotateBy(new Rotation3d(
+            0,
+            measuredBallPathPitch,
+            measuredAzimuthRad
+        )));
+
         Logger.recordOutput("Turret/Mechanism/Azimuth", azimuthMechanism);
         Logger.recordOutput("Turret/Mechanism/Hood", hoodMechanism);
+        Logger.recordOutput("Turret/Mechanism/LinesTarget", new Translation3d[][] {
+            new Translation3d[] { startPos, endPosTarget },
+        });
+        Logger.recordOutput("Turret/Mechanism/LinesMeasured", new Translation3d[][] {
+            new Translation3d[] { startPos, endPosMeasured },
+        });
     }
 }

@@ -5,7 +5,6 @@ import org.littletonrobotics.junction.Logger;
 import com.revrobotics.sim.SparkAbsoluteEncoderSim;
 
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import frc.robot.util.simUtils.spark.SparkSimThatActuallyWorks;
 
@@ -32,11 +31,6 @@ public class TurretIOSim extends TurretIOSpark {
     }
   
     public void updateInputs(TurretIOInputs inputs) {
-        if(!DriverStationSim.getDsAttached()) {
-            turretSim.reset();
-            return;
-        }
-
         for(int i = 0; i < subticks; i++) {
             var turretState = turretSim.updateAndGetState(
                 flywheelMotorSim.getAppliedOutput() * RoboRioSim.getVInVoltage(),

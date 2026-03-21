@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import java.util.function.DoubleSupplier;
 
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Spindexer extends SubsystemBase {
@@ -13,6 +14,11 @@ public class Spindexer extends SubsystemBase {
 
     public Spindexer(SpindexerIO io) {
         this.io = io;
+    }
+
+    @AutoLogOutput(key = "Spindexer/BallsPerSecond")
+    public double getBallsPerSecond() {
+        return SpindexerConstants.ballsInSpin * inputs.spinner.velocityRadPerSec() / (2 * Math.PI);
     }
 
     @Override

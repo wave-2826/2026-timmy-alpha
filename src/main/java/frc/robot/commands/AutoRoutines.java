@@ -6,27 +6,36 @@ import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants;
+import frc.robot.RobotContainer;
 import frc.robot.generated.autos.ChoreoTraj;
 import frc.robot.subsystems.climber.Climber;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LoggedAutoChooser;
+import frc.robot.util.simUtils.Simulation;
 
 public class AutoRoutines {
     private final AutoFactory autoFactory;
     private final Drive drive;
     private final Intake intake;
 
-    public AutoRoutines(Drive drive, Intake intake, Spindexer spindexer, Climber climber, Turret turret, LoggedAutoChooser autoChooser) {
-        this.drive = drive;
-        this.intake = intake;
+    public AutoRoutines(RobotContainer rc, LoggedAutoChooser autoChooser) {
+        this.drive = rc.drive;
+        this.intake = rc.intake;
 
         autoFactory = drive.createAutoFactory((traj, isStart) -> {
             Logger.recordOutput("Odometry/Trajectory", traj.getPoses());
             Logger.recordOutput("Odometry/IsStart", isStart);
         });
+
+        if(Constants.isSim) {
+            var traj = ChoreoTraj.ALL_TRAJECTORIES.getOrDefault(autoChooser.selectedCommand().getName(), null);
+            if(traj != null) Simulation.getInstance().driveSimulation.setSimulationWorldPose(AllianceFlipUtil.apply(traj.initialPoseBlue()));
+        }
 
         // .bind("Intake Stop", intake.disable())
         // .bind("Outtake", intake.enableOutward());

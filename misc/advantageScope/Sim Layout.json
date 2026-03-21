@@ -93,7 +93,7 @@
                 "sources": [
                   {
                     "type": "ghost",
-                    "logKey": "/RealOutputs/Odometry/Robot",
+                    "logKey": "/RealOutputs/Odometry/Best",
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {

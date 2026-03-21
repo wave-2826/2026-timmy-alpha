@@ -22,9 +22,11 @@ import frc.robot.subsystems.drive.ModuleIOTalonFXReal;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOReal;
+import frc.robot.subsystems.intake.IntakeIOSim;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerIO;
 import frc.robot.subsystems.spindexer.SpindexerIOReal;
+import frc.robot.subsystems.spindexer.SpindexerIOSim;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretIO;
 import frc.robot.subsystems.turret.TurretIOSim;
@@ -82,7 +84,7 @@ public class RobotContainer {
                 spindexer = new Spindexer(new SpindexerIOReal());
                 break;
             case SIM:
-                intake = new Intake(new IntakeIO() {});
+                intake = new Intake(new IntakeIOSim() {});
 
                 var driveSimulation = Simulation.getInstance().configureSimulation(intake);
 
@@ -104,7 +106,7 @@ public class RobotContainer {
                 );
                 turret = new Turret(new TurretIOSim());
                 climber = new Climber(new ClimberIO() {});
-                spindexer = new Spindexer(new SpindexerIO() {});
+                spindexer = new Spindexer(new SpindexerIOSim() {});
                 
                 drive.setPose(new Pose2d(3, 3, new Rotation2d()));
                 break;
@@ -129,7 +131,7 @@ public class RobotContainer {
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
         RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() -> Elastic.sendNotification(new Notification(NotificationLevel.INFO, "Running Auto...", autoChooser.getSelectedName()))));
 
-        routines = new AutoRoutines(drive, intake, spindexer, climber, turret, autoChooser);
+        routines = new AutoRoutines(this, autoChooser);
 
         Controls.getInstance().configureControls(this);
         testChooser = TuningCommands.constructTuningChooser(this);

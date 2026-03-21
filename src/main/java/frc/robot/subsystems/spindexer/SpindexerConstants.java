@@ -13,6 +13,8 @@ public class SpindexerConstants {
     public static final int spinnerCurrentLimit = 35;
     public static final int transferCurrentLimit = 20;
 
+    public static final int ballsInSpin = 5;
+
     public static final TunablePID spinnerPID = new TunablePID("Spindexer/Spinner")
         .addRealRobotGains(new GenericPIDConstants(0.005, 0, 0))
         .copyRealGainsInSim();

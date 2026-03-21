@@ -69,6 +69,8 @@ public final class Simulation {
             this::intakeFuel
         );
         
+        driveSimulation.setSimulationWorldPose(new Pose2d(3, 3, new Rotation2d()));
+        
         return driveSimulation;
     }
 
@@ -80,8 +82,6 @@ public final class Simulation {
     public void resetSimulationField() {
         if(Constants.currentMode != Constants.Mode.SIM) return;
 
-        driveSimulation.setSimulationWorldPose(new Pose2d(3, 3, new Rotation2d()));
-        
         fuel.clearFuel();
         fuel.spawnStartingFuel();
     }
@@ -103,6 +103,9 @@ public final class Simulation {
 
             // TODO: also run other sim IO with subticks
         }
+
+        // Shot updates
+        
     }
 
     public void simulationInit() {
