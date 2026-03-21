@@ -193,11 +193,11 @@ public class DriveConstants {
     public static final DCMotor turnMotorModel = DCMotor.getKrakenX60Foc(1);
     
     public static final KinematicConstraints kinematicConstraints = new KinematicConstraints(
-        MetersPerSecondPerSecond.of(100) /* measuered "magic value" - max linear acceleration */,
-        RadiansPerSecondPerSecond.of(100 * (maxAngularSpeedRadPerSec / maxSpeedMetersPerSec)),
-        MetersPerSecondPerSecond.of(80), /* Skid acceleration limit */
-        MetersPerSecondPerSecond.of(50), /* Max tilt acceleration X */
-        MetersPerSecondPerSecond.of(100) /* Max tilt acceleration Y */
+        MetersPerSecondPerSecond.of(12) /* measuered "magic value" - max linear acceleration */,
+        RadiansPerSecondPerSecond.of(10 * (maxAngularSpeedRadPerSec / maxSpeedMetersPerSec)),
+        MetersPerSecondPerSecond.of(9), /* Skid acceleration limit */
+        MetersPerSecondPerSecond.of(7), /* Max tilt acceleration X */
+        MetersPerSecondPerSecond.of(10) /* Max tilt acceleration Y */
     );
     
     // Encoder offsets measured with 
