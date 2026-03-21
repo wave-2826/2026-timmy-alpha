@@ -65,11 +65,11 @@ public class SpindexerIOReal implements SpindexerIO {
   
     @Override
     public void setSpinnerVoltage(double voltage) {
-        spinnerMotor.setVoltage(-voltage);
+        spinnerMotor.setVoltage(voltage);
     }
 
     @Override
     public void setTransferVoltage(double voltage) {
-        transferMotor.setVoltage(-voltage);
+        transferMotor.setVoltage(voltage);
     }
 }

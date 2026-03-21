@@ -21,9 +21,11 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import frc.robot.Controls;
+import frc.robot.RobotState;
 import frc.robot.commands.tuning.TurretTuning;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.subsystems.turret.TurretIO.TurretIOPIDOutputs;
+import frc.robot.util.Container;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
 /**
@@ -165,6 +167,7 @@ public class Turret extends SubsystemBase {
         DoubleSupplier flywheelScalar,
         DoubleSupplier azimuthSpeed
     ) {
+        Container<Double> azimuthOffset = new Container<>(0.0);
         return Commands.runEnd(() -> {
             if(target == null) {
                 target = new TurretTarget(0.0, inputs.getAzimuthAngleRad(), TurretConstants.hoodMinAngle);
@@ -172,8 +175,10 @@ public class Turret extends SubsystemBase {
 
             target.flywheelSpeedRadPerSec = flywheelScalar.getAsDouble() * Units.rotationsPerMinuteToRadiansPerSecond(manualFlywheelSpeed.get());
 
-            target.azimuthAngleRad -= MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.02;
-            target.azimuthAngleRad = MathUtil.angleModulus(target.azimuthAngleRad);
+            azimuthOffset.value -= MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.02;
+            target.azimuthAngleRad = MathUtil.angleModulus(
+                azimuthOffset.value - RobotState.getInstance().getEstimatedPose().getRotation().getRadians()
+            );
 
             target.hoodAngleRad = TurretConstants.hoodMinAngle + manualHoodOffset.get();
         }, () -> {
@@ -225,8 +230,8 @@ public class Turret extends SubsystemBase {
     public LinearVelocity getShotVelocity() {
         return MetersPerSecond.of(
             inputs.getFlywheelVelocityRadPerSecond() * TurretConstants.flywheelRadius *
-            0.5 * // one fixed side
-            0.1 // 10% of tangential velocity imparted
+                0.5 * // one fixed side
+                0.1 // 10% of tangential velocity imparted
         );
     }
     public Angle getShotAngle() {

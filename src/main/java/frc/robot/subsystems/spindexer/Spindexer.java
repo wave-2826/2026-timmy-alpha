@@ -37,6 +37,6 @@ public class Spindexer extends SubsystemBase {
 
     public void setPower(double percent) {
         io.setSpinnerVoltage(percent * 10.0);
-        io.setTransferVoltage(percent * 11.0);
+        io.setTransferVoltage(percent * 12.0);
     }
 }
