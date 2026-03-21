@@ -44,6 +44,7 @@ public class IntakeIOReal implements IntakeIO {
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 / rollerMotorReduction)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
+        rollerConfig.inverted(true);
         
         var deployBaseConfig = new SparkMaxConfig();
         deployBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(deployCurrentLimit).voltageCompensation(Constants.voltageCompensation);
