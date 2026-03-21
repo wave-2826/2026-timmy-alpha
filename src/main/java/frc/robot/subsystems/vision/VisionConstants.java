@@ -44,7 +44,7 @@ public class VisionConstants {
     );
     public static CameraConfiguration cameraFrontRight = new CameraConfiguration(
         "2826_OV9281_Abe",
-        null
+        new Transform3d(new Translation3d(0.2686987017716467, -0.38871703824933784, 0.4624331960863525), new Rotation3d(-0.0019470998534024731, -0.4229848498952987, -0.20816958409573905))
     );
     public static CameraConfiguration cameraRightmost = new CameraConfiguration(
         "2826_OV9281_Gem",

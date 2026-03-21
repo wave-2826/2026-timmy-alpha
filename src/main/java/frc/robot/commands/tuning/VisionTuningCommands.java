@@ -2,6 +2,7 @@ package frc.robot.commands.tuning;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
@@ -79,7 +80,7 @@ public class VisionTuningCommands {
 
             // If the held tag transform is facing away from the origin (by more than 180 deg), warn
             var angleToOrigin = Math.atan2(getHeldTagTransform().getY(), getHeldTagTransform().getX());
-            var angleDiff = Math.abs(angleToOrigin - getHeldTagTransform().getRotation().getZ());
+            var angleDiff = MathUtil.angleModulus(angleToOrigin - getHeldTagTransform().getRotation().getZ() + Math.PI);
             if(angleDiff > Math.PI) {
                 System.out.println("WARNING: The held tag transform is facing away from the origin! This is probably wrong");
             }
