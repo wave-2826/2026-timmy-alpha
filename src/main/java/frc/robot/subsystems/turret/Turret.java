@@ -95,13 +95,11 @@ public class Turret extends SubsystemBase {
                         TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
                             target.flywheelSpeedRadPerSec,
                             target.azimuthAngleRad % (Math.PI * 2),
-                            (
-                                MathUtil.clamp(
-                                    target.hoodAngleRad,
-                                    TurretConstants.hoodMinAngle,
-                                    TurretConstants.hoodMaxAngle
-                                ) - TurretConstants.hoodMinAngle
-                            ) / TurretConstants.hoodRingToHoodReduction
+                            MathUtil.clamp(
+                                target.hoodAngleRad,
+                                TurretConstants.hoodMinAngle,
+                                TurretConstants.hoodMaxAngle
+                            ) - TurretConstants.hoodMinAngle
                         );
                         io.setPIDOutputs(outputs);
                         break;

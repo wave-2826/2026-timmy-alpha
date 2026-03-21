@@ -100,7 +100,7 @@ public interface TurretIO {
         double flywheelSpeedRadPerSec,
         /** The turret azimuth angle relative to the robot base. */
         double azimuthAngleRad,
-        /** The angle of the hood outer ring relative to the azimuth position. */
+        /** The angle of the hood. */
         double hoodAngleRad
     ) {}
 
