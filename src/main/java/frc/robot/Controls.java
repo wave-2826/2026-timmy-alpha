@@ -73,12 +73,13 @@ public class Controls {
 
         intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
 
-        turret.setDefaultCommand(ScoringCommands.autoShoot(
-            turret, spindexer,
-            driver::getRightTriggerAxis,
-            coDriver::getRightY,
-            coDriver.rightBumper()::getAsBoolean
-        ));
+        // turret.setDefaultCommand(ScoringCommands.autoShoot(
+        //     turret, spindexer,
+        //     driver::getRightTriggerAxis,
+        //     coDriver::getRightY,
+        //     coDriver.rightBumper()::getAsBoolean
+        // ));
+        turret.setDefaultCommand(turret.runOscillationTest());
         coDriver.start().whileTrue(turret.runManual(coDriver::getRightTriggerAxis, coDriver::getLeftX, coDriver::getRightY));
         coDriver.start().and(coDriver.back()).onTrue(turret.reset());
         coDriver.leftBumper().onTrue(intake.enableOutward());

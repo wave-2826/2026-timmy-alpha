@@ -125,8 +125,8 @@ public class TurretController {
     private static final LoggedTunableVector<N3> rWeights = new LoggedTunableVector<>(
         "Turret/LQR_R",
         VecBuilder.fill(
-            Constants.isSim ? 50 : 0.2,
-            Constants.isSim ? 50 : 0.2,
+            Constants.isSim ? 50 : 0.4,
+            Constants.isSim ? 50 : 0.4,
             Constants.isSim ? 50 : 5
         )
     );

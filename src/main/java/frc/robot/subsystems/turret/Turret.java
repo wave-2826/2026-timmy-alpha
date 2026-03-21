@@ -68,8 +68,8 @@ public class Turret extends SubsystemBase {
     public Turret(TurretIO io) {
         this.io = io;
 
-        controlModeChooser.addOption("PID", ControlMode.PID);
-        controlModeChooser.addDefaultOption("LQR", ControlMode.LQR);
+        controlModeChooser.addDefaultOption("PID", ControlMode.PID);
+        controlModeChooser.addOption("LQR", ControlMode.LQR);
 
         TurretTuning.init();
     }
@@ -173,11 +173,11 @@ public class Turret extends SubsystemBase {
             }
 
             target.flywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(3000);
-            target.azimuthAngleRad = Math.sin(Timer.getFPGATimestamp() * 0.5) * Math.PI;
+            target.azimuthAngleRad = Math.sin(Timer.getFPGATimestamp() * 0.25) * Math.PI;
             target.hoodAngleRad = MathUtil.interpolate(
                 TurretConstants.hoodMinAngle + 0.1,
                 TurretConstants.hoodMaxAngle - 0.1,
-                Math.sin(Timer.getFPGATimestamp() * 2) * 0.5 + 0.5
+                Math.sin(Timer.getFPGATimestamp() * 1) * 0.5 + 0.5
             );
         }, () -> {
             target = null;
