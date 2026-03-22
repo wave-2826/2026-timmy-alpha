@@ -22,7 +22,6 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import frc.robot.Controls;
-import frc.robot.RobotState;
 import frc.robot.commands.tuning.TurretTuning;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.subsystems.turret.TurretIO.TurretIOPIDOutputs;
@@ -179,9 +178,11 @@ public class Turret extends SubsystemBase {
                 flyLimiter.calculate(flywheelScalar.getAsDouble() * manualFlywheelSpeed.get())
             );
 
-            azimuthOffset.value -= MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.02;
+            var parameters = ShotCalculator.getInstance().calculate();
+            
+            azimuthOffset.value += MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.02;
             target.azimuthAngleRad = MathUtil.angleModulus(
-                azimuthOffset.value + RobotState.getInstance().getEstimatedPose().getRotation().getRadians()
+                azimuthOffset.value + parameters.target().azimuthAngleRad
             );
 
             target.hoodAngleRad = TurretConstants.hoodMinAngle + manualHoodOffset.get();
