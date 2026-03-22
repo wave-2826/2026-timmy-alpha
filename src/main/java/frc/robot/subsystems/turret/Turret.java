@@ -161,7 +161,7 @@ public class Turret extends SubsystemBase {
         }, this);
     }
     
-    public static LoggedTunableNumber manualFlywheelSpeed = new LoggedTunableNumber("Turret/ManualFlywheelSpeed", 4600.0);
+    public static LoggedTunableNumber manualFlywheelSpeed = new LoggedTunableNumber("Turret/ManualFlywheelSpeed", 0.0);
     public static LoggedTunableNumber manualHoodOffset = new LoggedTunableNumber("Turret/ManualHoodAngleOffset", 0.0);
     public Command adjustManualVelocity(double change) {
         return Commands.runOnce(() -> manualFlywheelSpeed.set(manualFlywheelSpeed.get() + change));
@@ -180,11 +180,11 @@ public class Turret extends SubsystemBase {
                 target = new TurretTarget(0.0, inputs.getAzimuthAngleRad(), TurretConstants.hoodMinAngle);
             }
 
-            target.flywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(
-                flyLimiter.calculate(flywheelScalar.getAsDouble() * manualFlywheelSpeed.get())
-            );
-
             var parameters = ShotCalculator.getInstance().calculate();
+
+            target.flywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(flyLimiter.calculate(
+                flywheelScalar.getAsDouble() * (parameters.target().flywheelSpeedRadPerSec + manualFlywheelSpeed.get())
+            ));
             
             azimuthOffset.value += MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.02;
             target.azimuthAngleRad = MathUtil.angleModulus(

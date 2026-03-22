@@ -81,35 +81,31 @@ public class ShotCalculator {
     static {
         // TODO: These are just directly stolen from 6328... Tune ourselves!
 
+        // 43deg / 5.69m
+
         // Hub shots
-        hubShots.hoodAngleMap.put(0.96, 29.0318);
-        hubShots.hoodAngleMap.put(1.16, 27.7653);
-        hubShots.hoodAngleMap.put(1.58, 27.1321);
-        hubShots.hoodAngleMap.put(2.07, 25.5489);
-        hubShots.hoodAngleMap.put(2.37, 24.9156);
-        hubShots.hoodAngleMap.put(2.47, 24.5990);
-        hubShots.hoodAngleMap.put(2.70, 24.2824);
-        hubShots.hoodAngleMap.put(2.94, 23.9658);
-        hubShots.hoodAngleMap.put(3.48, 22.8575);
-        hubShots.hoodAngleMap.put(3.92, 21.4327);
-        hubShots.hoodAngleMap.put(4.35, 20.7994);
-        hubShots.hoodAngleMap.put(4.84, 20.1662);
+        hubShots.hoodAngleMap.put(0.96, 15.0);
+        hubShots.hoodAngleMap.put(1.16, 20.0);
+        hubShots.hoodAngleMap.put(1.58, 28.0);
+        hubShots.hoodAngleMap.put(2.94, 35.0);
+        hubShots.hoodAngleMap.put(5.69, 43.0);
 
         // comp tuning (oops):
         // 5600 rpm / 3.65m
-        
-        hubShots.flywheelSpeedMap.put(0.96, 4726.90152);
-        hubShots.flywheelSpeedMap.put(1.16, 4884.46497);
-        hubShots.flywheelSpeedMap.put(1.58, 5042.02842);
-        hubShots.flywheelSpeedMap.put(2.07, 5199.59187);
-        hubShots.flywheelSpeedMap.put(2.37, 5357.15532);
-        hubShots.flywheelSpeedMap.put(2.47, 5357.15532);
-        hubShots.flywheelSpeedMap.put(2.70, 5357.15532);
-        hubShots.flywheelSpeedMap.put(2.94, 5514.71877);
-        hubShots.flywheelSpeedMap.put(3.48, 5514.71877);
-        hubShots.flywheelSpeedMap.put(3.92, 5672.28189);
-        hubShots.flywheelSpeedMap.put(4.35, 5829.84534);
-        hubShots.flywheelSpeedMap.put(4.84, 5987.40879);
+        // 4500 rpm / 5.69m
+
+        hubShots.flywheelSpeedMap.put(0.96, 3636.07);
+        hubShots.flywheelSpeedMap.put(1.16, 3757.23);
+        hubShots.flywheelSpeedMap.put(1.58, 3878.46);
+        hubShots.flywheelSpeedMap.put(2.07, 3999.61);
+        hubShots.flywheelSpeedMap.put(2.37, 4120.84);
+        hubShots.flywheelSpeedMap.put(2.47, 4120.84);
+        hubShots.flywheelSpeedMap.put(2.70, 4120.84);
+        hubShots.flywheelSpeedMap.put(2.94, 4242.07);
+        hubShots.flywheelSpeedMap.put(3.48, 4242.07);
+        hubShots.flywheelSpeedMap.put(3.92, 4363.23);
+        hubShots.flywheelSpeedMap.put(4.35, 4484.46);
+        hubShots.flywheelSpeedMap.put(4.84, 4605.69);
 
         hubShots.timeOfFlightMap.put(5.68, 1.16);
         hubShots.timeOfFlightMap.put(4.55, 1.12);
@@ -243,16 +239,21 @@ public class ShotCalculator {
         }
         
         Logger.recordOutput("LaunchCalculator/LookaheadPose", lookaheadPose);
-        Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);  
+        Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);
 
         Rotation2d turretAngleAbsolute = target.minus(lookaheadPose.getTranslation()).getAngle();
         Rotation2d turretAngleRobotRelative = turretAngleAbsolute.minus(RobotState.getInstance().getEstimatedPose().getRotation());
         double hoodAngleRad = type.shotMapData.getHood(lookaheadTurretToTargetDistance);
+  
+        double flywheelVelocity = type.shotMapData.getFlywheel(lookaheadTurretToTargetDistance);
+        Logger.recordOutput("LaunchCalculator/Calculated/Flywheel", flywheelVelocity);
+        Logger.recordOutput("LaunchCalculator/Calculated/HoodAngle", hoodAngleRad);
+        Logger.recordOutput("LaunchCalculator/Calculated/Azimuth", turretAngleRobotRelative);
 
         return new ShotParameters(
             type,
             new TurretTarget(
-                type.shotMapData.getFlywheel(lookaheadTurretToTargetDistance),
+                flywheelVelocity,
                 turretAngleRobotRelative.getRadians(),
                 hoodAngleRad
             )
