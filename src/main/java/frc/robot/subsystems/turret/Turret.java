@@ -163,6 +163,12 @@ public class Turret extends SubsystemBase {
     
     public static LoggedTunableNumber manualFlywheelSpeed = new LoggedTunableNumber("Turret/ManualFlywheelSpeed", 4600.0);
     public static LoggedTunableNumber manualHoodOffset = new LoggedTunableNumber("Turret/ManualHoodAngleOffset", 0.0);
+    public Command adjustManualVelocity(double change) {
+        return Commands.runOnce(() -> manualFlywheelSpeed.set(manualFlywheelSpeed.get() + change));
+    }
+    public Command adjustManualAngle(double changeDegrees) {
+        return Commands.runOnce(() -> manualHoodOffset.set(manualHoodOffset.get() + Units.degreesToRadians(changeDegrees)));
+    }
     public Command runManual(
         DoubleSupplier flywheelScalar,
         DoubleSupplier azimuthSpeed

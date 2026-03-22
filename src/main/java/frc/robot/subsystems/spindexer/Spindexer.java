@@ -27,6 +27,13 @@ public class Spindexer extends SubsystemBase {
         Logger.processInputs("Spindexer", inputs);
     }
 
+    public Command runManual(DoubleSupplier percent) {
+        return runPercent(
+            () -> percent.getAsDouble(),
+            () -> Math.pow(percent.getAsDouble(), 0.1)
+        );
+    }
+
     public Command runPercent(DoubleSupplier spinPercent, DoubleSupplier transferPercent) {
         return runEnd(() -> {
             setPower(spinPercent.getAsDouble(), transferPercent.getAsDouble());

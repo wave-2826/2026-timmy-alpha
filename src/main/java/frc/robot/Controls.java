@@ -3,7 +3,6 @@ package frc.robot;
 import java.util.HashMap;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
@@ -11,7 +10,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -80,15 +78,15 @@ public class Controls {
         //     coDriver::getRightY,
         //     coDriver.rightBumper()::getAsBoolean
         // ));
-        // turret.setDefaultCommand(turret.runOscillationTest());
+        turretControlCodriver.and(coDriver.povRight()).onTrue(turret.adjustManualVelocity(250));
+        turretControlCodriver.and(coDriver.povLeft()).onTrue(turret.adjustManualVelocity(-250));
+        turretControlCodriver.and(coDriver.povRight()).onTrue(turret.adjustManualAngle(5));
+        turretControlCodriver.and(coDriver.povLeft()).onTrue(turret.adjustManualAngle(-5));
         turretControlCodriver.whileTrue(turret.runManual(
             coDriver::getRightTriggerAxis,
             coDriver::getLeftX
         ));
-        turretControlCodriver.whileTrue(spindexer.runPercent(
-            () -> coDriver.getLeftTriggerAxis(),
-            () -> Math.pow(coDriver.getLeftTriggerAxis(), 0.1)
-        ));
+        turretControlCodriver.whileTrue(spindexer.runManual(coDriver::getLeftTriggerAxis));
         turretControlCodriver.and(coDriver.start().or(coDriver.back())).onTrue(turret.reset());
 
         normalCodriver.whileTrue(intake.runRollerScaled(coDriver::getLeftY));
