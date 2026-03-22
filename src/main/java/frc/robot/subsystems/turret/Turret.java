@@ -168,7 +168,7 @@ public class Turret extends SubsystemBase {
         DoubleSupplier azimuthSpeed
     ) {
         Container<Double> azimuthOffset = new Container<>(0.0);
-        SlewRateLimiter flyLimiter = new SlewRateLimiter(3500);
+        SlewRateLimiter flyLimiter = new SlewRateLimiter(4000);
         return Commands.runEnd(() -> {
             if(target == null) {
                 target = new TurretTarget(0.0, inputs.getAzimuthAngleRad(), TurretConstants.hoodMinAngle);

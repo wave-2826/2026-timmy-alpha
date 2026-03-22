@@ -18,6 +18,10 @@ import frc.robot.subsystems.drive.GyroIOSim;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFXReal;
+import frc.robot.subsystems.hopperVision.HopperVision;
+import frc.robot.subsystems.hopperVision.HopperVisionIO;
+import frc.robot.subsystems.hopperVision.HopperVisionIOPhoton;
+import frc.robot.subsystems.hopperVision.HopperVisionIOSim;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOReal;
@@ -47,6 +51,7 @@ public class RobotContainer {
     // Subsystems
     public final Drive drive;
     public final Vision vision;
+    public final HopperVision hopperVision;
     public final Intake intake;
     public final Climber climber;
     public final Spindexer spindexer;
@@ -74,6 +79,7 @@ public class RobotContainer {
                     new VisionIOPhotonVision(VisionConstants.cameraFrontRight),
                     new VisionIOPhotonVision(VisionConstants.cameraRightmost)
                 );
+                hopperVision = new HopperVision(new HopperVisionIOPhoton());
                 intake = new Intake(new IntakeIOReal() {});
                 turret = new Turret(new TurretIOTalonFX() {});
                 climber = new Climber(new ClimberIO() {});
@@ -102,6 +108,7 @@ public class RobotContainer {
                     new VisionIOPhotonVisionSim(VisionConstants.cameraFrontRight, driveSimulation::getSimulatedDriveTrainPose),
                     new VisionIOPhotonVisionSim(VisionConstants.cameraRightmost, driveSimulation::getSimulatedDriveTrainPose)
                 );
+                hopperVision = new HopperVision(new HopperVisionIOSim());
                 climber = new Climber(new ClimberIO() {});
                 
                 drive.setPose(new Pose2d(3, 3, new Rotation2d()));
@@ -115,6 +122,7 @@ public class RobotContainer {
                     new ModuleIO() {},
                     new ModuleIO() {});
                 vision = new Vision(new VisionIO() {}, new VisionIO() {});
+                hopperVision = new HopperVision(new HopperVisionIO() {});
                 intake = new Intake(new IntakeIO() {});
                 turret = new Turret(new TurretIO() {});
                 climber = new Climber(new ClimberIO() {});

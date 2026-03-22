@@ -84,6 +84,9 @@ public final class Simulation {
         return driveSimulation;
     }
 
+    public int getHopperFuel() {
+        return hopper.getFuelCount();
+    }
     
     private void intakeFuel() {
         hopper.addFuel();

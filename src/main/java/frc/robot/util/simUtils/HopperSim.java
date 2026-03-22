@@ -48,6 +48,10 @@ public class HopperSim {
         Logger.recordOutput("HopperSim/Fuel", fuelInHopper);
     }
 
+    public int getFuelCount() {
+        return fuelInHopper;
+    }
+
     public void addFuel() {
         if(fuelInHopper >= maxFuel) {
             System.out.println("HopperSim: tried to intake fuel with no more space");

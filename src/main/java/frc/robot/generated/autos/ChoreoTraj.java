@@ -24,6 +24,20 @@ public record ChoreoTraj(
     Pose2d initialPoseBlue,
     Pose2d endPoseBlue
 ) {
+    public static final ChoreoTraj CenterDepot = new ChoreoTraj(
+        "CenterDepot",
+        OptionalInt.empty(),
+        2.87283,
+        new Pose2d(3.47272, 4.04414, Rotation2d.fromRadians(0)),
+        new Pose2d(1.3067, 5.10358, Rotation2d.fromRadians(-0.00671))
+    );
+    public static final ChoreoTraj CenterPreload = new ChoreoTraj(
+        "CenterPreload",
+        OptionalInt.empty(),
+        1.35107,
+        new Pose2d(3.62515, 4.0272, Rotation2d.fromRadians(0)),
+        new Pose2d(1.80056, 4.0348, Rotation2d.fromRadians(0))
+    );
     public static final ChoreoTraj LeftDoubleSwipe = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.empty(),
@@ -46,13 +60,6 @@ public record ChoreoTraj(
         5.011629999999999,
         new Pose2d(3.44291, 7.48501, Rotation2d.fromRadians(1.57036)),
         new Pose2d(3.42683, 7.41656, Rotation2d.fromRadians(-1.60464))
-    );
-    public static final ChoreoTraj SweepOutpost = new ChoreoTraj(
-        "SweepOutpost",
-        OptionalInt.empty(),
-        4.17381,
-        new Pose2d(4.49238, 7.35992, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(0.77421, 0.65509, Rotation2d.fromRadians(0))
     );
     public static final ChoreoTraj RightDoubleSwipeGenerated = new ChoreoTraj(
         "RightDoubleSwipeGenerated",
@@ -77,19 +84,28 @@ public record ChoreoTraj(
         new Pose2d(3.44291, 0.55799, Rotation2d.fromRadians(-1.57036)),
         new Pose2d(3.42683, 0.62644, Rotation2d.fromRadians(1.60464))
     );
+    public static final ChoreoTraj SweepOutpost = new ChoreoTraj(
+        "SweepOutpost",
+        OptionalInt.empty(),
+        4.17381,
+        new Pose2d(4.49238, 7.35992, Rotation2d.fromRadians(1.5708)),
+        new Pose2d(0.77421, 0.65509, Rotation2d.fromRadians(0))
+    );
 
     /**
      * A map between trajectory names and their corresponding data.
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
+        Map.entry("CenterDepot", CenterDepot),
+        Map.entry("CenterPreload", CenterPreload),
         Map.entry("LeftDoubleSwipe", LeftDoubleSwipe),
         Map.entry("LeftDoubleSwipe$0", LeftDoubleSwipe$0),
         Map.entry("LeftDoubleSwipe$1", LeftDoubleSwipe$1),
-        Map.entry("SweepOutpost", SweepOutpost),
         Map.entry("RightDoubleSwipeGenerated", RightDoubleSwipeGenerated),
         Map.entry("RightDoubleSwipeGenerated$0", RightDoubleSwipeGenerated$0),
-        Map.entry("RightDoubleSwipeGenerated$1", RightDoubleSwipeGenerated$1)
+        Map.entry("RightDoubleSwipeGenerated$1", RightDoubleSwipeGenerated$1),
+        Map.entry("SweepOutpost", SweepOutpost)
     );
 
     /**

@@ -3,8 +3,10 @@ package frc.robot.commands;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.subsystems.hopperVision.HopperVision;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.ShotCalculator;
 import frc.robot.subsystems.turret.Turret;
@@ -19,7 +21,7 @@ public class ScoringCommands {
      * backward to "unstuck" balls in case something goes wrong.
      * @return
      */
-    public static Command autoShoot(
+    public static Command teleopScoring(
         Turret turret,
         Spindexer spindexer,
         DoubleSupplier driverShoot,
@@ -46,5 +48,39 @@ public class ScoringCommands {
             turret.target = null;
             spindexer.setPower(0.0, 0.0);
         }, turret, spindexer);
+    }
+
+    public static Command autoScoreHopper(Turret turret, Spindexer spindexer, HopperVision hopperVision) {
+        return Commands.sequence(
+            Commands.run(() -> {
+                var parameters = ShotCalculator.getInstance().calculate();
+                turret.target = parameters.target();
+            }, turret, spindexer).until(turret::atSetpoint).withTimeout(2.0),
+
+            // Start transport early to spin up
+            Commands.run(() -> {
+                spindexer.setPower(0.0, 1.0);
+            }).withTimeout(0.5),
+            
+            // Run spin until no pieces remain
+            Commands.run(() -> {
+                spindexer.setPower(
+                    // Oscillation to unstuck pieces
+                    (Math.sin(Timer.getFPGATimestamp() * 3) + 0.5) * 1.0,
+                    1.0
+                );
+            }).raceWith(hopperVision.waitForNoPieces(0.5, 4.0, 5.0)),
+
+            // Wait a bit
+            Commands.waitSeconds(0.5),
+
+            // Reset turret/spin
+            Commands.run(() -> {
+                turret.target = null;
+                spindexer.setPower(0.0, 0.0);
+            }, turret, spindexer).until(() -> {
+                return true;
+            })
+        );
     }
 }
