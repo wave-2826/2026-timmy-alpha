@@ -73,6 +73,7 @@ public class DriveTuningCommands {
         : "./logs/tuning_results.json"; // In simulation, this is a local file
 
     // TODO - REALLY TODO - log this and make it work in replay
+    // ALSO TODO: backup to rio in case usb is lost
     /** A set of tuning results that we can load from and save to a JSON file. */
     public static class TuningResults {
         // TODO: Defaults that make sense for sim so stuff doesn't break

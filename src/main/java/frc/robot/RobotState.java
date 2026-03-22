@@ -147,10 +147,11 @@ public class RobotState {
         SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
         for(int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
             modulePositions[moduleIndex] = new SwerveModulePosition(0.0, modulePositions[moduleIndex].angle);
-            // moduleDeltas[moduleIndex] = new SwerveModulePosition(
-            //     modulePositions[moduleIndex].distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
-            //     modulePositions[moduleIndex].angle);
-            // lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
+
+            moduleDeltas[moduleIndex] = new SwerveModulePosition(
+                modulePositions[moduleIndex].distanceMeters - lastModulePositions[moduleIndex].distanceMeters,
+                modulePositions[moduleIndex].angle);
+            lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
         }
 
         // Update gyro angle
