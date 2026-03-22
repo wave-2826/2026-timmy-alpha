@@ -5,6 +5,8 @@ import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.RobotContainer;
@@ -13,7 +15,10 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hopperVision.HopperVision;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.spindexer.Spindexer;
+import frc.robot.subsystems.turret.ShotCalculator;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretConstants;
+import frc.robot.subsystems.turret.Turret.TurretTarget;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LoggedAutoChooser;
 import frc.robot.util.simUtils.Simulation;
@@ -54,8 +59,8 @@ public class AutoRoutines {
 
         autoChooser.addRoutine("Sweep Outpost (start left)", () -> this.getSweepOutpost());
         
-        autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload(), true);
-        autoChooser.addRoutine("Center Depot", () -> this.getCenterDepot());
+        autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload());
+        autoChooser.addRoutine("Center Depot", () -> this.getCenterDepot(), true);
     }
 
     private AutoRoutine getDoubleSwipe(boolean right) {
@@ -130,7 +135,30 @@ public class AutoRoutines {
         
         AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
 
-        traj.atTime("Shoot").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
+        // traj.atTime("Shoot").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
+        traj.atTime("Shoot").onTrue(Commands.sequence(
+            Commands.runOnce(() -> {
+                turret.target = new TurretTarget(
+                    Units.rotationsPerMinuteToRadiansPerSecond(5100),
+                    0.0,
+                    TurretConstants.hoodMinAngle
+                );
+            }),
+
+            Commands.waitSeconds(1.0),
+
+            Commands.run(() -> {
+                spindexer.setPower(0.0, 1.0);
+            }).withTimeout(0.5),
+            
+            Commands.run(() -> {
+                spindexer.setPower(
+                    // Oscillation to unstuck pieces
+                    (Math.sin(Timer.getFPGATimestamp() * 4) * 0.75 + 0.25) * 1.0,
+                    1.0
+                );
+            }).withTimeout(15)
+        ));
         traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
         
         routine.active().onTrue(Commands.sequence(
