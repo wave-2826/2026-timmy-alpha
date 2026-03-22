@@ -181,9 +181,10 @@ public class Turret extends SubsystemBase {
             }
 
             var parameters = ShotCalculator.getInstance().calculate();
+            double calcRPM = Units.radiansPerSecondToRotationsPerMinute(parameters.target().flywheelSpeedRadPerSec);
 
             target.flywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(flyLimiter.calculate(
-                flywheelScalar.getAsDouble() * (parameters.target().flywheelSpeedRadPerSec + manualFlywheelSpeed.get())
+                flywheelScalar.getAsDouble() * (calcRPM + manualFlywheelSpeed.get())
             ));
             
             azimuthOffset.value += MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.02;
@@ -191,7 +192,8 @@ public class Turret extends SubsystemBase {
                 azimuthOffset.value + parameters.target().azimuthAngleRad
             );
 
-            target.hoodAngleRad = TurretConstants.hoodMinAngle + manualHoodOffset.get();
+            // target.hoodAngleRad = TurretConstants.hoodMinAngle + manualHoodOffset.get();
+            target.hoodAngleRad = parameters.target().hoodAngleRad + manualHoodOffset.get();
         }, () -> {
             target = null;
         }, this);
