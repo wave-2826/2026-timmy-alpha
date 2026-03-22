@@ -242,14 +242,15 @@ public class ShotCalculator {
         Logger.recordOutput("LaunchCalculator/LookaheadPose", lookaheadPose);
         Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);  
 
-        Rotation2d turretAngle = target.minus(lookaheadPose.getTranslation()).getAngle();
+        Rotation2d turretAngleAbsolute = target.minus(lookaheadPose.getTranslation()).getAngle();
+        Rotation2d turretAngleRobotRelative = turretAngleAbsolute.minus(RobotState.getInstance().getEstimatedPose().getRotation());
         double hoodAngleRad = type.shotMapData.getHood(lookaheadTurretToTargetDistance);
 
         return new ShotParameters(
             type,
             new TurretTarget(
                 type.shotMapData.getFlywheel(lookaheadTurretToTargetDistance),
-                turretAngle.getRadians(),
+                turretAngleRobotRelative.getRadians(),
                 hoodAngleRad
             )
         );

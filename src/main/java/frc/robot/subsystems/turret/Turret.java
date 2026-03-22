@@ -22,7 +22,6 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import frc.robot.Controls;
-import frc.robot.RobotState;
 import frc.robot.commands.tuning.TurretTuning;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.subsystems.turret.TurretIO.TurretIOPIDOutputs;
@@ -169,7 +168,7 @@ public class Turret extends SubsystemBase {
         DoubleSupplier azimuthSpeed
     ) {
         Container<Double> azimuthOffset = new Container<>(0.0);
-        SlewRateLimiter flyLimiter = new SlewRateLimiter(1500);
+        SlewRateLimiter flyLimiter = new SlewRateLimiter(3500);
         return Commands.runEnd(() -> {
             if(target == null) {
                 target = new TurretTarget(0.0, inputs.getAzimuthAngleRad(), TurretConstants.hoodMinAngle);
@@ -179,9 +178,11 @@ public class Turret extends SubsystemBase {
                 flyLimiter.calculate(flywheelScalar.getAsDouble() * manualFlywheelSpeed.get())
             );
 
-            azimuthOffset.value -= MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.02;
+            var parameters = ShotCalculator.getInstance().calculate();
+            
+            azimuthOffset.value += MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.02;
             target.azimuthAngleRad = MathUtil.angleModulus(
-                azimuthOffset.value + RobotState.getInstance().getEstimatedPose().getRotation().getRadians()
+                azimuthOffset.value + parameters.target().azimuthAngleRad
             );
 
             target.hoodAngleRad = TurretConstants.hoodMinAngle + manualHoodOffset.get();

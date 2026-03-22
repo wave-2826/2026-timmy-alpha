@@ -147,7 +147,7 @@ public class Robot extends LoggedRobot {
         // }
         
         // Elastic dashboard utilities and setup
-        WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
+        if(Constants.useNTLogs) WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
 
         AutoLogOutputManager.addObject(RobotState.getInstance());
 
@@ -247,9 +247,6 @@ public class Robot extends LoggedRobot {
         noAutoSelectedAlert.set(DriverStation.isDisabled() && robotContainer.noAutoSelected());
         logReceiverQueueAlert.set(Logger.getReceiverQueueFault());
         LoggedTracer.record("Alerts");
-
-        // TODO: HACK uagghhh
-        robotContainer.autoChooser.periodic();
 
         // Miscellaneous logging
         NTClientLogger.log();
