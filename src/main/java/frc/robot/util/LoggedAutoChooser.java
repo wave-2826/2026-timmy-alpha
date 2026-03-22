@@ -76,7 +76,6 @@ public class LoggedAutoChooser {
         lastCommand = getters.get(lastSelectedValue).get();
     }
     
-    
     /**
     * Add an AutoRoutine to the chooser.
     *
@@ -84,8 +83,22 @@ public class LoggedAutoChooser {
     * memory and file loading time for unused AutoRoutines.
     */
     public void addRoutine(String name, Supplier<AutoRoutine> generator) {
+        addRoutine(name, generator, false);
+    }
+    
+    /**
+    * Add an AutoRoutine to the chooser.
+    *
+    * This is done to load AutoRoutines when and only when they are selected, in order to save
+    * memory and file loading time for unused AutoRoutines.
+    */
+    public void addRoutine(String name, Supplier<AutoRoutine> generator, boolean forceDefault) {
         getters.put(name, () -> generator.get().cmd());
-        dashboardChooser.addOption(name, name);
+        if(forceDefault) {
+            dashboardChooser.addOption(name, name);
+        } else {
+            dashboardChooser.addDefaultOption(name, name);
+        }
     }
     
     /**
