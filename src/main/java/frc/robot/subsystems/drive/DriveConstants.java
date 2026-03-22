@@ -300,7 +300,7 @@ public class DriveConstants {
         }
     }
 
-    public static final PIDController xController = new PIDController(8.5, 0.0, 0.0);
-    public static final PIDController yController = new PIDController(8.5, 0.0, 0.0);
-    public static final PIDController thetaController = new PIDController(8.0, 1.5, 1.25);
+    public static final PIDController xController = new PIDController(3.0, 0.0, 0.0);
+    public static final PIDController yController = new PIDController(3.0, 0.0, 0.0);
+    public static final PIDController thetaController = new PIDController(5.0, 0.8, 0.8333);
 }

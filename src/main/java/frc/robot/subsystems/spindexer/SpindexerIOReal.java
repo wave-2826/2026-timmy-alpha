@@ -36,6 +36,7 @@ public class SpindexerIOReal implements SpindexerIO {
         
         var tranferConfig = new SparkMaxConfig();
         tranferConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(transferCurrentLimit).voltageCompensation(Constants.voltageCompensation);
+        tranferConfig.closedLoopRampRate(0.5);
         tranferConfig
             .encoder
             .positionConversionFactor(2.0 * Math.PI / transferMotorReduction) // Rotor Rotations -> Radians

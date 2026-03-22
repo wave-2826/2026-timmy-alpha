@@ -90,22 +90,18 @@ public class ShotCalculator {
         hubShots.hoodAngleMap.put(2.94, 35.0);
         hubShots.hoodAngleMap.put(5.69, 43.0);
 
-        // comp tuning (oops):
-        // 5600 rpm / 3.65m
-        // 4500 rpm / 5.69m
-
-        hubShots.flywheelSpeedMap.put(0.96, 3090.49);
-        hubShots.flywheelSpeedMap.put(1.16, 3260.12);
-        hubShots.flywheelSpeedMap.put(1.58, 3429.84);
-        hubShots.flywheelSpeedMap.put(2.07, 3599.45);
-        hubShots.flywheelSpeedMap.put(2.37, 3769.17);
-        hubShots.flywheelSpeedMap.put(2.47, 3769.17);
-        hubShots.flywheelSpeedMap.put(2.70, 3769.17);
-        hubShots.flywheelSpeedMap.put(2.94, 3938.89);
-        hubShots.flywheelSpeedMap.put(3.48, 3938.89);
-        hubShots.flywheelSpeedMap.put(3.92, 4108.52);
-        hubShots.flywheelSpeedMap.put(4.35, 4278.24);
-        hubShots.flywheelSpeedMap.put(4.84, 4447.96);
+        hubShots.flywheelSpeedMap.put(0.96, 2809.5);
+        hubShots.flywheelSpeedMap.put(1.16, 2963.7);
+        hubShots.flywheelSpeedMap.put(1.58, 3118.0);
+        hubShots.flywheelSpeedMap.put(2.07, 3272.2);
+        hubShots.flywheelSpeedMap.put(2.37, 3426.5);
+        hubShots.flywheelSpeedMap.put(2.47, 3426.5);
+        hubShots.flywheelSpeedMap.put(2.70, 3426.5);
+        hubShots.flywheelSpeedMap.put(2.94, 3580.8);
+        hubShots.flywheelSpeedMap.put(3.48, 3580.8);
+        hubShots.flywheelSpeedMap.put(3.92, 3735.0);
+        hubShots.flywheelSpeedMap.put(4.35, 3889.3);
+        hubShots.flywheelSpeedMap.put(4.84, 4043.6);
 
         hubShots.timeOfFlightMap.put(5.68, 1.16);
         hubShots.timeOfFlightMap.put(4.55, 1.12);

@@ -15,7 +15,6 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.hopperVision.HopperVision;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.spindexer.Spindexer;
-import frc.robot.subsystems.turret.ShotCalculator;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretConstants;
 import frc.robot.subsystems.turret.Turret.TurretTarget;
@@ -141,7 +140,7 @@ public class AutoRoutines {
                     (Math.sin(Timer.getFPGATimestamp() * 4) * 0.75 + 0.25) * 1.0,
                     1.0
                 );
-            }).withTimeout(15)
+            }).withTimeout(10)
         ));
 
         routine.active().onTrue(Commands.sequence(
