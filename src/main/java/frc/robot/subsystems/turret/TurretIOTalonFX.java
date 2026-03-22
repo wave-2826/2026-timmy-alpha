@@ -73,7 +73,7 @@ public class TurretIOTalonFX implements TurretIO {
         tryUntilOk(5, () -> bottomFlywheelTalon.getConfigurator().apply(baseConfig, 0.25));
 
         var azimuthConfig = baseConfig.clone();
-        azimuthConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        azimuthConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         applyTorqueCurrentLimit(azimuthConfig, TurretConstants.azimuthCurrentLimit);
 
         if(!DISABLE_AZIMUTH_ABS_ENCODER) {
@@ -87,7 +87,7 @@ public class TurretIOTalonFX implements TurretIO {
         tryUntilOk(5, () -> azimuthTalon.getConfigurator().apply(azimuthConfig, 0.25));
         
         var hoodConfig = baseConfig.clone();
-        hoodConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        hoodConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         applyTorqueCurrentLimit(hoodConfig, TurretConstants.hoodCurrentLimit);
 
         TurretConstants.hoodMotorPID.applyConfigAndRegister(hoodConfig, hoodTalon);
@@ -179,7 +179,7 @@ public class TurretIOTalonFX implements TurretIO {
         bottomFlywheelTalon.setControl(followerRequest);
 
         azimuthTalon.setControl(positionRequest.withPosition(
-            -outputs.azimuthAngleRad() / (2 * Math.PI)
+            outputs.azimuthAngleRad() / (2 * Math.PI)
         ).withSlot(0));
         // TODO AAAAA
         double hoodRingPos = azimuthInternalAngle.getValue().in(Radians) +
