@@ -11,9 +11,7 @@ public class HopperVisionIOPhoton implements HopperVisionIO {
 
     @Override
     public void updateInputs(HopperVisionIOInputs inputs) {
-        // TODO
         inputs.connected = camera.isConnected();
-        inputs.targets = 0;
-        // for()
+        inputs.targets = camera.getLatestResult().getTargets().size();
     }
 }
