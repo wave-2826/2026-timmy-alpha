@@ -48,7 +48,7 @@
             "x": 1024.0,
             "y": 0.0,
             "width": 384.0,
-            "height": 512.0,
+            "height": 640.0,
             "type": "Alerts",
             "properties": {
               "topic": "/SmartDashboard/Alerts",
@@ -125,8 +125,8 @@
           },
           {
             "title": "Auto Choices",
-            "x": 256.0,
-            "y": 384.0,
+            "x": 384.0,
+            "y": 128.0,
             "width": 256.0,
             "height": 128.0,
             "type": "ComboBox Chooser",
@@ -181,7 +181,7 @@
           {
             "title": "Test Command",
             "x": 256.0,
-            "y": 640.0,
+            "y": 256.0,
             "width": 512.0,
             "height": 128.0,
             "type": "ComboBox Chooser",
