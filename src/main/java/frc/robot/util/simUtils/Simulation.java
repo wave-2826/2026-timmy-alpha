@@ -94,6 +94,7 @@ public final class Simulation {
 
         fuel.clearFuel();
         fuel.spawnStartingFuel();
+        hopper.resetToPreload();
     }
 
     public void setDrive(Drive drive) {
@@ -141,7 +142,6 @@ public final class Simulation {
         CommandScheduler.getInstance().schedule(
             Commands.waitSeconds(0.25).andThen(Commands.runOnce(() -> {
                 DriverStationSim.setDsAttached(true);
-                DriverStationSim.setEnabled(true);
                 DriverStationSim.setAllianceStationId(AllianceStationID.Blue3);
             })).ignoringDisable(true)
         );

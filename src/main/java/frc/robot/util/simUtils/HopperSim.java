@@ -22,7 +22,7 @@ public class HopperSim {
     private static double hopperCenterZ = Units.inchesToMeters(15);
 
     public boolean canIntake() {
-        return fuelInHopper <= maxFuel;
+        return fuelInHopper < maxFuel;
     }
 
     public Translation3d[] getHopperFuelFieldPositions(Pose3d robotPose) {
@@ -55,6 +55,10 @@ public class HopperSim {
         }
 
         fuelInHopper += 1;
+    }
+
+    public void resetToPreload() {
+        fuelInHopper = 8;
     }
 
     public boolean removeFuel() {
