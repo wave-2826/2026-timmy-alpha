@@ -55,7 +55,7 @@ public class ScoringCommands {
             Commands.run(() -> {
                 var parameters = ShotCalculator.getInstance().calculate();
                 turret.target = parameters.target();
-            }, turret, spindexer).until(turret::atSetpoint).withTimeout(2.0),
+            }, turret, spindexer).until(turret::atSetpoint).withTimeout(0.5),
 
             // Start transport early to spin up
             Commands.run(() -> {
@@ -66,10 +66,10 @@ public class ScoringCommands {
             Commands.run(() -> {
                 spindexer.setPower(
                     // Oscillation to unstuck pieces
-                    (Math.sin(Timer.getFPGATimestamp() * 3) + 0.5) * 1.0,
+                    (Math.sin(Timer.getFPGATimestamp() * 3) * 0.75 + 0.25) * 1.0,
                     1.0
                 );
-            }).raceWith(hopperVision.waitForNoPieces(0.5, 4.0, 5.0)),
+            }).raceWith(hopperVision.waitForNoPieces(0.5, 4.0, 8.0)),
 
             // Wait a bit
             Commands.waitSeconds(0.5),

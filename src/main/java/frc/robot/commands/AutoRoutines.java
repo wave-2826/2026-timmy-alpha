@@ -56,7 +56,6 @@ public class AutoRoutines {
         
         autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload(), true);
         autoChooser.addRoutine("Center Depot", () -> this.getCenterDepot());
-        // autoChooser.addRoutine("Right Double Swipe (fallback)", () -> this.getDoubleSwipe(true));
     }
 
     private AutoRoutine getDoubleSwipe(boolean right) {
