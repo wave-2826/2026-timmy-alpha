@@ -1,6 +1,8 @@
 package frc.robot.subsystems.hopperVision;
 
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -8,6 +10,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class HopperVision extends SubsystemBase {
     private HopperVisionIOInputsAutoLogged inputs = new HopperVisionIOInputsAutoLogged();
     private HopperVisionIO io;
+
+    private static Alert disconnectedAlert = new Alert("Hopper vision camera disconnected!", AlertType.kError);
 
     public Command waitForNoPieces(double waitAfter, double fallbackWait, double timeout) {
         double startTime = Timer.getFPGATimestamp();
@@ -32,5 +36,7 @@ public class HopperVision extends SubsystemBase {
     @Override
     public void periodic() {
         io.updateInputs(inputs);
+
+        disconnectedAlert.set(!inputs.connected);
     }
 }
