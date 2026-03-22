@@ -87,6 +87,9 @@ public class Controls {
         turretControlCodriver.and(coDriver.start().or(coDriver.back())).onTrue(turret.reset());
 
         normalCodriver.whileTrue(intake.runRollerScaled(coDriver::getLeftY));
+        normalCodriver.and(coDriver.povDown()).onTrue(intake.enableOutward());
+        normalCodriver.and(coDriver.povUp()).onTrue(intake.enable());
+        normalCodriver.and(coDriver.povLeft().or(coDriver.povRight())).onTrue(intake.disable());
 
         // Reset gyro or odometry if in simulation
         final Runnable resetGyro = Constants.isSim
