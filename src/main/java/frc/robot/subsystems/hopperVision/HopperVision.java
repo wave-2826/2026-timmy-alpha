@@ -1,5 +1,7 @@
 package frc.robot.subsystems.hopperVision;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -36,6 +38,7 @@ public class HopperVision extends SubsystemBase {
     @Override
     public void periodic() {
         io.updateInputs(inputs);
+        Logger.processInputs("HopperVision", inputs);
 
         disconnectedAlert.set(!inputs.connected);
     }
