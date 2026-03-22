@@ -109,7 +109,7 @@ public class Controls {
             } else {
                 codriverMode = CodriverMode.Normal;
             }
-        }));
+        }).ignoringDisable(true));
 
         // Endgame Alerts
         Trigger endgameAlert1Trigger = new Trigger(() -> DriverStation.isTeleopEnabled()
@@ -149,7 +149,7 @@ public class Controls {
             setRumble(controller, type, 1.0, hashCode());
         }, () -> {
             setRumble(controller, type, 0.0, hashCode());
-        }).withName("ControllerRumbleWhileRunning");
+        }).withName("ControllerRumbleWhileRunning").ignoringDisable(true);
     }
 
     /** Updates the controls, including shown alerts. */
