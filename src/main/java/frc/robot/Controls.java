@@ -27,7 +27,7 @@ import frc.robot.util.tunables.LoggedTunableNumber;
 
 public class Controls {
     private final Alert driverDisconnectedAlert = new Alert("Driver controller disconnected (port 0)", AlertType.kWarning);
-    private final Alert coDriverDisconnectedAlert = new Alert("Co-driver controller disconnected (port 1)", AlertType.kInfo);
+    private final Alert coDriverDisconnectedAlert = new Alert("Co-driver controller disconnected (port 1)", AlertType.kWarning);
 
     public final CommandXboxController driver = new CommandXboxController(0);
     public final CommandXboxController coDriver = new CommandXboxController(1);
