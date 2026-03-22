@@ -119,22 +119,6 @@ public class AutoRoutines {
         
         AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
 
-        traj.atTime("Shoot").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
-        
-        routine.active().onTrue(Commands.sequence(
-            traj.resetOdometry(),
-            traj.cmd()
-        ));
-
-        return routine;
-    }
-
-    private AutoRoutine getCenterDepot() {
-        var choreoTraj = ChoreoTraj.CenterDepot;
-        var routine = autoFactory.newRoutine(choreoTraj.name());
-        
-        AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
-
         // traj.atTime("Shoot").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
         traj.atTime("Shoot").onTrue(Commands.sequence(
             Commands.runOnce(() -> {
@@ -159,6 +143,22 @@ public class AutoRoutines {
                 );
             }).withTimeout(15)
         ));
+
+        routine.active().onTrue(Commands.sequence(
+            traj.resetOdometry(),
+            traj.cmd()
+        ));
+
+        return routine;
+    }
+
+    private AutoRoutine getCenterDepot() {
+        var choreoTraj = ChoreoTraj.CenterDepot;
+        var routine = autoFactory.newRoutine(choreoTraj.name());
+        
+        AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
+
+        traj.atTime("Shoot").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
         traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
         
         routine.active().onTrue(Commands.sequence(

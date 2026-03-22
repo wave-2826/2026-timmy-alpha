@@ -27,9 +27,9 @@ public record ChoreoTraj(
     public static final ChoreoTraj CenterDepot = new ChoreoTraj(
         "CenterDepot",
         OptionalInt.empty(),
-        2.87283,
+        2.91953,
         new Pose2d(3.47272, 4.04414, Rotation2d.fromRadians(0)),
-        new Pose2d(1.3067, 5.10358, Rotation2d.fromRadians(-0.00671))
+        new Pose2d(1.3067, 5.10358, Rotation2d.fromRadians(-0.00155))
     );
     public static final ChoreoTraj CenterPreload = new ChoreoTraj(
         "CenterPreload",

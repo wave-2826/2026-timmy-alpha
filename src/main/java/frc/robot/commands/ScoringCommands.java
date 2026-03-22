@@ -69,18 +69,21 @@ public class ScoringCommands {
                     (Math.sin(Timer.getFPGATimestamp() * 3) * 0.75 + 0.25) * 1.0,
                     1.0
                 );
-            }).raceWith(hopperVision.waitForNoPieces(0.5, 4.0, 8.0)),
-
-            // Wait a bit
-            Commands.waitSeconds(0.5),
-
-            // Reset turret/spin
-            Commands.run(() -> {
-                turret.target = null;
-                spindexer.setPower(0.0, 0.0);
-            }, turret, spindexer).until(() -> {
-                return true;
             })
+            // No stop
+            
+            // .raceWith(hopperVision.waitForNoPieces(0.5, 4.0, 8.0)),
+
+            // // Wait a bit
+            // Commands.waitSeconds(0.5),
+
+            // // Reset turret/spin
+            // Commands.run(() -> {
+            //     turret.target = null;
+            //     spindexer.setPower(0.0, 0.0);
+            // }, turret, spindexer).until(() -> {
+            //     return true;
+            // })
         );
     }
 }
