@@ -86,8 +86,7 @@ public class Controls {
             coDriver::getLeftX
         ));
         turretControlCodriver.whileTrue(spindexer.runPercent(
-            () -> coDriver.getLeftTriggerAxis() * (Math.sin(Timer.getFPGATimestamp() * 5) * 0.5 + 0.25)
-                + MathUtil.applyDeadband(coDriver.getLeftY(), 0.1),
+            () -> MathUtil.applyDeadband(coDriver.getLeftY(), 0.1),
             () -> Math.pow(coDriver.getLeftTriggerAxis(), 0.25)
         ));
         turretControlCodriver.and(coDriver.start().or(coDriver.back())).onTrue(turret.reset());
