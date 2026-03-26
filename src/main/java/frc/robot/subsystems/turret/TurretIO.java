@@ -3,6 +3,8 @@ package frc.robot.subsystems.turret;
 import org.littletonrobotics.junction.AutoLog;
 
 import edu.wpi.first.math.MathUtil;
+import frc.robot.subsystems.turret.Turret.ControlMode;
+import frc.robot.subsystems.turret.Turret.TurretTarget;
 
 public interface TurretIO {
     @AutoLog
@@ -63,6 +65,11 @@ public interface TurretIO {
 
         public HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0, 0.0);
 
+        /**
+         * Only used when dealing with high-frequency controllers;
+         * the number of loop updates since the last inputs update.
+         */
+        public int loopUpdates = 0;
 
         /**
          * Get the flywheel mechanism velocity in rad/s. Positive = shooting direction.
@@ -88,7 +95,6 @@ public interface TurretIO {
             // return azimuthEncoder.angleRad() * TurretConstants.totalAzimuthGearing;
             return MathUtil.angleModulus(azimuth.internalEncoderAngle);
         }
-        /**  */
         public double getAzimuthVelocityRadPerSec() {
             // return azimuthEncoder.velocityRadPerSec() * TurretConstants.totalAzimuthGearing;
             return azimuth.internalEncoderVelocity;
@@ -114,14 +120,17 @@ public interface TurretIO {
     /** Update the set of loggable inputs - data measured from the turret and passed into code. */
     public default void updateInputs(TurretIOInputs inputs) {}
 
+    /** Set the current turret control mode. This usually doesn't need to do anything. */
+    public default void setControlMode(ControlMode mode) {}
+
+    /** Run the turret with the given outputs in LQR control mode. */
+    public default void setTarget(TurretTarget target) {}
+
     /** Run the turret with the given outputs in PID control mode. */
     public default void setPIDOutputs(TurretIOPIDOutputs outputs) {}
 
     /** Run the turret with the given velocities only. */
     public default void setVelocityOutputs(double flywheelVelocityRadPerSec, double azimuthVelocityRadPerSec, double hoodVelocityRadPerSec) {}
-
-    /** Run the turret with the given outputs in LQR control mode. */
-    public default void setLQROutputs(TurretLQROutputs outputs) {}
 
     /** Reset the azimuth and hood to their zero position (flywheel facing directly toward pdh side, hood all the way down) */
     public default void resetAzimuthAndHood() {}

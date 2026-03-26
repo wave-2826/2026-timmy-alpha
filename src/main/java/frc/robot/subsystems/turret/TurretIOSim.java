@@ -2,55 +2,35 @@ package frc.robot.subsystems.turret;
 
 import org.littletonrobotics.junction.Logger;
 
-import com.revrobotics.sim.SparkAbsoluteEncoderSim;
-
+import com.ctre.phoenix6.sim.TalonFXSimState;
+import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.simulation.RoboRioSim;
-import frc.robot.util.simUtils.spark.SparkSimThatActuallyWorks;
+import frc.robot.subsystems.turret.TurretSim.SimTurretState;
 
-public class TurretIOSim extends TurretIOSpark {
-    private static int subticks = 5;
-
+public class TurretIOSim extends TurretIOTalonHighFrequency {
     // DC simulation motors
-    protected static DCMotor flywheelSimMotor = DCMotor.getNeoVortex(2);
-    protected static DCMotor azimuthSimMotor = DCMotor.getNeoVortex(1);
-    protected static DCMotor hoodSimMotor = DCMotor.getNeoVortex(1);
+    protected static DCMotor flywheelSimMotor = DCMotor.getKrakenX60Foc(2);
+    protected static DCMotor azimuthSimMotor = DCMotor.getKrakenX60Foc(1);
+    protected static DCMotor hoodSimMotor = DCMotor.getKrakenX60Foc(1);
 
     // Spark simulation objects
-    protected SparkSimThatActuallyWorks flywheelMotorSim = new SparkSimThatActuallyWorks(topFlywheelMotor, "top flywheel", flywheelSimMotor);
-    protected SparkSimThatActuallyWorks azimuthMotorSim = new SparkSimThatActuallyWorks(azimuthMotor, "azimuth", azimuthSimMotor);
-    protected SparkSimThatActuallyWorks hoodMotorSim = new SparkSimThatActuallyWorks(hoodMotor, "hood", hoodSimMotor);
-
-    // Spark simulation sensors
-    protected SparkAbsoluteEncoderSim azimuthEncoderSim = azimuthMotorSim.getAbsoluteEncoderSim();
+    protected TalonFXSimState flywheelMotorSim = io.topFlywheelTalon.getSimState();
+    protected TalonFXSimState azimuthMotorSim = io.azimuthTalon.getSimState();
+    protected TalonFXSimState hoodMotorSim = io.hoodTalon.getSimState();
 
     protected TurretSim turretSim = new TurretSim();
+    protected SimTurretState turretState = new SimTurretState(0, 0, 0, 0, 0);
 
     public TurretIOSim() {
         super();
+
+        flywheelMotorSim.setMotorType(MotorType.KrakenX60);
+        azimuthMotorSim.setMotorType(MotorType.KrakenX60);
+        hoodMotorSim.setMotorType(MotorType.KrakenX60);        
     }
   
-    public void updateInputs(TurretIOInputs inputs) {
-        for(int i = 0; i < subticks; i++) {
-            var turretState = turretSim.updateAndGetState(
-                flywheelMotorSim.getAppliedOutput() * RoboRioSim.getVInVoltage(),
-                hoodMotorSim.getAppliedOutput() * RoboRioSim.getVInVoltage(),
-                azimuthMotorSim.getAppliedOutput() * RoboRioSim.getVInVoltage(),
-                0.02 / subticks
-            );
-
-            flywheelMotorSim.iterate(turretState.flywheelMotorVelRps(), RoboRioSim.getVInVoltage(), 0.02 / subticks);
-            hoodMotorSim.iterate(turretState.hoodMotorVelRps(), RoboRioSim.getVInVoltage(), 0.02 / subticks);
-            azimuthMotorSim.iterate(turretState.azimuthMotorVelRps(), RoboRioSim.getVInVoltage(), 0.02 / subticks);
-        
-            // Not needed in real life, but needed here because of sim controller error accumulating
-            hoodMotorSim.setPosition(turretState.hoodMotorPosRad());
-            azimuthMotorSim.setPosition(turretState.azimuthMotorPosRad());
-
-            azimuthEncoderSim.setVelocity(turretSim.getState().azimuthVelRps());
-            azimuthEncoderSim.setPosition(turretSim.getState().azimuthPosRad());
-        }
-
+    @Override
+    public synchronized void updateInputs(TurretIOInputs inputs) {
         var state = turretSim.getState();
         Logger.recordOutput("TurretSim/State", state);
         Logger.recordOutput("TurretSim/State/HoodPosRad", state.hoodPosRad());
@@ -62,5 +42,23 @@ public class TurretIOSim extends TurretIOSpark {
         var distributedFlywheel = inputs.topFlywheel.half();
         inputs.topFlywheel = distributedFlywheel;
         inputs.bottomFlywheel = distributedFlywheel;
+    }
+
+    @Override
+    protected synchronized void periodic() {
+        super.periodic();
+
+        flywheelMotorSim.setRotorVelocity(turretState.flywheelMotorVelRps() / (2 * Math.PI));
+        hoodMotorSim.setRawRotorPosition(turretState.hoodMotorPosRad() / (2 * Math.PI));
+        hoodMotorSim.setRotorVelocity(turretState.hoodMotorVelRps() / (2 * Math.PI));
+        azimuthMotorSim.setRawRotorPosition(turretState.azimuthMotorPosRad() / (2 * Math.PI));
+        azimuthMotorSim.setRotorVelocity(turretState.azimuthMotorVelRps() / (2 * Math.PI));
+
+        turretState = turretSim.updateAndGetState(
+            flywheelMotorSim.getMotorVoltage(),
+            hoodMotorSim.getMotorVoltage(),
+            azimuthMotorSim.getMotorVoltage(),
+            1. / frequencyHz
+        );
     }
 }

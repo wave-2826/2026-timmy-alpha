@@ -12,7 +12,7 @@ public class VisionConstants {
      * If we should enable vision simulation. Turning off vision sim can dramatically improve loop times, but it's
      * obviously far less representative of real robot odometry.
      */
-    public static final boolean enableVisionSimulation = true;
+    public static final boolean enableVisionSimulation = false;
 
     /**
      * Enable drawing a wireframe visualization of the field to the camera streams in simulation mode. This is extremely

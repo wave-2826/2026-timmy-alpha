@@ -9,7 +9,8 @@ import frc.robot.commands.drive.DriveTuningCommands;
 public class TuningCommands {
     public static LoggedDashboardChooser<Command> constructTuningChooser(RobotContainer robotContainer) {
         LoggedDashboardChooser<Command> testChooser = new LoggedDashboardChooser<>("Test Command");
-        testChooser.addOption("Auto tune turret", robotContainer.turret.runTuning());
+        testChooser.addOption("Turret: Auto tune", robotContainer.turret.runTuning());
+        testChooser.addOption("Turret: Oscillation test", robotContainer.turret.runOscillationTest());
 
         DriveTuningCommands.addTuningCommandsToChooser(robotContainer.drive, testChooser);
         VisionTuningCommands.addTuningCommandsToChooser(robotContainer.vision, testChooser);
