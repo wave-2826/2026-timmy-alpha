@@ -31,11 +31,11 @@ import frc.robot.util.tunables.LoggedTunableNumber;
 /**
  * Our robot has a triple-coaxial turret - all motors are static relative to the robot frame.  
  * The power transmission stack is as follows:
- * - Flywheel: 2x NEO Vortex, on the "innermost" coaxial stage; this will be affected by the azimuth rotation, but runs
+ * - Flywheel: 2x Kraken X60, on the "innermost" coaxial stage; this will be affected by the azimuth rotation, but runs
  *   at a high velocity anyway so we don't care to compensate. The motors spin opposite, and the top needs to spin counterclockwise
  *   to shoot.
- * - Hood: 1x NEO Vortex, on the "middle" coaxial stage. Must run with the azimuth rotation to maintain a consistent hood angle.
- * - Azimuth: 1x NEO Vortex, on the "outermost" coaxial stage. Isn't affected by the other two stages and runs closed-loop over an
+ * - Hood: 1x Kraken X60, on the "middle" coaxial stage. Must run with the azimuth rotation to maintain a consistent hood angle.
+ * - Azimuth: 1x Kraken X60, on the "outermost" coaxial stage. Isn't affected by the other two stages and runs closed-loop over an
  *   attached absolute encoder.
  */
 public class Turret extends SubsystemBase {
