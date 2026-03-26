@@ -26,6 +26,9 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.IntakeIO;
 import frc.robot.subsystems.intake.IntakeIOReal;
 import frc.robot.subsystems.intake.IntakeIOSim;
+import frc.robot.subsystems.leds.LEDIO;
+import frc.robot.subsystems.leds.LEDIORio;
+import frc.robot.subsystems.leds.LEDs;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.spindexer.SpindexerIO;
 import frc.robot.subsystems.spindexer.SpindexerIOReal;
@@ -57,6 +60,8 @@ public class RobotContainer {
     public final Spindexer spindexer;
     public final Turret turret;
 
+    private final LEDs leds;
+
     // Dashboard inputs
     private final AutoRoutines routines;
     public final LoggedAutoChooser autoChooser;
@@ -84,6 +89,7 @@ public class RobotContainer {
                 turret = new Turret(new TurretIOTalonFX() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIOReal());
+                leds = new LEDs(new LEDIORio());
                 break;
             case SIM:
                 turret = new Turret(new TurretIOSim());
@@ -110,6 +116,7 @@ public class RobotContainer {
                 );
                 hopperVision = new HopperVision(new HopperVisionIOSim());
                 climber = new Climber(new ClimberIO() {});
+                leds = new LEDs(new LEDIORio());
                 
                 drive.setPose(new Pose2d(3, 3, new Rotation2d()));
                 break;
@@ -127,6 +134,7 @@ public class RobotContainer {
                 turret = new Turret(new TurretIO() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIO() {});
+                leds = new LEDs(new LEDIO() {});
                 break;
         }
 
