@@ -8,8 +8,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.commands.AutoRoutines;
 import frc.robot.commands.tuning.TuningCommands;
-import frc.robot.subsystems.climber.Climber;
-import frc.robot.subsystems.climber.ClimberIO;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.GyroIO;
@@ -56,7 +54,7 @@ public class RobotContainer {
     public final Vision vision;
     public final HopperVision hopperVision;
     public final Intake intake;
-    public final Climber climber;
+    // public final Climber climber;
     public final Spindexer spindexer;
     public final Turret turret;
 
@@ -88,7 +86,7 @@ public class RobotContainer {
                 hopperVision = new HopperVision(new HopperVisionIOPhoton());
                 intake = new Intake(new IntakeIOReal() {});
                 turret = new Turret(new TurretIOTalonHighFrequency() {});
-                climber = new Climber(new ClimberIO() {});
+                // climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIOReal());
                 break;
             case SIM:
@@ -116,7 +114,7 @@ public class RobotContainer {
                     new VisionIOPhotonVisionSim(VisionConstants.cameraRightmost, driveSimulation::getSimulatedDriveTrainPose)
                 );
                 hopperVision = new HopperVision(new HopperVisionIOSim());
-                climber = new Climber(new ClimberIO() {});
+                // climber = new Climber(new ClimberIO() {});
                 
                 drive.setPose(new Pose2d(3, 3, new Rotation2d()));
                 break;
@@ -133,7 +131,7 @@ public class RobotContainer {
                 hopperVision = new HopperVision(new HopperVisionIO() {});
                 intake = new Intake(new IntakeIO() {});
                 turret = new Turret(new TurretIO() {});
-                climber = new Climber(new ClimberIO() {});
+                // climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIO() {});
                 break;
         }

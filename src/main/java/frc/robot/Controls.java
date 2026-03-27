@@ -60,7 +60,6 @@ public class Controls {
     public void configureControls(RobotContainer rc) {
         Drive drive = rc.drive;
         Turret turret = rc.turret;
-        // Climber climber = rc.climber;
         Spindexer spindexer = rc.spindexer;
         Intake intake = rc.intake;
         
