@@ -16,6 +16,7 @@ import edu.wpi.first.math.numbers.N3;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.poseEstimator.OdometrySwerveDrivePoseEstimator;
+import frc.robot.util.simUtils.Simulation;
 
 /**
  * A singleton class that holds the global state of the robot. This holds state that doesn't directly control mechanisms and
@@ -101,6 +102,16 @@ public class RobotState {
         return poseEstimator.getEstimatedPosition();
     }
 
+    /** Returns the best esimated pose - the real robot pos in sim and the estimated one on real hardware. */
+    @AutoLogOutput(key = "Odometry/Best")
+    public Pose2d getBestEstimatedPose() {
+        if(Constants.isSim) {
+            return Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose();
+        } else {
+            return getEstimatedPose();
+        }
+    }
+
     /**
      * Gets if the robot is currently on the right side of the field.
      * @return
@@ -153,6 +164,7 @@ public class RobotState {
 
         // Apply update
         poseEstimator.updateWithTime(timestamp, rawGyroRotation, modulePositions);
+        // tf are we even doing anymore
     }
 
     public void addDriveSpeeds(ChassisSpeeds speeds) {

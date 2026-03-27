@@ -14,7 +14,11 @@ import frc.robot.util.Elastic;
 import frc.robot.util.Elastic.Notification;
 import frc.robot.util.Elastic.Notification.NotificationLevel;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+
 import java.io.FileWriter;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.Logger;
@@ -38,21 +42,24 @@ public class TurretTuning {
     private CommandXboxController controller;
     private class Motor {
         String name;
-        Supplier<Double> speedSupplier;
-        Supplier<Double> currentSupplier;
-        SlewRateLimiter speedLimiter = new SlewRateLimiter(1500); // rpm/s
-        double speedTarget = 0.0;
+        DoubleSupplier speedSupplier;
+        DoubleSupplier currentSupplier;
+        SlewRateLimiter speedLimiter;
+        double speedTarget = 0.0; // rad/s
         double manualSpeed = 0.0;
 
-        public Motor(String name, Supplier<Double> speedSupplier, Supplier<Double> currentSupplier) {
+        public Motor(String name, DoubleSupplier speedSupplier, DoubleSupplier currentSupplier, double slewRateRPMPS) {
             this.name = name;
             this.speedSupplier = speedSupplier;
             this.currentSupplier = currentSupplier;
+            this.speedLimiter = new SlewRateLimiter(Units.rotationsPerMinuteToRadiansPerSecond(slewRateRPMPS));
         }
 
-        public void setSetpoint(double speed) {
-            speedTarget = speed;
+        /** rad/sec */
+        public void setSetpoint(double speedRPM) {
+            speedTarget = Units.rotationsPerMinuteToRadiansPerSecond(speedRPM);
         }
+        /** rad/sec */
         public double getTrueSetpoint() {
             return speedLimiter.calculate(speedTarget);
         }
@@ -60,13 +67,14 @@ public class TurretTuning {
     private Motor[] motors;
     private EventLoop triggerLoop = new EventLoop();
     
-    public TurretTuning(TurretIO io, TurretIOInputs inputs, CommandXboxController controller) {
+    /** Inputs shouldn't change but it's weird */
+    public TurretTuning(TurretIO io, Supplier<TurretIOInputs> inputs, CommandXboxController controller) {
         this.io = io;
         this.controller = controller;
         this.motors = new Motor[] {
-            new Motor("Top Flywheel", inputs.topFlywheel::velocityRadPerSec, inputs.topFlywheel::currentAmps),
-            new Motor("Azimuth", inputs.azimuth::internalEncoderVelocity, inputs.azimuth::currentAmps),
-            new Motor("Hood", inputs.hood::velocityRadPerSec, inputs.hood::currentAmps)
+            new Motor("Flywheel", () -> inputs.get().topFlywheel.velocityRadPerSec(), () -> inputs.get().topFlywheel.currentAmps(), 4000),
+            new Motor("Hood", () -> inputs.get().hood.velocityRadPerSec(), () -> inputs.get().hood.currentAmps(), 4000),
+            new Motor("Azimuth", () -> inputs.get().azimuth.internalEncoderVelocity(), () -> inputs.get().azimuth.currentAmps(), 600)
         };
     }
 
@@ -94,7 +102,7 @@ public class TurretTuning {
 
 
     /** The speeds enumerated on each motor; the total number of combinations is N^3 where N is the length of this array. */
-    private double[] azimuthEnumerationSpeeds = new double[] { 0, 200 / 2., 500 / 2., 750 / 2., 1000 / 2. };
+    private double[] azimuthEnumerationSpeeds = new double[] { 0, 50, 100, 150, 200 };
     private double[] flywheelEnumerationSpeeds = new double[] { 0, 250, 1000, 1750, 2500 };
 
     /**
@@ -109,7 +117,7 @@ public class TurretTuning {
             int index = (n / (int)Math.pow(flywheelEnumerationSpeeds.length, i)) % flywheelEnumerationSpeeds.length;
             speeds[i] = enumerationSpeeds[i][index];
         }
-        return new double[] { speeds[0], speeds[2], speeds[1] };
+        return speeds;
     }
     
     private double enumerationStartTime = 0;
@@ -182,6 +190,7 @@ public class TurretTuning {
     private double[] currentAverageSums = new double[4];
     private double[] velocityAverageSums = new double[4];
 
+    /** Get the specified motor speed in RPM */
     private double getMotorSpeed(int motorIndex) {
         if(enumerating) {
             double[] speeds = getSpeeds(enumerationIndex);
@@ -219,7 +228,7 @@ public class TurretTuning {
 
             double timeIntoCurrentStep = (Timer.getFPGATimestamp() - enumerationStartTime) % ENUMERATION_PERIOD;
             // Reset averages halfway through each step once the motors have had time to settle
-            if(timeIntoCurrentStep < 0.02) {
+            if(timeIntoCurrentStep < 0.2) {
                 resetAverage();
             }
         }
@@ -228,20 +237,18 @@ public class TurretTuning {
             var motor = motors[i];
 
             double motorSpeed = getMotorSpeed(i);
-
-            double speed = Units.rotationsPerMinuteToRadiansPerSecond(motorSpeed);
-            motor.setSetpoint(speed);
+            motor.setSetpoint(motorSpeed);
             
-            double current = motor.currentSupplier.get();
-            double velocity = motor.speedSupplier.get();
+            double current = motor.currentSupplier.getAsDouble();
+            double velocity = motor.speedSupplier.getAsDouble();
 
             currentAverageSums[i] += current;
             velocityAverageSums[i] += velocity;
 
-            Logger.recordOutput("TurretTuning/AverageCurrent/" + motor.name, currentAverageSums[i] / averageSamples);
-            Logger.recordOutput("TurretTuning/Current/" + motor.name, current);
-            Logger.recordOutput("TurretTuning/Velocity/" + motor.name, velocity);
-            Logger.recordOutput("TurretTuning/VelocityTarget/" + motor.name, speed);
+            Logger.recordOutput("TurretTuning/AverageCurrent/" + motor.name, currentAverageSums[i] / averageSamples, Amps);
+            Logger.recordOutput("TurretTuning/Current/" + motor.name, current, Amps);
+            Logger.recordOutput("TurretTuning/Velocity/" + motor.name, velocity, RadiansPerSecond);
+            Logger.recordOutput("TurretTuning/VelocityTarget/" + motor.name, Units.rotationsPerMinuteToRadiansPerSecond(motorSpeed), RadiansPerSecond); // rad/sec
 
             totalCurrent += current;
             totalAverageCurrent += currentAverageSums[i] / averageSamples;
@@ -253,8 +260,8 @@ public class TurretTuning {
             motors[1].getTrueSetpoint()  // hood
         );
 
-        Logger.recordOutput("TurretTuning/TotalCurrent", totalCurrent);
-        Logger.recordOutput("TurretTuning/TotalAverageCurrent", totalAverageCurrent);
+        Logger.recordOutput("TurretTuning/TotalCurrent", totalCurrent, Amps);
+        Logger.recordOutput("TurretTuning/TotalAverageCurrent", totalAverageCurrent, Amps);
 
         averageSamples++;
     }

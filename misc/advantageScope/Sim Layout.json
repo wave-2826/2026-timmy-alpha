@@ -1,10 +1,10 @@
 {
   "hubs": [
     {
-      "x": -8,
-      "y": -8,
-      "width": 1722,
-      "height": 1034,
+      "x": 0,
+      "y": 0,
+      "width": 1448,
+      "height": 947,
       "state": {
         "sidebar": {
           "width": 360,
@@ -22,36 +22,38 @@
             "/RealOutputs/TurretSim/State",
             "/Turret/Controller",
             "/RealOutputs/Turret",
+            "/Tuning/Turret/Azimuth1",
             "/RealOutputs/TurretSim/Motors",
             "/RealOutputs/TurretSim/Setpoints",
             "/RealOutputs/Turret/Measured",
             "/RealOutputs/Turret/Setpoints",
+            "/Tuning/Turret/Flywheel1",
+            "/Tuning/Turret/Hood1",
             "/RealOutputs/Turret/Target",
             "/Turret/TopFlywheel",
             "/Tuning/Turret/LQR_R",
+            "/Tuning/Turret/LQR_Q",
             "/RealOutputs/thing",
             "/RealOutputs/thing/ModelInput",
             "/SystemStats",
-            "/Tuning/Turret",
             "/Turret/Hood",
-            "/Turret/BottomFlywheel",
-            "/URCL",
-            "/URCL/Spark-53",
             "/RealOutputs/Turret/LQRSetpoints",
-            "/Tuning/Turret/Azimuth1",
-            "/Tuning/Turret/Flywheel1",
-            "/Tuning/Turret/Hood1"
+            "/Turret",
+            "/RealOutputs/Odometry/Robot",
+            "/Tuning/Drive",
+            "/RealOutputs/SwerveStates",
+            "/RealOutputs/Odometry"
           ]
         },
         "tabs": {
-          "selected": 2,
+          "selected": 3,
           "tabs": [
             {
               "type": 0,
               "title": "",
               "controller": null,
               "controllerUUID": "esjqq3xok4kqw6zl2jjvyxkv2wlv7b7s",
-              "renderer": "",
+              "renderer": "#/",
               "controlsHeight": 0
             },
             {
@@ -66,6 +68,26 @@
                     "visible": true,
                     "options": {
                       "color": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "/RealOutputs/SwerveStates/Measured",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "/RealOutputs/SwerveStates/SetpointsOptimized",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#0000ff",
+                      "arrangement": "0,1,2,3"
                     }
                   },
                   {
@@ -87,6 +109,16 @@
               "controlsHeight": 200
             },
             {
+              "type": 5,
+              "title": "Console",
+              "controller": "/RealOutputs/Console",
+              "controllerUUID": "yb53gl1i7zfe3xj9xiyqy3vzz1rxqiiw",
+              "renderer": {
+                "highlight": false
+              },
+              "controlsHeight": 0
+            },
+            {
               "type": 3,
               "title": "3D Field",
               "controller": {
@@ -97,7 +129,7 @@
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {
-                      "model": "2026 KitBot",
+                      "model": "WaveRobotics",
                       "color": "#00ff00"
                     }
                   },
@@ -112,11 +144,11 @@
                   },
                   {
                     "type": "robot",
-                    "logKey": "/RealOutputs/FieldSimulation/RobotPosition",
+                    "logKey": "/RealOutputs/Odometry/Best",
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {
-                      "model": "2026 KitBot"
+                      "model": "WaveRobotics"
                     }
                   },
                   {
@@ -138,16 +170,6 @@
                       "color": "#0000ff",
                       "arrangement": "0,1,2,3"
                     }
-                  },
-                  {
-                    "type": "ghost",
-                    "logKey": "/RealOutputs/Odometry/Robot",
-                    "logType": "Pose2d",
-                    "visible": true,
-                    "options": {
-                      "model": "2026 KitBot",
-                      "color": "#00ff00"
-                    }
                   }
                 ],
                 "game": "FRC:2026 Field"
@@ -157,14 +179,14 @@
                 "cameraIndex": -2,
                 "orbitFov": 80,
                 "cameraPosition": [
-                  -5.56051844519534,
-                  3.3028214371284044,
-                  0.6564308557193999
+                  0.6368871099825023,
+                  1.2486449638541348,
+                  -0.6929630082528992
                 ],
                 "cameraTarget": [
-                  -5.560517647169445,
-                  -0.7188064360271279,
-                  0.6564269140642371
+                  0,
+                  0.5,
+                  0
                 ]
               },
               "controlsHeight": 200
@@ -203,11 +225,18 @@
                       "color": "#00ff00",
                       "arrangement": "0,1,2,3"
                     }
+                  },
+                  {
+                    "type": "rotation",
+                    "logKey": "/RealOutputs/Odometry/Robot/rotation",
+                    "logType": "Rotation2d",
+                    "visible": true,
+                    "options": {}
                   }
                 ],
                 "maxSpeed": 5,
-                "sizeX": 0.65,
-                "sizeY": 0.65,
+                "sizeX": 0.368,
+                "sizeY": 0.6985,
                 "orientation": 1
               },
               "controllerUUID": "8o6f64pqbrnsryfpwvqz8hb5xpk4kt91",
@@ -368,7 +397,7 @@
                     "type": "stepped",
                     "logKey": "/Turret/Azimuth/currentAmps",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#80588e",
                       "size": "normal"
@@ -378,9 +407,29 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Turret/LQRSetpoints/azimuthCurrent",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/Turret/Hood/currentAmps",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Turret/LQRSetpoints/hoodCurrent",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437",
                       "size": "normal"
                     }
                   }
@@ -401,41 +450,6 @@
                 "rightFilter": 0
               },
               "controllerUUID": "kcsz4f9o271nwvf00rswuh0bdolykp8k",
-              "renderer": null,
-              "controlsHeight": 200
-            },
-            {
-              "type": 1,
-              "title": "Line Graph",
-              "controller": {
-                "leftSources": [
-                  {
-                    "type": "stepped",
-                    "logKey": "/URCL/Spark-53/PrimaryEncoderPosition",
-                    "logType": "Number",
-                    "visible": true,
-                    "options": {
-                      "color": "#2b66a2",
-                      "size": "normal"
-                    }
-                  }
-                ],
-                "rightSources": [],
-                "discreteSources": [],
-                "leftLockedRange": null,
-                "rightLockedRange": null,
-                "leftUnitConversion": {
-                  "autoTarget": null,
-                  "preset": null
-                },
-                "rightUnitConversion": {
-                  "autoTarget": null,
-                  "preset": null
-                },
-                "leftFilter": 0,
-                "rightFilter": 0
-              },
-              "controllerUUID": "3gsdhziegmvlh9zz3pbx3gzlqd2fbz2p",
               "renderer": null,
               "controlsHeight": 200
             },

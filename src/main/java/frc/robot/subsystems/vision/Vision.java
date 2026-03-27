@@ -5,12 +5,13 @@ import static frc.robot.subsystems.vision.VisionConstants.*;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.networktables.NetworkTablesJNI;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.RobotState;
-import frc.robot.util.tunables.LoggedTunableNumber;
+import frc.robot.util.simUtils.Simulation;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -18,9 +19,6 @@ import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
-    public static final LoggedTunableNumber perTagPersistenceTime = new LoggedTunableNumber(
-        "Vision/PerTagPersistenceTime", 0.05);
-
     private final VisionIO[] io;
     private final VisionIOInputsAutoLogged[] inputs;
     private final Alert[] disconnectedAlerts;
@@ -49,7 +47,14 @@ public class Vision extends SubsystemBase {
     @Override
     @SuppressWarnings("unused")
     public void periodic() {
-        if(Constants.isSim && !VisionConstants.enableVisionSimulation) { return; }
+        if(Constants.isSim && !VisionConstants.enableVisionSimulation) {
+            RobotState.getInstance().addVisionMeasurement(
+                Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose(),
+                (double)NetworkTablesJNI.now() * 1e-6,
+                VecBuilder.fill(0.01, 0.01, 5.0)
+            );
+            return;
+        }
 
         for(int i = 0; i < io.length; i++) {
             io[i].updateInputs(inputs[i]);

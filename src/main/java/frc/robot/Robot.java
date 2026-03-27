@@ -26,8 +26,9 @@ import frc.robot.util.NTClientLogger;
 import frc.robot.util.RioAlerts;
 import frc.robot.util.SparkUtil;
 import frc.robot.util.ThreadPriorityDummyLogReceiver;
+import frc.robot.util.VirtualSubsystem;
 import frc.robot.util.simUtils.Simulation;
-import frc.robot.util.tunables.TunableSparkPID;
+import frc.robot.util.tunables.TunablePID;
 import frc.robot.util.Elastic;
 
 import java.lang.reflect.Field;
@@ -147,18 +148,11 @@ public class Robot extends LoggedRobot {
         // }
         
         // Elastic dashboard utilities and setup
-        WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
+        if(Constants.useNTLogs) WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
 
         AutoLogOutputManager.addObject(RobotState.getInstance());
 
         robotContainer = new RobotContainer();
-
-        if(Constants.currentMode == Constants.Mode.REAL && Constants.useSuperDangerousRTThreadPriority) {
-            // Switch the thread to high priority to improve loop timing.
-            // This is a dangerous operation! Read the comment on useSuperDangerousRTThreadPriority and understand what
-            // this does before using it anywhere.
-            Threads.setCurrentThreadPriority(true, 10);
-        }
 
         // https://www.chiefdelphi.com/t/elastic-2026-the-next-dimension/506888/79
         // This is.. unfortunate
@@ -223,7 +217,15 @@ public class Robot extends LoggedRobot {
         LoggedTracer.reset();
 
         // Switch thread to high priority to improve loop timing
-        Threads.setCurrentThreadPriority(true, 99);
+        
+        if(Constants.currentMode == Constants.Mode.REAL && Constants.useSuperDangerousRTThreadPriority) {
+            // Switch the thread to high priority to improve loop timing.
+            // This is a dangerous operation! Read the comment on useSuperDangerousRTThreadPriority and understand what
+            // this does before using it anywhere.
+            Threads.setCurrentThreadPriority(true, 90);
+        }
+        
+        VirtualSubsystem.beforeScheduler();
 
         // Runs the Scheduler. This is responsible for polling buttons, adding
         // newly-scheduled commands, running already-scheduled commands, removing
@@ -232,12 +234,14 @@ public class Robot extends LoggedRobot {
         // the Command-based framework to work.
         CommandScheduler.getInstance().run();
 
+        VirtualSubsystem.afterScheduler();
+
         // Return to normal thread priority
-        Threads.setCurrentThreadPriority(false, 10);
+        Threads.setCurrentThreadPriority(false, 0);
 
         LoggedTracer.record("Commands");
 
-        TunableSparkPID.periodic();
+        TunablePID.periodic();
         LoggedTracer.record("Tunables");
 
         // Alert-related updates

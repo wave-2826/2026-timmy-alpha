@@ -6,6 +6,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import java.util.function.DoubleSupplier;
+
 import org.littletonrobotics.junction.Logger;
 
 public class Climber extends SubsystemBase {
@@ -23,11 +25,11 @@ public class Climber extends SubsystemBase {
     }
 
     private Command runRightPercent(double percent) {
-        return Commands.runEnd(() -> io.setRightPower(percent * 12.0), () -> io.setRightPower(0.0));
+        return Commands.runEnd(() -> io.setRightPower(percent), () -> io.setRightPower(0.0));
     }
 
     private Command runLeftPercent(double percent) {
-        return Commands.runEnd(() -> io.setLeftPower(percent * 12.0), () -> io.setLeftPower(0.0));
+        return Commands.runEnd(() -> io.setLeftPower(percent), () -> io.setLeftPower(0.0));
     }
 
     public Command extendBoth() {
@@ -42,6 +44,24 @@ public class Climber extends SubsystemBase {
              runLeftPercent(-50).until(() ->  inputs.left.position() <= Units.inchesToMeters(15)),
             runRightPercent(-50).until(() -> inputs.right.position() <= Units.inchesToMeters(15))
         );
+    }
+
+    public Command manualControls(DoubleSupplier leftSupplier, DoubleSupplier rightSupplier) {
+        return Commands.runOnce(() -> {
+            io.setLeftServoPosition(2.5 / 4);
+            io.setRightServoPosition(2.5 / 4);
+        }).andThen(Commands.runEnd(() -> {
+            // Flipped since it should be relative to driver
+            double leftPercent = MathUtil.applyDeadband(rightSupplier.getAsDouble(), 0.3);
+            double rightPercent = MathUtil.applyDeadband(leftSupplier.getAsDouble() + rightSupplier.getAsDouble(), 0.3);
+            io.setLeftPower(leftPercent * 0.6);
+            io.setRightPower(rightPercent * 0.6);
+        }, () -> {
+            io.setLeftPower(0.0);
+            io.setRightPower(0.0);
+            io.setLeftServoPosition(0.0);
+            io.setRightServoPosition(0.0);
+        }));
     }
 
     public Command extendLeftServo(double position) {

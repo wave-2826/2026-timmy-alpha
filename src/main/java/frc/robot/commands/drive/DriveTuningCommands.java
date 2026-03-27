@@ -11,6 +11,7 @@ import java.text.NumberFormat;
 import java.util.List;
 import java.util.Set;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import org.littletonrobotics.junction.Logger;
@@ -53,7 +54,8 @@ public class DriveTuningCommands {
 
     private static final double SLIP_START_DELAY = 1.0; // Secs
     private static final double SLIP_START_SETPOINT = 5.0; // Amps
-    private static final double SLIP_RAMP_RATE = 1.5; // Amps/Sec
+    private static final double STATIC_SLIP_RAMP_RATE = 1.5; // Amps/Sec
+    private static final double DYNAMIC_SLIP_RAMP_RATE = 20.0; // Amps/Sec
     private static final double SLIP_TRAVEL_AMOUNT = Units.degreesToRadians(10); // Rad
 
     private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.5; // Rad/Sec
@@ -71,6 +73,7 @@ public class DriveTuningCommands {
         : "./logs/tuning_results.json"; // In simulation, this is a local file
 
     // TODO - REALLY TODO - log this and make it work in replay
+    // ALSO TODO: backup to rio in case usb is lost
     /** A set of tuning results that we can load from and save to a JSON file. */
     public static class TuningResults {
         // TODO: Defaults that make sense for sim so stuff doesn't break
@@ -205,11 +208,14 @@ public class DriveTuningCommands {
     /** Adds the drive tuning commands to the auto chooser. */
     public static void addTuningCommandsToChooser(Drive drive, LoggedDashboardChooser<Command> chooser) {
         // We might want to run these at a competition
-        chooser.addOption("Drive: Rezero Modules", collectModuleOffsets(drive));
+        chooser.addOption("Drive: Rezero Modules (gears climb side)", collectModuleOffsets(drive));
 
         chooser.addOption("Drive: Wheel Radius Characterization", wheelRadiusCharacterization(drive));
-        chooser.addOption("Drive: Slip Current Measurement (toward intake)", slipCurrentMeasurement(drive, false));
-        chooser.addOption("Drive: Slip Current Measurement (away from intake)", slipCurrentMeasurement(drive, true));
+        chooser.addOption("Drive: Static Slip Current Measurement (toward intake)", staticSlipCurrentMeasurement(drive, false));
+        chooser.addOption("Drive: Static Slip Current Measurement (away from intake)", staticSlipCurrentMeasurement(drive, true));
+
+        chooser.addOption("Drive: Dynamic Slip Current Measurement (toward intake)", dynamicSlipCurrentMeasurement(drive, false));
+        chooser.addOption("Drive: Dynamic Slip Current Measurement (away from intake)", dynamicSlipCurrentMeasurement(drive, true));
 
         // These only apply to when we're doing "real" tuning
         if(Robot.tuningMode()) {
@@ -412,7 +418,7 @@ public class DriveTuningCommands {
      * wall for this to work.  
      * Depends on wheel radius tuning.
      */
-    public static Command slipCurrentMeasurement(Drive drive, boolean reverseDirection) {
+    public static Command staticSlipCurrentMeasurement(Drive drive, boolean reverseDirection) {
         SlipCurrentModuleResult[] moduleResults = new SlipCurrentModuleResult[4];
 
         int currentLimitForSlipMeasurement = 100; // Amps
@@ -508,6 +514,123 @@ public class DriveTuningCommands {
         ).alongWith(require(drive));
     }
 
+    /**
+     * Measures the current at which the robot slips dynamically by accelerating with a constant jerk.  
+     * This is fundamentally nearly identical to static slip current measurement but the robot should
+     * not be placed near a wall - it should be placed in an open area. The ramp rate should be far higher
+     * because otherwise the robot would go like a thousand miles before slipping.
+     */
+    public static Command dynamicSlipCurrentMeasurement(Drive drive, boolean reverseDirection) {
+        List<double[]> currentSamples = new LinkedList<>();
+        Timer timer = new Timer();
+        Container<Boolean> stopEarly = new Container<Boolean>(false);
+        Container<Integer> slippedModule = new Container<>(0);
+        double[] moduleAccelerations = new double[4];
+
+        int currentLimitForSlipMeasurement = 100; // Amps
+
+        return Commands.sequence(
+            // Allow modules to orient
+            Commands.run(() -> {
+                drive.runCharacterizationCurrent(0.0);
+            }).withTimeout(SLIP_START_DELAY),
+
+            Commands.runOnce(() -> {
+                // Temporarily increase the drive current limit
+                drive.setSlipMeasurementCurrentLimit(Amps.of(currentLimitForSlipMeasurement));
+                stopEarly.value = false;
+                slippedModule.value = 0;
+                currentSamples.clear();
+                timer.restart();
+                for(int i = 0; i < 4; i++) moduleAccelerations[i] = 0;
+            }),
+
+            // Accelerate and gather data
+            Commands.run(() -> {
+                double setpoint = timer.get() * DYNAMIC_SLIP_RAMP_RATE + SLIP_START_SETPOINT;
+                if(setpoint > 90) {
+                    System.out.println("No wheels slipped! Capping value.");
+                    stopEarly.value = true;
+                }
+
+                if(reverseDirection) setpoint = -setpoint;
+                drive.runCharacterizationCurrent(setpoint);
+
+                double[] currents = new double[4];
+                for(int i = 0; i < 4; i++) {
+                    currents[i] = drive.getCharacterizationCurrent(i);
+                }
+                currentSamples.add(currents);
+            }).until(() -> {
+                if(stopEarly.value) return true;
+
+                // Check if any wheel has slipped by looking for a sudden difference in acceleration
+                // compared to the other wheels
+                for(int i = 0; i < 4; i++) {
+                    double accel = drive.getModuleCharacterizationAcceleration(i);
+                    moduleAccelerations[i] = accel;
+                }
+                
+                double[] accelerations = Arrays.stream(moduleAccelerations).sorted().toArray();
+                double medianAcceleration = accelerations[1];
+                double[] accelerationDifferenceFactors =
+                    Arrays.stream(moduleAccelerations)
+                    .map(a -> a / medianAcceleration).toArray();
+                for(int i = 0; i < 4; i++) {
+                    // 1.5x the median
+                    if(accelerationDifferenceFactors[i] > 1.5) {
+                        slippedModule.value = i;
+                        System.out.println("Wheel " + i + " slipped!");
+                        return true;
+                    }
+                }
+
+                return false;
+            }),
+
+            // Take a few samples behind when we stopped and print the result,
+            // restore the current limit, and print results
+            Commands.runOnce(() -> {
+                drive.setSlipMeasurementCurrentLimit(null);
+
+                double[] slipCurrents = currentSamples.get(currentSamples.size() - 4);
+                double slipSetpoint = timer.get() * DYNAMIC_SLIP_RAMP_RATE + SLIP_START_SETPOINT;
+
+                double slipCurrent = slipCurrents[slippedModule.value];
+
+                NumberFormat formatter = new DecimalFormat("#0.000");
+
+                // Who knows if this means anything physical, but it works (?)
+                System.out.println("********** Dynamic Drive Slip Current Measurement Results **********");
+                String[] moduleNames = new String[] {
+                    "Front left", "Front right", "Back left", "Back right"
+                };
+                System.out.println("\tSlipped module: " + moduleNames[slippedModule.value]);
+                System.out.println("\tSlip current: " + formatter.format(slipCurrent) + " amps");
+                System.out.println("\tSlip setpoint: " + formatter.format(slipSetpoint) + " amps");
+
+                // Estimate the wheel's coefficient of friction
+                double motorTorque = slipCurrent * DriveConstants.driveMotorModel.KtNMPerAmp;
+                double totalTorqueNm = 4 * DriveConstants.driveGearRatio * motorTorque;
+                double forceOnWheelN = DriveConstants.wheelForceMasses[slippedModule.value].in(Kilogram) * 9.81;
+                double wheelCOF = totalTorqueNm / (forceOnWheelN * Drive.tuningResults.wheelRadiusResults.radiusMeters());
+                NumberFormat cofFormatter = new DecimalFormat("#0.0000");
+                System.out.println("\tEstimated wheel COF: " + cofFormatter.format(wheelCOF));
+                System.out.flush();
+
+                // Save results
+                Drive.tuningResults.slipResults = new TuningResults.SlipTuningResults(
+                    slipCurrent,
+                    slipSetpoint,
+                    wheelCOF,
+                    Drive.tuningResults.slipResults.moduleSlipCurrentsAmps,
+                    Drive.tuningResults.slipResults.moduleSlipSetpoints
+                );
+                Drive.tuningResults.save();
+            })
+        ).alongWith(require(drive));
+    }
+
     private static Command slipCurrentWheel(Drive drive, int module, SlipCurrentModuleResult moduleResult, boolean reverseDirection) {
         List<Double> currentSamples = new LinkedList<>();
         Timer timer = new Timer();
@@ -518,12 +641,13 @@ public class DriveTuningCommands {
             Commands.runOnce(() -> {
                 currentSamples.clear();
                 startPosition.value = drive.getModuleCharacterizationPosition(module);
+                stopEarly.value = false;
                 timer.restart();
             }),
 
             // Accelerate and gather data
             Commands.run(() -> {
-                double setpoint = timer.get() * SLIP_RAMP_RATE + SLIP_START_SETPOINT;
+                double setpoint = timer.get() * STATIC_SLIP_RAMP_RATE + SLIP_START_SETPOINT;
                 if(setpoint > 90) {
                     System.out.println("Wheel " + module + " didn't slip! Capping value.");
                     stopEarly.value = true;
@@ -545,11 +669,11 @@ public class DriveTuningCommands {
                 drive.runCharacterizationVoltage(module, 0.0);
 
                 moduleResult.slipCurrent = currentSamples.get(currentSamples.size() - 4);
-                moduleResult.slipSetpoint = timer.get() * SLIP_RAMP_RATE + SLIP_START_SETPOINT;
+                moduleResult.slipSetpoint = timer.get() * STATIC_SLIP_RAMP_RATE + SLIP_START_SETPOINT;
 
                 System.out.println("Module " + module + " slip current measured.");
             }));
-    }
+    }    
 
     /** Characterizes the robot MOI. Depends on wheel radius tuning. */
     public static Command momentOfInertiaCharacterization(Drive drive) {

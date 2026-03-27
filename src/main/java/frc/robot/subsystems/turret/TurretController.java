@@ -111,27 +111,30 @@ public class TurretController {
     private static final LoggedTunableVector<N5> qWeights = new LoggedTunableVector<>(
         "Turret/LQR_Q",
         VecBuilder.fill(
-            0.002, // azimuth - rad
-            0.105, // azimuth vel - rad/s
-            0.005, // hood - rad
-            0.105, // hood vel - rad/s
-            2      // flywheel vel - rad/s
+            Constants.isSim ? 0.002 : 0.005, // azimuth - rad
+            Constants.isSim ? 0.105 : 0.2, // azimuth vel - rad/s
+            Constants.isSim ? 0.005 : 0.025, // hood - rad
+            Constants.isSim ? 0.105 : 0.2, // hood vel - rad/s
+            Constants.isSim ? 2     : 30 // flywheel vel - rad/s
         )
     );
     // R cost weights (control effort tolerance). Decrease this to more heavily penalize
     // control effort, or make the controller less aggressive
     private static final LoggedTunableVector<N3> rWeights = new LoggedTunableVector<>(
         "Turret/LQR_R",
-        VecBuilder.fill(50, 50, 50)
+        VecBuilder.fill(
+            Constants.isSim ? 50 : 0.4,
+            Constants.isSim ? 50 : 0.4,
+            Constants.isSim ? 50 : 5
+        )
     );
     // Kalman process / measurement noise (should be tuned empirically)
     // deg and deg/sec
     private static final Vector<N5> stateStdDevs = VecBuilder.fill(10, 10, 10, 10, 50).times(Math.PI * 2 / 360);
     private static final Vector<N5> measureStdDevs = VecBuilder.fill(0.1, 0.1, 1.0, 0.1, 1.0).times(Math.PI * 2 / 360);
     // Latency compensation
-    private static final LoggedTunableNumber lqrLatencyCompSec = new LoggedTunableNumber("Turret/LQR_LatencyComp", Constants.isSim ? 0.0 : 0.05);
-
-    private static final double loopPeriod = 0.02;
+    private static final LoggedTunableNumber lqrLatencyCompSec = new LoggedTunableNumber("Turret/LQR_LatencyComp", Constants.isSim ? 0.0 : 0.03);
+    private static final LoggedTunableNumber lqrFFContribution = new LoggedTunableNumber("Turret/LQRFFContribution", Constants.isSim ? 1.0 : 0.8);
 
     // Kt for a single motor in the group, at motor shaft
     private static final double KtFly = TurretConstants.flywheelSimMotor.KtNMPerAmp;
@@ -152,7 +155,11 @@ public class TurretController {
     private LinearQuadraticRegulator<N5, N3, N5> lqr;
     private LinearSystemLoop<N5, N3, N5> loop;
 
-    public TurretController() {
+    private final double loopPeriod;
+
+    public TurretController(double loopPeriod) {
+        this.loopPeriod = loopPeriod;
+        
         // θ_a  θ'_a   θ_h  θ'_h   ω_f
         var A = new Matrix<>(Nat.N5(), Nat.N5());
         A.set(0, 1, 1.0); // θ_azi  += θ'_azi
@@ -199,9 +206,9 @@ public class TurretController {
             lqr,
             observer,
             u -> desaturateInputVector(u, VecBuilder.fill(
-                TurretConstants.azimuthCurrentLimit,
-                TurretConstants.hoodCurrentLimit,
-                TurretConstants.flywheelCurrentLimit * 2
+                TurretConstants.azimuthCurrentLimit * 0.9,
+                TurretConstants.hoodCurrentLimit * 0.9,
+                TurretConstants.flywheelCurrentLimit * 0.9
             )),
             loopPeriod
         );
@@ -253,9 +260,9 @@ public class TurretController {
 
         // Empirical feedforward currents
         // The models return steady-state current for the given operating point
-        double ffAzimuth  = AzimuthFF(flyMotorVel, aziMotorVel, hoodMotorVel);
-        double ffHood     = HoodFF(flyMotorVel, aziMotorVel, hoodMotorVel);
-        double ffFlywheel = FlywheelFF(flyMotorVel, aziMotorVel, hoodMotorVel);
+        double ffAzimuth  = AzimuthFF(flyMotorVel, aziMotorVel, hoodMotorVel) * lqrFFContribution.get();
+        double ffHood     = HoodFF(flyMotorVel, aziMotorVel, hoodMotorVel) * lqrFFContribution.get();
+        double ffFlywheel = FlywheelFF(flyMotorVel, aziMotorVel, hoodMotorVel) * lqrFFContribution.get();
 
         // Build reference vector
         // x_ref = [θ_azi_target, 0 vel, θ_hood_target, 0 vel, ω_fly_target]
@@ -271,10 +278,12 @@ public class TurretController {
         var measurement = createStateVectorFromInputs(inputs);
         observer.correct(loop.getU(), measurement);
 
+        var xHat = observer.getXhat();
+        
         // LQR correction: u = K * error  (feedback only, no plant feedforward)
         // The empirical FF models already capture the steady-state operating-point
         // current, so adding the plant's linear feedforward on top would double-count.
-        var error = loop.getNextR().minus(observer.getXhat());
+        var error = loop.getNextR().minus(xHat);
         error.set(0, 0, MathUtil.angleModulus(error.get(0, 0))); // Wrap azimuth angle error
         var lqrCorrection = lqr.getK().times(error);
 
@@ -298,6 +307,11 @@ public class TurretController {
             currents.get(0, 0), // azimuth current
             currents.get(1, 0)  // hood current
         );
+    }
+
+    /** Get the observer state as a double array. */
+    public double[] getObserverState() {
+        return observer.getXhat().getData();
     }
 
     /**

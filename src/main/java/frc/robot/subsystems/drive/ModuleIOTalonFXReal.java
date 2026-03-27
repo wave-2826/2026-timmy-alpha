@@ -32,12 +32,12 @@ public class ModuleIOTalonFXReal extends ModuleIOTalonFX {
 
         // Update odometry inputs
         inputs.odometryTimestamps =
-                timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+            timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
         inputs.odometryDrivePositionsRad = drivePositionQueue.stream()
-                .mapToDouble(Units::rotationsToRadians)
-                .toArray();
+            .mapToDouble(pos -> Units.rotationsToRadians(pos) / constants.DriveMotorGearRatio)
+            .toArray();
         inputs.odometryTurnPositions =
-                turnPositionQueue.stream().map(Rotation2d::fromRotations).toArray(Rotation2d[]::new);
+            turnPositionQueue.stream().map(Rotation2d::fromRotations).toArray(Rotation2d[]::new);
         timestampQueue.clear();
         drivePositionQueue.clear();
         turnPositionQueue.clear();

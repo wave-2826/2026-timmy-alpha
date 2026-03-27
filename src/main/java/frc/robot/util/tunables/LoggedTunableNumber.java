@@ -76,6 +76,19 @@ public class LoggedTunableNumber implements DoubleSupplier {
     }
 
     /**
+     * Set the current value, from dashboard if available and in tuning mode.
+     * @param id
+     * @return
+     */
+    public void set(double value) {
+        if(Robot.tuningMode()) {
+            dashboardNumber.set(value);
+        } else {
+            defaultValue = value;
+        }
+    }
+
+    /**
      * Checks whether the number has changed since our last check
      *
      * @param id Unique identifier for the caller to avoid conflicts when shared between multiple objects. Recommended

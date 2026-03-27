@@ -1,5 +1,7 @@
 src/main/java/frc/robot/BuildConstants.java
 .env
+misc/**/*.pyc
+misc/dlogs/**/*
 
 ### C++ ###
 # Prerequisites

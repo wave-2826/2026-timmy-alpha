@@ -30,5 +30,6 @@ public interface ClimberIO {
 
   /** Sets the servo's position */
   public default void setLeftServoPosition(double position) {}
+  /** Sets the servo's position */
   public default void setRightServoPosition(double position) {}
 }

@@ -32,8 +32,11 @@ public class SpindexerIOReal implements SpindexerIO {
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 / spinnerCurrentLimit)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
+        spinnerConfig.inverted(true);
+        
         var tranferConfig = new SparkMaxConfig();
         tranferConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(transferCurrentLimit).voltageCompensation(Constants.voltageCompensation);
+        tranferConfig.closedLoopRampRate(0.5);
         tranferConfig
             .encoder
             .positionConversionFactor(2.0 * Math.PI / transferMotorReduction) // Rotor Rotations -> Radians
@@ -63,11 +66,11 @@ public class SpindexerIOReal implements SpindexerIO {
   
     @Override
     public void setSpinnerVoltage(double voltage) {
-        spinnerMotor.setVoltage(-voltage);
+        spinnerMotor.setVoltage(voltage);
     }
 
     @Override
     public void setTransferVoltage(double voltage) {
-        transferMotor.setVoltage(-voltage);
+        transferMotor.setVoltage(voltage);
     }
 }

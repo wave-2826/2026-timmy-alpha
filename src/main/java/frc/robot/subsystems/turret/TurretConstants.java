@@ -1,15 +1,15 @@
 package frc.robot.subsystems.turret;
 
 import com.ctre.phoenix6.CANBus;
-import com.revrobotics.spark.ClosedLoopSlot;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.util.SparkPIDConstants;
+import frc.robot.util.GenericPIDConstants;
 import frc.robot.util.tunables.TunableSimpleMotorFF;
-import frc.robot.util.tunables.TunableSparkPID;
+import frc.robot.util.tunables.TunablePID;
 
 public class TurretConstants {
     // CAN IDs
@@ -19,12 +19,15 @@ public class TurretConstants {
     public static final int hoodCanID = 54;
     public static final int azimuthCancoderID = 55;
 
+    public static final int azimuthZeroDIOPort = 1;
+    public static final Rotation2d azimuthResetAngle = Rotation2d.fromDegrees(180. + 26.);
+
     public static final CANBus CANBus = DriveConstants.CANBus;
 
     // Reductions; all are a ratio between output and input.
     // All stages have the same 31:200 reduction, but the hood and azimuth are further reduced by the bevel and planetary stages.
     public static final double flyMotorToRingReduction = 35.0 / 200.0;
-    public static final double aziMotorToRingReduction = 35.0 / 200.0;
+    public static final double aziMotorToRingReduction = 18.0 / 200.0;
     public static final double hoodMotorToRingReduction = 35.0 / 200.0;
     
     public static final double flywheelPlanetReduction = 213.0 / 25.0;
@@ -46,6 +49,8 @@ public class TurretConstants {
     // Constraints
     public static final double hoodMinAngle = Units.degreesToRadians(15);
     public static final double hoodMaxAngle = Units.degreesToRadians(43);
+
+    public static final double flywheelRadius = Units.inchesToMeters(2);
 
     // Inertias
     private static final double reflectInertia(double externalInertia, double ratioInternal) {
@@ -108,31 +113,28 @@ public class TurretConstants {
     public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * aziMotorToRingReduction * 0.8;
 
     // Current limits
-    public static final int flywheelCurrentLimit = 70; // amps each
-    public static final int azimuthCurrentLimit = 60; // amps
-    public static final int hoodCurrentLimit = 50; // amps
+    public static final int flywheelCurrentLimit = 30; // amps each
+    public static final int azimuthCurrentLimit = 40; // amps
+    public static final int hoodCurrentLimit = 40; // amps
 
     // PIDs
     public static final TunableSimpleMotorFF flywheelMotorFF = new TunableSimpleMotorFF("Turret/FlywheelFF")
         .addGains(0.0, 12.0 / maxFlywheelSpeedRadPerSec, flywheelMotorKA);
     
-    public static final TunableSparkPID flywheelMotorPID = new TunableSparkPID("Turret/Flywheel")
-        .addRealRobotGains(new SparkPIDConstants(0.0005, 0.0, 0.0))
-        .addRealRobotGains(new SparkPIDConstants(0.001, 0.5, 0.0, ClosedLoopSlot.kSlot1)) // Current PID
+    public static final TunablePID flywheelMotorPID = new TunablePID("Turret/Flywheel")
+        .addRealRobotGains(new GenericPIDConstants(0.4, 0.0, 0.0, 0.23)) // velocity voltage
         .copyRealGainsInSim();
     
-    public static final TunableSparkPID azimuthMotorPID = new TunableSparkPID("Turret/Azimuth")
-        .addRealRobotGains(new SparkPIDConstants(0.7, 0.0, 0.2))
-        .addRealRobotGains(new SparkPIDConstants(0.001, 0.5, 0.0, ClosedLoopSlot.kSlot1)) // Current PID
+    public static final TunablePID azimuthMotorPID = new TunablePID("Turret/Azimuth")
+        .addRealRobotGains(new GenericPIDConstants(100, 30, 1)) // position voltage
         .copyRealGainsInSim();
     
-    public static final TunableSparkPID hoodMotorPID = new TunableSparkPID("Turret/Hood")
-        .addRealRobotGains(new SparkPIDConstants(1.2, 0.0, 0.2))
-        .addRealRobotGains(new SparkPIDConstants(0.001, 0.5, 0.0, ClosedLoopSlot.kSlot1)) // Current PID
+    public static final TunablePID hoodMotorPID = new TunablePID("Turret/Hood")
+        .addRealRobotGains(new GenericPIDConstants(60, 1, 0)) // position voltage
         .copyRealGainsInSim();
     
     // Control tolerances
-    public static final double flywheelToleranceRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(200);
-    public static final double azimuthToleranceRad = Units.degreesToRadians(2);
-    public static final double hoodToleranceRad = Units.degreesToRadians(2);
+    public static final double flywheelToleranceRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(500);
+    public static final double azimuthToleranceRad = Units.degreesToRadians(10);
+    public static final double hoodToleranceRad = Units.degreesToRadians(20);
 }

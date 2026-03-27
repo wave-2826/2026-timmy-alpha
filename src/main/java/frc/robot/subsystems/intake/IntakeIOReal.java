@@ -13,6 +13,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -44,6 +45,7 @@ public class IntakeIOReal implements IntakeIO {
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 / rollerMotorReduction)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
+        rollerConfig.inverted(true);
         
         var deployBaseConfig = new SparkMaxConfig();
         deployBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(deployCurrentLimit).voltageCompensation(Constants.voltageCompensation);
@@ -52,10 +54,14 @@ public class IntakeIOReal implements IntakeIO {
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 * pinionRadiusMeters / pinionReduction)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
+        deployBaseConfig.closedLoop.maxMotion
+            // TODO: reasonable values
+            .cruiseVelocity(0.8) // m/s
+            .maxAcceleration(3.0); // m/s^2
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
         
-        deployLConfig.inverted(true);
+        deployLConfig.inverted(false);
         deployRConfig.follow(deployL, true);
 
         IntakeConstants.rollerPID.applyConfigAndRegister(rollerConfig, roller);
@@ -85,22 +91,24 @@ public class IntakeIOReal implements IntakeIO {
     }
   
     @Override
-    public void setRollerVoltage(double volts) {
-        roller.setVoltage(volts);
+    public void setRollerSpeed(double velocityRPM) {
+        roller.getClosedLoopController().setSetpoint(Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
+        // HACK
+        // roller.getClosedLoopController().setSetpoint(velocityRPM / 5000, ControlType.kDutyCycle);
     }
 
     @Override
-    public void setDeployVoltageL(double volts) {
-        deployL.setVoltage(volts);
+    public void setDeployPowerL(double power) {
+        deployL.getClosedLoopController().setSetpoint(power, ControlType.kDutyCycle);
     }
 
     @Override
-    public void setDeployVoltageR(double volts) {
+    public void setDeployPowerR(double power) {
         if(deployFollowing) {
             deployR.pauseFollowerModeAsync();
             deployFollowing = false;
         }
-        deployR.setVoltage(volts);
+        deployR.getClosedLoopController().setSetpoint(power, ControlType.kDutyCycle);
     }
 
     @Override
@@ -115,7 +123,7 @@ public class IntakeIOReal implements IntakeIO {
             deployR.resumeFollowerModeAsync();
             deployFollowing = true;
         }
-        deployController.setSetpoint(positionMeters, ControlType.kPosition);
+        deployController.setSetpoint(positionMeters, ControlType.kMAXMotionPositionControl);
     }
 
     @Override

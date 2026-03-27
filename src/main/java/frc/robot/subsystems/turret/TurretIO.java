@@ -2,6 +2,11 @@ package frc.robot.subsystems.turret;
 
 import org.littletonrobotics.junction.AutoLog;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.subsystems.turret.Turret.ControlMode;
+import frc.robot.subsystems.turret.Turret.TurretTarget;
+
 public interface TurretIO {
     @AutoLog
     public static class TurretIOInputs {
@@ -24,9 +29,9 @@ public interface TurretIO {
         public record AzimuthMotorInputs(
             /** Whether the motor is connected */
             boolean connected,
-            /** The azimuth motor's internal encoder angle in rad. */
+            /** The azimuth motor's internal encoder angle in rad (in mechanism rotations). */
             double internalEncoderAngle,
-            /** The azimuth motor's internal encoder velocity in rad/sec. */
+            /** The azimuth motor's internal encoder velocity in rad/sec (in mechanism rotations). */
             double internalEncoderVelocity,
             /** The motor current draw. */
             double currentAmps
@@ -35,8 +40,8 @@ public interface TurretIO {
             /** Whether the motor is connected */
             boolean connected,
             /** 
-             * The measured hood motor angle.
-             * The actual hood angle is the difference between this and the azimuth ring angle (and a reduction).
+             * The measured hood motor ring angle.
+             * The actual hood angle is the difference between this and the azimuth ring angle (and reductions).
              */
             double angleRad,
             /** The measured velocity of the hood motor in rad/sec. */
@@ -61,6 +66,15 @@ public interface TurretIO {
 
         public HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0, 0.0);
 
+        /**
+         * Only used when dealing with high-frequency controllers;
+         * the number of loop updates since the last inputs update.
+         */
+        public int loopUpdates = 0;
+        /** The state of the LQR kalman observer. */
+        public double[] LQRKalmanState = new double[5];
+
+        public boolean azimuthZeroTriggered = false;
 
         /**
          * Get the flywheel mechanism velocity in rad/s. Positive = shooting direction.
@@ -74,20 +88,21 @@ public interface TurretIO {
                 azimuthEncoder.velocityRadPerSec() * -TurretConstants.azimuthFlyCoupling;
         }
         public double getHoodAngleRad() {
-            return hood.angleRad() * TurretConstants.totalHoodGearing -
-                azimuthEncoder.angleRad() * TurretConstants.azimuthHoodCoupling +
+            return hood.angleRad() * TurretConstants.hoodRingToHoodReduction -
+                getAzimuthAngleRad() / TurretConstants.totalAzimuthGearing  * TurretConstants.azimuthHoodCoupling +
                 TurretConstants.hoodMinAngle;
-            // TODO: Store an offset?
         }
         public double getHoodVelocityRadPerSec() {
             return hood.velocityRadPerSec() * TurretConstants.totalHoodGearing -
                 azimuthEncoder.velocityRadPerSec() * TurretConstants.azimuthHoodCoupling;
         }
         public double getAzimuthAngleRad() {
-            return azimuthEncoder.angleRad() * TurretConstants.totalAzimuthGearing;
+            // return azimuthEncoder.angleRad() * TurretConstants.totalAzimuthGearing;
+            return MathUtil.angleModulus(azimuth.internalEncoderAngle);
         }
         public double getAzimuthVelocityRadPerSec() {
-            return azimuthEncoder.velocityRadPerSec() * TurretConstants.totalAzimuthGearing;
+            // return azimuthEncoder.velocityRadPerSec() * TurretConstants.totalAzimuthGearing;
+            return azimuth.internalEncoderVelocity;
         }
     }
 
@@ -96,7 +111,7 @@ public interface TurretIO {
         double flywheelSpeedRadPerSec,
         /** The turret azimuth angle relative to the robot base. */
         double azimuthAngleRad,
-        /** The angle of the hood outer ring relative to the azimuth position. */
+        /** The angle of the hood relative to its minimum. */
         double hoodAngleRad
     ) {}
 
@@ -110,14 +125,20 @@ public interface TurretIO {
     /** Update the set of loggable inputs - data measured from the turret and passed into code. */
     public default void updateInputs(TurretIOInputs inputs) {}
 
+    /** Set the current turret control mode. This usually doesn't need to do anything. */
+    public default void setControlMode(ControlMode mode) {}
+
+    /** Run the turret with the given outputs in LQR control mode. */
+    public default void setTarget(TurretTarget target) {}
+
     /** Run the turret with the given outputs in PID control mode. */
     public default void setPIDOutputs(TurretIOPIDOutputs outputs) {}
 
     /** Run the turret with the given velocities only. */
     public default void setVelocityOutputs(double flywheelVelocityRadPerSec, double azimuthVelocityRadPerSec, double hoodVelocityRadPerSec) {}
 
-    /** Run the turret with the given outputs in LQR control mode. */
-    public default void setLQROutputs(TurretLQROutputs outputs) {}
+    public default void resetAzimuth(Rotation2d angle) {}
+    public default void resetHoodToBottom() {}
 
     /** Stop all turret motion and hold position. */
     public default void stop() {}

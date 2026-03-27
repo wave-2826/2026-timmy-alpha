@@ -28,26 +28,36 @@ public class ShotCalculator {
         return instance;
     }
 
+    private static LoggedTunableNumber fudgeSpeedScale = new LoggedTunableNumber("ShotCalculator/FudgeSpeedScale", 1.0);
+    private static LoggedTunableNumber fudgeAngleOffsetDeg = new LoggedTunableNumber("ShotCalculator/FudgeAngleOffsetDeg", 0.0);
+
     private static class ShotMapData {
-        /** Distance (m)-hood angle (rad) map */
+        /** Distance (m)-hood angle (deg) map */
         InterpolatingDoubleTreeMap hoodAngleMap;
-        /** Distance (m)-flywheel speed (rad/s) map */
+        /** Distance (m)-flywheel speed (rpm) map */
         InterpolatingDoubleTreeMap flywheelSpeedMap;
         /** Distance (m)-ToF map (at the interpolated turret state) */
         InterpolatingDoubleTreeMap timeOfFlightMap;
 
-        ShotMapData() {
+        public ShotMapData() {
             hoodAngleMap = new InterpolatingDoubleTreeMap();
             flywheelSpeedMap = new InterpolatingDoubleTreeMap();
             timeOfFlightMap = new InterpolatingDoubleTreeMap();
         }
 
+        /** Get the hood angle in rad */
         public double getHood(double distanceMeters) {
-            return hoodAngleMap.get(distanceMeters);
+            return Units.degreesToRadians(
+                hoodAngleMap.get(distanceMeters) + fudgeAngleOffsetDeg.get()
+            );
         }
+        /** Get the flywheel velocity in RPM */
         public double getFlywheel(double distanceMeters) {
-            return flywheelSpeedMap.get(distanceMeters);
+            return Units.rotationsPerMinuteToRadiansPerSecond(
+                flywheelSpeedMap.get(distanceMeters)
+            ) * fudgeSpeedScale.get();
         }
+        /** Get the ToF in seconds */
         public double getTimeOfFlight(double distanceMeters) {
             return timeOfFlightMap.get(distanceMeters);
         }
@@ -56,7 +66,7 @@ public class ShotCalculator {
     private static ShotMapData hubShots = new ShotMapData();
     private static ShotMapData passShots = new ShotMapData();
     
-    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.02);
+    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.03);
     /**
      * See https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html#the-drag-constant-k.
      * For fuel, we found that the piece lost 19.4% of its velocity over 6.3s. The linear velocity drag can be represented as v(t) = v_0 * e^-kt or
@@ -71,32 +81,27 @@ public class ShotCalculator {
     static {
         // TODO: These are just directly stolen from 6328... Tune ourselves!
 
-        // Hub shots
-        hubShots.hoodAngleMap.put(0.96, 0.0044209);
-        hubShots.hoodAngleMap.put(1.16, 0.0053051);
-        hubShots.hoodAngleMap.put(1.58, 0.0061893);
-        hubShots.hoodAngleMap.put(2.07, 0.0081787);
-        hubShots.hoodAngleMap.put(2.37, 0.0097261);
-        hubShots.hoodAngleMap.put(2.47, 0.0101682);
-        hubShots.hoodAngleMap.put(2.70, 0.0106103);
-        hubShots.hoodAngleMap.put(2.94, 0.0110524);
-        hubShots.hoodAngleMap.put(3.48, 0.0119366);
-        hubShots.hoodAngleMap.put(3.92, 0.0141471);
-        hubShots.hoodAngleMap.put(4.35, 0.0150313);
-        hubShots.hoodAngleMap.put(4.84, 0.0167996);
+        // 43deg / 5.69m
 
-        hubShots.flywheelSpeedMap.put(0.96, 150.0);
-        hubShots.flywheelSpeedMap.put(1.16, 155.0);
-        hubShots.flywheelSpeedMap.put(1.58, 160.0);
-        hubShots.flywheelSpeedMap.put(2.07, 165.0);
-        hubShots.flywheelSpeedMap.put(2.37, 170.0);
-        hubShots.flywheelSpeedMap.put(2.47, 170.0);
-        hubShots.flywheelSpeedMap.put(2.70, 170.0);
-        hubShots.flywheelSpeedMap.put(2.94, 175.0);
-        hubShots.flywheelSpeedMap.put(3.48, 175.0);
-        hubShots.flywheelSpeedMap.put(3.92, 180.0);
-        hubShots.flywheelSpeedMap.put(4.35, 185.0);
-        hubShots.flywheelSpeedMap.put(4.84, 190.0);
+        // Hub shots
+        hubShots.hoodAngleMap.put(0.96, 15.0);
+        hubShots.hoodAngleMap.put(1.16, 20.0);
+        hubShots.hoodAngleMap.put(1.58, 28.0);
+        hubShots.hoodAngleMap.put(2.94, 35.0);
+        hubShots.hoodAngleMap.put(5.69, 43.0);
+
+        hubShots.flywheelSpeedMap.put(0.96, 2690.4);
+        hubShots.flywheelSpeedMap.put(1.16, 2860.0);
+        hubShots.flywheelSpeedMap.put(1.58, 3029.8);
+        hubShots.flywheelSpeedMap.put(2.07, 3199.4);
+        hubShots.flywheelSpeedMap.put(2.37, 3369.1);
+        hubShots.flywheelSpeedMap.put(2.47, 3369.1);
+        hubShots.flywheelSpeedMap.put(2.70, 3369.1);
+        hubShots.flywheelSpeedMap.put(2.94, 3538.8);
+        hubShots.flywheelSpeedMap.put(3.48, 3538.8);
+        hubShots.flywheelSpeedMap.put(3.92, 3708.5);
+        hubShots.flywheelSpeedMap.put(4.35, 3878.2);
+        hubShots.flywheelSpeedMap.put(4.84, 4047.9);
 
         hubShots.timeOfFlightMap.put(5.68, 1.16);
         hubShots.timeOfFlightMap.put(4.55, 1.12);
@@ -105,19 +110,18 @@ public class ShotCalculator {
         hubShots.timeOfFlightMap.put(1.38, 0.90);
 
         // Passing shots
-        passShots.hoodAngleMap.put(5.46,  0.6632251);
-        passShots.hoodAngleMap.put(17.16, 0.6632251);
+        passShots.hoodAngleMap.put(5.46,  40.0);
+        passShots.hoodAngleMap.put(17.16, 40.0);
 
-        passShots.flywheelSpeedMap.put(5.46,  160.0);
-        passShots.flywheelSpeedMap.put(6.62,  180.0);
-        passShots.flywheelSpeedMap.put(7.80,  200.0);
-        passShots.flywheelSpeedMap.put(17.16, 360.0);
+        passShots.flywheelSpeedMap.put(5.46, 4583.662);
+        passShots.flywheelSpeedMap.put(6.62, 5156.620);
+        passShots.flywheelSpeedMap.put(7.80, 5729.577);
 
-        passShots.timeOfFlightMap.put(5.46, 1.27);
-        passShots.timeOfFlightMap.put(6.62, 1.39);
-        passShots.timeOfFlightMap.put(7.8, 1.49);
-        passShots.timeOfFlightMap.put(11.0, 1.75);
-        passShots.timeOfFlightMap.put(13.0, 1.76);
+        passShots.timeOfFlightMap.put(5.46,  1.27);
+        passShots.timeOfFlightMap.put(6.62,  1.39);
+        passShots.timeOfFlightMap.put(7.8,   1.49);
+        passShots.timeOfFlightMap.put(11.0,  1.75);
+        passShots.timeOfFlightMap.put(13.0,  1.76);
         passShots.timeOfFlightMap.put(17.16, 2.16);
     }
 
@@ -231,16 +235,22 @@ public class ShotCalculator {
         }
         
         Logger.recordOutput("LaunchCalculator/LookaheadPose", lookaheadPose);
-        Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);  
+        Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);
 
-        Rotation2d turretAngle = target.minus(lookaheadPose.getTranslation()).getAngle();
+        Rotation2d turretAngleAbsolute = target.minus(lookaheadPose.getTranslation()).getAngle();
+        Rotation2d turretAngleRobotRelative = turretAngleAbsolute.minus(RobotState.getInstance().getEstimatedPose().getRotation());
         double hoodAngleRad = type.shotMapData.getHood(lookaheadTurretToTargetDistance);
+  
+        double flywheelVelocity = type.shotMapData.getFlywheel(lookaheadTurretToTargetDistance);
+        Logger.recordOutput("LaunchCalculator/Calculated/Flywheel", flywheelVelocity);
+        Logger.recordOutput("LaunchCalculator/Calculated/HoodAngle", hoodAngleRad);
+        Logger.recordOutput("LaunchCalculator/Calculated/Azimuth", turretAngleRobotRelative);
 
         return new ShotParameters(
             type,
             new TurretTarget(
-                type.shotMapData.getFlywheel(lookaheadTurretToTargetDistance),
-                turretAngle.getRadians(),
+                flywheelVelocity,
+                turretAngleRobotRelative.getRadians(),
                 hoodAngleRad
             )
         );

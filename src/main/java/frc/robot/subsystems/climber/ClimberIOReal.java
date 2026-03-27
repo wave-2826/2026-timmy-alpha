@@ -31,15 +31,15 @@ public class ClimberIOReal implements ClimberIO {
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 / motorReduction)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
+        config.inverted(true); // yes they are both inverted the same
         
         ClimberConstants.climbPID.applyConfigAndRegister(config, rightMotor);
         ClimberConstants.climbPID.applyConfigAndRegister(config, leftMotor);
 
-  
-        tryUntilOk(rightMotor, 5, () ->
-            rightMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
         tryUntilOk(leftMotor, 5, () ->
             leftMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        tryUntilOk(rightMotor, 5, () ->
+            rightMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
     }
   
     @Override

@@ -13,6 +13,8 @@ import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+// TODO: registerFaultAlerts on all motors
+
 public class SparkUtil {
     private static final boolean ENABLE_ALERT_TRACKING = true;
     

@@ -5,162 +5,166 @@ import org.littletonrobotics.junction.Logger;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants;
 import frc.robot.RobotContainer;
-import frc.robot.subsystems.climber.Climber;
+import frc.robot.generated.autos.ChoreoTraj;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.hopperVision.HopperVision;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
-import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.turret.TurretConstants;
+import frc.robot.subsystems.turret.Turret.TurretTarget;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LoggedAutoChooser;
+import frc.robot.util.simUtils.Simulation;
 
 public class AutoRoutines {
     private final AutoFactory autoFactory;
     private final Drive drive;
     private final Intake intake;
-    private final Climber climber;
-    private final Spindexer spindexer;
     private final Turret turret;
+    private final Spindexer spindexer;
+    private final HopperVision hopperVision;
 
     public AutoRoutines(RobotContainer rc, LoggedAutoChooser autoChooser) {
-        drive = rc.drive;
-        intake = rc.intake;
-        climber = rc.climber;
-        spindexer = rc.spindexer;
-        turret = rc.turret;
+        this.drive = rc.drive;
+        this.intake = rc.intake;
+        this.turret = rc.turret;
+        this.spindexer = rc.spindexer;
+        this.hopperVision = rc.hopperVision;
 
         autoFactory = drive.createAutoFactory((traj, isStart) -> {
             Logger.recordOutput("Odometry/Trajectory", traj.getPoses());
             Logger.recordOutput("Odometry/IsStart", isStart);
         });
 
-        autoFactory.bind("Deploy Intake", intake.deployIntake());
-        autoFactory.bind("Start Intaking", intake.runRollerTeleop(() -> 0.20, () -> 0.0));
-        autoFactory.bind("Stop Intaking", intake.runRollerTeleop(() -> 0.0, () -> 0.0));
-        autoFactory.bind("Deploy Climb", Commands.none());
-        autoFactory.bind("Climb Down", Commands.none());
+        if(Constants.isSim) {
+            var traj = ChoreoTraj.ALL_TRAJECTORIES.getOrDefault(autoChooser.selectedCommand().getName(), null);
+            if(traj != null) Simulation.getInstance().driveSimulation.setSimulationWorldPose(AllianceFlipUtil.apply(traj.initialPoseBlue()));
+        }
 
-        autoChooser.addRoutine("Right Swipe Outpost", this::getRightSwipeOutpost);
-        autoChooser.addRoutine("Right Swipe Climb Right", this::getRightSwipeClimbRight);
-        autoChooser.addRoutine("Right Swipe Climb Left", this::getRightSwipeClimbLeft);
-        // autoChooser.addRoutine("Right Sweep Climb Right", null);
-        // autoChooser.addRoutine("Right Sweep Climb Left", null);
-        // autoChooser.addRoutine("Left Double Swipe", null);
-        // autoChooser.addRoutine("Left Swipe Climb Right", null);
-        // autoChooser.addRoutine("Left Swipe Climb Left", null);
-        // autoChooser.addRoutine("Left Sweep Climb Right", null);
-        // autoChooser.addRoutine("Left Sweep Climb Left", null);
-        // autoChooser.addRoutine("Left Sweep Outpost", null);
+        // .bind("Intake Stop", intake.disable())
+        // .bind("Outtake", intake.enableOutward());
+        
+        autoChooser.addRoutine("Left Double Swipe", () -> this.getDoubleSwipe(false));
+        autoChooser.addRoutine("Right Double Swipe", () -> this.getDoubleSwipe(true));
+        
+        autoChooser.addRoutine("Left Single Swipe", () -> this.getSingleSwipe(false));
+        autoChooser.addRoutine("Right Single Swipe", () -> this.getSingleSwipe(true));
 
-        autoChooser.addRoutine("4-piece L1", this::get4Piece);
-
-        // double correctionRemoveMeWhenItActuallyWorks = 4;
-        // double distanceInches = 90 - 3 - 1 + correctionRemoveMeWhenItActuallyWorks;
-        // double timeSeconds = 1.5;
-        // autoChooser.addCmd("1-piece center", () -> Commands.sequence(
-        //     DriveCommands.driveStraightCommand(drive, Units.inchesToMeters(distanceInches / timeSeconds),
-        //         RobotState.getInstance()::getRotation).withTimeout(timeSeconds),
-        //     roller.runPercent(0.5).withTimeout(1.5)));
+        autoChooser.addRoutine("Sweep Outpost (start left)", () -> this.getSweepOutpost());
+        
+        autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload());
+        autoChooser.addRoutine("Center Depot", () -> this.getCenterDepot(), true);
     }
 
-    private AutoRoutine getRightSwipeOutpost() {
-        var routine = autoFactory.newRoutine("Right Swipe Outpost");
+    private AutoRoutine getDoubleSwipe(boolean right) {
+        var choreoTraj = right ? ChoreoTraj.RightDoubleSwipeGenerated : ChoreoTraj.LeftDoubleSwipe;
+        var routine = autoFactory.newRoutine(choreoTraj.name());
+        
+        AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
 
-        AutoTrajectory traj0 = routine.trajectory("RightSwipeOutpost", 0);
-        AutoTrajectory traj1 = routine.trajectory("RightSwipeOutpost", 1);
-        AutoTrajectory traj2 = routine.trajectory("RightSwipeOutpost", 2);
-        AutoTrajectory traj3 = routine.trajectory("RightSwipeOutpost", 3);
-        AutoTrajectory traj4 = routine.trajectory("RightSwipeOutpost", 4);
-        AutoTrajectory traj5 = routine.trajectory("RightSwipeOutpost", 5);
-
+        traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
+        
         routine.active().onTrue(Commands.sequence(
-            traj0.resetOdometry(),
-            traj0.cmd(),
-            traj1.cmd(),
-            traj2.cmd(),
-            traj3.cmd(),
-            traj4.cmd(),
-            traj5.cmd()
+            traj.resetOdometry(),
+            traj.cmd()
         ));
 
         return routine;
     }
 
-    private AutoRoutine getRightSwipeClimbRight() {
-        var routine = autoFactory.newRoutine("Right Swipe Climb Right");
+    private AutoRoutine getSingleSwipe(boolean right) {
+        var choreoTraj = right ? ChoreoTraj.RightDoubleSwipeGenerated$0 : ChoreoTraj.LeftDoubleSwipe$0;
+        var routine = autoFactory.newRoutine(choreoTraj.name());
+        
+        AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
 
-        AutoTrajectory traj0 = routine.trajectory("RightSwipeClimb", 0);
-        AutoTrajectory traj1 = routine.trajectory("RightSwipeClimb", 1);
-        AutoTrajectory traj2 = routine.trajectory("RightSwipeClimb", 2);
-        AutoTrajectory traj3 = routine.trajectory("RightSwipeClimb", 3);
-        AutoTrajectory traj4 = routine.trajectory("RightSwipeClimb", 4);
-        AutoTrajectory traj5 = routine.trajectory("RightSwipeClimb", 5);
-        AutoTrajectory climb0 = routine.trajectory("ClimbRight", 0);
-        AutoTrajectory climb1 = routine.trajectory("ClimbRight", 1);
-
+        traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
+        
         routine.active().onTrue(Commands.sequence(
-            traj0.resetOdometry(),
-            traj0.cmd(),
-            traj1.cmd(),
-            traj2.cmd(),
-            traj3.cmd(),
-            traj4.cmd(),
-            traj5.cmd(),
-            climb0.cmd(),
-            climb1.cmd()
+            traj.resetOdometry(),
+            traj.cmd()
         ));
 
         return routine;
     }
 
-        private AutoRoutine getRightSwipeClimbLeft() {
-        var routine = autoFactory.newRoutine("Right Swipe Climb Left");
+    private AutoRoutine getSweepOutpost() {
+        var choreoTraj = ChoreoTraj.SweepOutpost;
+        var routine = autoFactory.newRoutine(choreoTraj.name());
+        
+        AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
 
-        AutoTrajectory traj0 = routine.trajectory("RightSwipeClimb", 0);
-        AutoTrajectory traj1 = routine.trajectory("RightSwipeClimb", 1);
-        AutoTrajectory traj2 = routine.trajectory("RightSwipeClimb", 2);
-        AutoTrajectory traj3 = routine.trajectory("RightSwipeClimb", 3);
-        AutoTrajectory traj4 = routine.trajectory("RightSwipeClimb", 4);
-        AutoTrajectory traj5 = routine.trajectory("RightSwipeClimb", 5);
-        AutoTrajectory climb0 = routine.trajectory("ClimbLeft", 0);
-        AutoTrajectory climb1 = routine.trajectory("ClimbLeft", 1);
-
+        traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
+        traj.atTime("Intake Stop").onTrue(intake.disable());
+        traj.atTime("Outtake").onTrue(intake.enableOutward());
+        
         routine.active().onTrue(Commands.sequence(
-            traj0.resetOdometry(),
-            traj0.cmd(),
-            traj1.cmd(),
-            traj2.cmd(),
-            traj3.cmd(),
-            traj4.cmd(),
-            traj5.cmd(),
-            climb0.cmd(),
-            climb1.cmd()
+            traj.resetOdometry(),
+            traj.cmd()
         ));
 
         return routine;
     }
 
-    private AutoRoutine get4Piece() {
-        var routine = autoFactory.newRoutine("4-piece L1");
+    private AutoRoutine getCenterPreload() {
+        var choreoTraj = ChoreoTraj.CenterPreload;
+        var routine = autoFactory.newRoutine(choreoTraj.name());
+        
+        AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
 
-        AutoTrajectory firstPiece = routine.trajectory("4-piece L1", 0);
-        AutoTrajectory secondPiece = routine.trajectory("4-piece L1", 1);
-        AutoTrajectory thirdPiece = routine.trajectory("4-piece L1", 2);
-        // AutoTrajectory fourthPiece = routine.trajectory("4-piece L1", 3);
+        // traj.atTime("Shoot").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
+        traj.atTime("Shoot").onTrue(Commands.sequence(
+            Commands.runOnce(() -> {
+                turret.target = new TurretTarget(
+                    Units.rotationsPerMinuteToRadiansPerSecond(5100),
+                    0.0,
+                    TurretConstants.hoodMinAngle
+                );
+            }),
 
-        // @formatter:off
-        routine.active().onTrue(Commands.sequence(
-            firstPiece.resetOdometry(),
-            firstPiece.cmd(),
-            Commands.waitSeconds(2.0),
-            secondPiece.cmd(),
-            Commands.waitSeconds(2.0),
-            thirdPiece.cmd()
+            Commands.waitSeconds(1.0),
+
+            Commands.run(() -> {
+                spindexer.setPower(0.0, 1.0);
+            }).withTimeout(0.5),
+            
+            Commands.run(() -> {
+                spindexer.setPower(
+                    // Oscillation to unstuck pieces
+                    (Math.sin(Timer.getFPGATimestamp() * 4) * 0.75 + 0.25) * 1.0,
+                    1.0
+                );
+            }).withTimeout(10)
         ));
-        // @formatter:on
+
+        routine.active().onTrue(Commands.sequence(
+            traj.resetOdometry(),
+            traj.cmd()
+        ));
 
         return routine;
     }
 
+    private AutoRoutine getCenterDepot() {
+        var choreoTraj = ChoreoTraj.CenterDepot;
+        var routine = autoFactory.newRoutine(choreoTraj.name());
+        
+        AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
 
+        traj.atTime("Shoot").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
+        traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
+        
+        routine.active().onTrue(Commands.sequence(
+            traj.resetOdometry(),
+            traj.cmd()
+        ));
+
+        return routine;
+    }
 }

@@ -107,7 +107,16 @@ public class DriveConstants {
     // Constant tuned data
 
     // ""Tuned"" with.. scales
-    public static final Mass robotMass = Pound.of(134.51);
+    public static final Mass[] wheelForceMasses = new Mass[] {
+        Pound.of(39.2),
+        Pound.of(38.13),
+        Pound.of(19.63),
+        Pound.of(37.55)
+    };
+    public static final Mass robotMass = Pound.of(
+        Arrays.stream(wheelForceMasses)
+            .mapToDouble(m -> m.in(Pounds)).sum()
+    );
     // ""Tuned"" through CAD
     public static final MomentOfInertia robotMomentOfInertia = KilogramSquareMeters.of(7.4702);
     // Effective free speed (m/s) at 12 V applied output; tuned with max speed measurement
@@ -117,7 +126,7 @@ public class DriveConstants {
     public static final Slot0Configs steerGains = new Slot0Configs()
         .withKP(Constants.isSim ? 500 : 1600)
         .withKI(Constants.isSim ? 0   : 0)
-        .withKD(Constants.isSim ? 50  : 20)
+        .withKD(Constants.isSim ? 5   : 20)
         .withKS(Constants.isSim ? 0.1 : 0.1)
         .withKV(Constants.isSim ? 0.0 : 0.0)
         .withKA(Constants.isSim ? 0   : 0)
@@ -127,7 +136,7 @@ public class DriveConstants {
      * Base drive gains. Intentionally doesn't include kS or kV - those are found in tuning.
      */
     public static final Slot0Configs driveGains = new Slot0Configs()
-        .withKP(Constants.isSim ? 0.1   : 3.0)
+        .withKP(Constants.isSim ? 100   : 3.0)
         .withKI(Constants.isSim ? 0     : 0)
         .withKD(Constants.isSim ? 0     : 0);
 
@@ -184,11 +193,11 @@ public class DriveConstants {
     public static final DCMotor turnMotorModel = DCMotor.getKrakenX60Foc(1);
     
     public static final KinematicConstraints kinematicConstraints = new KinematicConstraints(
-        MetersPerSecondPerSecond.of(100) /* measuered "magic value" - max linear acceleration */,
-        RadiansPerSecondPerSecond.of(100 * (maxAngularSpeedRadPerSec / maxSpeedMetersPerSec)),
-        MetersPerSecondPerSecond.of(80), /* Skid acceleration limit */
-        MetersPerSecondPerSecond.of(50), /* Max tilt acceleration X */
-        MetersPerSecondPerSecond.of(100) /* Max tilt acceleration Y */
+        MetersPerSecondPerSecond.of(24) /* measuered "magic value" - max linear acceleration */,
+        RadiansPerSecondPerSecond.of(8 * (maxAngularSpeedRadPerSec / maxSpeedMetersPerSec)),
+        MetersPerSecondPerSecond.of(18), /* Skid acceleration limit */
+        MetersPerSecondPerSecond.of(14), /* Max tilt acceleration X */
+        MetersPerSecondPerSecond.of(20) /* Max tilt acceleration Y */
     );
     
     // Encoder offsets measured with 
@@ -291,7 +300,7 @@ public class DriveConstants {
         }
     }
 
-    public static final PIDController xController = new PIDController(8.5, 0.0, 0.0);
-    public static final PIDController yController = new PIDController(8.5, 0.0, 0.0);
-    public static final PIDController thetaController = new PIDController(8.0, 1.5, 1.25);
+    public static final PIDController xController = new PIDController(3.0, 0.0, 0.0);
+    public static final PIDController yController = new PIDController(3.0, 0.0, 0.0);
+    public static final PIDController thetaController = new PIDController(5.0, 0.8, 0.8333);
 }
