@@ -43,7 +43,7 @@ public class Spindexer extends SubsystemBase {
     }
 
     public void setPower(double spinPercent, double transferPercent) {
-        io.setSpinnerVoltage(spinPercent * 10.0);
+        io.setSpinnerVoltage(spinPercent * 12.0);
         io.setTransferVoltage(transferPercent * 12.0);
     }
 }

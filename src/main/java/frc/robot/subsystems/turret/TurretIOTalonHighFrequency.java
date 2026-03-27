@@ -2,6 +2,7 @@ package frc.robot.subsystems.turret;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Notifier;
 import frc.robot.subsystems.turret.Turret.ControlMode;
 import frc.robot.subsystems.turret.Turret.TurretTarget;
@@ -22,6 +23,7 @@ public class TurretIOTalonHighFrequency implements TurretIO {
     private TurretIOInputs lastInputs;
 
     private int loopUpdates;
+    private double[] latestKalmanState = new double[5];
 
     public TurretIOTalonHighFrequency() {
         super();
@@ -34,15 +36,20 @@ public class TurretIOTalonHighFrequency implements TurretIO {
             io.hoodVelocity
         );
 
+        Notifier.setHALThreadPriority(true, 99);
         notifier = new Notifier(this::periodic);
         notifier.startPeriodic(1. / frequencyHz);
         notifier.setName("TurretLQR");
-        Notifier.setHALThreadPriority(true, 1);
     }
 
     @Override
-    public synchronized void resetAzimuthAndHood() {
-        io.resetAzimuthAndHood();
+    public synchronized void resetAzimuth(Rotation2d position) {
+        io.resetAzimuth(position);
+    }
+
+    @Override
+    public synchronized void resetHoodToBottom() {
+        io.resetHoodToBottom();
     }
 
     @Override
@@ -72,6 +79,7 @@ public class TurretIOTalonHighFrequency implements TurretIO {
         lastInputs = inputs;
 
         inputs.loopUpdates = loopUpdates;
+        inputs.LQRKalmanState = latestKalmanState;
         loopUpdates = 0;
     }
 
@@ -97,6 +105,8 @@ public class TurretIOTalonHighFrequency implements TurretIO {
         io.updateLQRInputs(lastInputs);
         var outputs = controller.calculate(lastInputs, currentTarget);
         io.setLQROutputs(outputs);
+
+        latestKalmanState = controller.getObserverState();
 
         loopUpdates++;
     }

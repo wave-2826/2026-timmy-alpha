@@ -3,6 +3,7 @@ package frc.robot.subsystems.turret;
 import org.littletonrobotics.junction.AutoLog;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.subsystems.turret.Turret.ControlMode;
 import frc.robot.subsystems.turret.Turret.TurretTarget;
 
@@ -70,6 +71,10 @@ public interface TurretIO {
          * the number of loop updates since the last inputs update.
          */
         public int loopUpdates = 0;
+        /** The state of the LQR kalman observer. */
+        public double[] LQRKalmanState = new double[5];
+
+        public boolean azimuthZeroTriggered = false;
 
         /**
          * Get the flywheel mechanism velocity in rad/s. Positive = shooting direction.
@@ -84,7 +89,7 @@ public interface TurretIO {
         }
         public double getHoodAngleRad() {
             return hood.angleRad() * TurretConstants.hoodRingToHoodReduction -
-                getAzimuthAngleRad()  * TurretConstants.azimuthHoodCoupling +
+                getAzimuthAngleRad() / TurretConstants.totalAzimuthGearing  * TurretConstants.azimuthHoodCoupling +
                 TurretConstants.hoodMinAngle;
         }
         public double getHoodVelocityRadPerSec() {
@@ -132,8 +137,8 @@ public interface TurretIO {
     /** Run the turret with the given velocities only. */
     public default void setVelocityOutputs(double flywheelVelocityRadPerSec, double azimuthVelocityRadPerSec, double hoodVelocityRadPerSec) {}
 
-    /** Reset the azimuth and hood to their zero position (flywheel facing directly toward pdh side, hood all the way down) */
-    public default void resetAzimuthAndHood() {}
+    public default void resetAzimuth(Rotation2d angle) {}
+    public default void resetHoodToBottom() {}
 
     /** Stop all turret motion and hold position. */
     public default void stop() {}

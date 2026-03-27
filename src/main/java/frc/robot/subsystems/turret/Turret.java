@@ -109,8 +109,14 @@ public class Turret extends SubsystemBase {
                     break;
                 }
                 case LQR: {
+                    Logger.recordOutput("Turret/LQRKalman/azimuthPosition", inputs.LQRKalmanState[0]);
+                    Logger.recordOutput("Turret/LQRKalman/azimuthVelocity", inputs.LQRKalmanState[1]);
+                    Logger.recordOutput("Turret/LQRKalman/hoodPosition", inputs.LQRKalmanState[2]);
+                    Logger.recordOutput("Turret/LQRKalman/hoodVelocity", inputs.LQRKalmanState[3]);
+                    Logger.recordOutput("Turret/LQRKalman/flywheelVelocity", inputs.LQRKalmanState[4]);
+
                     // Managed in the IO layer
-                    io.setTarget(target);
+                    io.setTarget(target);            
                 }
             }
             
@@ -160,11 +166,13 @@ public class Turret extends SubsystemBase {
     public Command adjustManualAngle(double changeDegrees) {
         return Commands.runOnce(() -> manualHoodOffset.set(manualHoodOffset.get() + Units.degreesToRadians(changeDegrees)));
     }
+
+    double manualControlAzimuthOffset = 0.0;
+
     public Command runManual(
         DoubleSupplier flywheelScalar,
         DoubleSupplier azimuthSpeed
     ) {
-        Container<Double> azimuthOffset = new Container<>(0.0);
         SlewRateLimiter flyLimiter = new SlewRateLimiter(4000);
         return Commands.runEnd(() -> {
             if(target == null) {
@@ -178,9 +186,9 @@ public class Turret extends SubsystemBase {
                 flywheelScalar.getAsDouble() * (calcRPM + manualFlywheelSpeed.get())
             ));
             
-            azimuthOffset.value += MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.02;
+            manualControlAzimuthOffset += MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.02;
             target.azimuthAngleRad = MathUtil.angleModulus(
-                azimuthOffset.value + parameters.target().azimuthAngleRad
+                manualControlAzimuthOffset + parameters.target().azimuthAngleRad
             );
 
             // target.hoodAngleRad = TurretConstants.hoodMinAngle + manualHoodOffset.get();
@@ -192,7 +200,9 @@ public class Turret extends SubsystemBase {
 
     public Command reset() {
         return Commands.runOnce(() -> {
-            io.resetAzimuthAndHood();
+            io.resetAzimuth(TurretConstants.azimuthResetAngle);
+            io.resetHoodToBottom();
+            manualControlAzimuthOffset = 0.0;
         });
     }
 
@@ -243,6 +253,35 @@ public class Turret extends SubsystemBase {
     }
     public Angle getRobotRelativeYaw() {
         return Radians.of(inputs.getAzimuthAngleRad());
+    }
+
+    public Command zeroRoutine() {
+        Container<Boolean> startZeroValue = new Container<>(false);
+        Container<Double> hoodStartPos = new Container<>(0.);
+        double hoodRunVelocity = 3000;
+        double hoodRangeRad = TurretConstants.hoodMaxAngle - TurretConstants.hoodMinAngle;
+        return Commands.sequence(
+            runOnce(() -> {
+                startZeroValue.value = inputs.azimuthZeroTriggered;
+                hoodStartPos.value = inputs.getHoodAngleRad();
+            }),
+            // Clockwise until the sensor value is the opposite of what it started
+            run(() -> {
+                target = null;
+                io.setVelocityOutputs(0, Units.rotationsPerMinuteToRadiansPerSecond(50), hoodRunVelocity);
+            }).until(() -> inputs.azimuthZeroTriggered != startZeroValue.value),
+            // Counterclockwise until no longer triggered
+            run(() -> {
+                target = null;
+                io.setVelocityOutputs(0, Units.rotationsPerMinuteToRadiansPerSecond(25), hoodRunVelocity);
+            }).until(() -> !inputs.azimuthZeroTriggered),
+            runOnce(() -> io.resetAzimuth(TurretConstants.azimuthResetAngle)),
+            // Run until hood has changed by at least its full range
+            run(() -> {
+                io.setVelocityOutputs(0, 0, hoodRunVelocity);
+            }).until(() -> Math.abs(inputs.getHoodAngleRad() - hoodStartPos.value) > hoodRangeRad),
+            runOnce(() -> io.resetHoodToBottom())
+        );
     }
 
     public Command runTuning() {

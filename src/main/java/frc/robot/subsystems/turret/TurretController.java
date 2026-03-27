@@ -1,7 +1,5 @@
 package frc.robot.subsystems.turret;
 
-import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
@@ -281,11 +279,6 @@ public class TurretController {
         observer.correct(loop.getU(), measurement);
 
         var xHat = observer.getXhat();
-        Logger.recordOutput("Turret/LQRKalman/azimuthPosition", xHat.get(0, 0));
-        Logger.recordOutput("Turret/LQRKalman/azimuthVelocity", xHat.get(1, 0));
-        Logger.recordOutput("Turret/LQRKalman/hoodPosition", xHat.get(2, 0));
-        Logger.recordOutput("Turret/LQRKalman/hoodVelocity", xHat.get(3, 0));
-        Logger.recordOutput("Turret/LQRKalman/flywheelVelocity", xHat.get(4, 0));
         
         // LQR correction: u = K * error  (feedback only, no plant feedforward)
         // The empirical FF models already capture the steady-state operating-point
@@ -314,6 +307,11 @@ public class TurretController {
             currents.get(0, 0), // azimuth current
             currents.get(1, 0)  // hood current
         );
+    }
+
+    /** Get the observer state as a double array. */
+    public double[] getObserverState() {
+        return observer.getXhat().getData();
     }
 
     /**

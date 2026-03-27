@@ -154,13 +154,6 @@ public class Robot extends LoggedRobot {
 
         robotContainer = new RobotContainer();
 
-        if(Constants.currentMode == Constants.Mode.REAL && Constants.useSuperDangerousRTThreadPriority) {
-            // Switch the thread to high priority to improve loop timing.
-            // This is a dangerous operation! Read the comment on useSuperDangerousRTThreadPriority and understand what
-            // this does before using it anywhere.
-            Threads.setCurrentThreadPriority(true, 10);
-        }
-
         // https://www.chiefdelphi.com/t/elastic-2026-the-next-dimension/506888/79
         // This is.. unfortunate
         Elastic.selectTab("Teleoperated");
@@ -224,8 +217,14 @@ public class Robot extends LoggedRobot {
         LoggedTracer.reset();
 
         // Switch thread to high priority to improve loop timing
-        Threads.setCurrentThreadPriority(true, 99);
-
+        
+        if(Constants.currentMode == Constants.Mode.REAL && Constants.useSuperDangerousRTThreadPriority) {
+            // Switch the thread to high priority to improve loop timing.
+            // This is a dangerous operation! Read the comment on useSuperDangerousRTThreadPriority and understand what
+            // this does before using it anywhere.
+            Threads.setCurrentThreadPriority(true, 90);
+        }
+        
         VirtualSubsystem.beforeScheduler();
 
         // Runs the Scheduler. This is responsible for polling buttons, adding
@@ -238,7 +237,7 @@ public class Robot extends LoggedRobot {
         VirtualSubsystem.afterScheduler();
 
         // Return to normal thread priority
-        Threads.setCurrentThreadPriority(false, 10);
+        Threads.setCurrentThreadPriority(false, 0);
 
         LoggedTracer.record("Commands");
 
