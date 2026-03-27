@@ -145,7 +145,7 @@ public class LEDs extends VirtualSubsystem {
         initialUpdateNotifier = new Notifier(() -> {
             synchronized(this) {
                 this.time += 1. / 50.;
-                this.gradient(Color.kWhite, Color.kGray, 1.0);
+                this.gradient(Color.kWhite, Color.kDimGray, 1.0);
                 this.io.pushLEDs(this.buffer);
             }
         });

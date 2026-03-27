@@ -26,6 +26,7 @@ import frc.robot.util.NTClientLogger;
 import frc.robot.util.RioAlerts;
 import frc.robot.util.SparkUtil;
 import frc.robot.util.ThreadPriorityDummyLogReceiver;
+import frc.robot.util.VirtualSubsystem;
 import frc.robot.util.simUtils.Simulation;
 import frc.robot.util.tunables.TunablePID;
 import frc.robot.util.Elastic;
@@ -225,12 +226,16 @@ public class Robot extends LoggedRobot {
         // Switch thread to high priority to improve loop timing
         Threads.setCurrentThreadPriority(true, 99);
 
+        VirtualSubsystem.beforeScheduler();
+
         // Runs the Scheduler. This is responsible for polling buttons, adding
         // newly-scheduled commands, running already-scheduled commands, removing
         // finished or interrupted commands, and running subsystem periodic() methods.
         // This must be called from the robot's periodic block in order for anything in
         // the Command-based framework to work.
         CommandScheduler.getInstance().run();
+
+        VirtualSubsystem.afterScheduler();
 
         // Return to normal thread priority
         Threads.setCurrentThreadPriority(false, 10);

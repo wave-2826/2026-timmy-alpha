@@ -109,9 +109,9 @@ public class TurretConstants {
     public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * aziMotorToRingReduction * 0.8;
 
     // Current limits
-    public static final int flywheelCurrentLimit = 70; // amps each
-    public static final int azimuthCurrentLimit = 60; // amps
-    public static final int hoodCurrentLimit = 50; // amps
+    public static final int flywheelCurrentLimit = 30; // amps each
+    public static final int azimuthCurrentLimit = 40; // amps
+    public static final int hoodCurrentLimit = 40; // amps
 
     // PIDs
     public static final TunableSimpleMotorFF flywheelMotorFF = new TunableSimpleMotorFF("Turret/FlywheelFF")
@@ -122,11 +122,11 @@ public class TurretConstants {
         .copyRealGainsInSim();
     
     public static final TunablePID azimuthMotorPID = new TunablePID("Turret/Azimuth")
-        .addRealRobotGains(new GenericPIDConstants(30, 0.0, 0)) // position voltage
+        .addRealRobotGains(new GenericPIDConstants(100, 50, 1)) // position voltage
         .copyRealGainsInSim();
     
     public static final TunablePID hoodMotorPID = new TunablePID("Turret/Hood")
-        .addRealRobotGains(new GenericPIDConstants(20, 0.0, 0)) // position voltage
+        .addRealRobotGains(new GenericPIDConstants(60, 1, 0)) // position voltage
         .copyRealGainsInSim();
     
     // Control tolerances

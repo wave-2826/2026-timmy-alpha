@@ -66,7 +66,7 @@ public class ShotCalculator {
     private static ShotMapData hubShots = new ShotMapData();
     private static ShotMapData passShots = new ShotMapData();
     
-    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.04);
+    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.03);
     /**
      * See https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html#the-drag-constant-k.
      * For fuel, we found that the piece lost 19.4% of its velocity over 6.3s. The linear velocity drag can be represented as v(t) = v_0 * e^-kt or
@@ -90,18 +90,18 @@ public class ShotCalculator {
         hubShots.hoodAngleMap.put(2.94, 35.0);
         hubShots.hoodAngleMap.put(5.69, 43.0);
 
-        hubShots.flywheelSpeedMap.put(0.96, 2809.5);
-        hubShots.flywheelSpeedMap.put(1.16, 2963.7);
-        hubShots.flywheelSpeedMap.put(1.58, 3118.0);
-        hubShots.flywheelSpeedMap.put(2.07, 3272.2);
-        hubShots.flywheelSpeedMap.put(2.37, 3426.5);
-        hubShots.flywheelSpeedMap.put(2.47, 3426.5);
-        hubShots.flywheelSpeedMap.put(2.70, 3426.5);
-        hubShots.flywheelSpeedMap.put(2.94, 3580.8);
-        hubShots.flywheelSpeedMap.put(3.48, 3580.8);
-        hubShots.flywheelSpeedMap.put(3.92, 3735.0);
-        hubShots.flywheelSpeedMap.put(4.35, 3889.3);
-        hubShots.flywheelSpeedMap.put(4.84, 4043.6);
+        hubShots.flywheelSpeedMap.put(0.96, 2690.4);
+        hubShots.flywheelSpeedMap.put(1.16, 2860.0);
+        hubShots.flywheelSpeedMap.put(1.58, 3029.8);
+        hubShots.flywheelSpeedMap.put(2.07, 3199.4);
+        hubShots.flywheelSpeedMap.put(2.37, 3369.1);
+        hubShots.flywheelSpeedMap.put(2.47, 3369.1);
+        hubShots.flywheelSpeedMap.put(2.70, 3369.1);
+        hubShots.flywheelSpeedMap.put(2.94, 3538.8);
+        hubShots.flywheelSpeedMap.put(3.48, 3538.8);
+        hubShots.flywheelSpeedMap.put(3.92, 3708.5);
+        hubShots.flywheelSpeedMap.put(4.35, 3878.2);
+        hubShots.flywheelSpeedMap.put(4.84, 4047.9);
 
         hubShots.timeOfFlightMap.put(5.68, 1.16);
         hubShots.timeOfFlightMap.put(4.55, 1.12);

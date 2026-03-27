@@ -3,6 +3,7 @@ package frc.robot;
 import java.util.HashMap;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
@@ -64,7 +65,7 @@ public class Controls {
         Intake intake = rc.intake;
         
         // Default command, normal field-relative drive
-        drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> driver.getRightX()));
+        drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
         driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
         driver.leftBumper().onTrue(intake.deployIntake().alongWith(intake.enable()));
@@ -86,7 +87,7 @@ public class Controls {
             coDriver::getRightTriggerAxis,
             coDriver::getLeftX
         ));
-        turretControlCodriver.whileTrue(spindexer.runManual(coDriver::getLeftTriggerAxis));
+        turretControlCodriver.whileTrue(spindexer.runManual(() -> coDriver.getLeftTriggerAxis() + MathUtil.applyDeadband(coDriver.getRightY(), 0.2)));
         turretControlCodriver.and(coDriver.start().or(coDriver.back())).onTrue(turret.reset());
 
         normalCodriver.whileTrue(intake.runRollerScaled(coDriver::getLeftY));

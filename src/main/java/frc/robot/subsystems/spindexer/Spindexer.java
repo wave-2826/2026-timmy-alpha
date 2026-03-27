@@ -30,7 +30,7 @@ public class Spindexer extends SubsystemBase {
     public Command runManual(DoubleSupplier percent) {
         return runPercent(
             () -> percent.getAsDouble(),
-            () -> Math.pow(percent.getAsDouble(), 0.1)
+            () -> Math.pow(Math.abs(percent.getAsDouble()), 0.1)
         );
     }
 

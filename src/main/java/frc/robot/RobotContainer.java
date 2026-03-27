@@ -71,6 +71,7 @@ public class RobotContainer {
     public RobotContainer() {
         switch(Constants.currentMode) {
             case REAL:
+                leds = new LEDs(new LEDIORio());
                 // Real robot, instantiate hardware IO implementations
                 drive = new Drive(
                     new GyroIOPigeon2(),
@@ -89,9 +90,9 @@ public class RobotContainer {
                 turret = new Turret(new TurretIOTalonFX() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIOReal());
-                leds = new LEDs(new LEDIORio());
                 break;
             case SIM:
+                leds = new LEDs(new LEDIORio());
                 turret = new Turret(new TurretIOSim());
                 spindexer = new Spindexer(new SpindexerIOSim() {});
                 intake = new Intake(new IntakeIOSim() {});
@@ -116,11 +117,11 @@ public class RobotContainer {
                 );
                 hopperVision = new HopperVision(new HopperVisionIOSim());
                 climber = new Climber(new ClimberIO() {});
-                leds = new LEDs(new LEDIORio());
                 
                 drive.setPose(new Pose2d(3, 3, new Rotation2d()));
                 break;
             default:
+                leds = new LEDs(new LEDIO() {});
                 // Replayed robot, disable IO implementations
                 drive = new Drive(
                     new GyroIO() {},
@@ -134,7 +135,6 @@ public class RobotContainer {
                 turret = new Turret(new TurretIO() {});
                 climber = new Climber(new ClimberIO() {});
                 spindexer = new Spindexer(new SpindexerIO() {});
-                leds = new LEDs(new LEDIO() {});
                 break;
         }
 
