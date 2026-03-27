@@ -5,7 +5,6 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -50,7 +49,8 @@ public class Turret extends SubsystemBase {
             this.hoodAngleRad = hoodAngleRad;
         }
     }
-    private enum ControlMode {
+
+    public static enum ControlMode {
         NONE,
         PID,
         LQR
@@ -60,13 +60,10 @@ public class Turret extends SubsystemBase {
 
     private final TurretIOInputs inputs = new TurretIOInputsAutoLogged();
 
+    private ControlMode lastControlMode = null;
     private LoggedDashboardChooser<ControlMode> controlModeChooser = new LoggedDashboardChooser<>("Turret/ControlMode");
 
     public TurretTarget target = null;
-
-    private TurretController controller = new TurretController();
-    /** True once the LQR observer has been seeded with an initial measurement. */
-    private boolean controllerInitialised = false;
 
     public Turret(TurretIO io) {
         this.io = io;
@@ -79,53 +76,47 @@ public class Turret extends SubsystemBase {
 
     @Override
     public void periodic() {
+        var controlMode = controlModeChooser.get();
+        if(controlMode != lastControlMode) {
+            lastControlMode = controlMode;
+            io.setControlMode(controlMode);
+        }
+
         io.updateInputs(inputs);
         Logger.processInputs("Turret", (TurretIOInputsAutoLogged)inputs);
 
-        if(!DriverStation.isTest()) {
-            if(target == null) {
-                controllerInitialised = false;
-                io.stop();
+        if(target == null) {
+            io.stop();
 
-                Logger.recordOutput("Turret/Target/Azimuth", 0.0, Radians);
-                Logger.recordOutput("Turret/Target/Hood", 0.0, Radians);
-                Logger.recordOutput("Turret/Target/Flywheel", 0.0, RadiansPerSecond);
-            } else {
-                switch(controlModeChooser.get()) {
-                    case NONE:
-                        return;
-                    case PID: {
-                        TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
-                            target.flywheelSpeedRadPerSec,
-                            target.azimuthAngleRad % (Math.PI * 2),
-                            MathUtil.clamp(
-                                target.hoodAngleRad,
-                                TurretConstants.hoodMinAngle,
-                                TurretConstants.hoodMaxAngle
-                            ) - TurretConstants.hoodMinAngle
-                        );
-                        io.setPIDOutputs(outputs);
-                        break;
-                    }
-                    case LQR: {
-                        // Seed the observer the first time we enter LQR mode so it
-                        // starts from the real measured state rather than zero.
-                        if(!controllerInitialised) {
-                            controller.reset(inputs);
-                            controllerInitialised = true;
-                        }
-                        
-                        var outputs = controller.calculate(inputs, target);
-                        Logger.recordOutput("Turret/LQRSetpoints", outputs);
-                        io.setLQROutputs(outputs);
-                        break;
-                    }
+            Logger.recordOutput("Turret/Target/Azimuth", 0.0, Radians);
+            Logger.recordOutput("Turret/Target/Hood", 0.0, Radians);
+            Logger.recordOutput("Turret/Target/Flywheel", 0.0, RadiansPerSecond);
+        } else {
+            switch(controlMode) {
+                case NONE:
+                    return;
+                case PID: {
+                    TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
+                        target.flywheelSpeedRadPerSec,
+                        target.azimuthAngleRad % (Math.PI * 2),
+                        MathUtil.clamp(
+                            target.hoodAngleRad,
+                            TurretConstants.hoodMinAngle,
+                            TurretConstants.hoodMaxAngle
+                        ) - TurretConstants.hoodMinAngle
+                    );
+                    io.setPIDOutputs(outputs);
+                    break;
                 }
-                
-                Logger.recordOutput("Turret/Target/Azimuth", target.azimuthAngleRad, Radians);
-                Logger.recordOutput("Turret/Target/Hood", target.hoodAngleRad, Radians);
-                Logger.recordOutput("Turret/Target/Flywheel", target.flywheelSpeedRadPerSec, RadiansPerSecond);
+                case LQR: {
+                    // Managed in the IO layer
+                    io.setTarget(target);
+                }
             }
+            
+            Logger.recordOutput("Turret/Target/Azimuth", target.azimuthAngleRad, Radians);
+            Logger.recordOutput("Turret/Target/Hood", target.hoodAngleRad, Radians);
+            Logger.recordOutput("Turret/Target/Flywheel", target.flywheelSpeedRadPerSec, RadiansPerSecond);
         }
         TurretVisualizer.getInstance().update(
             target != null ? target.azimuthAngleRad : 0.0, inputs.getAzimuthAngleRad(),
@@ -256,6 +247,6 @@ public class Turret extends SubsystemBase {
 
     public Command runTuning() {
         TurretTuning tuning = new TurretTuning(io, () -> inputs, Controls.getInstance().coDriver);
-        return Commands.runOnce(tuning::start).andThen(Commands.runEnd(tuning::run, tuning::stop, this));
+        return runOnce(tuning::start).andThen(runEnd(tuning::run, tuning::stop));
     }
 }

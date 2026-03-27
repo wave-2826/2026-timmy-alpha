@@ -136,9 +136,7 @@ public class TurretController {
     private static final Vector<N5> measureStdDevs = VecBuilder.fill(0.1, 0.1, 1.0, 0.1, 1.0).times(Math.PI * 2 / 360);
     // Latency compensation
     private static final LoggedTunableNumber lqrLatencyCompSec = new LoggedTunableNumber("Turret/LQR_LatencyComp", Constants.isSim ? 0.0 : 0.03);
-    private static final LoggedTunableNumber lqrFFContribution = new LoggedTunableNumber("Turret/LQRFFContribution", Constants.isSim ? 1.0 : 0.1);
-
-    private static final double loopPeriod = 0.02;
+    private static final LoggedTunableNumber lqrFFContribution = new LoggedTunableNumber("Turret/LQRFFContribution", Constants.isSim ? 1.0 : 0.8);
 
     // Kt for a single motor in the group, at motor shaft
     private static final double KtFly = TurretConstants.flywheelSimMotor.KtNMPerAmp;
@@ -159,7 +157,11 @@ public class TurretController {
     private LinearQuadraticRegulator<N5, N3, N5> lqr;
     private LinearSystemLoop<N5, N3, N5> loop;
 
-    public TurretController() {
+    private final double loopPeriod;
+
+    public TurretController(double loopPeriod) {
+        this.loopPeriod = loopPeriod;
+        
         // θ_a  θ'_a   θ_h  θ'_h   ω_f
         var A = new Matrix<>(Nat.N5(), Nat.N5());
         A.set(0, 1, 1.0); // θ_azi  += θ'_azi
