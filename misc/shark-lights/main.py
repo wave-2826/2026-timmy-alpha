@@ -33,6 +33,10 @@ else:
 if not LED_AVAILABLE:
     from mock_led import Color, MockPixelStrip as PixelStrip
 
+try:
+    from termcolor import colored
+except ImportError:
+    colored = None
 
 class LEDController:
     """Controller for LED strip."""
@@ -72,7 +76,15 @@ class LEDController:
             self.strip.setPixelColor(i, color)
 
         self.strip.show()
-        logger.info(f"LED color set to RGB({r}, {g}, {b})")
+        if config.funLogging and colored:
+            logger.info(
+                colored(
+                    f"Set LEDs to color: R={r} G={g} B={b}",
+                    (r,g,b),
+                )
+            )
+        else:
+            logger.info(f"Set LEDs to color: R={r} G={g} B={b}")
 
         # if not LED_AVAILABLE:
             # logger.info(self.strip.getPixels())
