@@ -27,6 +27,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -71,9 +72,12 @@ public class DriveTuningCommands {
     public static final String TUNING_RESULTS_FILE = Constants.currentMode == Constants.Mode.REAL
         ? "/U/tuning_results.json" // On a real robot, this is a USB stick
         : "./logs/tuning_results.json"; // In simulation, this is a local file
+    /** The path to the JSON file with backup tuning results in case the normal one is missing. */
+    public static final String BACKUP_TUNING_RESULTS_FILE = Constants.currentMode == Constants.Mode.REAL
+        ? "/C/tuning_results_backup.json" // On a real robot, this is in the home directory
+        : "./logs/tuning_results_backup.json"; // In simulation, this is a local file
 
     // TODO - REALLY TODO - log this and make it work in replay
-    // ALSO TODO: backup to rio in case usb is lost
     /** A set of tuning results that we can load from and save to a JSON file. */
     public static class TuningResults {
         // TODO: Defaults that make sense for sim so stuff doesn't break
@@ -117,15 +121,34 @@ public class DriveTuningCommands {
             
             // Make sure the parent directory exists
             file.getParentFile().mkdirs();
-            if(!file.exists()) return new TuningResults(); // If the file doesn't exist, return an empty result
+            if(!file.exists()) return loadBackup(); // If the file doesn't exist, return an empty result
 
             var gson = builder.create();
             try(var fileReader = new FileReader(file)) {
                 return gson.fromJson(fileReader, TuningResults.class);
             } catch(JsonSyntaxException | JsonIOException | IOException e) {
                 e.printStackTrace();
-                return new TuningResults(); // If we can't read the file, return an empty result
+                return loadBackup(); // If we can't read the file, return an empty result
             }
+        }
+
+        private static TuningResults loadBackup() {
+            var file = Filesystem.getOperatingDirectory().toPath().resolve(BACKUP_TUNING_RESULTS_FILE).toFile();
+            if(!file.exists()) return missingError(); // If the backup file doesn't exist, return an empty result
+
+            var gson = builder.create();
+            try(var fileReader = new FileReader(file)) {
+                return gson.fromJson(fileReader, TuningResults.class);
+            } catch(JsonSyntaxException | JsonIOException | IOException e) {
+                e.printStackTrace();
+                return missingError(); // If we can't read the backup file, return an empty result
+            }
+        }
+
+        private static TuningResults missingError() {
+            DriverStation.reportError("ERROR: TUNING RESULTS ARE MISSING! EVERYTHING will be broken", false);
+            Elastic.sendNotification(new Notification(NotificationLevel.ERROR, "Tuning results", "Tuning results missing! Everything will be broken..."));
+            return new TuningResults();
         }
 
         public String generateReadableResultsComment() {
@@ -178,6 +201,14 @@ public class DriveTuningCommands {
                 fileWriter.write("\n");
                 fileWriter.write(generateReadableResultsComment());
                 System.out.println("Saved tuning results to " + TUNING_RESULTS_FILE);
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+
+            // Save backup results (no comment)
+            try(var fileWriter = new java.io.FileWriter(BACKUP_TUNING_RESULTS_FILE)) {
+                gson.toJson(this, fileWriter);
+                System.out.println("Saved backup tuning results to " + BACKUP_TUNING_RESULTS_FILE);
             } catch(IOException e) {
                 e.printStackTrace();
             }
