@@ -19,11 +19,13 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
+import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.LoggedTracer;
 import frc.robot.util.NTClientLogger;
 import frc.robot.util.RioAlerts;
+import frc.robot.util.SimDeviceLogger;
 import frc.robot.util.SparkUtil;
 import frc.robot.util.ThreadPriorityDummyLogReceiver;
 import frc.robot.util.VirtualSubsystem;
@@ -134,6 +136,8 @@ public class Robot extends LoggedRobot {
         CommandScheduler.getInstance().onCommandInitialize((Command command) -> logCommandFunction.accept(command, true));
         CommandScheduler.getInstance().onCommandFinish((Command command) -> logCommandFunction.accept(command, false));
         CommandScheduler.getInstance().onCommandInterrupt((Command command) -> logCommandFunction.accept(command, false));
+
+        if(Constants.isSim) SimDeviceLogger.init();
 
         // This most likely isn't a good idea, but we experience so many power issues
         // that we reduce the RoboRIO brownout voltage. The RoboRIO 2 originally had a
@@ -254,6 +258,7 @@ public class Robot extends LoggedRobot {
 
         // Miscellaneous logging
         NTClientLogger.log();
+        if(Constants.isSim) SimDeviceLogger.update();
         LoggedTracer.record("Logging");
     }
 

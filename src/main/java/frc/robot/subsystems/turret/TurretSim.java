@@ -1,5 +1,7 @@
 package frc.robot.subsystems.turret;
 
+import edu.wpi.first.math.MathUtil;
+
 public class TurretSim {
     public record SimTurretState(
         double flywheelMotorVelRps,
@@ -25,7 +27,7 @@ public class TurretSim {
 
         /** Get the hood position in radians */
         public double hoodPosRad() {
-            return hoodMotorPosRad * TurretConstants.totalHoodGearing -
+            return -hoodMotorPosRad * TurretConstants.totalHoodGearing -
                 azimuthMotorPosRad * TurretConstants.azimuthHoodCoupling +
                 TurretConstants.hoodMinAngle;
         }
@@ -76,23 +78,23 @@ public class TurretSim {
     /**
      * Iterate the turret simulation by the given time step, and return the current state.
      */
-    public SimTurretState updateAndGetState(double flywheelVoltage, double hoodVoltage, double azimuthVoltage, double dtSeconds) {
-        // Calculate the actual current drawn by each motor given the applied voltage and current velocity.
-        // DCMotor.getCurrent already accounts for back-EMF, so at free speed the current naturally drops to zero.
-        double flywheelCurrent = TurretConstants.flywheelSimMotor.getCurrent(flywheelMotorVelRps, flywheelVoltage);
-        double azimuthCurrent = TurretConstants.azimuthSimMotor.getCurrent(azimuthMotorVelRps, azimuthVoltage);
-        double hoodCurrent = TurretConstants.hoodSimMotor.getCurrent(hoodMotorVelRps, hoodVoltage);
+    public SimTurretState updateAndGetState(double flywheelCurrent, double hoodCurrent, double azimuthCurrent, double dtSeconds) {
+        double flywheelResistiveCurrent = MathUtil.clamp(TurretController.FlywheelFF(MathUtil.clamp(flywheelMotorVelRps, -650, 650), 0, 0), -150, 150);
+        double azimuthResistiveCurrent = MathUtil.clamp(TurretController.AzimuthFF(0, MathUtil.clamp(azimuthMotorVelRps, -40, 40), 0), -150, 150);
+        double hoodResistiveCurrent = MathUtil.clamp(TurretController.HoodFF(0, 0, MathUtil.clamp(hoodMotorVelRps, -650, 650)), -150, 150);
 
-        // Apply small Coulomb friction
-        double flywheelAppliedCurrent = applyCoulombFriction(flywheelCurrent, flywheelMotorVelRps);
-        double azimuthAppliedCurrent  = applyCoulombFriction(azimuthCurrent, azimuthMotorVelRps);
-        double hoodAppliedCurrent     = applyCoulombFriction(hoodCurrent, hoodMotorVelRps);
+        // some fudging needed in sim unfortunately
+        flywheelCurrent -= flywheelResistiveCurrent;
+        azimuthCurrent -= azimuthResistiveCurrent * 0.8;
+        hoodCurrent -= hoodResistiveCurrent * 0.9;
 
         // Update the velocities based on the applied current
         // A * (Nm/A) / (Kg m^2) = rad/s^2
-        double flywheelAngularAcceleration = flywheelAppliedCurrent * TurretConstants.flywheelSimMotor.KtNMPerAmp / TurretConstants.flywheelMotorInertiaKgM2;
-        double azimuthAngularAcceleration = azimuthAppliedCurrent * TurretConstants.azimuthSimMotor.KtNMPerAmp / TurretConstants.azimuthMotorInertiaKgM2;
-        double hoodAngularAcceleration = hoodAppliedCurrent * TurretConstants.hoodSimMotor.KtNMPerAmp / TurretConstants.hoodMotorInertiaKgM2;
+        // I genuinely can't figure out if there needs to be a 2pi in here or not,
+        // but it feels more realistic with it, so we keep it I guess?
+        double flywheelAngularAcceleration = flywheelCurrent * TurretConstants.flywheelSimMotor.KtNMPerAmp / TurretConstants.flywheelMotorInertiaKgM2 * 2 * Math.PI;
+        double azimuthAngularAcceleration = azimuthCurrent * TurretConstants.azimuthSimMotor.KtNMPerAmp / TurretConstants.azimuthMotorInertiaKgM2 * 2 * Math.PI;
+        double hoodAngularAcceleration = hoodCurrent * TurretConstants.hoodSimMotor.KtNMPerAmp / TurretConstants.hoodMotorInertiaKgM2 * 2 * Math.PI;
         
         flywheelMotorVelRps += flywheelAngularAcceleration * dtSeconds;
         azimuthMotorVelRps += azimuthAngularAcceleration * dtSeconds;

@@ -62,8 +62,14 @@ version = int.from_bytes(guid_bytes[12:16], "little")
 
 print(f"Creating virtual controller with bus_type={bus_type}, vendor={vendor:#06x}, product={product:#06x}, version={version:#06x}")
 
+CONTROLLERS = 2
+
 # has to contain "pad" or else wpilib maps it differentlly SOB
-ui = UInput(capabilities, name="Sim Keyboard Xbox pad", vendor=vendor, product=product, version=version, bustype=bus_type)
+
+controllers = [
+    UInput(capabilities, name=f"Sim Xbox pad {i}", vendor=vendor, product=product, version=version, bustype=bus_type)
+    for i in range(CONTROLLERS)
+]
 
 # 030000005e0400000a0b000005040000
 # 030000005e0400000a0b000005040000
@@ -98,7 +104,9 @@ key_map = {
     ecodes.KEY_1: ("button", ecodes.BTN_SELECT),
     ecodes.KEY_2: ("button", ecodes.BTN_START),
 
-    ecodes.KEY_F1: ("toggle",)
+    ecodes.KEY_F1: ("toggle", None),
+    ecodes.KEY_F2: ("toggle", 0),
+    ecodes.KEY_F3: ("toggle", 1)
 }
 
 class Interpolator:
@@ -186,9 +194,12 @@ def columnize(lines, col_width=40, start_indent=""):
         result += f"{start_indent}{l.ljust(col_width)}{r}\n"
     return result
 
-enabled = False
+active_controller = None
+grabbed = False
 
 while True:
+    ui = active_controller
+
     try:
         for event in dev.read():
             if event.type != ecodes.EV_KEY:
@@ -204,22 +215,24 @@ while True:
 
             for action in (actions if isinstance(actions, list) else [actions]):
                 if action[0] == "toggle":
-                    print("Toggle key pressed")
                     if key_event.keystate == key_event.key_down:
-                        enabled = not enabled
-                        print(f"Toggled {'ON' if enabled else 'OFF'}")
+                        active_controller = controllers[action[1]] if action[1] is not None else None
 
                         # Eat events if enabled
-                        if enabled:
-                            dev.grab()
-                        else:
-                            dev.ungrab()
-                elif enabled and action[0].startswith("axis"):
+                        should_grab = active_controller != None
+
+                        if should_grab != grabbed:
+                            if should_grab:
+                                dev.grab()
+                            else:
+                                dev.ungrab()
+                            grabbed = should_grab
+                elif active_controller is not None and action[0].startswith("axis"):
                     if key_event.keystate == key_event.key_down:
                         axis_state[action[0]].set_target(action[1])
                     elif key_event.keystate == key_event.key_up:
                         axis_state[action[0]].set_target(0)
-                elif enabled and action[0] == "button":
+                elif active_controller is not None and action[0] == "button":
                     value = 1 if key_event.keystate == key_event.key_down or\
                         key_event.keystate == key_event.key_hold else 0
                     ui.write(ecodes.EV_KEY, action[1], value)
@@ -227,23 +240,26 @@ while True:
                     ui.syn()
     except BlockingIOError:
         pass
+    
+    ui = active_controller
 
     # Update interpolators and send axis values
     for axis, interp in axis_state.items():
         interp.update()
-    ui.write(ecodes.EV_ABS, ecodes.ABS_X, int(axis_state["axis_left_x"]))
-    ui.write(ecodes.EV_ABS, ecodes.ABS_Y, int(axis_state["axis_left_y"]))
-    ui.write(ecodes.EV_ABS, ecodes.ABS_Z, int(axis_state["axis_left_trigger"]))
-    ui.write(ecodes.EV_ABS, ecodes.ABS_RX, int(axis_state["axis_right_x"]))
-    ui.write(ecodes.EV_ABS, ecodes.ABS_RY, int(axis_state["axis_right_y"]))
-    ui.write(ecodes.EV_ABS, ecodes.ABS_RZ, int(axis_state["axis_right_trigger"]))
-    ui.write(ecodes.EV_ABS, ecodes.ABS_HAT0X, int(axis_state["axis_dpad_x"]))
-    ui.write(ecodes.EV_ABS, ecodes.ABS_HAT0Y, int(axis_state["axis_dpad_y"]))
-    ui.syn()
+    if active_controller is not None:
+        ui.write(ecodes.EV_ABS, ecodes.ABS_X, int(axis_state["axis_left_x"]))
+        ui.write(ecodes.EV_ABS, ecodes.ABS_Y, int(axis_state["axis_left_y"]))
+        ui.write(ecodes.EV_ABS, ecodes.ABS_Z, int(axis_state["axis_left_trigger"]))
+        ui.write(ecodes.EV_ABS, ecodes.ABS_RX, int(axis_state["axis_right_x"]))
+        ui.write(ecodes.EV_ABS, ecodes.ABS_RY, int(axis_state["axis_right_y"]))
+        ui.write(ecodes.EV_ABS, ecodes.ABS_RZ, int(axis_state["axis_right_trigger"]))
+        ui.write(ecodes.EV_ABS, ecodes.ABS_HAT0X, int(axis_state["axis_dpad_x"]))
+        ui.write(ecodes.EV_ABS, ecodes.ABS_HAT0Y, int(axis_state["axis_dpad_y"]))
+        ui.syn()
 
     # Print the controller state to the bottom line
     state_str = (
-        f"Enabled: {highlight_bool(enabled)} {"(press F1 to disable and ungrab!!)" if enabled else "(press F1 to enable - keyboard input elsewhere will be lost!)"}\n"
+        f"Active controller: {active_controller.name if active_controller is not None else "None"} {"(press F1 to disable and ungrab!!)" if active_controller is not None else "(when enabling a controller, keyboard input will be eaten!)"}\n"
         f"Left Stick: ({highlight_int(axis_state['axis_left_x'])}, {highlight_int(axis_state['axis_left_y'])})  |  "
         f"Right Stick: ({highlight_int(axis_state['axis_right_x'])}, {highlight_int(axis_state['axis_right_y'])}) \n"
         f"Triggers: ({highlight_int(axis_state['axis_left_trigger'], 255, 0)}, {highlight_int(axis_state['axis_right_trigger'], 255, 0)})  |  "
