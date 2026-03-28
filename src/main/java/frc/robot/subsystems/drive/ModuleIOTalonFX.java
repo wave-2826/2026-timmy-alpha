@@ -6,6 +6,7 @@ import static frc.robot.util.PhoenixUtil.tryUntilOk;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.*;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -222,6 +223,20 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         constants.SteerMotorGains.kI = kI;
         constants.SteerMotorGains.kD = kD;
         configureMotors();
+    }
+
+    @Override
+    public void setDriveNeutralModeCoast(boolean coast) {
+        var config = new MotorOutputConfigs();
+        config.NeutralMode = coast ? NeutralModeValue.Coast : NeutralModeValue.Brake;
+        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(config, 0.25));
+    }
+
+    @Override
+    public void setTurnNeutralModeCoast(boolean coast) {
+        var config = new MotorOutputConfigs();
+        config.NeutralMode = coast ? NeutralModeValue.Coast : NeutralModeValue.Brake;
+        tryUntilOk(5, () -> turnTalon.getConfigurator().apply(config, 0.25));
     }
 
     @Override

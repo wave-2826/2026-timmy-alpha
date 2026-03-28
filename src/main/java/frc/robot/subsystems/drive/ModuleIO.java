@@ -50,6 +50,12 @@ public interface ModuleIO {
 
     /** Set P gain, I gain, D gain, and derivative filter for closed loop control on turn motor. */
     public default void setTurnPID(double kP, double kI, double kD) {}
+    
+    /** Set the neutral mode of the drive motor; used so we can set them to coast when the robot is disabled. */
+    public default void setDriveNeutralModeCoast(boolean coast) {}
+
+    /** Set the neutral mode of the turn motor; used so we can set them to coast when the robot is disabled. */
+    public default void setTurnNeutralModeCoast(boolean coast) {}
 
     /** Temporarily override the drive motor current limit for slip current characterization. */
     public default void setSlipMeasurementCurrentLimit(Current current) {}

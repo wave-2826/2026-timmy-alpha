@@ -156,6 +156,12 @@ public class Module {
         io.setTurnOpenLoopVoltage(0.0);
     }
 
+    /** Sets if the drive and turn motors are in brake mode. */
+    public void setWheelsLocked(boolean locked) {
+        io.setDriveNeutralModeCoast(!locked);
+        io.setTurnNeutralModeCoast(!locked);
+    }
+
     /** Returns the current turn angle of the module. */
     public Rotation2d getAngle() {
         return inputs.turnAbsolutePosition;

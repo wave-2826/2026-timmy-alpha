@@ -4,6 +4,7 @@ package frc.robot.subsystems.drive;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -76,6 +77,11 @@ public class Drive extends SubsystemBase {
         PhoenixOdometryThread.getInstance().start();
     }
 
+    /** A debouncer that automatically unlocks the wheels after the robot has been disabled for a period of time. */
+    private final Debouncer unlockWheelsDebouncer = new Debouncer(2.0, Debouncer.DebounceType.kFalling);
+    /** If the wheels are currently in brake mode. */
+    private boolean wheelsLocked = true;
+
     @Override
     public void periodic() {
         odometryLock.lock(); // Prevents odometry updates while reading data
@@ -85,6 +91,14 @@ public class Drive extends SubsystemBase {
             module.periodic();
         }
         odometryLock.unlock();
+
+        boolean shouldLock = unlockWheelsDebouncer.calculate(DriverStation.isEnabled())
+            && !DriverStation.isFMSAttached()
+            && !DriverStation.isAutonomous();
+        if(shouldLock != wheelsLocked) {
+            wheelsLocked = shouldLock;
+            for(var module : modules) module.setWheelsLocked(wheelsLocked);
+        }
 
         // Stop moving when disabled
         if(DriverStation.isDisabled()) {
