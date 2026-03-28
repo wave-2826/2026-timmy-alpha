@@ -319,24 +319,24 @@ public class TurretController {
      * We normalise inputs to positive velocity, query the model, then re-apply the sign.
      */
     public static double AzimuthFF(double flyMotorVel, double aziMotorVel, double hoodMotorVel) {
-        double sign = Math.tanh(10 * aziMotorVel);
+        double sign = Math.tanh(aziMotorVel);
         if(sign == 0.0) return 0.0;
         return TurretTuningData.AzimuthCurrentModel.calculate(
-            flyMotorVel * sign,
+            flyMotorVel,
             aziMotorVel * sign,
-            hoodMotorVel * sign
-        );
+            hoodMotorVel
+        ) * sign;
     }
 
     /**
      * Feedforward for the hood motor: steady-state current at the given operating point.
      */
     public static double HoodFF(double flyMotorVel, double aziMotorVel, double hoodMotorVel) {
-        double sign = Math.tanh(10 * hoodMotorVel);
+        double sign = Math.tanh(hoodMotorVel);
         if(sign == 0.0) return 0.0;
         return TurretTuningData.HoodCurrentModel.calculate(
-            flyMotorVel * sign,
-            aziMotorVel * sign,
+            flyMotorVel,
+            aziMotorVel,
             hoodMotorVel * sign
         ) * sign;
     }
@@ -345,12 +345,12 @@ public class TurretController {
      * Feedforward for the flywheel motor: steady-state current at the given operating point.
      */
     public static double FlywheelFF(double flyMotorVel, double aziMotorVel, double hoodMotorVel) {
-        double sign = Math.tanh(10 * flyMotorVel);
+        double sign = Math.tanh(flyMotorVel);
         if(sign == 0.0) return 0.0;
         return TurretTuningData.FlywheelCurrentModel.calculate(
             flyMotorVel * sign,
-            aziMotorVel * sign,
-            hoodMotorVel * sign
+            aziMotorVel,
+            hoodMotorVel
         ) * sign;
     }
 

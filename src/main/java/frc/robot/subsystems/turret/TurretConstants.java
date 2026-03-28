@@ -69,15 +69,15 @@ public class TurretConstants {
     public static final double flywheelMotorInertiaKgM2 = reflectInertia(
         reflectInertia(
             0.0004089093 + // Wheel
-            0.000066745 + // Wheel shaft
+            0.000066745  + // Wheel shaft
             0.0000368726 + // Shaft stuff
             0.0000011706 + // Other shaft stuff
             0.0004667602 * 3, // Inertial plates per plate
-            flywheelPlanetReduction * flywheelRingToFlyReduction
+            flywheelRingToFlyReduction
         ) + 0.0116297925, // Big ring
         flyMotorToRingReduction
     ) + 0.0000201921 + 0.0000011706 + // Motor shaft stuff
-        0.00221388368; // Rev NEO vortex MOI (measured since Rev doesn't give it to us...)
+        0.000221388368; // Rev NEO vortex MOI (measured since Rev doesn't give it to us...)
     
     /** The moment of inertia experienced by the motor for azimuth rotation (reflected through the drivetrain) */
     public static final double azimuthMotorInertiaKgM2 = reflectInertia(
@@ -85,20 +85,17 @@ public class TurretConstants {
         parallelAxisInertia(0.0265304183, 1.4442381, 0.0297434), // Full turret azimuth MOI around center of rotation
         aziMotorToRingReduction
     ) + 0.0000201921 + 0.0000011706 + // Motor shaft stuff
-        0.00221388368; // Rev NEO vortex MOI (measured since Rev doesn't give it to us...)
+        0.000221388368; // Rev NEO vortex MOI (measured since Rev doesn't give it to us...)
 
     /** The moment of inertia experienced by the motor for hood rotation (reflected through the drivetrain) */
     public static final double hoodMotorInertiaKgM2 = reflectInertia(
         reflectInertia(
-            reflectInertia(
-                parallelAxisInertia(0.00199082756, 0.2853, 0.079629), // The actual hood doodad
-                hoodRingToHoodReduction
-            ) + 2.92639653e-6, // Transmission before bevel gear
+            2.92639653e-6, // Power transmission
             hoodPlanetReduction
         ) + 0.0116297925, // Big ring
         hoodMotorToRingReduction
     ) + 0.0000201921 + 0.0000011706 + // Motor shaft stuff
-        0.00221388368; // Rev NEO vortex MOI (measured since Rev doesn't give it to us...)
+        0.000221388368; // Rev NEO vortex MOI (measured since Rev doesn't give it to us...)
 
     /** kA for the flywheel system in volts per (rad/s^2). Calculated using the motor inertia reflected through the entire drivetrain. */
     public static final double flywheelMotorKA = flywheelMotorInertiaKgM2 / (flywheelSimMotor.KtNMPerAmp * 12); // uhh maybe?
@@ -125,17 +122,17 @@ public class TurretConstants {
     public static final TunablePID flywheelMotorPID = new TunablePID("Turret/Flywheel")
         .addRealRobotGains(new GenericPIDConstants(30, 0.0, 0.0, 0.2)) // velocity voltage
         .addRealRobotGains(new GenericPIDConstants(0.1, 0, 0, 0.2, PIDSlot.Slot1))
-        .copyRealGainsInSim();
+        .addSimGains(new GenericPIDConstants(0.2, 5, 0, 0.15));
     
     public static final TunablePID azimuthMotorPID = new TunablePID("Turret/Azimuth")
         .addRealRobotGains(new GenericPIDConstants(100, 30, 1)) // position voltage
         .addRealRobotGains(new GenericPIDConstants(0.8, 0, 0, 0.2, PIDSlot.Slot1))
-        .copyRealGainsInSim();
+        .addSimGains(new GenericPIDConstants(100, 15, 2));
     
     public static final TunablePID hoodMotorPID = new TunablePID("Turret/Hood")
         .addRealRobotGains(new GenericPIDConstants(60, 1, 0)) // position voltage
         .addRealRobotGains(new GenericPIDConstants(0.1, 0, 0, 0.2, PIDSlot.Slot1))
-        .copyRealGainsInSim();
+        .addSimGains(new GenericPIDConstants(0.5, 0, 0));
     
     // Control tolerances
     public static final double flywheelToleranceRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(500);
