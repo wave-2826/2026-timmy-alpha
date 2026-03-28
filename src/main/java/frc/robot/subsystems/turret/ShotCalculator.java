@@ -84,30 +84,30 @@ public class ShotCalculator {
         // 43deg / 5.69m
 
         // Hub shots
-        hubShots.hoodAngleMap.put(0.96, 15.0);
+        hubShots.hoodAngleMap.put(0.96, 16.0);
         hubShots.hoodAngleMap.put(1.16, 20.0);
         hubShots.hoodAngleMap.put(1.58, 28.0);
         hubShots.hoodAngleMap.put(2.94, 35.0);
-        hubShots.hoodAngleMap.put(5.69, 43.0);
+        hubShots.hoodAngleMap.put(4.65, 43.0);
 
-        hubShots.flywheelSpeedMap.put(0.96, 2690.4);
-        hubShots.flywheelSpeedMap.put(1.16, 2860.0);
-        hubShots.flywheelSpeedMap.put(1.58, 3029.8);
-        hubShots.flywheelSpeedMap.put(2.07, 3199.4);
-        hubShots.flywheelSpeedMap.put(2.37, 3369.1);
-        hubShots.flywheelSpeedMap.put(2.47, 3369.1);
-        hubShots.flywheelSpeedMap.put(2.70, 3369.1);
-        hubShots.flywheelSpeedMap.put(2.94, 3538.8);
-        hubShots.flywheelSpeedMap.put(3.48, 3538.8);
-        hubShots.flywheelSpeedMap.put(3.92, 3708.5);
-        hubShots.flywheelSpeedMap.put(4.35, 3878.2);
-        hubShots.flywheelSpeedMap.put(4.84, 4047.9);
+        hubShots.flywheelSpeedMap.put(0.96, 2562.2);
+        hubShots.flywheelSpeedMap.put(1.16, 2723.8);
+        hubShots.flywheelSpeedMap.put(1.58, 2885.5);
+        hubShots.flywheelSpeedMap.put(2.07, 3047.0);
+        hubShots.flywheelSpeedMap.put(2.37, 3208.6);
+        hubShots.flywheelSpeedMap.put(2.47, 3208.6);
+        hubShots.flywheelSpeedMap.put(2.70, 3208.6);
+        hubShots.flywheelSpeedMap.put(2.94, 3370.2);
+        hubShots.flywheelSpeedMap.put(3.48, 3370.2);
+        hubShots.flywheelSpeedMap.put(3.92, 3531.9);
+        hubShots.flywheelSpeedMap.put(4.35, 3693.5);
+        hubShots.flywheelSpeedMap.put(4.65, 3750.0);
 
         hubShots.timeOfFlightMap.put(5.68, 1.16);
         hubShots.timeOfFlightMap.put(4.55, 1.12);
         hubShots.timeOfFlightMap.put(3.15, 1.11);
         hubShots.timeOfFlightMap.put(1.88, 1.09);
-        hubShots.timeOfFlightMap.put(1.38, 0.90);
+        hubShots.timeOfFlightMap.put(1.38, 1.23);
 
         // Passing shots
         passShots.hoodAngleMap.put(5.46,  40.0);
@@ -158,9 +158,9 @@ public class ShotCalculator {
     private Translation2d getTargetPosition(ShotType type, Translation2d turretPosition) {
         switch(type) {
             case PASS_LEFT:
-                return AllianceFlipUtil.apply(new Translation2d(2.094, 1.372));
-            case PASS_RIGHT:
                 return AllianceFlipUtil.apply(new Translation2d(2.094, FieldConstants.fieldWidthY - 1.372));
+            case PASS_RIGHT:
+                return AllianceFlipUtil.apply(new Translation2d(2.094, 1.372));
             default: // Hub shot
                 Translation2d hubCenter = AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
                 return hubCenter.plus(

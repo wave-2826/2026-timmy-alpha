@@ -182,7 +182,7 @@ public class TurretController {
         // ω'_fly  accelerated by flywheel current
         // Negated because we define positive flywheel velocity = shooting direction,
         // which is opposite to the motor direction through the negative gear ratio.
-        B.set(4, 2, BFlywheel * -TurretConstants.totalFlywheelGearing);
+        B.set(4, 2, BFlywheel * TurretConstants.totalFlywheelGearing);
 
         var C = Matrix.eye(Nat.N5()); // Just output the full state
         var D = new Matrix<>(Nat.N5(), Nat.N3()); // No direct feedthrough

@@ -3,6 +3,7 @@ package frc.robot.subsystems.turret;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
@@ -17,6 +18,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
@@ -27,6 +29,7 @@ public class TurretIOTalonFX implements TurretIO {
     protected final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0).withUseTimesync(true);
     protected final VelocityVoltage velocityRequest = new VelocityVoltage(0).withEnableFOC(true).withUseTimesync(true);
     protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(true).withUseTimesync(true);
+    protected final CoastOut coastRequest = new CoastOut();
     
     protected final Follower followerRequest;
 
@@ -142,6 +145,23 @@ public class TurretIOTalonFX implements TurretIO {
         resetAzimuth(Rotation2d.kZero);
         resetHoodToBottom();
     }
+
+    @Override
+    public void setPIDOutputs(TurretIOPIDOutputs outputs) {
+        if(outputs.flywheelSpeedRadPerSec() < Units.degreesToRadians(10)) topFlywheelTalon.setControl(coastRequest);
+        else topFlywheelTalon.setControl(velocityRequest.withVelocity(
+            outputs.flywheelSpeedRadPerSec() / (2 * Math.PI) / TurretConstants.totalFlywheelGearing
+        ).withSlot(0));
+        bottomFlywheelTalon.setControl(followerRequest);
+
+        azimuthTalon.setControl(positionRequest.withPosition(
+            outputs.azimuthAngleRad() / (2 * Math.PI)
+        ).withSlot(0));
+
+        double hoodRingPosRadNoCoupling = -(outputs.hoodAngleRad() - TurretConstants.hoodMinAngle) / TurretConstants.hoodRingToHoodReduction;
+        double hoodRingRotations = hoodRingPosRadNoCoupling / (2 * Math.PI) + azimuthInternalAngle.getValueAsDouble();
+        hoodTalon.setControl(positionRequest.withPosition(hoodRingRotations).withSlot(0));
+    }
   
     public void updateLQRInputs(TurretIOInputs inputs) {
         BaseStatusSignal.refreshAll(azimuthInternalAngle, azimuthInternalVelocity, topFlywheelVelocity, hoodAngle, hoodVelocity);
@@ -203,24 +223,7 @@ public class TurretIOTalonFX implements TurretIO {
             hoodCurrent.getValueAsDouble()
         );
 
-        inputs.azimuthZeroTriggered = azimuthZeroSensor.get();
-    }
-
-    @Override
-    public void setPIDOutputs(TurretIOPIDOutputs outputs) {
-        topFlywheelTalon.setControl(velocityRequest.withVelocity(
-            outputs.flywheelSpeedRadPerSec() / (2 * Math.PI)
-        ).withSlot(0));
-        bottomFlywheelTalon.setControl(followerRequest);
-
-        azimuthTalon.setControl(positionRequest.withPosition(
-            outputs.azimuthAngleRad() / (2 * Math.PI)
-        ).withSlot(0));
-        double hoodRingPos = outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction + 
-            azimuthInternalAngle.getValueAsDouble() * (2 * Math.PI);
-        hoodTalon.setControl(positionRequest.withPosition(
-            hoodRingPos / (2 * Math.PI) // in ring rotations
-        ).withSlot(0));
+        inputs.azimuthZeroTriggered = !azimuthZeroSensor.get();
     }
 
     @Override

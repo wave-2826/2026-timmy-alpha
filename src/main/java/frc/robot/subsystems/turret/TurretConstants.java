@@ -8,6 +8,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.GenericPIDConstants;
+import frc.robot.util.GenericPIDConstants.PIDSlot;
 import frc.robot.util.tunables.TunableSimpleMotorFF;
 import frc.robot.util.tunables.TunablePID;
 
@@ -33,7 +34,7 @@ public class TurretConstants {
     public static final double flywheelPlanetReduction = 213.0 / 25.0;
     public static final double hoodPlanetReduction = 213.0 / 25.0;
 
-    public static final double flywheelRingToFlyReduction = -10.0 / 18.0 * TurretConstants.flywheelPlanetReduction;
+    public static final double flywheelRingToFlyReduction = 10.0 / 18.0 * TurretConstants.flywheelPlanetReduction;
     public static final double hoodRingToHoodReduction = 1.0 / 202.0 * TurretConstants.hoodPlanetReduction;
 
     // Calculated reductions
@@ -113,24 +114,27 @@ public class TurretConstants {
     public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * aziMotorToRingReduction * 0.8;
 
     // Current limits
-    public static final int flywheelCurrentLimit = 30; // amps each
+    public static final int flywheelCurrentLimit = 50; // amps each
     public static final int azimuthCurrentLimit = 40; // amps
-    public static final int hoodCurrentLimit = 40; // amps
+    public static final int hoodCurrentLimit = 50; // amps
 
     // PIDs
     public static final TunableSimpleMotorFF flywheelMotorFF = new TunableSimpleMotorFF("Turret/FlywheelFF")
         .addGains(0.0, 12.0 / maxFlywheelSpeedRadPerSec, flywheelMotorKA);
     
     public static final TunablePID flywheelMotorPID = new TunablePID("Turret/Flywheel")
-        .addRealRobotGains(new GenericPIDConstants(0.4, 0.0, 0.0, 0.23)) // velocity voltage
+        .addRealRobotGains(new GenericPIDConstants(30, 0.0, 0.0, 0.2)) // velocity voltage
+        .addRealRobotGains(new GenericPIDConstants(0.1, 0, 0, 0.2, PIDSlot.Slot1))
         .copyRealGainsInSim();
     
     public static final TunablePID azimuthMotorPID = new TunablePID("Turret/Azimuth")
         .addRealRobotGains(new GenericPIDConstants(100, 30, 1)) // position voltage
+        .addRealRobotGains(new GenericPIDConstants(0.8, 0, 0, 0.2, PIDSlot.Slot1))
         .copyRealGainsInSim();
     
     public static final TunablePID hoodMotorPID = new TunablePID("Turret/Hood")
         .addRealRobotGains(new GenericPIDConstants(60, 1, 0)) // position voltage
+        .addRealRobotGains(new GenericPIDConstants(0.1, 0, 0, 0.2, PIDSlot.Slot1))
         .copyRealGainsInSim();
     
     // Control tolerances

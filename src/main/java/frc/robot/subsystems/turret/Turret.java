@@ -103,7 +103,7 @@ public class Turret extends SubsystemBase {
                             target.hoodAngleRad,
                             TurretConstants.hoodMinAngle,
                             TurretConstants.hoodMaxAngle
-                        ) - TurretConstants.hoodMinAngle
+                        )
                     );
                     io.setPIDOutputs(outputs);
                     break;
@@ -269,19 +269,19 @@ public class Turret extends SubsystemBase {
             run(() -> {
                 target = null;
                 io.setVelocityOutputs(0, Units.rotationsPerMinuteToRadiansPerSecond(50), hoodRunVelocity);
-            }).until(() -> inputs.azimuthZeroTriggered != startZeroValue.value),
+            }).until(() -> inputs.azimuthZeroTriggered != startZeroValue.value).withTimeout(2),
             // Counterclockwise until no longer triggered
             run(() -> {
                 target = null;
                 io.setVelocityOutputs(0, Units.rotationsPerMinuteToRadiansPerSecond(25), hoodRunVelocity);
-            }).until(() -> !inputs.azimuthZeroTriggered),
+            }).until(() -> !inputs.azimuthZeroTriggered).withTimeout(1),
             runOnce(() -> io.resetAzimuth(TurretConstants.azimuthResetAngle)),
             // Run until hood has changed by at least its full range
             run(() -> {
                 io.setVelocityOutputs(0, 0, hoodRunVelocity);
-            }).until(() -> Math.abs(inputs.getHoodAngleRad() - hoodStartPos.value) > hoodRangeRad),
+            }).until(() -> Math.abs(inputs.getHoodAngleRad() - hoodStartPos.value) > hoodRangeRad).withTimeout(1),
             runOnce(() -> io.resetHoodToBottom())
-        );
+        ).withName("TurretZero");
     }
 
     public Command runTuning() {
