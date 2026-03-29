@@ -49,7 +49,7 @@ public class VisionIOPhotonVision implements VisionIO {
             if(result.hasTargets()) {
                 inputs.bestTagTransform = result.getBestTarget().getBestCameraToTarget();
             } else {
-                inputs.bestTagTransform = null;
+                inputs.bestTagTransform = Transform3d.kZero;
             }
 
             if(disabled) continue;

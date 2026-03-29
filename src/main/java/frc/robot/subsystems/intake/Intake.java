@@ -54,7 +54,7 @@ public class Intake extends SubsystemBase {
     }
     
     public Command deployIntake() {
-        final double deployPower = 0.4;
+        final double deployPower = 0.6;
         return Commands.parallel(
             Commands.runEnd(() -> io.setDeployPowerL(deployPower), () -> io.setDeployPowerL(0.0))
                 .until(() -> deployLCurrentFilter.calculate(inputs.deployL.currentAmps()) > IntakeConstants.deployStallCurrent),
@@ -65,7 +65,7 @@ public class Intake extends SubsystemBase {
         });
     }
     
-    /** Set the intake position. Positive numbers are outward. */
+    /** Set the intake position. Positive numbers are inward. */
     public Command setIntakePosition(DoubleSupplier position) {
         return run(() -> {
             io.setDeployPosition(position.getAsDouble());

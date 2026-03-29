@@ -93,8 +93,8 @@ public class Drive extends SubsystemBase {
         odometryLock.unlock();
 
         boolean shouldLock = unlockWheelsDebouncer.calculate(DriverStation.isEnabled())
-            && !DriverStation.isFMSAttached()
-            && !DriverStation.isAutonomous();
+            || DriverStation.isFMSAttached()
+            || DriverStation.isAutonomous();
         if(shouldLock != wheelsLocked) {
             wheelsLocked = shouldLock;
             for(var module : modules) module.setWheelsLocked(wheelsLocked);
@@ -289,7 +289,7 @@ public class Drive extends SubsystemBase {
         baseSpeeds.omegaRadiansPerSecond += DriveConstants.thetaController.calculate(pose.getRotation().getRadians(),
             targetPose.getRotation().getRadians());
         runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(baseSpeeds, RobotState.getInstance().getRotation()),
-            accelerations,false);
+            accelerations, false);
     }
 
     //////////////////// Characterization/tuning

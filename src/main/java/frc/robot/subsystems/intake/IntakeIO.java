@@ -40,7 +40,7 @@ public interface IntakeIO {
     public default void setDeployPowerR(double power) {}
     
     public default void resetDeployEncoders() {}
-    /** Set the deploy position relative to when the deploy encoders were last reset. Positive numbers are outward. */
+    /** Set the deploy position relative to when the deploy encoders were last reset. Positive numbers are inward. */
     public default void setDeployPosition(double position) {}
     /** Stops deploy. */
     public default void stopDeploy() {}

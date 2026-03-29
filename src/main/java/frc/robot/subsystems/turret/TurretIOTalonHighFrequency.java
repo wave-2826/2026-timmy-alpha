@@ -48,8 +48,8 @@ public class TurretIOTalonHighFrequency implements TurretIO {
     }
 
     @Override
-    public synchronized void resetHoodToBottom() {
-        io.resetHoodToBottom();
+    public synchronized void resetHoodTo(double angleRad) {
+        io.resetHoodTo(angleRad);
     }
 
     @Override

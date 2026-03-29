@@ -69,7 +69,8 @@ public class AutoRoutines {
         AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
 
         traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
-        
+        traj.atTime("Score").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
+
         routine.active().onTrue(Commands.sequence(
             traj.resetOdometry(),
             traj.cmd()
@@ -85,6 +86,7 @@ public class AutoRoutines {
         AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
 
         traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
+        traj.atTime("Score").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
         
         routine.active().onTrue(Commands.sequence(
             traj.resetOdometry(),

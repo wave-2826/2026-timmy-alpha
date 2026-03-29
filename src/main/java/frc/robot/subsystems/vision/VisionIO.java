@@ -13,7 +13,7 @@ public interface VisionIO {
          * The best tag transform that maps camera space to object space. 
          * Null if there are no tracked targets.
          */
-        public Transform3d bestTagTransform = null;
+        public Transform3d bestTagTransform = Transform3d.kZero;
         public PoseObservation[] poseObservations = new PoseObservation[0];
     }
 

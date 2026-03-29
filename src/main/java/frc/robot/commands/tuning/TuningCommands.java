@@ -13,7 +13,7 @@ public class TuningCommands {
         testChooser.addOption("Turret: Oscillation test", robotContainer.turret.runOscillationTest());
 
         DriveTuningCommands.addTuningCommandsToChooser(robotContainer.drive, testChooser);
-        VisionTuningCommands.addTuningCommandsToChooser(robotContainer.vision, testChooser);
+        VisionTuningCommands.addTuningCommandsToChooser(robotContainer.drive, robotContainer.vision, testChooser);
 
         return testChooser;
     }

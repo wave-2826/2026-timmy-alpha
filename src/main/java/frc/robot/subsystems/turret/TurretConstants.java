@@ -21,7 +21,7 @@ public class TurretConstants {
     public static final int azimuthCancoderID = 55;
 
     public static final int azimuthZeroDIOPort = 1;
-    public static final Rotation2d azimuthResetAngle = Rotation2d.fromDegrees(180. + 26.);
+    public static final Rotation2d azimuthResetAngle = Rotation2d.fromDegrees(180. - 26.);
 
     public static final CANBus CANBus = DriveConstants.CANBus;
 
@@ -48,7 +48,7 @@ public class TurretConstants {
     public static final double azimuthHoodCoupling = TurretConstants.totalAzimuthGearing * TurretConstants.hoodRingToHoodReduction;
 
     // Constraints
-    public static final double hoodMinAngle = Units.degreesToRadians(15);
+    public static final double hoodMinAngle = Units.degreesToRadians(30); // Units.degreesToRadians(15);
     public static final double hoodMaxAngle = Units.degreesToRadians(43);
 
     public static final double flywheelRadius = Units.inchesToMeters(2);

@@ -15,6 +15,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
+import frc.robot.util.SparkUtil;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
 
@@ -45,6 +46,7 @@ public class IntakeIOReal implements IntakeIO {
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 / rollerMotorReduction)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
+        rollerConfig.signals.apply(SparkUtil.defaultSignals).primaryEncoderVelocityPeriodMs(20);
         rollerConfig.inverted(true);
         
         var deployBaseConfig = new SparkMaxConfig();
@@ -58,6 +60,7 @@ public class IntakeIOReal implements IntakeIO {
             // TODO: reasonable values
             .cruiseVelocity(0.8) // m/s
             .maxAcceleration(3.0); // m/s^2
+        deployBaseConfig.signals.apply(SparkUtil.defaultSignals).primaryEncoderPositionPeriodMs(20);
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
         
@@ -121,7 +124,7 @@ public class IntakeIOReal implements IntakeIO {
             deployR.resumeFollowerModeAsync();
             deployFollowing = true;
         }
-        deployController.setSetpoint(positionMeters, ControlType.kMAXMotionPositionControl);
+        deployController.setSetpoint(-positionMeters, ControlType.kPosition);
     }
 
     @Override

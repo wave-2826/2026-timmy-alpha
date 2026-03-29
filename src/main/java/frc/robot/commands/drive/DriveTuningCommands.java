@@ -14,7 +14,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 
+import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.inputs.LoggableInputs;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import com.google.gson.GsonBuilder;
@@ -79,9 +81,7 @@ public class DriveTuningCommands {
 
     // TODO - REALLY TODO - log this and make it work in replay
     /** A set of tuning results that we can load from and save to a JSON file. */
-    public static class TuningResults {
-        // TODO: Defaults that make sense for sim so stuff doesn't break
-        
+    public static class TuningResults {    
         public static record WheelRadiusTuningResults(double radiusMeters, double radiusInches) {}
         public static record FeedforwardTuningResults(double kS, double kV) {}
         public static record SlipTuningResults(
@@ -93,7 +93,26 @@ public class DriveTuningCommands {
         ) {}
         public static record ModuleZeroingResults(double[] moduleOffsetsRadians) {}
         public static record MOIResults(double moiKgM2) {}
+    
+        private final transient LoggableInputs inputs =
+            new LoggableInputs() {
+                public void toLog(LogTable table) {
+                    table.put("WheelRadiusResults", wheelRadiusResults);
+                    table.put("FeedforwardResults", feedforwardResults);
+                    table.put("SlipResults", slipResults);
+                    table.put("ModuleZeroingResults", moduleZeroingResults);
+                    table.put("MOIResults", moiResults);
+                }
 
+                public void fromLog(LogTable table) {
+                    wheelRadiusResults = table.get("WheelRadiusResults", wheelRadiusResults);
+                    feedforwardResults = table.get("FeedforwardResults", feedforwardResults);
+                    slipResults = table.get("SlipResults", slipResults);
+                    moduleZeroingResults = table.get("ModuleZeroingResults", moduleZeroingResults);
+                    moiResults = table.get("MOIResults", moiResults);
+                }
+            };
+        
         public WheelRadiusTuningResults wheelRadiusResults = new WheelRadiusTuningResults(0.0507746, 1.999);
         public FeedforwardTuningResults feedforwardResults = new FeedforwardTuningResults(3.68789, 1.42702);
         public SlipTuningResults slipResults = new SlipTuningResults(
@@ -117,19 +136,28 @@ public class DriveTuningCommands {
             .registerTypeAdapter(Class.class, new GsonClassAdapter());
 
         public static TuningResults load() {
-            var file = Filesystem.getOperatingDirectory().toPath().resolve(TUNING_RESULTS_FILE).toFile();
-            
-            // Make sure the parent directory exists
-            file.getParentFile().mkdirs();
-            if(!file.exists()) return loadBackup(); // If the file doesn't exist, return an empty result
-
-            var gson = builder.create();
-            try(var fileReader = new FileReader(file)) {
-                return gson.fromJson(fileReader, TuningResults.class);
-            } catch(JsonSyntaxException | JsonIOException | IOException e) {
-                e.printStackTrace();
-                return loadBackup(); // If we can't read the file, return an empty result
+            TuningResults results;
+            if(!Logger.hasReplaySource()) {
+                var file = Filesystem.getOperatingDirectory().toPath().resolve(TUNING_RESULTS_FILE).toFile();
+                
+                // Make sure the parent directory exists
+                file.getParentFile().mkdirs();
+                if(!file.exists()) results = loadBackup(); // If the file doesn't exist, return an empty result
+                else {
+                    var gson = builder.create();
+                    try(var fileReader = new FileReader(file)) {
+                        results = gson.fromJson(fileReader, TuningResults.class);
+                    } catch(JsonSyntaxException | JsonIOException | IOException e) {
+                        e.printStackTrace();
+                        results = loadBackup(); // If we can't read the file, return an empty result
+                    }
+                }
+            } else {
+                results = new TuningResults();
             }
+            
+            Logger.processInputs("Drive/DriveTuningCommands", results.inputs);
+            return results;
         }
 
         private static TuningResults loadBackup() {
@@ -195,6 +223,9 @@ public class DriveTuningCommands {
         private transient ArrayList<Runnable> onChangeCallbacks = new ArrayList<>();
 
         public void save() {
+            Logger.processInputs("Drive/DriveTuningCommands", inputs);
+            if(Logger.hasReplaySource()) return;
+
             var gson = builder.create();
             try(var fileWriter = new java.io.FileWriter(TUNING_RESULTS_FILE)) {
                 gson.toJson(this, fileWriter);

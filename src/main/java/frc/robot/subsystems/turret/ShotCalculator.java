@@ -66,7 +66,7 @@ public class ShotCalculator {
     private static ShotMapData hubShots = new ShotMapData();
     private static ShotMapData passShots = new ShotMapData();
     
-    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.03);
+    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.5);
     /**
      * See https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html#the-drag-constant-k.
      * For fuel, we found that the piece lost 19.4% of its velocity over 6.3s. The linear velocity drag can be represented as v(t) = v_0 * e^-kt or
@@ -79,10 +79,6 @@ public class ShotCalculator {
     private static LoggedTunableNumber hubOutwardBiasInches = new LoggedTunableNumber("ShotCalculator/HubOutwardBiasInches", 6);
 
     static {
-        // TODO: These are just directly stolen from 6328... Tune ourselves!
-
-        // 43deg / 5.69m
-
         // Hub shots
         hubShots.hoodAngleMap.put(0.96, 16.0);
         hubShots.hoodAngleMap.put(1.16, 20.0);
@@ -90,24 +86,25 @@ public class ShotCalculator {
         hubShots.hoodAngleMap.put(2.94, 35.0);
         hubShots.hoodAngleMap.put(4.65, 43.0);
 
-        hubShots.flywheelSpeedMap.put(0.96, 2562.2);
-        hubShots.flywheelSpeedMap.put(1.16, 2723.8);
-        hubShots.flywheelSpeedMap.put(1.58, 2885.5);
-        hubShots.flywheelSpeedMap.put(2.07, 3047.0);
-        hubShots.flywheelSpeedMap.put(2.37, 3208.6);
-        hubShots.flywheelSpeedMap.put(2.47, 3208.6);
-        hubShots.flywheelSpeedMap.put(2.70, 3208.6);
-        hubShots.flywheelSpeedMap.put(2.94, 3370.2);
-        hubShots.flywheelSpeedMap.put(3.48, 3370.2);
-        hubShots.flywheelSpeedMap.put(3.92, 3531.9);
-        hubShots.flywheelSpeedMap.put(4.35, 3693.5);
-        hubShots.flywheelSpeedMap.put(4.65, 3750.0);
+        hubShots.flywheelSpeedMap.put(0.96, 2618.);
+        hubShots.flywheelSpeedMap.put(1.16, 2796.);
+        hubShots.flywheelSpeedMap.put(1.58, 2974.);
+        hubShots.flywheelSpeedMap.put(2.07, 3151.);
+        hubShots.flywheelSpeedMap.put(2.37, 3329.);
+        hubShots.flywheelSpeedMap.put(2.47, 3329.);
+        hubShots.flywheelSpeedMap.put(2.70, 3329.);
+        hubShots.flywheelSpeedMap.put(2.94, 3507.);
+        hubShots.flywheelSpeedMap.put(3.48, 3507.);
+        hubShots.flywheelSpeedMap.put(3.92, 3685.);
+        hubShots.flywheelSpeedMap.put(4.35, 3862.);
+        hubShots.flywheelSpeedMap.put(4.65, 3925.);
 
-        hubShots.timeOfFlightMap.put(5.68, 1.16);
-        hubShots.timeOfFlightMap.put(4.55, 1.12);
-        hubShots.timeOfFlightMap.put(3.15, 1.11);
-        hubShots.timeOfFlightMap.put(1.88, 1.09);
-        hubShots.timeOfFlightMap.put(1.38, 1.23);
+        hubShots.timeOfFlightMap.put(5.68, 1.85);
+        hubShots.timeOfFlightMap.put(4.55, 1.79);
+        hubShots.timeOfFlightMap.put(3.15, 1.44);
+        hubShots.timeOfFlightMap.put(1.88, 1.36);
+        hubShots.timeOfFlightMap.put(1.30, 1.36);
+        
 
         // Passing shots
         passShots.hoodAngleMap.put(5.46,  40.0);
@@ -217,10 +214,10 @@ public class ShotCalculator {
             * (TurretConstants.robotToTurret.getX() * Math.cos(robotAngle)
             - TurretConstants.robotToTurret.getY() * Math.sin(robotAngle));
 
-        double timeOfFlight, effectiveTimeOfFlight;
+        double timeOfFlight = 0, effectiveTimeOfFlight = 0;
         Pose2d lookaheadPose = turretPosition;
         double lookaheadTurretToTargetDistance = turretToTargetDistance;
-        for (int i = 0; i < 20; i++) {
+        for(int i = 0; i < 20; i++) {
             timeOfFlight = type.shotMapData.getTimeOfFlight(lookaheadTurretToTargetDistance);
             // Calculate the effective time of flight, including induced linear drag. See
             // https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html
@@ -234,6 +231,8 @@ public class ShotCalculator {
             lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
         }
         
+        Logger.recordOutput("LaunchCalculator/TimeOfFlight", timeOfFlight);
+        Logger.recordOutput("LaunchCalculator/EffectiveTimeOfFlight", effectiveTimeOfFlight);
         Logger.recordOutput("LaunchCalculator/LookaheadPose", lookaheadPose);
         Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);
 

@@ -23,6 +23,17 @@ import edu.wpi.first.units.measure.Angle;
 
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
+/**
+ * + azimuth -> clockwise
+ * + hood -> up
+ * + flywheel -> outward
+ * 
+ * azimuth is independent
+ * hood and flywheel run based on the difference of their rings to the azimuth ring
+ * hood is `([hood ring] - [azimuth ring]) / [hood ring to hood reduction]`
+ * therefore [hood ring] is `[azimuth ring] - hood * [hood ring to hood reduction]`
+ * 
+ */
 public class TurretIOTalonFX implements TurretIO {
     private static final boolean DISABLE_AZIMUTH_ABS_ENCODER = true;
 
@@ -143,7 +154,7 @@ public class TurretIOTalonFX implements TurretIO {
         );
 
         resetAzimuth(Rotation2d.kZero);
-        resetHoodToBottom();
+        resetHoodTo(TurretConstants.hoodMinAngle);
     }
 
     @Override
@@ -158,8 +169,9 @@ public class TurretIOTalonFX implements TurretIO {
             outputs.azimuthAngleRad() / (2 * Math.PI)
         ).withSlot(0));
 
-        double hoodRingPosRadNoCoupling = -(outputs.hoodAngleRad() - TurretConstants.hoodMinAngle) / TurretConstants.hoodRingToHoodReduction;
-        double hoodRingRotations = hoodRingPosRadNoCoupling / (2 * Math.PI) + azimuthInternalAngle.getValueAsDouble();
+        double azimuthRingRotations = azimuthInternalAngle.getValueAsDouble();
+        double hoodRingRotations =
+            azimuthRingRotations - outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction / (2 * Math.PI);
         hoodTalon.setControl(positionRequest.withPosition(hoodRingRotations).withSlot(0));
     }
   
@@ -244,12 +256,16 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void resetAzimuth(Rotation2d angle) {
-        tryUntilOk(5, () -> azimuthTalon.setPosition(angle.getRadians()));
+        tryUntilOk(5, () -> azimuthTalon.setPosition(angle.getRotations()));
     }
 
     @Override
-    public void resetHoodToBottom() {
-        tryUntilOk(5, () -> hoodTalon.setPosition(azimuthInternalAngle.getValueAsDouble()));
+    public void resetHoodTo(double angleRad) {
+        double angleRotations = (angleRad - TurretConstants.hoodMinAngle) / 2 / Math.PI;
+        tryUntilOk(5, () -> hoodTalon.setPosition(
+            azimuthInternalAngle.getValueAsDouble() +
+            angleRotations / TurretConstants.hoodRingToHoodReduction
+        ));
     }
 
     @Override

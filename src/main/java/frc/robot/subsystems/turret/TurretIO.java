@@ -21,9 +21,9 @@ public interface TurretIO {
         public record AzimuthMotorInputs(
             /** Whether the motor is connected */
             boolean connected,
-            /** The azimuth motor's internal encoder angle in rad (in mechanism rotations). */
+            /** The azimuth motor's internal encoder angle in rad (in CCW mechanism radians). */
             double internalEncoderAngle,
-            /** The azimuth motor's internal encoder velocity in rad/sec (in mechanism rotations). */
+            /** The azimuth motor's internal encoder velocity in rad/sec (in CCW mechanism radians/sec). */
             double internalEncoderVelocity,
             /** The motor current draw. */
             double currentAmps
@@ -32,7 +32,7 @@ public interface TurretIO {
             /** Whether the motor is connected */
             boolean connected,
             /** 
-             * The measured hood motor ring angle.
+             * The measured hood motor ring angle (CCW positive).
              * The actual hood angle is the difference between this and the azimuth ring angle (and reductions).
              */
             double angleRad,
@@ -80,8 +80,7 @@ public interface TurretIO {
                 azimuthEncoder.velocityRadPerSec() * TurretConstants.azimuthFlyCoupling;
         }
         public double getHoodAngleRad() {
-            return -hood.angleRad() * TurretConstants.hoodRingToHoodReduction -
-                azimuth.internalEncoderAngle / TurretConstants.totalAzimuthGearing * TurretConstants.azimuthHoodCoupling +
+            return (azimuth.internalEncoderAngle - hood.angleRad) / TurretConstants.hoodRingToHoodReduction +
                 TurretConstants.hoodMinAngle;
         }
         public double getHoodVelocityRadPerSec() {
@@ -101,7 +100,7 @@ public interface TurretIO {
     public static record TurretIOPIDOutputs(
         /** The target flywheel speed. */
         double flywheelSpeedRadPerSec,
-        /** The turret azimuth angle relative to the robot base. */
+        /** The turret azimuth angle relative to the robot base, in counterclockwise rotations */
         double azimuthAngleRad,
         /** The angle of the hood relative to its minimum. */
         double hoodAngleRad
@@ -130,7 +129,7 @@ public interface TurretIO {
     public default void setVelocityOutputs(double flywheelVelocityRadPerSec, double azimuthVelocityRadPerSec, double hoodVelocityRadPerSec) {}
 
     public default void resetAzimuth(Rotation2d angle) {}
-    public default void resetHoodToBottom() {}
+    public default void resetHoodTo(double angleRad) {}
 
     /** Stop all turret motion and hold position. */
     public default void stop() {}

@@ -3,12 +3,19 @@ package frc.robot.commands.tuning;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.RobotState;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
@@ -47,9 +54,10 @@ public class VisionTuningCommands {
     }
 
     /** Adds the drive tuning commands to the auto chooser. */
-    public static void addTuningCommandsToChooser(Vision vision, LoggedDashboardChooser<Command> chooser) {
+    public static void addTuningCommandsToChooser(Drive drive, Vision vision, LoggedDashboardChooser<Command> chooser) {
         // We may want to run this at a competition
         chooser.addOption("TUNING | Vision Camera Position Measurement", measureCameraPositions(vision));
+        chooser.addOption("TUNING | SPINNY Vision Camera Position Measurement", spinnyMeasureCameraPositions(drive, vision));
     }
 
     // Distance out from PDH side
@@ -90,7 +98,7 @@ public class VisionTuningCommands {
             int seen = 0;
             for(int cameraIndex = 0; cameraIndex < vision.getCameraCount(); cameraIndex++) {
                 var transform = transforms[cameraIndex];
-                if(transform != null) {
+                if(transform != Transform3d.kZero) {
                     averages[cameraIndex].add(transform);
                     seen++;
                     if(seen > 1) System.out.print(", ");
@@ -101,7 +109,6 @@ public class VisionTuningCommands {
         }, vision).finallyDo(() -> {
             System.out.flush();
             System.out.println("********** Vision camera position measurement results **********");
-            Transform3d[] adjustedTransforms = new Transform3d[4];
             for(int cameraIndex = 0; cameraIndex < vision.getCameraCount(); cameraIndex++) {
                 if(!averages[cameraIndex].hasAverage()) {
                     System.out.println("Camera " + cameraIndex + " (" + vision.getCameraNames()[cameraIndex] + ") did not see any tags; no data to calculate position.");
@@ -109,7 +116,6 @@ public class VisionTuningCommands {
                 }
                 Transform3d averageTransform = averages[cameraIndex].getAverage();
                 Transform3d transform = getHeldTagTransform().plus(averageTransform.inverse());
-                adjustedTransforms[cameraIndex] = transform;
 
                 System.out.print("Robot to camera " + cameraIndex + " (" + vision.getCameraNames()[cameraIndex] + "): ");
                 printTransform(transform);
@@ -118,6 +124,67 @@ public class VisionTuningCommands {
         });
     }
 
+    public static Command spinnyMeasureCameraPositions(Drive drive, Vision vision) {
+        // TODO: actually do this sob
+        TransformAverage[] averages = new TransformAverage[vision.getCameraCount()];
+        return drive.runOnce(() -> {
+            drive.setPose(new Pose2d(
+                RobotState.getInstance().getEstimatedPose().getTranslation(),
+                Rotation2d.kZero
+            ));
+        }).andThen(Commands.parallel(
+            Commands.startRun(() -> {
+                for(int cameraIndex = 0; cameraIndex < vision.getCameraCount(); cameraIndex++) {
+                    averages[cameraIndex] = new TransformAverage();
+                }
+                System.out.println("********** Vision camera position measurement started. **********");
+
+                // If the held tag transform is facing away from the origin (by more than 180 deg), warn
+                var angleToOrigin = Math.atan2(getHeldTagTransform().getY(), getHeldTagTransform().getX());
+                var angleDiff = MathUtil.angleModulus(angleToOrigin - getHeldTagTransform().getRotation().getZ());
+                if(Math.abs(angleDiff) < Math.PI / 2) {
+                    System.out.println("WARNING: The held tag transform is facing away from the origin! This is probably wrong");
+                }
+            }, () -> {
+                Transform3d[] transforms = vision.getBestTagTransforms();
+                System.out.print("Cameras seeing tags: [");
+                int seen = 0;
+                for(int cameraIndex = 0; cameraIndex < vision.getCameraCount(); cameraIndex++) {
+                    var cameraToTag = transforms[cameraIndex];
+                    if(cameraToTag == Transform3d.kZero) continue;
+
+                    var robotAngle = RobotState.getInstance().getEstimatedPose().getRotation();
+                    var robotToTag = getHeldTagTransform().plus(new Transform3d(
+                        new Transform2d(Translation2d.kZero, robotAngle)
+                    ).inverse());
+                    var robotToCamera = robotToTag.plus(cameraToTag.inverse());
+
+                    averages[cameraIndex].add(robotToCamera);
+                    seen++;
+                    if(seen > 1) System.out.print(", ");
+                    System.out.print(vision.getCameraNames()[cameraIndex]);
+                }
+                System.out.println("]");
+            }, vision),
+            drive.runEnd(() -> drive.runVelocity(new ChassisSpeeds(0., 0., Units.degreesToRadians(45)), false), () -> drive.stop())
+        )).finallyDo(() -> {
+            System.out.flush();
+            System.out.println("********** Vision camera position measurement results **********");
+            for(int cameraIndex = 0; cameraIndex < vision.getCameraCount(); cameraIndex++) {
+                if(!averages[cameraIndex].hasAverage()) {
+                    System.out.println("Camera " + cameraIndex + " (" + vision.getCameraNames()[cameraIndex] + ") did not see any tags; no data to calculate position.");
+                    continue;
+                }
+                
+                Transform3d transform = averages[cameraIndex].getAverage();
+
+                System.out.print("Robot to camera " + cameraIndex + " (" + vision.getCameraNames()[cameraIndex] + "): ");
+                printTransform(transform);
+            }
+            System.out.flush();
+        });
+    }
+    
     private static void printTransform(Transform3d transform) {
         // new Transform3d(new Translation3d(x, y, z), new Rotation3d(roll, pitch, yaw))
         Rotation3d rotation = transform.getRotation();
