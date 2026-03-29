@@ -56,7 +56,9 @@ public class AutoRoutines {
         autoChooser.addRoutine("Left Single Swipe", () -> this.getSingleSwipe(false));
         autoChooser.addRoutine("Right Single Swipe", () -> this.getSingleSwipe(true));
 
-        autoChooser.addRoutine("Sweep Outpost (start left)", () -> this.getSweepOutpost());
+        autoChooser.addRoutine("Left Sweep Swipe", () -> this.getSweepSwipe(false));
+        autoChooser.addRoutine("Right Sweep Swipe", () -> this.getSweepSwipe(true));
+
         
         autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload());
         autoChooser.addRoutine("Center Depot", () -> this.getCenterDepot(), true);
@@ -96,8 +98,8 @@ public class AutoRoutines {
         return routine;
     }
 
-    private AutoRoutine getSweepOutpost() {
-        var choreoTraj = ChoreoTraj.SweepOutpost;
+    private AutoRoutine getSweepSwipe(boolean right) {
+        var choreoTraj = right ? ChoreoTraj.RightSweepSwipeGenerated : ChoreoTraj.LeftSweepSwipe;
         var routine = autoFactory.newRoutine(choreoTraj.name());
         
         AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
