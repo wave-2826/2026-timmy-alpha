@@ -35,7 +35,7 @@ import static frc.robot.util.PhoenixUtil.tryUntilOk;
  * 
  */
 public class TurretIOTalonFX implements TurretIO {
-    private static final boolean DISABLE_AZIMUTH_ABS_ENCODER = true;
+    // private static final boolean DISABLE_AZIMUTH_ABS_ENCODER = true;
 
     protected final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0).withUseTimesync(true);
     protected final VelocityVoltage velocityRequest = new VelocityVoltage(0).withEnableFOC(true).withUseTimesync(true);
@@ -100,10 +100,6 @@ public class TurretIOTalonFX implements TurretIO {
         var azimuthConfig = baseConfig.clone();
         azimuthConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         applyTorqueCurrentLimit(azimuthConfig, TurretConstants.azimuthCurrentLimit);
-
-        if(!DISABLE_AZIMUTH_ABS_ENCODER) {
-            // TODO: azimuth feedback
-        }
 
         TurretConstants.azimuthMotorPID.applyConfigAndRegister(azimuthConfig, azimuthTalon);
         azimuthConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.totalAzimuthGearing;

@@ -48,7 +48,7 @@ public class TurretConstants {
     public static final double azimuthHoodCoupling = TurretConstants.totalAzimuthGearing * TurretConstants.hoodRingToHoodReduction;
 
     // Constraints
-    public static final double hoodMinAngle = Units.degreesToRadians(30); // Units.degreesToRadians(15);
+    public static final double hoodMinAngle = Units.degreesToRadians(25); // Units.degreesToRadians(15);
     public static final double hoodMaxAngle = Units.degreesToRadians(43);
 
     public static final double flywheelRadius = Units.inchesToMeters(2);
@@ -112,8 +112,8 @@ public class TurretConstants {
 
     // Current limits
     public static final int flywheelCurrentLimit = 50; // amps each
-    public static final int azimuthCurrentLimit = 40; // amps
-    public static final int hoodCurrentLimit = 50; // amps
+    public static final int azimuthCurrentLimit = 20; // amps
+    public static final int hoodCurrentLimit = 20; // amps
 
     // PIDs
     public static final TunableSimpleMotorFF flywheelMotorFF = new TunableSimpleMotorFF("Turret/FlywheelFF")

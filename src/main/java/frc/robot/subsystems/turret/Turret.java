@@ -100,11 +100,7 @@ public class Turret extends SubsystemBase {
                     TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
                         target.flywheelSpeedRadPerSec,
                         target.azimuthAngleRad % (Math.PI * 2),
-                        MathUtil.clamp(
-                            target.hoodAngleRad,
-                            TurretConstants.hoodMinAngle,
-                            TurretConstants.hoodMaxAngle
-                        ) - TurretConstants.hoodMinAngle
+                        target.hoodAngleRad - TurretConstants.hoodMinAngle
                     );
                     io.setPIDOutputs(outputs);
                     break;
@@ -205,6 +201,7 @@ public class Turret extends SubsystemBase {
             io.resetAzimuth(TurretConstants.azimuthResetAngle);
             io.resetHoodTo(TurretConstants.hoodMaxAngle);
             manualControlAzimuthOffset = 0.0;
+            manualHoodOffset.set(0.0);
         });
     }
 
@@ -263,7 +260,7 @@ public class Turret extends SubsystemBase {
         Container<Boolean> startZeroValue = new Container<>(false);
         Container<Double> hoodStartPos = new Container<>(0.);
         double hoodRunVelocity = Units.rotationsPerMinuteToRadiansPerSecond(-500);
-        double zeroRangeRad = (TurretConstants.hoodMaxAngle - TurretConstants.hoodMinAngle) / 3.;
+        double zeroRangeRad = TurretConstants.hoodMaxAngle - TurretConstants.hoodMinAngle;
         BooleanSupplier hoodFinished = () -> Math.abs(inputs.getHoodAngleRad() - hoodStartPos.value) > zeroRangeRad;
         return Commands.sequence(
             runOnce(() -> {
@@ -289,6 +286,7 @@ public class Turret extends SubsystemBase {
             runOnce(() -> {
                 io.resetHoodTo(TurretConstants.hoodMaxAngle);
                 manualControlAzimuthOffset = 0;
+                manualHoodOffset.set(0.0);
                 hasZeroed = true;
             })
         ).withName("TurretZero");

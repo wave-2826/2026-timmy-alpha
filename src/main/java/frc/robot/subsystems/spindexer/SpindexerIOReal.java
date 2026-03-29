@@ -61,7 +61,7 @@ public class SpindexerIOReal implements SpindexerIO {
 
         var transferVelocity = getIfOk(transferMotor, transferEncoder::getVelocity, 0.0);
         var transferCurrent = getIfOk(transferMotor, transferMotor::getOutputCurrent, 0.0);
-        inputs.spinner = new SpindexerIOInputs.SpinnerMotorInputs(!sparkStickyFault, transferVelocity, transferCurrent);
+        inputs.transfer = new SpindexerIOInputs.TransferMotorInputs(!sparkStickyFault, transferVelocity, transferCurrent);
     }
   
     @Override

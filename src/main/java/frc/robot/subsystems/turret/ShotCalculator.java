@@ -2,6 +2,7 @@ package frc.robot.subsystems.turret;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -80,31 +81,16 @@ public class ShotCalculator {
 
     static {
         // Hub shots
-        hubShots.hoodAngleMap.put(0.96, 16.0);
-        hubShots.hoodAngleMap.put(1.16, 20.0);
-        hubShots.hoodAngleMap.put(1.58, 28.0);
-        hubShots.hoodAngleMap.put(2.94, 35.0);
-        hubShots.hoodAngleMap.put(4.65, 43.0);
+        hubShots.hoodAngleMap.put(0.96, 25.0);
+        hubShots.hoodAngleMap.put(4.65, 41.0);
 
         hubShots.flywheelSpeedMap.put(0.96, 2618.);
-        hubShots.flywheelSpeedMap.put(1.16, 2796.);
-        hubShots.flywheelSpeedMap.put(1.58, 2974.);
-        hubShots.flywheelSpeedMap.put(2.07, 3151.);
-        hubShots.flywheelSpeedMap.put(2.37, 3329.);
-        hubShots.flywheelSpeedMap.put(2.47, 3329.);
-        hubShots.flywheelSpeedMap.put(2.70, 3329.);
-        hubShots.flywheelSpeedMap.put(2.94, 3507.);
-        hubShots.flywheelSpeedMap.put(3.48, 3507.);
-        hubShots.flywheelSpeedMap.put(3.92, 3685.);
-        hubShots.flywheelSpeedMap.put(4.35, 3862.);
         hubShots.flywheelSpeedMap.put(4.65, 3925.);
 
-        hubShots.timeOfFlightMap.put(5.68, 1.85);
-        hubShots.timeOfFlightMap.put(4.55, 1.79);
-        hubShots.timeOfFlightMap.put(3.15, 1.44);
-        hubShots.timeOfFlightMap.put(1.88, 1.36);
         hubShots.timeOfFlightMap.put(1.30, 1.36);
-        
+        hubShots.timeOfFlightMap.put(1.88, 1.36);
+        hubShots.timeOfFlightMap.put(3.15, 1.44);
+        hubShots.timeOfFlightMap.put(5.68, 1.85);
 
         // Passing shots
         passShots.hoodAngleMap.put(5.46,  40.0);
@@ -167,6 +153,11 @@ public class ShotCalculator {
         }
     }
 
+    // velocities from the previous cycle for acceleration estimation
+    private double lastRobotVx = 0;
+    private double lastRobotVy = 0;
+    private double lastRobotOmega = 0;
+    
     public ShotParameters calculate() {
         Pose2d estimatedPose = RobotState.getInstance().getEstimatedPose();
 
@@ -195,12 +186,21 @@ public class ShotCalculator {
         }
 
         ChassisSpeeds robotRelativeVelocity = RobotState.getInstance().getRobotVelocity();
-        estimatedPose = estimatedPose.exp(new Twist2d(
-            robotRelativeVelocity.vxMetersPerSecond * phaseDelay.get(),
-            robotRelativeVelocity.vyMetersPerSecond * phaseDelay.get(),
-            robotRelativeVelocity.omegaRadiansPerSecond * phaseDelay.get()
-        ));
 
+        // Second-order pose prediction based on estimated acceleration
+        double ax = (robotRelativeVelocity.vxMetersPerSecond - lastRobotVx) / 0.02;
+        double ay = (robotRelativeVelocity.vyMetersPerSecond - lastRobotVy) / 0.02;
+        double aOmega = (robotRelativeVelocity.omegaRadiansPerSecond - lastRobotOmega) / 0.02;
+        double phaseDelayDt = phaseDelay.get();
+        estimatedPose = estimatedPose.exp(new Twist2d(
+            robotRelativeVelocity.vxMetersPerSecond * phaseDelayDt + 0.5 * ax * phaseDelayDt * phaseDelayDt,
+            robotRelativeVelocity.vyMetersPerSecond * phaseDelayDt + 0.5 * ay * phaseDelayDt * phaseDelayDt,
+            robotRelativeVelocity.omegaRadiansPerSecond * phaseDelayDt + 0.5 * aOmega * phaseDelayDt * phaseDelayDt
+        ));
+        lastRobotVx = robotRelativeVelocity.vxMetersPerSecond;
+        lastRobotVy = robotRelativeVelocity.vyMetersPerSecond;
+        lastRobotOmega = robotRelativeVelocity.omegaRadiansPerSecond;
+        
         Translation2d target = getTargetPosition(type, turretPosition.getTranslation());
         double turretToTargetDistance = target.getDistance(turretPosition.getTranslation());
 
@@ -238,7 +238,11 @@ public class ShotCalculator {
 
         Rotation2d turretAngleAbsolute = target.minus(lookaheadPose.getTranslation()).getAngle();
         Rotation2d turretAngleRobotRelative = turretAngleAbsolute.minus(RobotState.getInstance().getEstimatedPose().getRotation());
-        double hoodAngleRad = type.shotMapData.getHood(lookaheadTurretToTargetDistance);
+        double hoodAngleRad = MathUtil.clamp(
+            type.shotMapData.getHood(lookaheadTurretToTargetDistance),
+            TurretConstants.hoodMinAngle,
+            TurretConstants.hoodMaxAngle
+        );
   
         double flywheelVelocity = type.shotMapData.getFlywheel(lookaheadTurretToTargetDistance);
         Logger.recordOutput("LaunchCalculator/Calculated/Flywheel", flywheelVelocity);
