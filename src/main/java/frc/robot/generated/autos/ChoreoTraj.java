@@ -1,4 +1,4 @@
-// spotless:off
+
 package frc.robot.generated.autos;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -6,10 +6,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import java.util.Map;
 import java.util.OptionalInt;
 
+// If these imports cause errors because you're not using ChoreoLib,
+// turn off "Include ChoreoLib-specific Helpers" in Choreo's codegen settings.
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
-// If the 2 imports above cause errors because you're not using ChoreoLib,
-// turn off "Include ChoreoLib-specific Helpers" in Choreo's codegen settings.
 
 /**
  * A class containing the name, start pose, end pose, and total time of every Choreo trajectory.
@@ -25,87 +25,91 @@ public record ChoreoTraj(
     Pose2d endPoseBlue
 ) {
     public static final ChoreoTraj CenterDepot = new ChoreoTraj(
-        "CenterDepot",
-        OptionalInt.empty(),
-        2.91953,
-        new Pose2d(3.47272, 4.04414, Rotation2d.fromRadians(0)),
-        new Pose2d(1.3067, 5.10358, Rotation2d.fromRadians(-0.00402))
-    );
-    public static final ChoreoTraj CenterPreload = new ChoreoTraj(
-        "CenterPreload",
-        OptionalInt.empty(),
-        1.35107,
-        new Pose2d(3.62515, 4.0272, Rotation2d.fromRadians(0)),
-        new Pose2d(1.80056, 4.0348, Rotation2d.fromRadians(0))
-    );
-    public static final ChoreoTraj LeftDoubleSwipe = new ChoreoTraj(
-        "LeftDoubleSwipe",
-        OptionalInt.empty(),
-        9.68842,
-        new Pose2d(4.50402, 7.34015, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(3.42683, 7.41656, Rotation2d.fromRadians(-1.64395))
-    );
-    /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
-    public static final ChoreoTraj LeftDoubleSwipe$0 = new ChoreoTraj(
-        "LeftDoubleSwipe",
-        OptionalInt.of(0),
-        4.32303,
-        new Pose2d(4.50402, 7.34015, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(3.44291, 7.48501, Rotation2d.fromRadians(1.56992))
-    );
-    /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
-    public static final ChoreoTraj LeftDoubleSwipe$1 = new ChoreoTraj(
-        "LeftDoubleSwipe",
-        OptionalInt.of(1),
-        5.3653900000000005,
-        new Pose2d(3.44291, 7.48501, Rotation2d.fromRadians(1.56992)),
-        new Pose2d(3.42683, 7.41656, Rotation2d.fromRadians(-1.64395))
-    );
-    public static final ChoreoTraj RightDoubleSwipeGenerated = new ChoreoTraj(
-        "RightDoubleSwipeGenerated",
-        OptionalInt.empty(),
-        9.68842,
-        new Pose2d(4.50402, 0.70285, Rotation2d.fromRadians(-1.5708)),
-        new Pose2d(3.42683, 0.62644, Rotation2d.fromRadians(1.64395))
-    );
-    /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
-    public static final ChoreoTraj RightDoubleSwipeGenerated$0 = new ChoreoTraj(
-        "RightDoubleSwipeGenerated",
-        OptionalInt.of(0),
-        4.32303,
-        new Pose2d(4.50402, 0.70285, Rotation2d.fromRadians(-1.5708)),
-        new Pose2d(3.44291, 0.55799, Rotation2d.fromRadians(-1.56992))
-    );
-    /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
-    public static final ChoreoTraj RightDoubleSwipeGenerated$1 = new ChoreoTraj(
-        "RightDoubleSwipeGenerated",
-        OptionalInt.of(1),
-        5.3653900000000005,
-        new Pose2d(3.44291, 0.55799, Rotation2d.fromRadians(-1.56992)),
-        new Pose2d(3.42683, 0.62644, Rotation2d.fromRadians(1.64395))
-    );
-    public static final ChoreoTraj SweepOutpost = new ChoreoTraj(
-        "SweepOutpost",
-        OptionalInt.empty(),
-        4.44144,
-        new Pose2d(4.49238, 7.35992, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(0.77421, 0.65509, Rotation2d.fromRadians(0))
-    );
+	    "CenterDepot",
+	    OptionalInt.empty(),
+	    2.91953,
+	    new Pose2d(3.473, 4.044, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.307, 5.104, Rotation2d.fromRadians(-0.004))
+	);
+	public static final ChoreoTraj CenterPreload = new ChoreoTraj(
+	    "CenterPreload",
+	    OptionalInt.empty(),
+	    1.35107,
+	    new Pose2d(3.625, 4.027, Rotation2d.fromRadians(0)),
+	    new Pose2d(1.801, 4.035, Rotation2d.fromRadians(0))
+	);
+	public static final ChoreoTraj LeftDoubleSwipe = new ChoreoTraj(
+	    "LeftDoubleSwipe",
+	    OptionalInt.empty(),
+	    9.68842,
+	    new Pose2d(4.504, 7.34, Rotation2d.fromRadians(1.571)),
+	    new Pose2d(3.427, 7.417, Rotation2d.fromRadians(-1.644))
+	);
+	public static final ChoreoTraj LeftDoubleSwipe$0 = new ChoreoTraj(
+	    "LeftDoubleSwipe",
+	    OptionalInt.of(0),
+	    4.32303,
+	    new Pose2d(4.504, 7.34, Rotation2d.fromRadians(1.571)),
+	    new Pose2d(3.443, 7.485, Rotation2d.fromRadians(1.57))
+	);
+	public static final ChoreoTraj LeftDoubleSwipe$1 = new ChoreoTraj(
+	    "LeftDoubleSwipe",
+	    OptionalInt.of(1),
+	    5.3653900000000005,
+	    new Pose2d(3.443, 7.485, Rotation2d.fromRadians(1.57)),
+	    new Pose2d(3.427, 7.417, Rotation2d.fromRadians(-1.644))
+	);
+	public static final ChoreoTraj LeftSweepSwipe = new ChoreoTraj(
+	    "LeftSweepSwipe",
+	    OptionalInt.empty(),
+	    8.76782,
+	    new Pose2d(4.477, 7.534, Rotation2d.fromRadians(1.571)),
+	    new Pose2d(3.398, 0.657, Rotation2d.fromRadians(1.571))
+	);
+	public static final ChoreoTraj RightDoubleSwipeGenerated = new ChoreoTraj(
+	    "RightDoubleSwipeGenerated",
+	    OptionalInt.empty(),
+	    9.68842,
+	    new Pose2d(4.504, 0.703, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(3.427, 0.626, Rotation2d.fromRadians(1.644))
+	);
+	public static final ChoreoTraj RightDoubleSwipeGenerated$0 = new ChoreoTraj(
+	    "RightDoubleSwipeGenerated",
+	    OptionalInt.of(0),
+	    4.32303,
+	    new Pose2d(4.504, 0.703, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(3.443, 0.558, Rotation2d.fromRadians(-1.57))
+	);
+	public static final ChoreoTraj RightDoubleSwipeGenerated$1 = new ChoreoTraj(
+	    "RightDoubleSwipeGenerated",
+	    OptionalInt.of(1),
+	    5.3653900000000005,
+	    new Pose2d(3.443, 0.558, Rotation2d.fromRadians(-1.57)),
+	    new Pose2d(3.427, 0.626, Rotation2d.fromRadians(1.644))
+	);
+	public static final ChoreoTraj RightSweepSwipeGenerated = new ChoreoTraj(
+	    "RightSweepSwipeGenerated",
+	    OptionalInt.empty(),
+	    8.76783,
+	    new Pose2d(4.477, 0.509, Rotation2d.fromRadians(-1.571)),
+	    new Pose2d(3.398, 7.386, Rotation2d.fromRadians(-1.571))
+	);
 
     /**
      * A map between trajectory names and their corresponding data.
      * This allows for trajectory data to be looked up with strings during runtime.
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
-        Map.entry("CenterDepot", CenterDepot),
-        Map.entry("CenterPreload", CenterPreload),
-        Map.entry("LeftDoubleSwipe", LeftDoubleSwipe),
-        Map.entry("LeftDoubleSwipe$0", LeftDoubleSwipe$0),
-        Map.entry("LeftDoubleSwipe$1", LeftDoubleSwipe$1),
-        Map.entry("RightDoubleSwipeGenerated", RightDoubleSwipeGenerated),
-        Map.entry("RightDoubleSwipeGenerated$0", RightDoubleSwipeGenerated$0),
-        Map.entry("RightDoubleSwipeGenerated$1", RightDoubleSwipeGenerated$1),
-        Map.entry("SweepOutpost", SweepOutpost)
+    	Map.entry("CenterDepot", CenterDepot),
+		Map.entry("CenterPreload", CenterPreload),
+		Map.entry("LeftDoubleSwipe", LeftDoubleSwipe),
+		Map.entry("LeftDoubleSwipe$0", LeftDoubleSwipe$0),
+		Map.entry("LeftDoubleSwipe$1", LeftDoubleSwipe$1),
+		Map.entry("LeftSweepSwipe", LeftSweepSwipe),
+		Map.entry("RightDoubleSwipeGenerated", RightDoubleSwipeGenerated),
+		Map.entry("RightDoubleSwipeGenerated$0", RightDoubleSwipeGenerated$0),
+		Map.entry("RightDoubleSwipeGenerated$1", RightDoubleSwipeGenerated$1),
+		Map.entry("RightSweepSwipeGenerated", RightSweepSwipeGenerated)
     );
 
     /**
@@ -132,4 +136,3 @@ public record ChoreoTraj(
         return routine.trajectory(this.name);
     }
 }
-// spotless:on
