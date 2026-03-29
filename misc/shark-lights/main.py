@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """WebSocket client for receiving LED color commands from a remote server."""
 
 import asyncio
@@ -83,8 +82,8 @@ class LEDController:
                     (r,g,b),
                 )
             )
-        else:
-            logger.info(f"Set LEDs to color: R={r} G={g} B={b}")
+        #else:
+            #logger.info(f"Set LEDs to color: R={r} G={g} B={b}")
 
         # if not LED_AVAILABLE:
             # logger.info(self.strip.getPixels())
@@ -145,8 +144,13 @@ async def led_client(
     except Exception as e:
         logger.error(f"Connection error: {e}")
     finally:
-        controller.turn_off()
-        logger.info("LEDs turned off")
+        logger.info("Disconnected from server; signaling and returning for reconnect")
+        # Briefly blink magenta to indicate disconnect, then return.
+        for _ in range(3):
+            controller.set_color(255, 0, 255)
+            await asyncio.sleep(0.5)
+            controller.set_color(0, 0, 0)
+            await asyncio.sleep(0.5)
 
 
 async def main() -> None:
