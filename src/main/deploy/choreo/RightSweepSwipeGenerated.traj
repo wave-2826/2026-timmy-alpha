@@ -43,8 +43,7 @@
     {"x":{"exp":"6.954102039337158 m", "val":6.954102039337158}, "y":{"exp":"4.798239009857177 m", "val":4.798239009857177}, "heading":{"exp":"1.42294689601067 rad", "val":1.42294689601067}, "intervals":65, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"5.8680739402771 m", "val":5.8680739402771}, "y":{"exp":"4.666599529266357 m", "val":4.666599529266357}, "heading":{"exp":"-1.5437755497509609 rad", "val":-1.5437755497509609}, "intervals":29, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
     {"x":{"exp":"5.8680739402771 m", "val":5.8680739402771}, "y":{"exp":"7.3323049716949456 m", "val":7.3323049716949456}, "heading":{"exp":"-1.5707963267948966 rad", "val":-1.5707963267948966}, "intervals":23, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"3.3980000019073486 m", "val":3.3980000019073486}, "y":{"exp":"7.386116462230682 m", "val":7.386116462230682}, "heading":{"exp":"-1.5707963267948966 rad", "val":-1.5707963267948966}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false},
-    {"x":{"exp":"-0.3746262490749359 m", "val":-0.3746262490749359}, "y":{"exp":"-0.5785115957260132 m", "val":-0.5785115957260132}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
+    {"x":{"exp":"3.3980000019073486 m", "val":3.3980000019073486}, "y":{"exp":"7.386116462230682 m", "val":7.386116462230682}, "heading":{"exp":"-1.5707963267948966 rad", "val":-1.5707963267948966}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
@@ -401,5 +400,6 @@
  "events":[
    {"name":"Intake", "from":{"target":1, "targetTimestamp":0.69595, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"Intake Stop", "from":{"target":3, "targetTimestamp":2.40152, "offset":{"exp":"0.5 s", "val":0.5}}, "event":null},
-   {"name":"Outtake", "from":{"target":5, "targetTimestamp":3.74751, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
+   {"name":"Outtake", "from":{"target":5, "targetTimestamp":3.74751, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
+   {"name":"Outtake", "from":{"target":10, "targetTimestamp":8.76783, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
 }

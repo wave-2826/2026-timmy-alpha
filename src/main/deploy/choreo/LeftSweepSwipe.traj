@@ -400,5 +400,6 @@
  "events":[
    {"name":"Intake", "from":{"target":1, "targetTimestamp":0.69608, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"Intake Stop", "from":{"target":3, "targetTimestamp":2.40159, "offset":{"exp":"0.5 s", "val":0.5}}, "event":null},
-   {"name":"Outtake", "from":{"target":5, "targetTimestamp":3.74748, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
+   {"name":"Outtake", "from":{"target":5, "targetTimestamp":3.74748, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
+   {"name":"Outtake", "from":{"target":10, "targetTimestamp":8.76782, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
 }
