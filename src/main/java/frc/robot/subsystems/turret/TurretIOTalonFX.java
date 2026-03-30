@@ -60,9 +60,6 @@ public class TurretIOTalonFX implements TurretIO {
     protected final StatusSignal<AngularVelocity> bottomFlywheelVelocity;
     /** Base unit: stator **amps** */
     protected final StatusSignal<Current> bottomFlywheelCurrent;
-    
-    // protected final StatusSignal<Angle> azimuthAbsAngle;
-    // protected final StatusSignal<AngularVelocity> azimuthAbsVelocity;
 
     /** Base unit: mechanism **rotations** */
     protected final StatusSignal<Angle> azimuthInternalAngle;
@@ -146,7 +143,7 @@ public class TurretIOTalonFX implements TurretIO {
         // Leader update frequency so follower can track more accurately
         topFlywheelCurrent.setUpdateFrequency(250.0);
         ParentDevice.optimizeBusUtilizationForAll(
-            topFlywheelTalon, bottomFlywheelTalon, azimuthTalon, hoodTalon//, azimuthCancoder
+            topFlywheelTalon, bottomFlywheelTalon, azimuthTalon, hoodTalon
         );
 
         resetAzimuth(Rotation2d.kZero);
@@ -206,13 +203,6 @@ public class TurretIOTalonFX implements TurretIO {
             azimuthInternalVelocity.getValueAsDouble() * (2 * Math.PI),
             azimuthCurrent.getValueAsDouble()
         );
-        // inputs.azimuthEncoder = new TurretIOInputs.AzimuthEncoderInputs(
-        //     azimuthEncoderStatus.isOK(),
-        //     azimuthAbsAngle.getValueAsDouble() * (2 * Math.PI),
-        //     azimuthAbsVelocity.getValueAsDouble() * (2 * Math.PI)
-        // );
-        inputs.azimuthEncoder = new TurretIOInputs.AzimuthEncoderInputs(false, 0, 0);
-
         inputs.topFlywheel = new TurretIOInputs.FlywheelMotorInputs(
             topFlywheelStatus.isOK(),
             topFlywheelVelocity.getValueAsDouble() * (2 * Math.PI),
@@ -257,10 +247,12 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void resetHoodTo(double angleRad) {
+        // hoodAngle = (azimuth.internalEncoderAngle - hood.angleRad) * TurretConstants.hoodRingToHoodReduction + hoodMinAngle
+        // (hoodAngle - hoodMinAngle) / TurretConstants.hoodRingToHoodReduction = azimuth.internalEncoderAngle - hood.angleRad
+        // azimuth.internalEncoderAngle - (hoodAngle - hoodMinAngle) / TurretConstants.hoodRingToHoodReduction = hood.angleRad
         double angleRotations = (angleRad - TurretConstants.hoodMinAngle) / 2 / Math.PI;
         tryUntilOk(5, () -> hoodTalon.setPosition(
-            azimuthInternalAngle.getValueAsDouble() +
-            angleRotations / TurretConstants.hoodRingToHoodReduction
+            azimuthInternalAngle.getValueAsDouble() - angleRotations / TurretConstants.hoodRingToHoodReduction
         ));
     }
 

@@ -164,7 +164,10 @@ public class RobotState {
 
         // Apply update
         poseEstimator.updateWithTime(timestamp, rawGyroRotation, modulePositions);
-        // tf are we even doing anymore
+    }
+
+    public Rotation2d getRawGyroReading() {
+        return rawGyroRotation;
     }
 
     public void addDriveSpeeds(ChassisSpeeds speeds) {

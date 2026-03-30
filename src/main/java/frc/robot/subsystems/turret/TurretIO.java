@@ -41,20 +41,11 @@ public interface TurretIO {
             /** The motor current draw. */
             double currentAmps
         ) {}
-        public record AzimuthEncoderInputs(
-            /** Whether the encoder is connected */
-            boolean connected,
-            /** The measured azimuth motor angle, but based on the absolute encoder. */
-            double angleRad,
-            /** The measured absolute motor velocity in rad/sec, but based on the absolute encoder. */
-            double velocityRadPerSec
-        ) {}
 
         public FlywheelMotorInputs topFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
         public FlywheelMotorInputs bottomFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
 
         public AzimuthMotorInputs azimuth = new AzimuthMotorInputs(false, 0.0, 0.0, 0.0);
-        public AzimuthEncoderInputs azimuthEncoder = new AzimuthEncoderInputs(false, 0.0, 0.0);
 
         public HoodMotorInputs hood = new HoodMotorInputs(false, 0.0, 0.0, 0.0);
 
@@ -77,22 +68,20 @@ public interface TurretIO {
             return (
                 topFlywheel.velocityRadPerSec() + bottomFlywheel.velocityRadPerSec()
             ) / 2 * TurretConstants.totalFlywheelGearing -
-                azimuthEncoder.velocityRadPerSec() * TurretConstants.azimuthFlyCoupling;
+                azimuth.internalEncoderVelocity() * TurretConstants.azimuthFlyCoupling;
         }
         public double getHoodAngleRad() {
-            return (azimuth.internalEncoderAngle - hood.angleRad) / TurretConstants.hoodRingToHoodReduction +
+            return (azimuth.internalEncoderAngle - hood.angleRad) * TurretConstants.hoodRingToHoodReduction +
                 TurretConstants.hoodMinAngle;
         }
         public double getHoodVelocityRadPerSec() {
             return hood.velocityRadPerSec() * TurretConstants.totalHoodGearing -
-                azimuthEncoder.velocityRadPerSec() * TurretConstants.azimuthHoodCoupling;
+                azimuth.internalEncoderVelocity() * TurretConstants.azimuthHoodCoupling;
         }
         public double getAzimuthAngleRad() {
-            // return azimuthEncoder.angleRad() * TurretConstants.totalAzimuthGearing;
             return MathUtil.angleModulus(azimuth.internalEncoderAngle);
         }
         public double getAzimuthVelocityRadPerSec() {
-            // return azimuthEncoder.velocityRadPerSec() * TurretConstants.totalAzimuthGearing;
             return azimuth.internalEncoderVelocity;
         }
     }

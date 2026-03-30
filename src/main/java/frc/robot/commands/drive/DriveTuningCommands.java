@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 
+import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
@@ -81,37 +82,122 @@ public class DriveTuningCommands {
 
     // TODO - REALLY TODO - log this and make it work in replay
     /** A set of tuning results that we can load from and save to a JSON file. */
-    public static class TuningResults {    
-        public static record WheelRadiusTuningResults(double radiusMeters, double radiusInches) {}
-        public static record FeedforwardTuningResults(double kS, double kV) {}
-        public static record SlipTuningResults(
-            double slipCurrentAmps,
-            double slipSetpointVolts,
-            double wheelCOF,
-            double[] moduleSlipCurrentsAmps,
-            double[] moduleSlipSetpoints
-        ) {}
-        public static record ModuleZeroingResults(double[] moduleOffsetsRadians) {}
-        public static record MOIResults(double moiKgM2) {}
-    
-        private final transient LoggableInputs inputs =
-            new LoggableInputs() {
-                public void toLog(LogTable table) {
-                    table.put("WheelRadiusResults", wheelRadiusResults);
-                    table.put("FeedforwardResults", feedforwardResults);
-                    table.put("SlipResults", slipResults);
-                    table.put("ModuleZeroingResults", moduleZeroingResults);
-                    table.put("MOIResults", moiResults);
-                }
+    public static class TuningResults {
+        public static class WheelRadiusTuningResults implements LoggableInputs {
+            public double radiusMeters;
+            public double radiusInches;
 
-                public void fromLog(LogTable table) {
-                    wheelRadiusResults = table.get("WheelRadiusResults", wheelRadiusResults);
-                    feedforwardResults = table.get("FeedforwardResults", feedforwardResults);
-                    slipResults = table.get("SlipResults", slipResults);
-                    moduleZeroingResults = table.get("ModuleZeroingResults", moduleZeroingResults);
-                    moiResults = table.get("MOIResults", moiResults);
-                }
-            };
+            public WheelRadiusTuningResults(double radiusMeters, double radiusInches) {
+                this.radiusMeters = radiusMeters;
+                this.radiusInches = radiusInches;
+            }
+
+            @Override
+            public void toLog(LogTable table) {
+                table.put("RadiusMeters", radiusMeters);
+                table.put("RadiusInches", radiusInches);
+            }
+
+            @Override
+            public void fromLog(LogTable table) {
+                radiusMeters = table.get("RadiusMeters", radiusMeters);
+                radiusInches = table.get("RadiusInches", radiusInches);
+            }
+        }
+        public static class FeedforwardTuningResults implements LoggableInputs {
+            public double kS;
+            public double kV;
+
+            public FeedforwardTuningResults(double kS, double kV) {
+                this.kS = kS;
+                this.kV = kV;
+            }
+
+            @Override
+            public void toLog(LogTable table) {
+                table.put("kS", kS);
+                table.put("kV", kV);
+            }
+
+            @Override
+            public void fromLog(LogTable table) {
+                kS = table.get("kS", kS);
+                kV = table.get("kV", kV);
+            }
+        }
+        public static class SlipTuningResults implements LoggableInputs {
+            public double slipCurrentAmps;
+            public double slipSetpointVolts;
+            public double wheelCOF;
+            public double[] moduleSlipCurrentsAmps;
+            public double[] moduleSlipSetpoints;
+
+            public SlipTuningResults(
+                double slipCurrentAmps,
+                double slipSetpointVolts,
+                double wheelCOF,
+                double[] moduleSlipCurrentsAmps,
+                double[] moduleSlipSetpoints
+            ) {
+                this.slipCurrentAmps = slipCurrentAmps;
+                this.slipSetpointVolts = slipSetpointVolts;
+                this.wheelCOF = wheelCOF;
+                this.moduleSlipCurrentsAmps = moduleSlipCurrentsAmps;
+                this.moduleSlipSetpoints = moduleSlipSetpoints;
+            }
+            
+            @Override
+            public void toLog(LogTable table) {
+                table.put("SlipCurrentAmps", slipCurrentAmps);
+                table.put("SlipSetpointVolts", slipSetpointVolts);
+                table.put("WheelCOF", wheelCOF);
+                table.put("ModuleSlipCurrentsAmps", moduleSlipCurrentsAmps);
+                table.put("ModuleSlipSetpoints", moduleSlipSetpoints);
+            }
+
+            @Override
+            public void fromLog(LogTable table) {
+                slipCurrentAmps = table.get("SlipCurrentAmps", slipCurrentAmps);
+                slipSetpointVolts = table.get("SlipSetpointVolts", slipSetpointVolts);
+                wheelCOF = table.get("WheelCOF", wheelCOF);
+                moduleSlipCurrentsAmps = table.get("ModuleSlipCurrentsAmps", moduleSlipCurrentsAmps);
+                moduleSlipSetpoints = table.get("ModuleSlipSetpoints", moduleSlipSetpoints);
+            }
+        }
+        public static class ModuleZeroingResults implements LoggableInputs {
+            public double[] moduleOffsetsRadians;
+
+            public ModuleZeroingResults(double[] moduleOffsetsRadians) {
+                this.moduleOffsetsRadians = moduleOffsetsRadians;
+            }
+            
+            @Override
+            public void toLog(LogTable table) {
+                table.put("ModuleOffsetsRadians", moduleOffsetsRadians);
+            }
+
+            @Override
+            public void fromLog(LogTable table) {
+                moduleOffsetsRadians = table.get("ModuleOffsetsRadians", moduleOffsetsRadians);
+            }
+        }
+        public static class MOIResults implements LoggableInputs {
+            public double moiKgM2;
+
+            public MOIResults(double moiKgM2) {
+                this.moiKgM2 = moiKgM2;
+            }
+
+            @Override
+            public void toLog(LogTable table) {
+                table.put("MoiKgM2", moiKgM2);
+            }
+
+            @Override
+            public void fromLog(LogTable table) {
+                moiKgM2 = table.get("MoiKgM2", moiKgM2);
+            }
+        }
         
         public WheelRadiusTuningResults wheelRadiusResults = new WheelRadiusTuningResults(0.0507746, 1.999);
         public FeedforwardTuningResults feedforwardResults = new FeedforwardTuningResults(3.68789, 1.42702);
@@ -135,6 +221,14 @@ public class DriveTuningCommands {
             // Allow serializing records
             .registerTypeAdapter(Class.class, new GsonClassAdapter());
 
+        private void processInputs() {
+            Logger.processInputs("Drive/DriveTuningCommands/WheelRadiusResults", wheelRadiusResults);
+            Logger.processInputs("Drive/DriveTuningCommands/FeedforwardResults", feedforwardResults);
+            Logger.processInputs("Drive/DriveTuningCommands/SlipResults", slipResults);
+            Logger.processInputs("Drive/DriveTuningCommands/ModuleZeroingResults", moduleZeroingResults);
+            Logger.processInputs("Drive/DriveTuningCommands/MOIResults", moiResults);
+        }
+
         public static TuningResults load() {
             TuningResults results;
             if(!Logger.hasReplaySource()) {
@@ -156,7 +250,7 @@ public class DriveTuningCommands {
                 results = new TuningResults();
             }
             
-            Logger.processInputs("Drive/DriveTuningCommands", results.inputs);
+            results.processInputs();
             return results;
         }
 
@@ -223,7 +317,7 @@ public class DriveTuningCommands {
         private transient ArrayList<Runnable> onChangeCallbacks = new ArrayList<>();
 
         public void save() {
-            Logger.processInputs("Drive/DriveTuningCommands", inputs);
+            processInputs();
             if(Logger.hasReplaySource()) return;
 
             var gson = builder.create();
@@ -548,7 +642,7 @@ public class DriveTuningCommands {
                 double motorTorque = averageSlipCurrent * DriveConstants.driveMotorModel.KtNMPerAmp;
                 double totalTorqueNm = 4 * DriveConstants.driveGearRatio * motorTorque;
                 double robotMassN = DriveConstants.robotMass.in(Kilogram) * 9.81;
-                double wheelCOF = totalTorqueNm / (robotMassN * Drive.tuningResults.wheelRadiusResults.radiusMeters());
+                double wheelCOF = totalTorqueNm / (robotMassN * Drive.tuningResults.wheelRadiusResults.radiusMeters);
                 NumberFormat cofFormatter = new DecimalFormat("#0.0000");
                 System.out.println("\tEstimated wheel COF: " + cofFormatter.format(wheelCOF));
                 System.out.flush();
@@ -675,7 +769,7 @@ public class DriveTuningCommands {
                 double motorTorque = slipCurrent * DriveConstants.driveMotorModel.KtNMPerAmp;
                 double totalTorqueNm = 4 * DriveConstants.driveGearRatio * motorTorque;
                 double forceOnWheelN = DriveConstants.wheelForceMasses[slippedModule.value].in(Kilogram) * 9.81;
-                double wheelCOF = totalTorqueNm / (forceOnWheelN * Drive.tuningResults.wheelRadiusResults.radiusMeters());
+                double wheelCOF = totalTorqueNm / (forceOnWheelN * Drive.tuningResults.wheelRadiusResults.radiusMeters);
                 NumberFormat cofFormatter = new DecimalFormat("#0.0000");
                 System.out.println("\tEstimated wheel COF: " + cofFormatter.format(wheelCOF));
                 System.out.flush();
@@ -785,7 +879,7 @@ public class DriveTuningCommands {
 
             // TODO: check that this is right? it produces wierd numbers
             double wheelTorque = DriveConstants.driveGearRatio * effectiveCurrent * DriveConstants.driveMotorModel.KtNMPerAmp;
-            double wheelForceAtGround = wheelTorque / Drive.tuningResults.wheelRadiusResults.radiusMeters();
+            double wheelForceAtGround = wheelTorque / Drive.tuningResults.wheelRadiusResults.radiusMeters;
             double torqueOnRobot = wheelForceAtGround * DriveConstants.driveBaseRadius * 4;
             double moi = torqueOnRobot / averageGyroAcceleration;
 

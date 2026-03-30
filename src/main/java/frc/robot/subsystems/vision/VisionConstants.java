@@ -64,7 +64,7 @@ public class VisionConstants {
     // Standard deviation baselines, for 1 meter distance and 1 tag
     // (Adjusted automatically based on distance and # of tags)
     public static double linearStdDevBaseline = 0.02; // Meters
-    public static double angularStdDevBaseline = 0.06; // Radians
+    public static double angularStdDevBaseline = 1000.0; // Radians
 
     // Standard deviation multipliers for each camera
     // (Adjust to trust some cameras more than others)

@@ -231,6 +231,7 @@ public class ShotCalculator {
             lookaheadTurretToTargetDistance = target.getDistance(lookaheadPose.getTranslation());
         }
         
+        Logger.recordOutput("LaunchCalculator/TargetPosition", target);
         Logger.recordOutput("LaunchCalculator/TimeOfFlight", timeOfFlight);
         Logger.recordOutput("LaunchCalculator/EffectiveTimeOfFlight", effectiveTimeOfFlight);
         Logger.recordOutput("LaunchCalculator/LookaheadPose", lookaheadPose);

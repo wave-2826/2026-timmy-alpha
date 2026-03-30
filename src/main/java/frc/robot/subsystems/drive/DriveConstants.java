@@ -72,14 +72,14 @@ public class DriveConstants {
                     .withDriveMotorGearRatio(driveGearRatio)
                     .withSteerMotorGearRatio(steerGearRatio)
                     .withCouplingGearRatio(coupleRatio)
-                    .withWheelRadius(Drive.tuningResults.wheelRadiusResults.radiusMeters())
+                    .withWheelRadius(Drive.tuningResults.wheelRadiusResults.radiusMeters)
                     .withSteerMotorGains(steerGains)
                     .withDriveMotorGains(driveGains
-                        .withKS(Drive.tuningResults.feedforwardResults.kS())
-                        .withKV(Drive.tuningResults.feedforwardResults.kV()))
+                        .withKS(Drive.tuningResults.feedforwardResults.kS)
+                        .withKV(Drive.tuningResults.feedforwardResults.kV))
                     .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
                     .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.TorqueCurrentFOC)
-                    .withSlipCurrent(Drive.tuningResults.slipResults.slipCurrentAmps())
+                    .withSlipCurrent(Drive.tuningResults.slipResults.slipCurrentAmps)
                     .withSpeedAt12Volts(linearFreeSpeed)
                     .withDriveMotorType(driveMotorType)
                     .withSteerMotorType(steerMotorType)
@@ -93,7 +93,7 @@ public class DriveConstants {
                     .withDriveFrictionVoltage(driveFrictionVoltage);
             return ConstantCreator.createModuleConstants(
                 steerMotorId, driveMotorId, encoderId,
-                Radians.of(Drive.tuningResults.moduleZeroingResults.moduleOffsetsRadians()[index]),
+                Radians.of(Drive.tuningResults.moduleZeroingResults.moduleOffsetsRadians[index]),
                 xPosition, yPosition,
                 invertSide, invertMotor, invertEncoder
             );

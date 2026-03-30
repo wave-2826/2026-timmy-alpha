@@ -1,6 +1,7 @@
 package frc.robot.subsystems.turret;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -14,7 +15,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
-import java.util.function.BooleanSupplier;
+import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -256,33 +257,16 @@ public class Turret extends SubsystemBase {
 
     private boolean hasZeroed = false;
 
-    public Command zeroRoutine() {
-        Container<Boolean> startZeroValue = new Container<>(false);
-        Container<Double> hoodStartPos = new Container<>(0.);
-        double hoodRunVelocity = Units.rotationsPerMinuteToRadiansPerSecond(-500);
-        double zeroRangeRad = TurretConstants.hoodMaxAngle - TurretConstants.hoodMinAngle;
-        BooleanSupplier hoodFinished = () -> Math.abs(inputs.getHoodAngleRad() - hoodStartPos.value) > zeroRangeRad;
+    public Command zeroRoutine() {        
+        Container<Double> azimuthVelocity = new Container<>(0.);
+        Container<Double> hoodVelocity = new Container<>(0.);
+
         return Commands.sequence(
-            runOnce(() -> {
-                startZeroValue.value = inputs.azimuthZeroTriggered;
-                hoodStartPos.value = inputs.getHoodAngleRad();
-            }),
-            // Clockwise until the sensor value is the opposite of what it started
-            run(() -> {
-                target = null;
-                io.setVelocityOutputs(0, Units.rotationsPerMinuteToRadiansPerSecond(60), hoodFinished.getAsBoolean() ? 0. : hoodRunVelocity);
-            }).until(() -> inputs.azimuthZeroTriggered != startZeroValue.value).withTimeout(5),
-            // Counterclockwise until no longer triggered
-            // TODO: search for falling edge while traveling in correct direction
-            run(() -> {
-                target = null;
-                io.setVelocityOutputs(0, -Units.rotationsPerMinuteToRadiansPerSecond(15), hoodFinished.getAsBoolean() ? 0. : hoodRunVelocity);
-            }).until(() -> !inputs.azimuthZeroTriggered).withTimeout(1),
-            runOnce(() -> io.resetAzimuth(TurretConstants.azimuthResetAngle)),
-            // Run until hood has changed by at least its full range
-            run(() -> {
-                io.setVelocityOutputs(0, 0, hoodRunVelocity);
-            }).until(hoodFinished).withTimeout(1),
+            Commands.parallel(
+                zeroAzimuth((v) -> azimuthVelocity.value = v),
+                zeroHood((v) -> hoodVelocity.value = v)
+            ).raceWith(run(() -> io.setVelocityOutputs(0, azimuthVelocity.value, hoodVelocity.value))),
+
             runOnce(() -> {
                 io.resetHoodTo(TurretConstants.hoodMaxAngle);
                 manualControlAzimuthOffset = 0;
@@ -290,6 +274,55 @@ public class Turret extends SubsystemBase {
                 hasZeroed = true;
             })
         ).withName("TurretZero");
+    }
+
+    private Command zeroHood(DoubleConsumer setHoodVelocity) {
+        LinearFilter hoodCurrentFilter = LinearFilter.movingAverage((int)(0.5 / 0.02));
+        double hoodRunVelocity = Units.rotationsPerMinuteToRadiansPerSecond(-500);
+
+        Container<Double> hoodStartPos = new Container<>(0.);
+        double zeroRangeRad = TurretConstants.hoodMaxAngle - TurretConstants.hoodMinAngle;
+        
+        // Run velocity until EITHER the hood has gone its full range or it hits the zero current
+        return Commands.sequence(
+            Commands.runOnce(() -> {
+                hoodStartPos.value = inputs.getHoodAngleRad();
+                hoodCurrentFilter.reset();
+            }),
+            Commands.run(() -> {
+                setHoodVelocity.accept(hoodRunVelocity);
+            }).until(() -> {
+                return Math.abs(inputs.getHoodAngleRad() - hoodStartPos.value) > zeroRangeRad ||
+                    hoodCurrentFilter.calculate(inputs.hood.currentAmps()) > TurretConstants.hoodResetCurrent;
+            }),
+            Commands.runOnce(() -> {
+                setHoodVelocity.accept(0);
+            })
+        );
+    }
+
+    private Command zeroAzimuth(DoubleConsumer setAzimuthVelocity) {
+        Container<Boolean> startZeroValue = new Container<>(false);
+        double triggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(60);
+        double detriggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(10);
+        return Commands.sequence(
+            Commands.runOnce(() -> {
+                startZeroValue.value = inputs.azimuthZeroTriggered;
+            }),
+
+            // Clockwise until the sensor value is the opposite of what it started
+            Commands.run(() -> {
+                target = null;
+                setAzimuthVelocity.accept(startZeroValue.value ? detriggerSpeed : triggerSpeed);
+            }).until(() -> inputs.azimuthZeroTriggered != startZeroValue.value).withTimeout(5),
+            // Counterclockwise until no longer triggered
+            // TODO: search for falling edge while also traveling in correct direction
+            Commands.run(() -> {
+                target = null;
+                setAzimuthVelocity.accept(-Units.rotationsPerMinuteToRadiansPerSecond(detriggerSpeed));
+            }).until(() -> !inputs.azimuthZeroTriggered).withTimeout(1),
+            Commands.runOnce(() -> io.resetAzimuth(TurretConstants.azimuthResetAngle))
+        );
     }
 
     public boolean zeroed() {

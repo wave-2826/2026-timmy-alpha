@@ -68,7 +68,7 @@ public class Module {
     private void setDrivePID() {
         io.setDrivePID(
             driveP.get(), 0, driveD.get(),
-            Drive.tuningResults.feedforwardResults.kS(), Drive.tuningResults.feedforwardResults.kV(),
+            Drive.tuningResults.feedforwardResults.kS, Drive.tuningResults.feedforwardResults.kV,
             driveA.get()
         );
     }
@@ -88,7 +88,7 @@ public class Module {
         int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
         odometryPositions = new SwerveModulePosition[sampleCount];
         for (int i = 0; i < sampleCount; i++) {
-            double positionMeters = inputs.odometryDrivePositionsRad[i] * Drive.tuningResults.wheelRadiusResults.radiusMeters();
+            double positionMeters = inputs.odometryDrivePositionsRad[i] * Drive.tuningResults.wheelRadiusResults.radiusMeters;
             Rotation2d angle = inputs.odometryTurnPositions[i];
             odometryPositions[i] = new SwerveModulePosition(positionMeters, angle);
         }
@@ -127,8 +127,8 @@ public class Module {
 
         // Apply setpoints
         io.setDriveVelocity(
-            state.speedMetersPerSecond / Drive.tuningResults.wheelRadiusResults.radiusMeters() * speedScalar.get(),
-            accelerationMps2 / Drive.tuningResults.wheelRadiusResults.radiusMeters()
+            state.speedMetersPerSecond / Drive.tuningResults.wheelRadiusResults.radiusMeters * speedScalar.get(),
+            accelerationMps2 / Drive.tuningResults.wheelRadiusResults.radiusMeters
         );
         io.setTurnPosition(state.angle);
     }
@@ -169,12 +169,12 @@ public class Module {
 
     /** Returns the current drive position of the module in meters. */
     public double getPositionMeters() {
-        return inputs.drivePositionRad * Drive.tuningResults.wheelRadiusResults.radiusMeters();
+        return inputs.drivePositionRad * Drive.tuningResults.wheelRadiusResults.radiusMeters;
     }
 
     /** Returns the current drive velocity of the module in meters per second. */
     public double getVelocityMetersPerSec() {
-        return inputs.driveVelocityRadPerSec * Drive.tuningResults.wheelRadiusResults.radiusMeters();
+        return inputs.driveVelocityRadPerSec * Drive.tuningResults.wheelRadiusResults.radiusMeters;
     }
 
     /** Returns the module position (turn angle and drive position). */
