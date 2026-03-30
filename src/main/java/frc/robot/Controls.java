@@ -86,7 +86,10 @@ public class Controls {
             coDriver::getRightTriggerAxis,
             coDriver::getLeftX
         ));
-        turretControlCodriver.whileTrue(spindexer.runManual(() -> coDriver.getLeftTriggerAxis() + MathUtil.applyDeadband(coDriver.getRightY(), 0.2)));
+        turretControlCodriver.whileTrue(spindexer.runManual(
+            () -> coDriver.getLeftTriggerAxis() + MathUtil.applyDeadband(coDriver.getRightY(), 0.2),
+            () -> turret.atSetpoint()
+        ));
         turretControlCodriver.and(coDriver.start().or(coDriver.back())).onTrue(turret.reset());
         turretControlCodriver.and(coDriver.leftBumper()).onTrue(turret.zeroRoutine());
         RobotModeTriggers.teleop().or(RobotModeTriggers.autonomous()).onTrue(turret.zeroRoutine().unless(turret::zeroed));

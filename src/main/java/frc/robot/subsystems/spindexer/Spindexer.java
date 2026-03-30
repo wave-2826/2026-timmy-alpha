@@ -3,6 +3,7 @@ package frc.robot.subsystems.spindexer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -27,10 +28,10 @@ public class Spindexer extends SubsystemBase {
         Logger.processInputs("Spindexer", inputs);
     }
 
-    public Command runManual(DoubleSupplier percent) {
+    public Command runManual(DoubleSupplier percent, BooleanSupplier runDexter) {
         return runPercent(
             () -> percent.getAsDouble(),
-            () -> Math.pow(Math.abs(percent.getAsDouble()), 0.1)
+            () -> runDexter.getAsBoolean() ? Math.pow(Math.abs(percent.getAsDouble()), 0.1) : 0.
         );
     }
 

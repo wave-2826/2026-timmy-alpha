@@ -111,7 +111,7 @@ public class TurretConstants {
     public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * aziMotorToRingReduction * 0.8;
 
     // Current limits
-    public static final int flywheelCurrentLimit = 50; // amps each
+    public static final int flywheelCurrentLimit = 40; // amps each
     public static final int azimuthCurrentLimit = 50; // amps
     public static final int hoodCurrentLimit = 40; // amps
 
@@ -137,7 +137,7 @@ public class TurretConstants {
         .addSimGains(new GenericPIDConstants(0.5, 0, 0));
     
     // Control tolerances
-    public static final double flywheelToleranceRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(500);
-    public static final double azimuthToleranceRad = Units.degreesToRadians(10);
-    public static final double hoodToleranceRad = Units.degreesToRadians(20);
+    public static final double flywheelToleranceRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(50);
+    public static final double azimuthToleranceRad = Units.degreesToRadians(2);
+    public static final double hoodToleranceRad = Units.degreesToRadians(2);
 }

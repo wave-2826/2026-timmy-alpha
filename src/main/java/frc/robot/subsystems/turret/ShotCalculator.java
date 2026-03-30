@@ -31,6 +31,10 @@ public class ShotCalculator {
 
     private static LoggedTunableNumber fudgeSpeedScale = new LoggedTunableNumber("ShotCalculator/FudgeSpeedScale", 1.0);
     private static LoggedTunableNumber fudgeAngleOffsetDeg = new LoggedTunableNumber("ShotCalculator/FudgeAngleOffsetDeg", 0.0);
+    private static LoggedTunableNumber fudgeTimeOfFlightScale = new LoggedTunableNumber("ShotCalculator/FudgeTOFScale", 1.0);
+    
+    private static LoggedTunableNumber fudgeHubX = new LoggedTunableNumber("ShotCalculator/FudgeHubXInches", 0.0);
+    private static LoggedTunableNumber fudgeHubY = new LoggedTunableNumber("ShotCalculator/FudgeHubYInches", -6.0);
 
     private static class ShotMapData {
         /** Distance (m)-hood angle (deg) map */
@@ -60,14 +64,14 @@ public class ShotCalculator {
         }
         /** Get the ToF in seconds */
         public double getTimeOfFlight(double distanceMeters) {
-            return timeOfFlightMap.get(distanceMeters);
+            return timeOfFlightMap.get(distanceMeters) * fudgeTimeOfFlightScale.get();
         }
     }
 
     private static ShotMapData hubShots = new ShotMapData();
     private static ShotMapData passShots = new ShotMapData();
     
-    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.5);
+    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.03);
     /**
      * See https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html#the-drag-constant-k.
      * For fuel, we found that the piece lost 19.4% of its velocity over 6.3s. The linear velocity drag can be represented as v(t) = v_0 * e^-kt or
@@ -82,15 +86,15 @@ public class ShotCalculator {
     static {
         // Hub shots
         hubShots.hoodAngleMap.put(0.96, 25.0);
-        hubShots.hoodAngleMap.put(4.65, 41.0);
+        hubShots.hoodAngleMap.put(3.45, 41.0);
 
         hubShots.flywheelSpeedMap.put(0.96, 2618.);
         hubShots.flywheelSpeedMap.put(4.65, 3925.);
 
-        hubShots.timeOfFlightMap.put(1.30, 1.36);
-        hubShots.timeOfFlightMap.put(1.88, 1.36);
-        hubShots.timeOfFlightMap.put(3.15, 1.44);
-        hubShots.timeOfFlightMap.put(5.68, 1.85);
+        hubShots.timeOfFlightMap.put(1.30, 0.90);
+        hubShots.timeOfFlightMap.put(1.88, 0.90);
+        hubShots.timeOfFlightMap.put(3.15, 0.96);
+        hubShots.timeOfFlightMap.put(5.68, 1.23);
 
         // Passing shots
         passShots.hoodAngleMap.put(5.46,  40.0);
@@ -149,7 +153,10 @@ public class ShotCalculator {
                 return hubCenter.plus(
                     new Translation2d(Units.inchesToMeters(hubOutwardBiasInches.get()), 0.0)
                         .rotateBy(hubCenter.minus(turretPosition).getAngle())
-                );
+                ).plus(new Translation2d(
+                    Units.inchesToMeters(fudgeHubX.get()),
+                    Units.inchesToMeters(fudgeHubY.get())
+                ));
         }
     }
 

@@ -36,23 +36,19 @@ public class VisionConstants {
 
     public static CameraConfiguration cameraLeftmost = new CameraConfiguration(
         "2826_OV9281_Ena",
-        // TODO: Recalibrate
-        new Transform3d(new Translation3d(0.15582344984686222, 0.4341147342006587, 0.4534495927084479), new Rotation3d(0.02516561369000825, -0.4091266208993857, 1.289064962108927))
-        // new Transform3d(new Translation3d(0.26299228917216877, 0.37463897857529405, 0.46437706895675346), new Rotation3d(0.019078617921454894, -0.32843832829994896, 0.22190482336538536))
+        new Transform3d(new Translation3d(0.18868012181167004, 0.37056625122226144, 0.46341750211881333), new Rotation3d(0.030098053016044974, -0.325774366531199, 1.2441301090023986))
     );
     public static CameraConfiguration cameraFrontLeft = new CameraConfiguration(
         "2826_OV9281_Fin",
-        // TODO: Recalibrate
-        new Transform3d(new Translation3d(0.2686987017716467, 0.38871703824933784, 0.4624331960863525), new Rotation3d(-0.0019470998534024731, -0.4229848498952987, 0.20816958409573905))
-        // new Transform3d(new Translation3d(0.19297534359942536, 0.43660469052086318, 0.4836127596115337), new Rotation3d(0.015612826506477587, -0.30580379815927905, 1.3097503000462243))
+        new Transform3d(new Translation3d(0.22778657178131428, 0.3163912857925228, 0.4614040424243781), new Rotation3d(0.039016142820737766, -0.31813074444347167, 0.18745931081144462))
     );
     public static CameraConfiguration cameraFrontRight = new CameraConfiguration(
         "2826_OV9281_Abe",
-        new Transform3d(new Translation3d(0.2686987017716467, -0.38871703824933784, 0.4624331960863525), new Rotation3d(-0.0019470998534024731, -0.4229848498952987, -0.20816958409573905))
+        null
     );
     public static CameraConfiguration cameraRightmost = new CameraConfiguration(
         "2826_OV9281_Gem",
-        new Transform3d(new Translation3d(0.15582344984686222, -0.4341147342006587, 0.4534495927084479), new Rotation3d(0.02516561369000825, -0.4091266208993857, -1.289064962108927))
+        new Transform3d(new Translation3d(0.1519442869732049, -0.40257497173741424, 0.4614851538303224), new Rotation3d(0.033264102269778766, -0.3840198165501535, -1.3709157027823682))
     );
 
     // Basic filtering thresholds
@@ -63,7 +59,7 @@ public class VisionConstants {
 
     // Standard deviation baselines, for 1 meter distance and 1 tag
     // (Adjusted automatically based on distance and # of tags)
-    public static double linearStdDevBaseline = 0.02; // Meters
+    public static double linearStdDevBaseline = 0.07; // Meters
     public static double angularStdDevBaseline = 1000.0; // Radians
 
     // Standard deviation multipliers for each camera

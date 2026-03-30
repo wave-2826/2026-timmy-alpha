@@ -63,27 +63,27 @@ public class VisionTuningCommands {
     }
 
     // Distance out from PDH side
-    private static LoggedTunableNumber heldTagXIn = new LoggedTunableNumber("Vision/CalibrationTag/XInches", 0.0);
+    private static LoggedTunableNumber heldTagXIn = new LoggedTunableNumber("Vision/CalibrationTag/XInches", 48.);
     // Distance left toward rio side
-    private static LoggedTunableNumber heldTagYIn = new LoggedTunableNumber("Vision/CalibrationTag/YInches", 60.75);
+    private static LoggedTunableNumber heldTagYIn = new LoggedTunableNumber("Vision/CalibrationTag/YInches", 0.0);
     // Distance up
-    private static LoggedTunableNumber heldTagZIn = new LoggedTunableNumber("Vision/CalibrationTag/ZInches", 23.0 + 6.5 / 2.);
+    private static LoggedTunableNumber heldTagZIn = new LoggedTunableNumber("Vision/CalibrationTag/ZInches", 21.59375);
     // Rotation clockwise from forward (facing PDH)
-    private static LoggedTunableNumber heldTagYawDeg = new LoggedTunableNumber("Vision/CalibrationTag/YawDegrees", 270.0);
+    private static LoggedTunableNumber heldTagYawDeg = new LoggedTunableNumber("Vision/CalibrationTag/YawDegrees", 180.0);
 
     /** The transform of the calibration tag, relative to the robot base. */
     private static Pose3d getHeldTagPose() {
         // Rotation applied before translation
         return new Pose3d(
-            Translation3d.kZero,
-            new Rotation3d(0., 0., Units.degreesToRadians(heldTagYawDeg.get()))
-        ).plus(new Transform3d(
             new Translation3d(
                 Units.inchesToMeters(heldTagXIn.get()),
                 Units.inchesToMeters(heldTagYIn.get()),
                 Units.inchesToMeters(heldTagZIn.get())
             ),
             Rotation3d.kZero
+        ).plus(new Transform3d(
+            Translation3d.kZero,
+            new Rotation3d(0., 0., Units.degreesToRadians(heldTagYawDeg.get()))
         ));
     }
 
@@ -136,6 +136,7 @@ public class VisionTuningCommands {
     public static Command spinnyMeasureCameraPositions(Drive drive, Vision vision) {
         Container<Rotation2d> initialGyroReading = new Container<>(Rotation2d.kZero);
         TransformAverage[] averages = new TransformAverage[vision.getCameraCount()];
+        Container<Boolean> anyCamerasSee = new Container<>(true);
         return drive.runOnce(() -> {
             initialGyroReading.value = RobotState.getInstance().getRawGyroReading();
         }).andThen(Commands.parallel(
@@ -158,19 +159,18 @@ public class VisionTuningCommands {
 
                 var robotAngle = RobotState.getInstance().getRawGyroReading().minus(initialGyroReading.value);
                 var robotPose = new Pose3d(new Pose2d(Translation2d.kZero, robotAngle));
-                var originToTag = getHeldTagPose();
-                var robotToTag = originToTag.minus(robotPose);
+                var tagPose = getHeldTagPose();
 
                 Logger.recordOutput("Vision/Tuning/OriginToRobot", robotPose);
-                Logger.recordOutput("Vision/Tuning/OriginToTag", originToTag);
-                Logger.recordOutput("Vision/Tuning/RobotToTag", robotToTag);
+                Logger.recordOutput("Vision/Tuning/TagPose", tagPose);
 
                 for(int cameraIndex = 0; cameraIndex < vision.getCameraCount(); cameraIndex++) {
                     var cameraToTag = transforms[cameraIndex];
                     if(cameraToTag == Transform3d.kZero) continue;
 
-                    var robotToCamera = robotToTag.plus(cameraToTag.inverse());
-                    
+                    var cameraPose = tagPose.plus(cameraToTag.inverse());
+                    var robotToCamera = new Transform3d(robotPose, cameraPose);
+
                     Logger.recordOutput("Vision/Tuning/CameraToTag/" + cameraIndex, cameraToTag);
                     var currentAverage = averages[cameraIndex].getAverage();
                     Logger.recordOutput("Vision/Tuning/RobotToTag/" + cameraIndex, cameraToTag.plus(currentAverage.inverse()));
@@ -183,10 +183,15 @@ public class VisionTuningCommands {
                     camerasSeeingTags.append(vision.getCameraNames()[cameraIndex]);
                 }
 
+                anyCamerasSee.value = seen > 0;
+
                 Logger.recordOutput("Vision/Tuning/CamerasSeeingTags", camerasSeeingTags.toString());
                 System.out.println("Cameras seeing tags: [" + camerasSeeingTags.toString() + "]");
-            }, vision)
-            // drive.runEnd(() -> drive.runVelocity(new ChassisSpeeds(0., 0., Units.degreesToRadians(5)), false), () -> drive.stop())
+            }, vision),
+            drive.runEnd(() -> drive.runVelocity(new ChassisSpeeds(
+                0., 0.,
+                anyCamerasSee.value ? Units.degreesToRadians(4) : Units.degreesToRadians(20)
+            ), false), () -> drive.stop())
         )).finallyDo(() -> {
             System.out.flush();
             System.out.println("********** Vision camera position measurement results **********");
