@@ -80,7 +80,7 @@ public class Drive extends SubsystemBase {
     /** A debouncer that automatically unlocks the wheels after the robot has been disabled for a period of time. */
     private final Debouncer unlockWheelsDebouncer = new Debouncer(2.0, Debouncer.DebounceType.kFalling);
     /** If the wheels are currently in brake mode. */
-    private boolean wheelsLocked = true;
+    private boolean wheelsLocked = false;
 
     @Override
     public void periodic() {
@@ -95,6 +95,7 @@ public class Drive extends SubsystemBase {
         boolean shouldLock = unlockWheelsDebouncer.calculate(DriverStation.isEnabled())
             || DriverStation.isFMSAttached()
             || DriverStation.isAutonomous();
+        Logger.recordOutput("Drive/WheelsLocked", shouldLock);
         if(shouldLock != wheelsLocked) {
             wheelsLocked = shouldLock;
             for(var module : modules) module.setWheelsLocked(wheelsLocked);

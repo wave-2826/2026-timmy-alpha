@@ -114,8 +114,7 @@ public class DriveConstants {
         Pound.of(37.55)
     };
     public static final Mass robotMass = Pound.of(
-        Arrays.stream(wheelForceMasses)
-            .mapToDouble(m -> m.in(Pounds)).sum()
+        Arrays.stream(wheelForceMasses).mapToDouble(m -> m.in(Pounds)).sum()
     );
     // ""Tuned"" through CAD
     public static final MomentOfInertia robotMomentOfInertia = KilogramSquareMeters.of(7.4702);

@@ -227,16 +227,16 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
 
     @Override
     public void setDriveNeutralModeCoast(boolean coast) {
-        var config = new MotorOutputConfigs();
-        config.NeutralMode = coast ? NeutralModeValue.Coast : NeutralModeValue.Brake;
-        tryUntilOk(5, () -> driveTalon.getConfigurator().apply(config, 0.25));
+        // var config = new MotorOutputConfigs();
+        // config.NeutralMode = coast ? NeutralModeValue.Coast : NeutralModeValue.Brake;
+        // tryUntilOk(5, () -> driveTalon.getConfigurator().apply(config, 0.25));
     }
 
     @Override
     public void setTurnNeutralModeCoast(boolean coast) {
-        var config = new MotorOutputConfigs();
-        config.NeutralMode = coast ? NeutralModeValue.Coast : NeutralModeValue.Brake;
-        tryUntilOk(5, () -> turnTalon.getConfigurator().apply(config, 0.25));
+        // var config = new MotorOutputConfigs();
+        // config.NeutralMode = coast ? NeutralModeValue.Coast : NeutralModeValue.Brake;
+        // tryUntilOk(5, () -> turnTalon.getConfigurator().apply(config, 0.25));
     }
 
     @Override

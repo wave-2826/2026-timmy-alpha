@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 
-import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
@@ -47,6 +46,7 @@ import frc.robot.util.Elastic;
 import frc.robot.util.GsonClassAdapter;
 import frc.robot.util.Elastic.Notification;
 import frc.robot.util.Elastic.Notification.NotificationLevel;
+import frc.robot.util.tunables.LoggedTunableNumber;
 
 /**
  * A collection of commands for tuning the drive subsystem. All drive tuning commands print their results and save them
@@ -56,11 +56,12 @@ public class DriveTuningCommands {
     private static final double FF_START_DELAY = 1.0; // Secs
     private static final double FF_RAMP_RATE = 1.0; // Amps/Sec
 
-    private static final double SLIP_START_DELAY = 1.0; // Secs
-    private static final double SLIP_START_SETPOINT = 5.0; // Amps
-    private static final double STATIC_SLIP_RAMP_RATE = 1.5; // Amps/Sec
-    private static final double DYNAMIC_SLIP_RAMP_RATE = 20.0; // Amps/Sec
-    private static final double SLIP_TRAVEL_AMOUNT = Units.degreesToRadians(10); // Rad
+    private static final LoggedTunableNumber SLIP_START_DELAY = new LoggedTunableNumber("Drive/Tuning/SlipStartDelay", 1.0); // Secs
+    private static final LoggedTunableNumber SLIP_START_SETPOINT = new LoggedTunableNumber("Drive/Tuning/SlipStartSetpoint", 20.0); // Amps
+    private static final LoggedTunableNumber STATIC_SLIP_RAMP_RATE = new LoggedTunableNumber("Drive/Tuning/StaticSlipRampRate", 1.5); // Amps/Sec
+    private static final LoggedTunableNumber DYNAMIC_SLIP_RAMP_RATE = new LoggedTunableNumber("Drive/Tuning/DynamicSlipRampRate", 80.0); // Amps/Sec
+    private static final LoggedTunableNumber DYNAMIC_SLIP_RATIO = new LoggedTunableNumber("Drive/Tuning/DynamicSlipRatio", 2.5); // scalar
+    private static final LoggedTunableNumber SLIP_TRAVEL_AMOUNT = new LoggedTunableNumber("Drive/Tuning/SlipTravelAmount", Units.degreesToRadians(10)); // Rad
 
     private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.5; // Rad/Sec
     private static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
@@ -370,8 +371,8 @@ public class DriveTuningCommands {
         chooser.addOption("Drive: Static Slip Current Measurement (toward intake)", staticSlipCurrentMeasurement(drive, false));
         chooser.addOption("Drive: Static Slip Current Measurement (away from intake)", staticSlipCurrentMeasurement(drive, true));
 
-        chooser.addOption("Drive: Dynamic Slip Current Measurement (toward intake)", dynamicSlipCurrentMeasurement(drive, false));
-        chooser.addOption("Drive: Dynamic Slip Current Measurement (away from intake)", dynamicSlipCurrentMeasurement(drive, true));
+        chooser.addOption("Drive: Dynamic Slip Current Measurement (toward intake)", dynamicSlipCurrentMeasurement(drive, true));
+        chooser.addOption("Drive: Dynamic Slip Current Measurement (away from intake)", dynamicSlipCurrentMeasurement(drive, false));
 
         // These only apply to when we're doing "real" tuning
         if(Robot.tuningMode()) {
@@ -591,7 +592,7 @@ public class DriveTuningCommands {
             // Allow modules to orient
             Commands.run(() -> {
                 drive.runCharacterizationCurrent(0.0);
-            }).withTimeout(SLIP_START_DELAY),
+            }).withTimeout(SLIP_START_DELAY.get()),
 
             Commands.defer(() -> {
                 Command[] commands = new Command[4];
@@ -683,13 +684,13 @@ public class DriveTuningCommands {
         Container<Integer> slippedModule = new Container<>(0);
         double[] moduleAccelerations = new double[4];
 
-        int currentLimitForSlipMeasurement = 100; // Amps
+        int currentLimitForSlipMeasurement = 130; // Amps
 
         return Commands.sequence(
             // Allow modules to orient
             Commands.run(() -> {
                 drive.runCharacterizationCurrent(0.0);
-            }).withTimeout(SLIP_START_DELAY),
+            }).withTimeout(SLIP_START_DELAY.get()),
 
             Commands.runOnce(() -> {
                 // Temporarily increase the drive current limit
@@ -703,11 +704,11 @@ public class DriveTuningCommands {
 
             // Accelerate and gather data
             Commands.run(() -> {
-                double setpoint = timer.get() * DYNAMIC_SLIP_RAMP_RATE + SLIP_START_SETPOINT;
-                if(setpoint > 90) {
-                    System.out.println("No wheels slipped! Capping value.");
-                    stopEarly.value = true;
-                }
+                double setpoint = timer.get() * DYNAMIC_SLIP_RAMP_RATE.get() + SLIP_START_SETPOINT.get();
+                // if(setpoint > 130) {
+                //     System.out.println("No wheels slipped! Capping value.");
+                //     stopEarly.value = true;
+                // }
 
                 if(reverseDirection) setpoint = -setpoint;
                 drive.runCharacterizationCurrent(setpoint);
@@ -719,6 +720,7 @@ public class DriveTuningCommands {
                 currentSamples.add(currents);
             }).until(() -> {
                 if(stopEarly.value) return true;
+                if(timer.get() < 0.2) return false;
 
                 // Check if any wheel has slipped by looking for a sudden difference in acceleration
                 // compared to the other wheels
@@ -729,14 +731,18 @@ public class DriveTuningCommands {
                 
                 double[] accelerations = Arrays.stream(moduleAccelerations).sorted().toArray();
                 double medianAcceleration = accelerations[1];
-                double[] accelerationDifferenceFactors =
-                    Arrays.stream(moduleAccelerations)
-                    .map(a -> a / medianAcceleration).toArray();
+
+                if(medianAcceleration < Units.degreesToRadians(1)) {
+                    return false;
+                }
+
                 for(int i = 0; i < 4; i++) {
-                    // 1.5x the median
-                    if(accelerationDifferenceFactors[i] > 1.5) {
+                    double differenceFactor = moduleAccelerations[i] / medianAcceleration;
+                    // 3x the median is considered a slip
+                    if(differenceFactor > DYNAMIC_SLIP_RATIO.get()) {
                         slippedModule.value = i;
-                        System.out.println("Wheel " + i + " slipped!");
+                        System.out.println("Wheel " + i + " slipped at " + moduleAccelerations[i] + " rad/s^2, which is " + differenceFactor + "x the median acceleration of "
+                            + medianAcceleration + " rad/s^2");
                         return true;
                     }
                 }
@@ -744,20 +750,48 @@ public class DriveTuningCommands {
                 return false;
             }),
 
+            // Reset currents
+            Commands.parallel(
+                Commands.runOnce(() -> {
+                    drive.runCharacterizationCurrent(0);
+                }),
+
+                Commands.run(() -> {
+                    double[] currents = new double[4];
+                    for(int i = 0; i < 4; i++) {
+                        currents[i] = drive.getCharacterizationCurrent(i);
+                    }
+                    currentSamples.add(currents);
+                }).withTimeout(0.05)
+            ),
+
+            Commands.waitSeconds(0.25),
+
             // Take a few samples behind when we stopped and print the result,
             // restore the current limit, and print results
             Commands.runOnce(() -> {
                 drive.setSlipMeasurementCurrentLimit(null);
+                
+                double slipSetpoint = timer.get() * DYNAMIC_SLIP_RAMP_RATE.get() + SLIP_START_SETPOINT.get();
 
-                double[] slipCurrents = currentSamples.get(currentSamples.size() - 4);
-                double slipSetpoint = timer.get() * DYNAMIC_SLIP_RAMP_RATE + SLIP_START_SETPOINT;
+                // Find the maximum current draw of the slipped module
+                double slipCurrent = 0.0;
+                for(double[] sample : currentSamples) {
+                    slipCurrent = Math.max(slipCurrent, sample[slippedModule.value]);
+                }
 
-                double slipCurrent = slipCurrents[slippedModule.value];
+                System.out.println("********** Dynamic Drive Slip Current Measurement Results **********");
 
                 NumberFormat formatter = new DecimalFormat("#0.000");
 
+                if(slipCurrent < 20.) {
+                    System.out.println("\tSlip current too low, likely measurement error. Not storing.");
+                    System.out.println("\tMeasured slip current: " + formatter.format(slipCurrent) + " amps");
+                    System.out.println("\tSetpoint: " + formatter.format(slipSetpoint) + " amps");
+                    return;
+                }
+
                 // Who knows if this means anything physical, but it works (?)
-                System.out.println("********** Dynamic Drive Slip Current Measurement Results **********");
                 String[] moduleNames = new String[] {
                     "Front left", "Front right", "Back left", "Back right"
                 };
@@ -803,7 +837,7 @@ public class DriveTuningCommands {
 
             // Accelerate and gather data
             Commands.run(() -> {
-                double setpoint = timer.get() * STATIC_SLIP_RAMP_RATE + SLIP_START_SETPOINT;
+                double setpoint = timer.get() * STATIC_SLIP_RAMP_RATE.get() + SLIP_START_SETPOINT.get();
                 if(setpoint > 90) {
                     System.out.println("Wheel " + module + " didn't slip! Capping value.");
                     stopEarly.value = true;
@@ -817,7 +851,7 @@ public class DriveTuningCommands {
                 if(stopEarly.value) return true;
 
                 double distanceTraveled = Math.abs(drive.getModuleCharacterizationPosition(module) - startPosition.value);
-                return distanceTraveled > SLIP_TRAVEL_AMOUNT;
+                return distanceTraveled > SLIP_TRAVEL_AMOUNT.get();
             }),
 
             // Take a few samples behind when we stopped and print the result
@@ -825,7 +859,7 @@ public class DriveTuningCommands {
                 drive.runCharacterizationVoltage(module, 0.0);
 
                 moduleResult.slipCurrent = currentSamples.get(currentSamples.size() - 4);
-                moduleResult.slipSetpoint = timer.get() * STATIC_SLIP_RAMP_RATE + SLIP_START_SETPOINT;
+                moduleResult.slipSetpoint = timer.get() * STATIC_SLIP_RAMP_RATE.get() + SLIP_START_SETPOINT.get();
 
                 System.out.println("Module " + module + " slip current measured.");
             }));

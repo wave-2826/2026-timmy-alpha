@@ -7,7 +7,7 @@
       "height": 1034,
       "state": {
         "sidebar": {
-          "width": 358,
+          "width": 500,
           "expanded": [
             "/RealOutputs/LoggedTracer/Turret",
             "/RealOutputs/Drive",
@@ -59,20 +59,18 @@
             "/PowerDistribution/ChannelCurrent",
             "/URCL/Spark-30",
             "/HopperVision",
-            "/RealOutputs/Vision",
             "/RealOutputs",
             "/RealOutputs/Vision/Camera0/TagPoses",
             "/RealOutputs/Vision/Camera1/TagPoses",
             "/RealOutputs/Vision/Tuning",
             "/RealOutputs/Vision/Tuning/EstimatedCamera",
             "/RealOutputs/Vision/Tuning/RobotToCamera",
-            "/RealOutputs/Vision/Summary",
-            "/Tuning/Vision",
-            "/RealOutputs/Vision/Tuning/CameraToTag"
+            "/RealOutputs/Vision/Tuning/CameraToTag",
+            "/RealOutputs/Odometry"
           ]
         },
         "tabs": {
-          "selected": 1,
+          "selected": 3,
           "tabs": [
             {
               "type": 0,
@@ -83,6 +81,39 @@
               "controlsHeight": 0
             },
             {
+              "type": 2,
+              "title": "2D Field",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "/RealOutputs/Odometry/Best",
+                    "logType": "Pose2d",
+                    "visible": true,
+                    "options": {
+                      "bumpers": "#00ff00"
+                    }
+                  },
+                  {
+                    "type": "vision",
+                    "logKey": "/RealOutputs/LaunchCalculator/TargetPosition",
+                    "logType": "Translation2d",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ff00",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "field": "FRC:2026 Field",
+                "orientation": 0,
+                "size": "large"
+              },
+              "controllerUUID": "3f6d5bi20damt8q0o1m1a08bt9q5f8wb",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
               "type": 3,
               "title": "3D Field",
               "controller": {
@@ -91,16 +122,7 @@
                     "type": "aprilTag",
                     "logKey": "/RealOutputs/Vision/Tuning/RobotToTag",
                     "logType": "Transform3d",
-                    "visible": false,
-                    "options": {
-                      "variant": "36h11-6.5in"
-                    }
-                  },
-                  {
-                    "type": "aprilTag",
-                    "logKey": "/RealOutputs/Vision/Tuning/OriginToTag",
-                    "logType": "Pose3d",
-                    "visible": false,
+                    "visible": true,
                     "options": {
                       "variant": "36h11-6.5in"
                     }
@@ -109,36 +131,38 @@
                     "type": "ghost",
                     "logKey": "/RealOutputs/Vision/Tuning/OriginToRobot",
                     "logType": "Pose3d",
-                    "visible": false,
+                    "visible": true,
                     "options": {
-                      "model": "Duck Bot",
+                      "model": "WaveRobotics",
                       "color": "#00ff00"
                     }
                   },
                   {
                     "type": "axes",
-                    "logKey": "/RealOutputs/Vision/Tuning/CameraToTag/3",
+                    "logKey": "/RealOutputs/Vision/Tuning/EstimatedCamera/3",
                     "logType": "Transform3d",
-                    "visible": false,
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "aprilTag",
+                    "logKey": "/RealOutputs/Vision/Tuning/TagPose",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {
+                      "variant": "36h11-6.5in"
+                    }
+                  },
+                  {
+                    "type": "axes",
+                    "logKey": "/RealOutputs/Vision/Tuning/EstimatedCamera/1",
+                    "logType": "Transform3d",
+                    "visible": true,
                     "options": {}
                   },
                   {
                     "type": "axes",
-                    "logKey": "/RealOutputs/Vision/Tuning/RobotToCamera/3",
-                    "logType": "Transform3d",
-                    "visible": false,
-                    "options": {}
-                  },
-                  {
-                    "type": "axes",
-                    "logKey": "/RealOutputs/Vision/Tuning/CameraToTag/3",
-                    "logType": "Transform3d",
-                    "visible": false,
-                    "options": {}
-                  },
-                  {
-                    "type": "axes",
-                    "logKey": "/RealOutputs/Vision/Tuning/RobotToTag",
+                    "logKey": "/RealOutputs/Vision/Tuning/EstimatedCamera/0",
                     "logType": "Transform3d",
                     "visible": true,
                     "options": {}
@@ -151,17 +175,27 @@
                 "cameraIndex": -1,
                 "orbitFov": 50,
                 "cameraPosition": [
-                  -7.5926683468523875,
-                  0.6117403496419817,
-                  7.477364204019937
+                  -8.477399887187007,
+                  3.6337468150219836,
+                  4.177012223068839
                 ],
                 "cameraTarget": [
-                  -8.091924561851636,
-                  0.6802470144088211,
-                  4.3298162910473375
+                  -7.652037995863757,
+                  0.5728686325990214,
+                  4.354478555756827
                 ]
               },
               "controlsHeight": 355
+            },
+            {
+              "type": 5,
+              "title": "Console",
+              "controller": "/RealOutputs/Console",
+              "controllerUUID": "bysdk4lineilv5ip9un39jne5ff6t4xr",
+              "renderer": {
+                "highlight": false
+              },
+              "controlsHeight": 0
             }
           ]
         }
