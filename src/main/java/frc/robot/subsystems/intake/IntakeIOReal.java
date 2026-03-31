@@ -20,15 +20,17 @@ import frc.robot.util.SparkUtil;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 public class IntakeIOReal implements IntakeIO {
-    protected final SparkFlex roller = new SparkFlex(intakeRollerCanId, MotorType.kBrushless);
+    protected final SparkFlex rollerL = new SparkFlex(intakeRollerLCanId, MotorType.kBrushless);
+    protected final SparkFlex rollerR = new SparkFlex(intakeRollerLCanId, MotorType.kBrushless);
+    
     protected final SparkMax deployL = new SparkMax(intakeDeployLCanId, MotorType.kBrushless);
     protected final SparkMax deployR = new SparkMax(intakeDeployRCanId, MotorType.kBrushless);
     
-    protected final SparkClosedLoopController rollerController = roller.getClosedLoopController();
+    protected final SparkClosedLoopController rollerController = rollerL.getClosedLoopController();
     protected final SparkClosedLoopController deployControllerL = deployL.getClosedLoopController();
     protected final SparkClosedLoopController deployControllerR = deployR.getClosedLoopController();
 
-    protected final RelativeEncoder rollerEncoder = roller.getEncoder();
+    protected final RelativeEncoder rollerEncoder = rollerL.getEncoder();
     protected final RelativeEncoder deployEncoderL = deployL.getEncoder();
     protected final RelativeEncoder deployEncoderR = deployR.getEncoder();
 
@@ -67,11 +69,17 @@ public class IntakeIOReal implements IntakeIO {
         deployLConfig.inverted(false);
         deployRConfig.follow(deployL, true);
 
-        IntakeConstants.rollerPID.applyConfigAndRegister(rollerConfig, roller);
+        var rollerLConfig = new SparkMaxConfig().apply(rollerConfig);
+        var rollerRConfig = new SparkMaxConfig().apply(rollerConfig);
+        rollerRConfig.follow(rollerL, true);
+
+        IntakeConstants.rollerPID.applyConfigAndRegister(rollerLConfig, rollerL);
+        IntakeConstants.rollerPID.applyConfigAndRegister(rollerRConfig, rollerR);
         IntakeConstants.deployPID.applyConfigAndRegister(deployLConfig, deployL);
         IntakeConstants.deployPID.applyConfigAndRegister(deployRConfig, deployR);
 
-        tryUntilOk(roller, 5, () -> roller.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        tryUntilOk(rollerL, 5, () -> rollerL.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        tryUntilOk(rollerR, 5, () -> rollerR.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
         tryUntilOk(deployL, 5, () -> deployL.configure(deployLConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
         tryUntilOk(deployR, 5, () -> deployR.configure(deployRConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
 
@@ -80,9 +88,13 @@ public class IntakeIOReal implements IntakeIO {
   
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        var rollerVelocity = getIfOk(roller, rollerEncoder::getVelocity, 0.0);
-        var rollerCurrent = getIfOk(roller, roller::getOutputCurrent, 0.0);
-        inputs.roller = new IntakeIOInputs.RollerMotorInputs(checkFault(), rollerVelocity, rollerCurrent);
+        var rollerLVelocity = getIfOk(rollerL, rollerEncoder::getVelocity, 0.0);
+        var rollerLCurrent = getIfOk(rollerL, rollerL::getOutputCurrent, 0.0);
+        inputs.rollerL = new IntakeIOInputs.RollerMotorInputs(checkFault(), rollerLVelocity, rollerLCurrent);
+        
+        var rollerRVelocity = getIfOk(rollerR, rollerEncoder::getVelocity, 0.0);
+        var rollerRCurrent = getIfOk(rollerR, rollerL::getOutputCurrent, 0.0);
+        inputs.rollerR = new IntakeIOInputs.RollerMotorInputs(checkFault(), rollerRVelocity, rollerRCurrent);
 
         var deployLCurrent = getIfOk(deployL, deployL::getOutputCurrent, 0.0);
         var deployLPosition = getIfOk(deployL, deployEncoderL::getPosition, 0.0);
@@ -95,7 +107,7 @@ public class IntakeIOReal implements IntakeIO {
   
     @Override
     public void setRollerSpeed(double velocityRPM) {
-        roller.getClosedLoopController().setSetpoint(Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
+        rollerController.setSetpoint(Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
     }
 
     @Override

@@ -51,7 +51,12 @@ public class IntakeIOSim implements IntakeIO {
             deployPos
         );
         inputs.deployR = inputs.deployL;
-        inputs.roller = new RollerMotorInputs(
+        inputs.rollerL = new RollerMotorInputs(
+            true,
+            rollerSpeed,
+            0.0
+        );
+        inputs.rollerR = new RollerMotorInputs(
             true,
             rollerSpeed,
             0.0

@@ -22,7 +22,8 @@ public interface IntakeIO {
             double motorPosition
         ) {}
         
-        RollerMotorInputs roller = new RollerMotorInputs(false, 0.0, 0.0);
+        RollerMotorInputs rollerL = new RollerMotorInputs(false, 0.0, 0.0);
+        RollerMotorInputs rollerR = new RollerMotorInputs(false, 0.0, 0.0);
         DeployMotorInputs deployL = new DeployMotorInputs(false, 0.0, 0.0);
         DeployMotorInputs deployR = new DeployMotorInputs(false, 0.0, 0.0);
     }
