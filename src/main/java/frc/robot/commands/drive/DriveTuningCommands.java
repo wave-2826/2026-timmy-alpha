@@ -60,7 +60,7 @@ public class DriveTuningCommands {
     private static final LoggedTunableNumber SLIP_START_SETPOINT = new LoggedTunableNumber("Drive/Tuning/SlipStartSetpoint", 20.0); // Amps
     private static final LoggedTunableNumber STATIC_SLIP_RAMP_RATE = new LoggedTunableNumber("Drive/Tuning/StaticSlipRampRate", 1.5); // Amps/Sec
     private static final LoggedTunableNumber DYNAMIC_SLIP_RAMP_RATE = new LoggedTunableNumber("Drive/Tuning/DynamicSlipRampRate", 80.0); // Amps/Sec
-    private static final LoggedTunableNumber DYNAMIC_SLIP_RATIO = new LoggedTunableNumber("Drive/Tuning/DynamicSlipRatio", 2.5); // scalar
+    private static final LoggedTunableNumber DYNAMIC_SLIP_RATIO = new LoggedTunableNumber("Drive/Tuning/DynamicSlipRatio", 2.0); // scalar
     private static final LoggedTunableNumber SLIP_TRAVEL_AMOUNT = new LoggedTunableNumber("Drive/Tuning/SlipTravelAmount", Units.degreesToRadians(10)); // Rad
 
     private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.5; // Rad/Sec
@@ -753,7 +753,8 @@ public class DriveTuningCommands {
             // Reset currents
             Commands.parallel(
                 Commands.runOnce(() -> {
-                    drive.runCharacterizationCurrent(0);
+                    // skid a bit for fun I guess
+                    drive.stopWithX();
                 }),
 
                 Commands.run(() -> {
@@ -765,7 +766,7 @@ public class DriveTuningCommands {
                 }).withTimeout(0.05)
             ),
 
-            Commands.waitSeconds(0.25),
+            Commands.waitSeconds(0.2),
 
             // Take a few samples behind when we stopped and print the result,
             // restore the current limit, and print results
