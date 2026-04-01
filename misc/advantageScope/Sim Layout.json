@@ -10,7 +10,6 @@
           "width": 358,
           "expanded": [
             "/RealOutputs/LoggedTracer/Turret",
-            "/RealOutputs/Drive",
             "/RealOutputs/Drive/BackLeft",
             "/DriverStation/Joystick0",
             "/DriverStation/Joystick0/AxisValues",
@@ -54,27 +53,27 @@
             "/RealOutputs/LaunchCalculator/Calculated",
             "/Turret/BottomFlywheel",
             "/Tuning/ShotCalculator",
-            "/Tuning",
-            "/Tuning/Turret",
             "/RealOutputs/Turret/Measured",
             "/Spindexer/Transfer",
-            "/Drive/ModuleBackLeft",
             "/PowerDistribution/ChannelCurrent",
-            "/URCL/Spark-30",
             "/Tuning/Turret/Azimuth",
-            "/HopperVision",
             "/Tuning/Vision",
-            "/RealOutputs/Vision",
             "/RealOutputs/Vision/Camera0",
-            "/RealOutputs",
             "/RealOutputs/Vision/Camera0/TagPoses",
             "/RealOutputs/Vision/Camera1",
             "/RealOutputs/Vision/Camera1/TagPoses",
-            "/Vision"
+            "/RealOutputs",
+            "/Tuning",
+            "/Tuning/Drive",
+            "/Tuning/Drive/Tuning",
+            "/URCL",
+            "/Intake/RollerR",
+            "/Intake/RollerL",
+            "/Intake"
           ]
         },
         "tabs": {
-          "selected": 2,
+          "selected": 1,
           "tabs": [
             {
               "type": 0,
@@ -139,7 +138,7 @@
                 ],
                 "field": "FRC:2026 Field",
                 "orientation": 0,
-                "size": "large"
+                "size": "small"
               },
               "controllerUUID": "mujk7gyw41em3id4y68glm913vopow6g",
               "renderer": null,
@@ -216,9 +215,9 @@
                 "cameraIndex": -1,
                 "orbitFov": 80,
                 "cameraPosition": [
-                  -5.361550547590449,
-                  2.368792299890122,
-                  -1.2691911017516553
+                  -8.906687875368458,
+                  5.028997164068986,
+                  -2.1382121839336348
                 ],
                 "cameraTarget": [
                   -4.690716053535525,
@@ -548,6 +547,16 @@
                       "color": "#af2437",
                       "size": "bold"
                     }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/LaunchCalculator/TurretToTargetDistance",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#80588e",
+                      "size": "normal"
+                    }
                   }
                 ],
                 "rightSources": [
@@ -629,7 +638,7 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Turret/Measured/Azimuth",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#2b66a2",
                       "size": "normal"
@@ -649,7 +658,7 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Turret/Target/Azimuth",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#2b66a2",
                       "size": "bold"
@@ -703,7 +712,12 @@
                 "rightLockedRange": null,
                 "leftUnitConversion": {
                   "autoTarget": null,
-                  "preset": null
+                  "preset": {
+                    "type": "angle",
+                    "factor": 1,
+                    "from": "radians",
+                    "to": "degrees"
+                  }
                 },
                 "rightUnitConversion": {
                   "autoTarget": null,

@@ -78,10 +78,10 @@ public class Controls {
         //     coDriver::getRightY,
         //     coDriver.rightBumper()::getAsBoolean
         // ));
-        turretControlCodriver.and(coDriver.povRight()).onTrue(turret.adjustManualVelocity(250));
-        turretControlCodriver.and(coDriver.povLeft()).onTrue(turret.adjustManualVelocity(-250));
-        turretControlCodriver.and(coDriver.povUp()).onTrue(turret.adjustManualAngle(5));
-        turretControlCodriver.and(coDriver.povDown()).onTrue(turret.adjustManualAngle(-5));
+        turretControlCodriver.and(coDriver.povRight()).onTrue(turret.adjustManualVelocity(100));
+        turretControlCodriver.and(coDriver.povLeft()).onTrue(turret.adjustManualVelocity(-100));
+        turretControlCodriver.and(coDriver.povUp()).onTrue(turret.adjustManualAngle(1));
+        turretControlCodriver.and(coDriver.povDown()).onTrue(turret.adjustManualAngle(-1));
         turretControlCodriver.whileTrue(turret.runManual(
             coDriver::getRightTriggerAxis,
             coDriver::getLeftX

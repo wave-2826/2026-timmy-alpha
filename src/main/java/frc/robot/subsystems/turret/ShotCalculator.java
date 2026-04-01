@@ -30,7 +30,8 @@ public class ShotCalculator {
     }
 
     private static LoggedTunableNumber fudgeSpeedScale = new LoggedTunableNumber("ShotCalculator/FudgeSpeedScale", 1.0);
-    private static LoggedTunableNumber fudgeAngleOffsetDeg = new LoggedTunableNumber("ShotCalculator/FudgeAngleOffsetDeg", 0.0);
+    private static LoggedTunableNumber fudgeAzimuthOffsetDegCCW = new LoggedTunableNumber("ShotCalculator/FudgeAzimuthOffsetDegCCW", 3.0);
+    private static LoggedTunableNumber fudgeHoodOffsetDeg = new LoggedTunableNumber("ShotCalculator/FudgeHoodOffsetDeg", 0.0);
     private static LoggedTunableNumber fudgeTimeOfFlightScale = new LoggedTunableNumber("ShotCalculator/FudgeTOFScale", 1.0);
     
     private static LoggedTunableNumber fudgeHubX = new LoggedTunableNumber("ShotCalculator/FudgeHubXInches", 0.0);
@@ -53,7 +54,7 @@ public class ShotCalculator {
         /** Get the hood angle in rad */
         public double getHood(double distanceMeters) {
             return Units.degreesToRadians(
-                hoodAngleMap.get(distanceMeters) + fudgeAngleOffsetDeg.get()
+                hoodAngleMap.get(distanceMeters) + fudgeHoodOffsetDeg.get()
             );
         }
         /** Get the flywheel velocity in RPM */
@@ -85,24 +86,42 @@ public class ShotCalculator {
 
     static {
         // Hub shots
-        hubShots.hoodAngleMap.put(0.96, 25.0);
-        hubShots.hoodAngleMap.put(3.45, 41.0);
 
-        hubShots.flywheelSpeedMap.put(0.96, 2618.);
-        hubShots.flywheelSpeedMap.put(4.65, 3925.);
+        // 1.486m: 2680 rpm / 29.9 deg / 1.10s
+        // 2.28m: 2770 rpm / 37.4 deg / 1.04s
+        // 2.64m: 2810 rpm / 40.7 deg / 0.933s
+        // 3.41m: 3235 rpm / 40.9 deg / 1.17s
+        // 4.33m: 3530 rpm / 41.9 deg / 1.39s
+        // 5.35m: 4185 rpm / 41.9 deg / 1.45s
 
-        hubShots.timeOfFlightMap.put(1.30, 0.90);
-        hubShots.timeOfFlightMap.put(1.88, 0.90);
-        hubShots.timeOfFlightMap.put(3.15, 0.96);
-        hubShots.timeOfFlightMap.put(5.68, 1.23);
+        hubShots.hoodAngleMap.put(1.486, 29.9);
+        hubShots.hoodAngleMap.put(2.28, 37.4);
+        hubShots.hoodAngleMap.put(2.64, 40.7);
+        hubShots.hoodAngleMap.put(3.41, 40.9);
+        hubShots.hoodAngleMap.put(4.33, 41.9);
+        hubShots.hoodAngleMap.put(5.35, 41.9);
+
+        hubShots.flywheelSpeedMap.put(1.486, 2680.0);
+        hubShots.flywheelSpeedMap.put(2.28, 2770.0);
+        hubShots.flywheelSpeedMap.put(2.64, 2810.0);
+        hubShots.flywheelSpeedMap.put(3.41, 3235.0);
+        hubShots.flywheelSpeedMap.put(4.33, 3530.0);
+        hubShots.flywheelSpeedMap.put(5.35, 4185.0);
+
+        hubShots.timeOfFlightMap.put(1.486, 1.10);
+        hubShots.timeOfFlightMap.put(2.28, 1.04);
+        hubShots.timeOfFlightMap.put(2.64, 0.933);
+        hubShots.timeOfFlightMap.put(3.41, 1.17);
+        hubShots.timeOfFlightMap.put(4.33, 1.39);
+        hubShots.timeOfFlightMap.put(5.35, 1.45);
 
         // Passing shots
         passShots.hoodAngleMap.put(5.46,  40.0);
         passShots.hoodAngleMap.put(17.16, 40.0);
 
-        passShots.flywheelSpeedMap.put(5.46, 4583.662);
-        passShots.flywheelSpeedMap.put(6.62, 5156.620);
-        passShots.flywheelSpeedMap.put(7.80, 5729.577);
+        passShots.flywheelSpeedMap.put(5.46, 3274.0);
+        passShots.flywheelSpeedMap.put(6.62, 3683.3);
+        passShots.flywheelSpeedMap.put(7.80, 4092.5);
 
         passShots.timeOfFlightMap.put(5.46,  1.27);
         passShots.timeOfFlightMap.put(6.62,  1.39);
@@ -244,7 +263,9 @@ public class ShotCalculator {
         Logger.recordOutput("LaunchCalculator/LookaheadPose", lookaheadPose);
         Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);
 
-        Rotation2d turretAngleAbsolute = target.minus(lookaheadPose.getTranslation()).getAngle();
+        Rotation2d turretAngleAbsolute = target.minus(lookaheadPose.getTranslation()).getAngle().plus(
+            Rotation2d.fromDegrees(fudgeAzimuthOffsetDegCCW.get())
+        );
         Rotation2d turretAngleRobotRelative = turretAngleAbsolute.minus(RobotState.getInstance().getEstimatedPose().getRotation());
         double hoodAngleRad = MathUtil.clamp(
             type.shotMapData.getHood(lookaheadTurretToTargetDistance),

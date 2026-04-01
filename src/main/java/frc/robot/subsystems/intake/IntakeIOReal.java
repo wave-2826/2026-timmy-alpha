@@ -21,7 +21,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 public class IntakeIOReal implements IntakeIO {
     protected final SparkFlex rollerL = new SparkFlex(intakeRollerLCanId, MotorType.kBrushless);
-    protected final SparkFlex rollerR = new SparkFlex(intakeRollerLCanId, MotorType.kBrushless);
+    protected final SparkFlex rollerR = new SparkFlex(intakeRollerRCanId, MotorType.kBrushless);
     
     protected final SparkMax deployL = new SparkMax(intakeDeployLCanId, MotorType.kBrushless);
     protected final SparkMax deployR = new SparkMax(intakeDeployRCanId, MotorType.kBrushless);
@@ -30,7 +30,8 @@ public class IntakeIOReal implements IntakeIO {
     protected final SparkClosedLoopController deployControllerL = deployL.getClosedLoopController();
     protected final SparkClosedLoopController deployControllerR = deployR.getClosedLoopController();
 
-    protected final RelativeEncoder rollerEncoder = rollerL.getEncoder();
+    protected final RelativeEncoder rollerLEncoder = rollerL.getEncoder();
+    protected final RelativeEncoder rollerREncoder = rollerR.getEncoder();
     protected final RelativeEncoder deployEncoderL = deployL.getEncoder();
     protected final RelativeEncoder deployEncoderR = deployR.getEncoder();
 
@@ -88,21 +89,21 @@ public class IntakeIOReal implements IntakeIO {
   
     @Override
     public void updateInputs(IntakeIOInputs inputs) {
-        var rollerLVelocity = getIfOk(rollerL, rollerEncoder::getVelocity, 0.0);
+        var rollerLVelocity = getIfOk(rollerL, rollerLEncoder::getVelocity, 0.0);
         var rollerLCurrent = getIfOk(rollerL, rollerL::getOutputCurrent, 0.0);
-        inputs.rollerL = new IntakeIOInputs.RollerMotorInputs(checkFault(), rollerLVelocity, rollerLCurrent);
+        inputs.rollerL = new IntakeIOInputs.RollerMotorInputs(!checkFault(), rollerLVelocity, rollerLCurrent);
         
-        var rollerRVelocity = getIfOk(rollerR, rollerEncoder::getVelocity, 0.0);
-        var rollerRCurrent = getIfOk(rollerR, rollerL::getOutputCurrent, 0.0);
-        inputs.rollerR = new IntakeIOInputs.RollerMotorInputs(checkFault(), rollerRVelocity, rollerRCurrent);
+        var rollerRVelocity = getIfOk(rollerR, rollerREncoder::getVelocity, 0.0);
+        var rollerRCurrent = getIfOk(rollerR, rollerR::getOutputCurrent, 0.0);
+        inputs.rollerR = new IntakeIOInputs.RollerMotorInputs(!checkFault(), rollerRVelocity, rollerRCurrent);
 
         var deployLCurrent = getIfOk(deployL, deployL::getOutputCurrent, 0.0);
         var deployLPosition = getIfOk(deployL, deployEncoderL::getPosition, 0.0);
-        inputs.deployL = new IntakeIOInputs.DeployMotorInputs(checkFault(), deployLCurrent, deployLPosition);
+        inputs.deployL = new IntakeIOInputs.DeployMotorInputs(!checkFault(), deployLCurrent, deployLPosition);
 
         var deployRCurrent = getIfOk(deployR, deployR::getOutputCurrent, 0.0);
         var deployRPosition = getIfOk(deployR, deployEncoderR::getPosition, 0.0);
-        inputs.deployR = new IntakeIOInputs.DeployMotorInputs(checkFault(), deployRCurrent, deployRPosition);
+        inputs.deployR = new IntakeIOInputs.DeployMotorInputs(!checkFault(), deployRCurrent, deployRPosition);
     }
   
     @Override
