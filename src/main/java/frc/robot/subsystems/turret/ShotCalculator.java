@@ -29,13 +29,13 @@ public class ShotCalculator {
         return instance;
     }
 
-    private static LoggedTunableNumber fudgeSpeedScale = new LoggedTunableNumber("ShotCalculator/FudgeSpeedScale", 1.0);
-    private static LoggedTunableNumber fudgeAzimuthOffsetDegCCW = new LoggedTunableNumber("ShotCalculator/FudgeAzimuthOffsetDegCCW", 3.0);
+    private static LoggedTunableNumber fudgeSpeedScale = new LoggedTunableNumber("ShotCalculator/FudgeSpeedScale", 1.05);
+    private static LoggedTunableNumber fudgeAzimuthOffsetDegCCW = new LoggedTunableNumber("ShotCalculator/FudgeAzimuthOffsetDegCCW", 1.0);
     private static LoggedTunableNumber fudgeHoodOffsetDeg = new LoggedTunableNumber("ShotCalculator/FudgeHoodOffsetDeg", 0.0);
     private static LoggedTunableNumber fudgeTimeOfFlightScale = new LoggedTunableNumber("ShotCalculator/FudgeTOFScale", 1.0);
     
     private static LoggedTunableNumber fudgeHubX = new LoggedTunableNumber("ShotCalculator/FudgeHubXInches", 0.0);
-    private static LoggedTunableNumber fudgeHubY = new LoggedTunableNumber("ShotCalculator/FudgeHubYInches", -6.0);
+    private static LoggedTunableNumber fudgeHubY = new LoggedTunableNumber("ShotCalculator/FudgeHubYInches", 0.0);
 
     private static class ShotMapData {
         /** Distance (m)-hood angle (deg) map */

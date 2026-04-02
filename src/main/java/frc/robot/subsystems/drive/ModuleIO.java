@@ -40,7 +40,7 @@ public interface ModuleIO {
     public default void setTurnOpenLoopVoltage(double voltageVolts) {}
 
     /** Run the drive motor at the specified velocity. */
-    public default void setDriveVelocity(double velocityRadPerSec, double accelerationRadPerSec2) {}
+    public default void setDriveVelocity(double velocityRadPerSec, double ffForceNM) {}
 
     /** Run the turn motor to the specified rotation. */
     public default void setTurnPosition(Rotation2d rotation) {}

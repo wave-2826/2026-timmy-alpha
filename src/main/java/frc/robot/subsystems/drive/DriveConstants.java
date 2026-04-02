@@ -14,7 +14,6 @@ import com.ctre.phoenix6.swerve.*;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.*;
 
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -22,6 +21,8 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.*;
 import frc.robot.Constants;
 import frc.robot.subsystems.drive.kinematicConstraints.KinematicConstraints;
+import frc.robot.util.GenericPIDConstants;
+import frc.robot.util.tunables.TunablePID;
 
 /**
  * A cleaned up TunerConstants file; most constants correspond to those in TunerConstants.java.
@@ -299,7 +300,10 @@ public class DriveConstants {
         }
     }
 
-    public static final PIDController xController = new PIDController(3.0, 0.0, 0.0);
-    public static final PIDController yController = new PIDController(3.0, 0.0, 0.0);
-    public static final PIDController thetaController = new PIDController(6.0, 0.8, 0.5);
+    public static final TunablePID autoLinearPID = new TunablePID("Autos/Linear")
+        .addRealRobotGains(new GenericPIDConstants(4.0, 0.0, 0.0))
+        .copyRealGainsInSim();
+    public static final TunablePID autoAngularPID = new TunablePID("Autos/Angular")
+        .addRealRobotGains(new GenericPIDConstants(2.0, 0.0, 0.6))
+        .copyRealGainsInSim();
 }

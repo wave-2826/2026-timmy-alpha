@@ -26,7 +26,8 @@ public class IntakeIOReal implements IntakeIO {
     protected final SparkMax deployL = new SparkMax(intakeDeployLCanId, MotorType.kBrushless);
     protected final SparkMax deployR = new SparkMax(intakeDeployRCanId, MotorType.kBrushless);
     
-    protected final SparkClosedLoopController rollerController = rollerL.getClosedLoopController();
+    protected final SparkClosedLoopController rollerLController = rollerL.getClosedLoopController();
+    protected final SparkClosedLoopController rollerRController = rollerR.getClosedLoopController();
     protected final SparkClosedLoopController deployControllerL = deployL.getClosedLoopController();
     protected final SparkClosedLoopController deployControllerR = deployR.getClosedLoopController();
 
@@ -72,15 +73,14 @@ public class IntakeIOReal implements IntakeIO {
 
         var rollerLConfig = new SparkMaxConfig().apply(rollerConfig);
         var rollerRConfig = new SparkMaxConfig().apply(rollerConfig);
-        rollerRConfig.follow(rollerL, true);
 
         IntakeConstants.rollerPID.applyConfigAndRegister(rollerLConfig, rollerL);
         IntakeConstants.rollerPID.applyConfigAndRegister(rollerRConfig, rollerR);
         IntakeConstants.deployPID.applyConfigAndRegister(deployLConfig, deployL);
         IntakeConstants.deployPID.applyConfigAndRegister(deployRConfig, deployR);
 
-        tryUntilOk(rollerL, 5, () -> rollerL.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
-        tryUntilOk(rollerR, 5, () -> rollerR.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        tryUntilOk(rollerL, 5, () -> rollerL.configure(rollerLConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        tryUntilOk(rollerR, 5, () -> rollerR.configure(rollerRConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
         tryUntilOk(deployL, 5, () -> deployL.configure(deployLConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
         tryUntilOk(deployR, 5, () -> deployR.configure(deployRConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
 
@@ -93,7 +93,7 @@ public class IntakeIOReal implements IntakeIO {
         var rollerLCurrent = getIfOk(rollerL, rollerL::getOutputCurrent, 0.0);
         inputs.rollerL = new IntakeIOInputs.RollerMotorInputs(!checkFault(), rollerLVelocity, rollerLCurrent);
         
-        var rollerRVelocity = getIfOk(rollerR, rollerREncoder::getVelocity, 0.0);
+        var rollerRVelocity = getIfOk(rollerR, () -> -rollerREncoder.getVelocity(), 0.0);
         var rollerRCurrent = getIfOk(rollerR, rollerR::getOutputCurrent, 0.0);
         inputs.rollerR = new IntakeIOInputs.RollerMotorInputs(!checkFault(), rollerRVelocity, rollerRCurrent);
 
@@ -108,7 +108,8 @@ public class IntakeIOReal implements IntakeIO {
   
     @Override
     public void setRollerSpeed(double velocityRPM) {
-        rollerController.setSetpoint(Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
+        rollerLController.setSetpoint(Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
+        rollerRController.setSetpoint(-Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
     }
 
     @Override

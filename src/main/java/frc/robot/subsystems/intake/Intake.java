@@ -43,7 +43,7 @@ public class Intake extends SubsystemBase {
     }
     
     public Command runRollerScaled(DoubleSupplier percent) {
-        return run(() -> io.setRollerSpeed(percent.getAsDouble() * intakeRollerSpeed.get()));
+        return Commands.run(() -> io.setRollerSpeed(percent.getAsDouble() * intakeRollerSpeed.get()));
     }
 
     private LinearFilter deployLCurrentFilter = LinearFilter.movingAverage(5);

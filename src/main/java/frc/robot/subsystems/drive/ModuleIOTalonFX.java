@@ -193,12 +193,14 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
     }
 
     @Override
-    public void setDriveVelocity(double wheelVelocityRadPerSec, double accelerationRadPerSec2) {
+    public void setDriveVelocity(double wheelVelocityRadPerSec, double ffForceNM) {
         double motorVelocityRotPerSec = Units.radiansToRotations(wheelVelocityRadPerSec) * constants.DriveMotorGearRatio;
-        double motorAccelerationRotPerSec2 = Units.radiansToRotations(accelerationRadPerSec2) * constants.DriveMotorGearRatio;
-        driveTalon.setControl(velocityTorqueCurrentRequest
-            .withVelocity(motorVelocityRotPerSec)
-            .withAcceleration(motorAccelerationRotPerSec2));
+        double motorForceNM = ffForceNM * constants.DriveMotorGearRatio;
+        driveTalon.setControl(
+            velocityTorqueCurrentRequest
+                .withVelocity(motorVelocityRotPerSec)
+                .withFeedForward(motorForceNM)
+        );
     }
 
     @Override

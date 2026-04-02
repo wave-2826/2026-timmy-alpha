@@ -2,16 +2,24 @@ package frc.robot.commands;
 
 import org.littletonrobotics.junction.Logger;
 
+import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
+import choreo.trajectory.SwerveSample;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.RobotContainer;
+import frc.robot.RobotState;
+import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.autos.ChoreoTraj;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.hopperVision.HopperVision;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.spindexer.Spindexer;
@@ -20,6 +28,7 @@ import frc.robot.subsystems.turret.TurretConstants;
 import frc.robot.subsystems.turret.Turret.TurretTarget;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LoggedAutoChooser;
+import frc.robot.util.GenericPIDConstants.PIDSlot;
 import frc.robot.util.simUtils.Simulation;
 
 public class AutoRoutines {
@@ -30,14 +39,26 @@ public class AutoRoutines {
     private final Spindexer spindexer;
     private final HopperVision hopperVision;
 
+    /** The latest trajectory target. If null, no trajectory has been followed yet. */
+    private Pose2d latestTrajectoryTarget = null;
+
+    private PIDController xController = new PIDController(0, 0, 0);
+    private PIDController yController = new PIDController(0, 0, 0);
+    private PIDController thetaController = new PIDController(0, 0, 0);
+
     public AutoRoutines(RobotContainer rc, LoggedAutoChooser autoChooser) {
+        DriveConstants.autoLinearPID.configureController(xController, PIDSlot.Slot0);
+        DriveConstants.autoLinearPID.configureController(yController, PIDSlot.Slot0);
+        DriveConstants.autoAngularPID.configureController(thetaController, PIDSlot.Slot0);
+        thetaController.enableContinuousInput(-Math.PI, Math.PI);
+
         this.drive = rc.drive;
         this.intake = rc.intake;
         this.turret = rc.turret;
         this.spindexer = rc.spindexer;
         this.hopperVision = rc.hopperVision;
 
-        autoFactory = drive.createAutoFactory((traj, isStart) -> {
+        autoFactory = createAutoFactory((traj, isStart) -> {
             Logger.recordOutput("Odometry/Trajectory", traj.getPoses());
             Logger.recordOutput("Odometry/IsStart", isStart);
         });
@@ -46,9 +67,6 @@ public class AutoRoutines {
             var traj = ChoreoTraj.ALL_TRAJECTORIES.getOrDefault(autoChooser.selectedCommand().getName(), null);
             if(traj != null) Simulation.getInstance().driveSimulation.setSimulationWorldPose(AllianceFlipUtil.apply(traj.initialPoseBlue()));
         }
-
-        // .bind("Intake Stop", intake.disable())
-        // .bind("Outtake", intake.enableOutward());
         
         autoChooser.addRoutine("Left Double Swipe", () -> this.getDoubleSwipe(false));
         autoChooser.addRoutine("Right Double Swipe", () -> this.getDoubleSwipe(true));
@@ -62,6 +80,62 @@ public class AutoRoutines {
         
         autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload());
         autoChooser.addRoutine("Center Depot", () -> this.getCenterDepot(), true);
+    }
+
+    
+    /**
+     * Creates a new auto factory for this drivetrain with the given trajectory logger.
+     *
+     * @param trajLogger Logger for the trajectory
+     * @return AutoFactory for this drivetrain
+     */
+    public AutoFactory createAutoFactory(TrajectoryLogger<SwerveSample> trajLogger) {
+        var robotState = RobotState.getInstance();
+        return new AutoFactory(
+            robotState::getEstimatedPose,
+            drive::setPose,
+            this::followPath,
+            true,
+            drive,
+            trajLogger
+        );
+    }
+
+    /**
+     * Follows the given field-centric path sample with PID.
+     *
+     * @param sample Sample along the path to follow
+     */
+    public void followPath(SwerveSample sample) {
+        latestTrajectoryTarget = sample.getPose();
+
+        var baseSpeeds = sample.getChassisSpeeds();
+
+        double[] forcesN = new double[4];
+        for(int i = 0; i < 4; i++) {
+            double forceX = sample.moduleForcesX()[i] ;
+            double forceY = sample.moduleForcesY()[i] ;
+            forcesN[i] = Math.sqrt(forceX * forceX + forceY * forceY);
+        }
+
+        followPathToTarget(latestTrajectoryTarget, forcesN, baseSpeeds);
+    }
+
+    public void followPathToTarget(Pose2d targetPose, double[] ffForcesN, ChassisSpeeds baseSpeeds) {
+        var pose = RobotState.getInstance().getEstimatedPose();
+
+        Logger.recordOutput("Odometry/Auto/CurrentPose", pose);
+        Logger.recordOutput("Odometry/Auto/TargetPose", targetPose);
+        Logger.recordOutput("Odometry/Auto/TranslationError", targetPose.getTranslation().minus(pose.getTranslation()).getNorm());
+        Logger.recordOutput("Odometry/Auto/RotationErrorDeg", targetPose.getRotation().minus(pose.getRotation()).getDegrees());
+
+        baseSpeeds.vxMetersPerSecond += xController.calculate(pose.getX(), targetPose.getX());
+        baseSpeeds.vyMetersPerSecond += yController.calculate(pose.getY(), targetPose.getY());
+        baseSpeeds.omegaRadiansPerSecond += thetaController.calculate(pose.getRotation().getRadians(), targetPose.getRotation().getRadians());
+        drive.runVelocity(
+            ChassisSpeeds.fromFieldRelativeSpeeds(baseSpeeds, RobotState.getInstance().getRotation()),
+            ffForcesN, false
+        );
     }
 
     private AutoRoutine getDoubleSwipe(boolean right) {

@@ -15,6 +15,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 public class DriveCommands {
@@ -22,7 +24,7 @@ public class DriveCommands {
     
     private DriveCommands() {}
 
-    private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
+    private static Translation2d getLinearVelocityFromJoysticks(double x, double y, double speedScalar) {
         // Apply deadband
         double linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), DEADBAND);
         Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
@@ -32,23 +34,31 @@ public class DriveCommands {
 
         // Return new linear velocity
         return new Pose2d(new Translation2d(), linearDirection)
-            .transformBy(new Transform2d(linearMagnitude, 0.0, new Rotation2d()))
+            .transformBy(new Transform2d(linearMagnitude * speedScalar, 0.0, new Rotation2d()))
             .getTranslation();
     }
 
     /** Field relative drive command using two joysticks (controlling linear and angular velocities). */
-    public static Command joystickDrive(Drive drive, DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier) {
+    public static Command joystickDrive(
+        Drive drive,
+        DoubleSupplier xSupplier,
+        DoubleSupplier ySupplier,
+        DoubleSupplier omegaSupplier,
+        BooleanSupplier driveSlow
+    ) {
         RobotState robotState = RobotState.getInstance();
         return Commands.run(() -> {
+            double speedScalar = driveSlow.getAsBoolean() ? 0.5 : 1.0;
+            
             // Get linear velocity
             Translation2d linearVelocity =
-                getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+                getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble(), speedScalar);
 
             // Apply rotation deadband
             double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
 
             // Square rotation value for more precise control
-            omega = Math.copySign(omega * omega, omega);
+            omega = Math.copySign(omega * omega, omega) * speedScalar;
 
             // Convert to field relative speeds & send command
             ChassisSpeeds speeds = new ChassisSpeeds(

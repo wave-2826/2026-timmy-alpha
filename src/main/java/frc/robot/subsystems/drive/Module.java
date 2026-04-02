@@ -103,32 +103,34 @@ public class Module {
     /**
      * Optimize the module state and 
      * @param currentAngle
-     * @param accelerationMps2
+     * @param accelerationFFN
      * @return
      */
-    private OptimizePair optimizeState(SwerveModuleState state, Rotation2d currentAngle, double accelerationMps2) {
+    private OptimizePair optimizeState(SwerveModuleState state, Rotation2d currentAngle, double accelerationFFN) {
         var delta = state.angle.minus(currentAngle);
         if(Math.abs(delta.getDegrees()) > 90.0) {
             state.speedMetersPerSecond *= -1;
             state.angle = state.angle.rotateBy(Rotation2d.kPi);
-            accelerationMps2 *= -1;
+            accelerationFFN *= -1;
         }
-        return new OptimizePair(state, accelerationMps2);
+        return new OptimizePair(state, accelerationFFN);
     }
 
     /** Runs the module with the specified setpoint state. Mutates the state to optimize it. */
-    public void runSetpoint(SwerveModuleState state, double accelerationMps2) {
+    public void runSetpoint(SwerveModuleState state, double ffForceN) {
         // Optimize velocity setpoint
-        var pair = optimizeState(state, getAngle(), accelerationMps2);
+        var pair = optimizeState(state, getAngle(), ffForceN);
         state = pair.state;
-        accelerationMps2 = pair.acceleration;
+        ffForceN = pair.acceleration;
 
         state.cosineScale(inputs.turnAbsolutePosition);
+        // also cosine scale FF
+        ffForceN *= state.angle.minus(inputs.turnAbsolutePosition).getCos();
 
         // Apply setpoints
         io.setDriveVelocity(
             state.speedMetersPerSecond / Drive.tuningResults.wheelRadiusResults.radiusMeters * speedScalar.get(),
-            accelerationMps2 / Drive.tuningResults.wheelRadiusResults.radiusMeters
+            ffForceN * Drive.tuningResults.wheelRadiusResults.radiusMeters
         );
         io.setTurnPosition(state.angle);
     }

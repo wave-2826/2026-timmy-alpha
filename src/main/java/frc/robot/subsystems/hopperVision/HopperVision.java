@@ -2,6 +2,8 @@ package frc.robot.subsystems.hopperVision;
 
 import org.littletonrobotics.junction.Logger;
 
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -17,6 +19,7 @@ public class HopperVision extends SubsystemBase {
 
     public Command waitForNoPieces(double waitAfter, double fallbackWait, double timeout) {
         double startTime = Timer.getFPGATimestamp();
+        Debouncer hasPiecesDebouncer = new Debouncer(0.5, DebounceType.kFalling);
         return Commands.sequence(
             Commands.waitUntil(() -> {
                 if(!inputs.connected) {
@@ -24,7 +27,7 @@ public class HopperVision extends SubsystemBase {
                     return Timer.getFPGATimestamp() - startTime > fallbackWait;
                 } else {
                     // If we're connected, wait until we see no targets
-                    return inputs.targets == 0;
+                    return !hasPiecesDebouncer.calculate(inputs.targets != 0);
                 }
             }),
             Commands.waitSeconds(waitAfter)

@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.util.Elastic;
@@ -63,14 +64,21 @@ public class Controls {
         Spindexer spindexer = rc.spindexer;
         Intake intake = rc.intake;
         
-        // Default command, normal field-relative drive
-        drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX()));
+        drive.setDefaultCommand(DriveCommands.joystickDrive(
+            drive,
+            () -> -driver.getLeftY(), () -> -driver.getLeftX(), () -> -driver.getRightX(),
+            driver.rightBumper()
+        ));
         driver.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
-        driver.leftBumper().onTrue(intake.deployIntake().alongWith(intake.enable()));
-        driver.rightBumper().onTrue(intake.disable());
+        IntakeCommands intakeCommands = new IntakeCommands();
+        driver.a().onTrue(intake.deployIntake());
 
-        intake.setDefaultCommand(intake.setIntakePositionNormalized(driver::getLeftTriggerAxis));
+        normalCodriver.and(coDriver.povDown()).onTrue(intakeCommands.overrideOut());
+        normalCodriver.and(coDriver.povUp()).onTrue(intakeCommands.overrideIn());
+        normalCodriver.and(coDriver.povLeft().or(coDriver.povRight())).onTrue(intakeCommands.overrideOff());
+
+        intake.setDefaultCommand(intakeCommands.run(intake, driver::getLeftTriggerAxis, driver.leftBumper()));
 
         // turret.setDefaultCommand(ScoringCommands.autoShoot(
         //     turret, spindexer,
@@ -94,10 +102,10 @@ public class Controls {
         turretControlCodriver.and(coDriver.leftBumper()).onTrue(turret.zeroRoutine());
         RobotModeTriggers.teleop().or(RobotModeTriggers.autonomous()).onTrue(turret.zeroRoutine().unless(turret::zeroed));
 
-        normalCodriver.whileTrue(intake.runRollerScaled(coDriver::getLeftY));
-        normalCodriver.and(coDriver.povDown()).onTrue(intake.enableOutward());
-        normalCodriver.and(coDriver.povUp()).onTrue(intake.enable());
-        normalCodriver.and(coDriver.povLeft().or(coDriver.povRight())).onTrue(intake.disable());
+        // Reset turret at the start of teleop
+        RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
+            turret.target = null;
+        }));
 
         // Reset gyro or odometry if in simulation
         final Runnable resetGyro = Constants.isSim

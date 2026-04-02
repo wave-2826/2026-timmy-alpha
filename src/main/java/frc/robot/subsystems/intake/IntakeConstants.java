@@ -18,7 +18,7 @@ public class IntakeConstants {
     public static final int deployCurrentLimit = 25;
     
     /** The current we use to detect the motors at the end of their travel */
-    public static final double deployStallCurrent = 15;
+    public static final double deployStallCurrent = 22;
     
     public static final double pinionReduction = 25.;
     public static final double pinionRadiusMeters = Units.inchesToMeters(2.857143/2);
