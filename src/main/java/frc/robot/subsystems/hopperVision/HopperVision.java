@@ -19,8 +19,9 @@ public class HopperVision extends SubsystemBase {
 
     public Command waitForNoPieces(double waitAfter, double fallbackWait, double timeout) {
         double startTime = Timer.getFPGATimestamp();
-        Debouncer hasPiecesDebouncer = new Debouncer(0.5, DebounceType.kFalling);
+        Debouncer hasPiecesDebouncer = new Debouncer(1.0, DebounceType.kFalling);
         return Commands.sequence(
+            Commands.runOnce(() -> hasPiecesDebouncer.calculate(true)),
             Commands.waitUntil(() -> {
                 if(!inputs.connected) {
                     // If we're not connected, wait the fallback time and hope for the best

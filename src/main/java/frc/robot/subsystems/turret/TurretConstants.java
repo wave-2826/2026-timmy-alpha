@@ -115,7 +115,7 @@ public class TurretConstants {
     public static final int azimuthCurrentLimit = 50; // amps
     public static final int hoodCurrentLimit = 40; // amps
 
-    public static final int hoodResetCurrent = 35; // amps
+    public static final int hoodResetCurrent = 30; // amps
 
     // PIDs
     public static final TunableSimpleMotorFF flywheelMotorFF = new TunableSimpleMotorFF("Turret/FlywheelFF")

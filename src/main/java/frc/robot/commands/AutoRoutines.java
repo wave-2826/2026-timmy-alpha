@@ -12,11 +12,11 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.RobotContainer;
 import frc.robot.RobotState;
-import frc.robot.commands.drive.DriveCommands;
 import frc.robot.generated.autos.ChoreoTraj;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -58,10 +58,7 @@ public class AutoRoutines {
         this.spindexer = rc.spindexer;
         this.hopperVision = rc.hopperVision;
 
-        autoFactory = createAutoFactory((traj, isStart) -> {
-            Logger.recordOutput("Odometry/Trajectory", traj.getPoses());
-            Logger.recordOutput("Odometry/IsStart", isStart);
-        });
+        autoFactory = createAutoFactory();
 
         if(Constants.isSim) {
             var traj = ChoreoTraj.ALL_TRAJECTORIES.getOrDefault(autoChooser.selectedCommand().getName(), null);
@@ -89,7 +86,7 @@ public class AutoRoutines {
      * @param trajLogger Logger for the trajectory
      * @return AutoFactory for this drivetrain
      */
-    public AutoFactory createAutoFactory(TrajectoryLogger<SwerveSample> trajLogger) {
+    public AutoFactory createAutoFactory() {
         var robotState = RobotState.getInstance();
         return new AutoFactory(
             robotState::getEstimatedPose,
@@ -97,7 +94,10 @@ public class AutoRoutines {
             this::followPath,
             true,
             drive,
-            trajLogger
+            (traj, isStart) -> {
+                Logger.recordOutput("Odometry/Trajectory", traj.getPoses());
+                Logger.recordOutput("Odometry/IsStart", isStart);
+            }
         );
     }
 
@@ -138,18 +138,27 @@ public class AutoRoutines {
         );
     }
 
-    private AutoRoutine getDoubleSwipe(boolean right) {
-        var choreoTraj = right ? ChoreoTraj.RightDoubleSwipeGenerated : ChoreoTraj.LeftDoubleSwipe;
-        var routine = autoFactory.newRoutine(choreoTraj.name());
-        
-        AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
+    private Command stopDrive() {
+        return Commands.runOnce(() -> drive.stop());
+    }
 
-        traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
-        traj.atTime("Score").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
+    private AutoRoutine getDoubleSwipe(boolean right) {
+        var fullTraj = right ? ChoreoTraj.RightDoubleSwipeGenerated : ChoreoTraj.LeftDoubleSwipe;
+        var routine = autoFactory.newRoutine(fullTraj.name());
+        
+        var chorTraj0 = right ? ChoreoTraj.RightDoubleSwipeGenerated$0 : ChoreoTraj.LeftDoubleSwipe$0;
+        var chorTraj1 = right ? ChoreoTraj.RightDoubleSwipeGenerated$1 : ChoreoTraj.LeftDoubleSwipe$1;
+        AutoTrajectory traj0 = chorTraj0.asAutoTraj(routine);
+        AutoTrajectory traj1 = chorTraj1.asAutoTraj(routine);
+
+        traj0.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
 
         routine.active().onTrue(Commands.sequence(
-            traj.resetOdometry(),
-            traj.cmd()
+            traj0.resetOdometry(),
+            traj0.cmd(),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)),
+            traj1.cmd(),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
         ));
 
         return routine;
@@ -162,11 +171,11 @@ public class AutoRoutines {
         AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
 
         traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
-        traj.atTime("Score").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
         
         routine.active().onTrue(Commands.sequence(
             traj.resetOdometry(),
-            traj.cmd()
+            traj.cmd(),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
         ));
 
         return routine;
@@ -196,34 +205,33 @@ public class AutoRoutines {
         
         AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
 
-        // traj.atTime("Shoot").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
-        traj.atTime("Shoot").onTrue(Commands.sequence(
-            Commands.runOnce(() -> {
-                turret.target = new TurretTarget(
-                    Units.rotationsPerMinuteToRadiansPerSecond(5100),
-                    0.0,
-                    TurretConstants.hoodMinAngle
-                );
-            }),
-
-            Commands.waitSeconds(1.0),
-
-            Commands.run(() -> {
-                spindexer.setPower(0.0, 1.0);
-            }).withTimeout(0.5),
-            
-            Commands.run(() -> {
-                spindexer.setPower(
-                    // Oscillation to unstuck pieces
-                    (Math.sin(Timer.getFPGATimestamp() * 4) * 0.75 + 0.25) * 1.0,
-                    1.0
-                );
-            }).withTimeout(10)
-        ));
-
         routine.active().onTrue(Commands.sequence(
             traj.resetOdometry(),
-            traj.cmd()
+            traj.cmd(),
+            stopDrive(),
+            Commands.sequence(
+                Commands.runOnce(() -> {
+                    turret.target = new TurretTarget(
+                        Units.rotationsPerMinuteToRadiansPerSecond(5100),
+                        0.0,
+                        TurretConstants.hoodMinAngle
+                    );
+                }),
+
+                Commands.waitSeconds(1.0),
+
+                Commands.run(() -> {
+                    spindexer.setPower(0.0, 1.0);
+                }).withTimeout(0.5),
+                
+                Commands.run(() -> {
+                    spindexer.setPower(
+                        // Oscillation to unstuck pieces
+                        (Math.sin(Timer.getFPGATimestamp() * 4) * 0.75 + 0.25) * 1.0,
+                        1.0
+                    );
+                }).withTimeout(10)
+            )
         ));
 
         return routine;
@@ -235,12 +243,12 @@ public class AutoRoutines {
         
         AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
 
-        traj.atTime("Shoot").onTrue(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision));
         traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
         
         routine.active().onTrue(Commands.sequence(
             traj.resetOdometry(),
-            traj.cmd()
+            traj.cmd(),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
         ));
 
         return routine;

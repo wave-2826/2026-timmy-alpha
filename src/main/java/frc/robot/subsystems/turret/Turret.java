@@ -171,7 +171,7 @@ public class Turret extends SubsystemBase {
         DoubleSupplier flywheelScalar,
         DoubleSupplier azimuthSpeed
     ) {
-        SlewRateLimiter flyLimiter = new SlewRateLimiter(4000);
+        SlewRateLimiter flyLimiter = new SlewRateLimiter(5000);
         return Commands.runEnd(() -> {
             if(target == null) {
                 target = new TurretTarget(0.0, inputs.getAzimuthAngleRad(), TurretConstants.hoodMinAngle);
@@ -277,8 +277,8 @@ public class Turret extends SubsystemBase {
     }
 
     private Command zeroHood(DoubleConsumer setHoodVelocity) {
-        LinearFilter hoodCurrentFilter = LinearFilter.movingAverage((int)(0.5 / 0.02));
-        double hoodRunVelocity = Units.rotationsPerMinuteToRadiansPerSecond(-500);
+        LinearFilter hoodCurrentFilter = LinearFilter.movingAverage((int)(0.3 / 0.02));
+        double hoodRunVelocity = Units.rotationsPerMinuteToRadiansPerSecond(-400);
 
         Container<Double> hoodStartPos = new Container<>(0.);
         double zeroRangeRad = TurretConstants.hoodMaxAngle - TurretConstants.hoodMinAngle;

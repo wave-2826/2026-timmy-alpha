@@ -47,40 +47,38 @@ public class ScoringCommands {
         }, () -> {
             turret.target = null;
             spindexer.setPower(0.0, 0.0);
-        }, turret, spindexer);
+        }, turret, spindexer).withName("TeleopScoring");
     }
 
     public static Command autoScoreHopper(Turret turret, Spindexer spindexer, HopperVision hopperVision) {
         return Commands.sequence(
-            Commands.run(() -> {
-                var parameters = ShotCalculator.getInstance().calculate();
-                turret.target = parameters.target();
-            }, turret, spindexer).until(turret::atSetpoint).withTimeout(0.5),
-
             // Start transport early to spin up
-            Commands.run(() -> {
+            spindexer.run(() -> {
                 spindexer.setPower(0.0, 1.0);
-            }).withTimeout(0.5),
+            }).withTimeout(0.15),
+
+            Commands.waitUntil(turret::atSetpoint),
             
             // Run spin until no pieces remain
-            Commands.run(() -> {
+            spindexer.run(() -> {
                 spindexer.setPower(
                     // Oscillation to unstuck pieces
-                    (Math.sin(Timer.getFPGATimestamp() * 3) * 0.75 + 0.25) * 1.0,
-                    1.0
+                    ((Math.sin(Timer.getFPGATimestamp() * 7.) * 0.5 + 0.5) * 1.2 - 0.2) * 1.0,
+                    turret.atSetpoint() ? 1.0 : 0.0
                 );
-            }).raceWith(hopperVision.waitForNoPieces(0.5, 4.0, 8.0)),
-
-            // // Wait a bit
-            Commands.waitSeconds(0.5),
+            }).raceWith(hopperVision.waitForNoPieces(1.0, 4.0, 8.0)),
 
             // Reset turret/spin
-            Commands.run(() -> {
+            spindexer.run(() -> {
                 turret.target = null;
                 spindexer.setPower(0.0, 0.0);
-            }, turret, spindexer).until(() -> {
+            }).until(() -> {
                 return true;
             })
-        );
+        ).raceWith(
+            turret.run(() -> {
+                turret.target = ShotCalculator.getInstance().calculate().target();
+            })
+        ).withName("AutoScoreHopper");
     }
 }

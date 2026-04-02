@@ -68,7 +68,7 @@ public class IntakeIOReal implements IntakeIO {
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
         
-        deployLConfig.inverted(false);
+        deployLConfig.inverted(true);
         deployRConfig.follow(deployL, true);
 
         var rollerLConfig = new SparkMaxConfig().apply(rollerConfig);

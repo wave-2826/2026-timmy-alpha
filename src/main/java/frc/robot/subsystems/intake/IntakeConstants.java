@@ -15,12 +15,12 @@ public class IntakeConstants {
     public static final double rollerMotorReduction = 1.0;
     
     public static final int rollerCurrentLimit = 40;
-    public static final int deployCurrentLimit = 25;
+    public static final int deployCurrentLimit = 40;
     
     /** The current we use to detect the motors at the end of their travel */
-    public static final double deployStallCurrent = 22;
+    public static final double deployStallCurrent = 35;
     
-    public static final double pinionReduction = 25.;
+    public static final double pinionReduction = 9.;
     public static final double pinionRadiusMeters = Units.inchesToMeters(2.857143/2);
     public static final double trackLengthMeters = Units.inchesToMeters(14.75);
 
