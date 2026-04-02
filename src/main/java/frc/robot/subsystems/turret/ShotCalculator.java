@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.FieldConstants.LeftTrench;
 import frc.robot.FieldConstants.LinesVertical;
@@ -184,6 +185,12 @@ public class ShotCalculator {
     private double lastRobotVy = 0;
     private double lastRobotOmega = 0;
     
+    private double applyPhaseDelay(double vel, double accel) {
+        double phaseDelayDt = phaseDelay.get();
+        if(Constants.isSim) return vel * phaseDelayDt * 0.4; // Hacky but oh well
+        return vel * phaseDelayDt + 0.5 * accel * phaseDelayDt * phaseDelayDt;
+    }
+
     public ShotParameters calculate() {
         Pose2d estimatedPose = RobotState.getInstance().getEstimatedPose();
 
@@ -217,11 +224,11 @@ public class ShotCalculator {
         double ax = (robotRelativeVelocity.vxMetersPerSecond - lastRobotVx) / 0.02;
         double ay = (robotRelativeVelocity.vyMetersPerSecond - lastRobotVy) / 0.02;
         double aOmega = (robotRelativeVelocity.omegaRadiansPerSecond - lastRobotOmega) / 0.02;
-        double phaseDelayDt = phaseDelay.get();
+
         estimatedPose = estimatedPose.exp(new Twist2d(
-            robotRelativeVelocity.vxMetersPerSecond * phaseDelayDt + 0.5 * ax * phaseDelayDt * phaseDelayDt,
-            robotRelativeVelocity.vyMetersPerSecond * phaseDelayDt + 0.5 * ay * phaseDelayDt * phaseDelayDt,
-            robotRelativeVelocity.omegaRadiansPerSecond * phaseDelayDt + 0.5 * aOmega * phaseDelayDt * phaseDelayDt
+            applyPhaseDelay(robotRelativeVelocity.vxMetersPerSecond, ax),
+            applyPhaseDelay(robotRelativeVelocity.vyMetersPerSecond, ay),
+            applyPhaseDelay(robotRelativeVelocity.omegaRadiansPerSecond, aOmega)
         ));
         lastRobotVx = robotRelativeVelocity.vxMetersPerSecond;
         lastRobotVy = robotRelativeVelocity.vyMetersPerSecond;

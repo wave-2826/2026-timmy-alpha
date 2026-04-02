@@ -19,7 +19,9 @@ public class Spindexer extends SubsystemBase {
 
     @AutoLogOutput(key = "Spindexer/BallsPerSecond")
     public double getBallsPerSecond() {
-        return SpindexerConstants.ballsInSpin * inputs.spinner.velocityRadPerSec() / (2 * Math.PI);
+        return SpindexerConstants.ballsInSpin * inputs.spinner.velocityRadPerSec() / (2 * Math.PI)
+            / 2.0 // half of the ball is spun
+            / 5.0; // 400% loss oops
     }
 
     @Override

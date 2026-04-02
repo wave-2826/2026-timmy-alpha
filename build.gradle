@@ -116,7 +116,7 @@ test {
 // value to "true" to enable the sim GUI by default (this
 // is the standard WPILib behavior).
 // TODO: disable when replaying but use for sim
-wpi.sim.addGui().defaultEnabled = false
+wpi.sim.addGui().defaultEnabled = true
 // wpi.sim.addDriverstation()
 
 // update simulateJavaRelease for fancy hotswap

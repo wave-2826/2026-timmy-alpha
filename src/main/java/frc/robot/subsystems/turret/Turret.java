@@ -243,13 +243,13 @@ public class Turret extends SubsystemBase {
 
     public LinearVelocity getShotVelocity() {
         return MetersPerSecond.of(
-            inputs.getFlywheelVelocityRadPerSecond() * TurretConstants.flywheelRadius *
-                0.5 * // one fixed side
-                0.1 // 10% of tangential velocity imparted
+            inputs.getFlywheelVelocityRadPerSecond() * TurretConstants.flywheelRadius
+                * 0.5 // one fixed side
+                * 0.8 // efficiency
         );
     }
     public Angle getShotAngle() {
-        return Radians.of(inputs.getHoodAngleRad() + Math.PI);
+        return Radians.of(Math.PI / 2 - inputs.getHoodAngleRad() + Units.degreesToRadians(1));
     }
     public Angle getRobotRelativeYaw() {
         return Radians.of(inputs.getAzimuthAngleRad());
