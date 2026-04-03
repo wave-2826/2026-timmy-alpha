@@ -148,7 +148,7 @@ public class IntakeIOReal implements IntakeIO {
     @Override
     public void setDeployPosition(double positionMeters) {
         deployLController.setSetpoint(-positionMeters, ControlType.kPosition);
-        deployRController.setSetpoint(positionMeters, ControlType.kPosition);
+        deployRController.setSetpoint(-positionMeters, ControlType.kPosition);
     }
 
     @Override
