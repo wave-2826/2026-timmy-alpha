@@ -67,7 +67,7 @@ public class Intake extends SubsystemBase {
     }
     
     public Command deployIntake() {
-        final double deployPower = 0.1;
+        final double deployPower = 0.2;
         return Commands.parallel(
             Commands.runEnd(() -> io.setDeployPowerL(deployPower), () -> io.setDeployPowerL(0.0))
                 .until(() -> deployLDebouncer.calculate(inputs.deployL.currentAmps() > IntakeConstants.deployStallCurrent)),

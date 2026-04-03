@@ -156,7 +156,7 @@ public class IntakeIOReal implements IntakeIO {
             deployR.resumeFollowerModeAsync();
             deployFollowing = true;
         }
-        deployController.setSetpoint(-positionMeters, ControlType.kMAXMotionPositionControl);
+        deployController.setSetpoint(-positionMeters, ControlType.kPosition);
     }
 
     @Override

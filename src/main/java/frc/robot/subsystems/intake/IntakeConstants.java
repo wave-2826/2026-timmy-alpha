@@ -31,6 +31,6 @@ public class IntakeConstants {
         .addRealRobotGains(new GenericPIDConstants(0.0015, 0, 0, 1. / DCMotor.getNeoVortex(1).KvRadPerSecPerVolt))
         .addSimGains(new GenericPIDConstants(0.005, 0, 0));
     public static final TunablePID deployPID = new TunablePID("Intake/Deploy")
-        .addRealRobotGains(new GenericPIDConstants(5, 0, 0))
+        .addRealRobotGains(new GenericPIDConstants(2.5, 0, 0))
         .addSimGains(new GenericPIDConstants(0.005, 0, 0));
 }
