@@ -46,6 +46,7 @@ public class IntakeIOReal implements IntakeIO {
     protected final SparkClosedLoopController deployRController;
 
     public IntakeIOReal() {
+        // General configs
         var rollerConfig = new SparkMaxConfig();
         rollerConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(rollerCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         rollerConfig
@@ -71,6 +72,8 @@ public class IntakeIOReal implements IntakeIO {
             .cruiseVelocity(2.0) // m/s
             .maxAcceleration(3.0); // m/s^2
         deployBaseConfig.signals.apply(SparkUtil.defaultSignals).primaryEncoderPositionPeriodMs(20);
+
+        // Per-motor
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
         

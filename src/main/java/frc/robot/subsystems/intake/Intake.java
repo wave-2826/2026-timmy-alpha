@@ -59,8 +59,8 @@ public class Intake extends SubsystemBase {
         return Commands.run(() -> io.setRollerSpeed(percent.getAsDouble() * intakeRollerSpeed.get()));
     }
 
-    private Debouncer deployLDebouncer = new Debouncer(0.2, DebounceType.kRising);
-    private Debouncer deployRDebouncer = new Debouncer(0.2, DebounceType.kRising);
+    private Debouncer deployLDebouncer = new Debouncer(0.5, DebounceType.kRising);
+    private Debouncer deployRDebouncer = new Debouncer(0.5, DebounceType.kRising);
 
     public boolean isDeployed() {
         return Math.abs((inputs.deployL.motorPosition() + inputs.deployR.motorPosition()) / 2) < 0.1;
@@ -69,6 +69,10 @@ public class Intake extends SubsystemBase {
     public Command deployIntake() {
         final double deployPower = 0.35;
         return Commands.parallel(
+            Commands.runOnce(() -> {
+                deployLDebouncer.calculate(false);
+                deployRDebouncer.calculate(false);
+            }),
             Commands.runEnd(() -> io.setDeployPowerL(deployPower), () -> io.setDeployPowerL(0.0))
                 .until(() -> deployLDebouncer.calculate(inputs.deployL.currentAmps() > IntakeConstants.deployStallCurrent)),
             Commands.runEnd(() -> io.setDeployPowerR(deployPower), () -> io.setDeployPowerR(0.0))
