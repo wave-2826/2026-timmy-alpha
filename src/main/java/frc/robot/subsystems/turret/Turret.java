@@ -299,7 +299,10 @@ public class Turret extends SubsystemBase {
             Commands.parallel(
                 zeroAzimuth((v) -> azimuthVelocity.value = v),
                 zeroHood((v) -> hoodVelocity.value = v)
-            ).raceWith(run(() -> io.setVelocityOutputs(0, azimuthVelocity.value, hoodVelocity.value))),
+            ).raceWith(run(() -> {
+                target = null;
+                io.setVelocityOutputs(0, azimuthVelocity.value, hoodVelocity.value);
+            })),
 
             runOnce(() -> {
                 io.resetHoodTo(TurretConstants.hoodMaxAngle);
