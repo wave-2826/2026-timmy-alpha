@@ -10,7 +10,7 @@ import frc.robot.subsystems.turret.TurretSim.SimTurretState;
 
 public class TurretIOSim extends TurretIOTalonHighFrequency {
     // Spark simulation objects
-    protected TalonFXSimState flywheelTalonSim = io.flywheel1Talon.getSimState();
+    protected TalonFXSimState flywheel1TalonSim = io.flywheel1Talon.getSimState();
     protected TalonFXSimState flywheel2TalonSim = io.flywheel2Talon.getSimState();
     protected TalonFXSimState azimuthTalonSim = io.azimuthTalon.getSimState();
     protected TalonFXSimState hoodTalonSim = io.hoodTalon.getSimState();
@@ -21,13 +21,13 @@ public class TurretIOSim extends TurretIOTalonHighFrequency {
     public TurretIOSim() {
         super();
 
-        flywheelTalonSim.setMotorType(MotorType.KrakenX60);
+        flywheel1TalonSim.setMotorType(MotorType.KrakenX60);
         flywheel2TalonSim.setMotorType(MotorType.KrakenX60);
         azimuthTalonSim.setMotorType(MotorType.KrakenX60);
         hoodTalonSim.setMotorType(MotorType.KrakenX60);
 
-        flywheelTalonSim.Orientation = ChassisReference.CounterClockwise_Positive;
-        flywheel2TalonSim.Orientation = ChassisReference.Clockwise_Positive;
+        flywheel1TalonSim.Orientation = ChassisReference.CounterClockwise_Positive;
+        flywheel2TalonSim.Orientation = ChassisReference.CounterClockwise_Positive;
 
         azimuthTalonSim.Orientation = ChassisReference.CounterClockwise_Positive;
         hoodTalonSim.Orientation = ChassisReference.CounterClockwise_Positive;
@@ -48,7 +48,7 @@ public class TurretIOSim extends TurretIOTalonHighFrequency {
     protected synchronized void periodic() {
         super.periodic();
 
-        flywheelTalonSim.setRotorVelocity(turretState.flywheelMotorVelRps() / (2 * Math.PI));
+        flywheel1TalonSim.setRotorVelocity(turretState.flywheelMotorVelRps() / (2 * Math.PI));
         flywheel2TalonSim.setRotorVelocity(turretState.flywheelMotorVelRps() / (2 * Math.PI));
 
         hoodTalonSim.setRawRotorPosition(turretState.hoodMotorPosRad() / (2 * Math.PI));
@@ -57,7 +57,7 @@ public class TurretIOSim extends TurretIOTalonHighFrequency {
         azimuthTalonSim.setRotorVelocity(turretState.azimuthMotorVelRps() / (2 * Math.PI));
 
         turretState = turretSim.updateAndGetState(
-            -flywheelTalonSim.getTorqueCurrent(),
+            -flywheel1TalonSim.getTorqueCurrent(),
             -hoodTalonSim.getTorqueCurrent(),
             -azimuthTalonSim.getTorqueCurrent(),
             1. / frequencyHz

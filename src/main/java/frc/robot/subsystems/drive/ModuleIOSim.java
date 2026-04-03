@@ -58,13 +58,13 @@ public class ModuleIOSim extends ModuleIOTalonFX {
         turnSim.update(0.02);
 
         // Constant resistant coulomb friction
-        double frictionNM = 0.5;
+        double frictionNM = 0.05;
         driveSim.setAngularVelocity(driveSim.getAngularVelocityRadPerSec() + Math.tanh(10. * driveSim.getAngularVelocityRadPerSec()) * frictionNM / driveInertia);
         turnSim.setAngularVelocity(turnSim.getAngularVelocityRadPerSec() + Math.tanh(10. * turnSim.getAngularVelocityRadPerSec()) * frictionNM / turnInertia);
 
         // Linear drive friction from things like carpet interactions, air resistence, idk what else but probably a bunch
-        double driveFrictionNMSperRad = 0.1;
-        driveSim.setAngularVelocity(driveSim.getAngularVelocityRadPerSec() + Math.tanh(10. * driveSim.getAngularVelocityRadPerSec()) * driveFrictionNMSperRad / driveInertia);
+        double driveFrictionNMSperRad = 0.001;
+        driveSim.setAngularVelocity(driveSim.getAngularVelocityRadPerSec() - driveSim.getAngularVelocityRadPerSec() * driveFrictionNMSperRad / driveInertia);
 
         driveSimState.setRawRotorPosition(driveSim.getAngularPositionRad());
         driveSimState.setRotorVelocity(driveSim.getAngularVelocityRadPerSec());

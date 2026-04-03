@@ -1,3 +1,8 @@
+# Exit early if OPEN_SIM_PROGRAMS is set to "false"
+if($env:OPEN_SIM_PROGRAMS -eq "false") {
+    return
+}
+
 function OpenIfNotRunning {
     param (
         [string]$ProgramPath

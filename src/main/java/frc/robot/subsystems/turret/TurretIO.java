@@ -68,8 +68,7 @@ public interface TurretIO {
         public double getFlywheelVelocityRadPerSecond() {
             return (
                 flywheel1.velocityRadPerSec() + flywheel2.velocityRadPerSec()
-            ) / 2 -
-                azimuth.internalEncoderVelocity() * TurretConstants.azimuthFlyCoupling;
+            ) / 2 - azimuth.internalEncoderVelocity() * TurretConstants.azimuthFlyCoupling;
         }
         public double getHoodAngleRad() {
             return (azimuth.internalEncoderAngle - hood.angleRad) * TurretConstants.hoodRingToHoodReduction +

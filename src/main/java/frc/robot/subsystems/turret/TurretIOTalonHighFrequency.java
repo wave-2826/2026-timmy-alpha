@@ -91,6 +91,8 @@ public class TurretIOTalonHighFrequency implements TurretIO {
     }
 
     protected synchronized void periodic() {
+        loopUpdates++;
+        
         if(controlMode != ControlMode.LQR || currentTarget == null) {
             controllerInitialised = false;
             return;
@@ -107,7 +109,5 @@ public class TurretIOTalonHighFrequency implements TurretIO {
         io.setLQROutputs(outputs);
 
         latestKalmanState = controller.getObserverState();
-
-        loopUpdates++;
     }
 }

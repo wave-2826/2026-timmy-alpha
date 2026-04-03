@@ -160,9 +160,7 @@ public class TurretIOTalonFX implements TurretIO {
     @Override
     public void setPIDOutputs(TurretIOPIDOutputs outputs) {
         var flywheel1Connected = flywheel1ConnectedDebouncer.calculate(flywheel1Velocity.getStatus().isOK());
-        var velocityReq = velocityRequest.withVelocity(
-            outputs.flywheelSpeedRadPerSec() / (2 * Math.PI) / TurretConstants.totalFlywheelGearing
-        ).withSlot(0);
+        var velocityReq = velocityRequest.withVelocity(outputs.flywheelSpeedRadPerSec() / (2 * Math.PI)).withSlot(0);
         if(flywheel1Connected) {
             if(outputs.flywheelSpeedRadPerSec() < Units.degreesToRadians(10)) {
                 flywheel1Talon.setControl(coastRequest);

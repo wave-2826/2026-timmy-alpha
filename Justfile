@@ -27,7 +27,7 @@ build-watch:
 replay:
     (Get-Content -Path {{ConstantsFile}}) -replace "simMode = Mode.SIM;", "simMode = Mode.REPLAY;" | Set-Content -Path {{ConstantsFile}}
     .\misc\scripts\openSimPrograms.ps1
-    .\gradlew simulateJava  "-Dorg.gradle.java.home=C:\Users\Public\wpilib\2026\jdk\"
+    .\gradlew simReplay  "-Dorg.gradle.java.home=C:\Users\Public\wpilib\2026\jdk\"
 
 build:
     ./gradlew build
@@ -35,7 +35,7 @@ build:
 [linux]
 replay:
     sed -i 's/simMode = Mode.SIM;/simMode = Mode.REPLAY;/g' {{ConstantsFile}}
-    ./gradlew simulateJava
+    ./gradlew simReplay
 
 template-subsystem:
     python ./misc/scripts/template-subsystem.py
