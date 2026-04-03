@@ -96,7 +96,7 @@ public class TurretIOTalonFX implements TurretIO {
         flywheelConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.totalFlywheelGearing;
         applyTorqueCurrentLimit(flywheelConfig, TurretConstants.flywheelCurrentLimit);
 
-        TurretConstants.flywheelMotorPID.applyConfigAndRegister(baseConfig, flywheel1Talon, flywheel2Talon);
+        TurretConstants.flywheelMotorPID.applyConfigAndRegister(flywheelConfig, flywheel1Talon, flywheel2Talon);
 
         tryUntilOk(5, () -> flywheel1Talon.getConfigurator().apply(flywheelConfig, 0.25));
         tryUntilOk(5, () -> flywheel2Talon.getConfigurator().apply(flywheelConfig, 0.25));
