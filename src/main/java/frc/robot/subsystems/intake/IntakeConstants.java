@@ -28,7 +28,7 @@ public class IntakeConstants {
     public static final double fullyExtendedIntakeDepth = Units.inchesToMeters(20); // TODO: collect from cad
 
     public static final TunablePID rollerPID = new TunablePID("Intake/Roller")
-        .addRealRobotGains(new GenericPIDConstants(0.0015, 0, 0, 1. / DCMotor.getNeoVortex(1).KvRadPerSecPerVolt))
+        .addRealRobotGains(new GenericPIDConstants(0.002, 0, 0, 1. / DCMotor.getNeoVortex(1).KvRadPerSecPerVolt))
         .addSimGains(new GenericPIDConstants(0.005, 0, 0));
     public static final TunablePID deployPID = new TunablePID("Intake/Deploy")
         .addRealRobotGains(new GenericPIDConstants(1.25, 0, 0))

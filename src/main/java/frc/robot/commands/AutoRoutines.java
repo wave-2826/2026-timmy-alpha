@@ -8,12 +8,15 @@ import choreo.auto.AutoTrajectory;
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.RobotContainer;
 import frc.robot.RobotState;
 import frc.robot.generated.autos.ChoreoTraj;
@@ -73,9 +76,10 @@ public class AutoRoutines {
         autoChooser.addRoutine("Left Sweep Swipe", () -> this.getSweepSwipe(false));
         autoChooser.addRoutine("Right Sweep Swipe", () -> this.getSweepSwipe(true));
 
-        
-        autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload());
+        autoChooser.addRoutine("Center Preload Simplified", () -> this.getCenterPreload(true));
+        autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload(false));
         autoChooser.addRoutine("Center Depot", () -> this.getCenterDepot(), true);
+        autoChooser.addCmd("Shoot Only (intake facing DS)", () -> this.getShootOnly());
     }
 
     
@@ -198,7 +202,7 @@ public class AutoRoutines {
         return routine;
     }
 
-    private AutoRoutine getCenterPreload() {
+    private AutoRoutine getCenterPreload(boolean noTurretControl) {
         var choreoTraj = ChoreoTraj.CenterPreload;
         var routine = autoFactory.newRoutine(choreoTraj.name());
         
@@ -208,7 +212,7 @@ public class AutoRoutines {
             traj.resetOdometry(),
             traj.cmd(),
             stopDrive(),
-            Commands.sequence(
+            noTurretControl ? Commands.sequence(
                 Commands.runOnce(() -> {
                     turret.target = new TurretTarget(
                         Units.rotationsPerMinuteToRadiansPerSecond(4225),
@@ -230,7 +234,7 @@ public class AutoRoutines {
                         1.0
                     );
                 }).withTimeout(10)
-            )
+            ) : ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)
         ));
 
         return routine;
@@ -251,5 +255,12 @@ public class AutoRoutines {
         ));
 
         return routine;
+    }
+
+    private Command getShootOnly() {
+        return Commands.sequence(
+            Commands.runOnce(() -> drive.setPose(new Pose2d(new Translation2d(2., FieldConstants.fieldWidthY / 2.), Rotation2d.kZero))),
+            ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)
+        );
     }
 }
