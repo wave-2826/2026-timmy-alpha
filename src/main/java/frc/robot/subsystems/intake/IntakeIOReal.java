@@ -136,7 +136,7 @@ public class IntakeIOReal implements IntakeIO {
     @Override
     public void setDeployPowerR(double power) {
         deployR.getClosedLoopController().setSetpoint(power, ControlType.kDutyCycle);
-        deployL.getClosedLoopController().setSetpoint(-power, ControlType.kDutyCycle);
+        deployL.getClosedLoopController().setSetpoint(power, ControlType.kDutyCycle);
     }
 
     @Override
