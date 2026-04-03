@@ -68,13 +68,13 @@ public class IntakeIOReal implements IntakeIO {
             .uvwAverageDepth(2);
         deployBaseConfig.closedLoop.maxMotion
             // TODO: reasonable values
-            .cruiseVelocity(0.8) // m/s
+            .cruiseVelocity(2.0) // m/s
             .maxAcceleration(3.0); // m/s^2
         deployBaseConfig.signals.apply(SparkUtil.defaultSignals).primaryEncoderPositionPeriodMs(20);
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
         
-        deployLConfig.inverted(true);
+        deployLConfig.inverted(false);
         deployRConfig.follow(deployL, true);
 
         var rollerLConfig = new SparkMaxConfig().apply(rollerConfig);
