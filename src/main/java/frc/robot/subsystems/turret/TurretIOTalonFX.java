@@ -94,6 +94,7 @@ public class TurretIOTalonFX implements TurretIO {
 
         var flywheelConfig = baseConfig.clone();
         flywheelConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.totalFlywheelGearing;
+        flywheelConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         applyTorqueCurrentLimit(flywheelConfig, TurretConstants.flywheelCurrentLimit);
 
         TurretConstants.flywheelMotorPID.applyConfigAndRegister(flywheelConfig, flywheel1Talon, flywheel2Talon);

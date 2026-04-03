@@ -301,7 +301,7 @@ public class DriveConstants {
     }
 
     public static final TunablePID autoLinearPID = new TunablePID("Autos/Linear")
-        .addRealRobotGains(new GenericPIDConstants(3.0, 0.0, 0.1))
+        .addRealRobotGains(new GenericPIDConstants(6.0, 0.0, 0.0))
         .copyRealGainsInSim();
     public static final TunablePID autoAngularPID = new TunablePID("Autos/Angular")
         .addRealRobotGains(new GenericPIDConstants(3.0, 0.0, 0.4))
