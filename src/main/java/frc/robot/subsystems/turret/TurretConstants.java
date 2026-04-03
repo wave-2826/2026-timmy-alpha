@@ -137,7 +137,7 @@ public class TurretConstants {
         .addSimGains(new GenericPIDConstants(0.5, 0, 0));
     
     // Control tolerances
-    public static final double flywheelToleranceRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(50);
+    public static final double flywheelToleranceRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(40);
     public static final double azimuthToleranceRad = Units.degreesToRadians(2);
     public static final double hoodToleranceRad = Units.degreesToRadians(2);
 }
