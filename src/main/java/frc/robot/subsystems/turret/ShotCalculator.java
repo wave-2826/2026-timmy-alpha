@@ -32,7 +32,7 @@ public class ShotCalculator {
 
     private static LoggedTunableNumber fudgeSpeedScale = new LoggedTunableNumber("ShotCalculator/FudgeSpeedScale", 1.05);
     private static LoggedTunableNumber fudgeAzimuthOffsetDegCCW = new LoggedTunableNumber("ShotCalculator/FudgeAzimuthOffsetDegCCW", 1.0);
-    private static LoggedTunableNumber fudgeHoodOffsetDeg = new LoggedTunableNumber("ShotCalculator/FudgeHoodOffsetDeg", 0.0);
+    private static LoggedTunableNumber fudgeHoodOffsetDeg = new LoggedTunableNumber("ShotCalculator/FudgeHoodOffsetDeg", -1.0);
     private static LoggedTunableNumber fudgeTimeOfFlightScale = new LoggedTunableNumber("ShotCalculator/FudgeTOFScale", 1.0);
     
     private static LoggedTunableNumber fudgeHubX = new LoggedTunableNumber("ShotCalculator/FudgeHubXInches", 0.0);

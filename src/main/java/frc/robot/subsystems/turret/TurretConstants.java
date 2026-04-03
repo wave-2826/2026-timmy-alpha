@@ -49,7 +49,7 @@ public class TurretConstants {
 
     // Constraints
     public static final double hoodMinAngle = Units.degreesToRadians(20);
-    public static final double hoodMaxAngle = Units.degreesToRadians(44);
+    public static final double hoodMaxAngle = Units.degreesToRadians(45);
 
     public static final double flywheelRadius = Units.inchesToMeters(2);
 

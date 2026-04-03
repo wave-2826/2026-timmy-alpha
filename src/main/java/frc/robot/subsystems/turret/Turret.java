@@ -100,6 +100,13 @@ public class Turret extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Turret", (TurretIOInputsAutoLogged)inputs);
 
+        // Clamp hood if in an unreasonable position
+        if(inputs.getHoodAngleRad() > TurretConstants.hoodMaxAngle + Units.degreesToRadians(95)) {
+            // Hood will be mechanically limited in range but the motor can keep spinning; clamp so our
+            // understanding of the hood position is at least close
+            io.resetHoodTo(TurretConstants.hoodMaxAngle);
+        }
+
         flywheel1DisconnectedAlert.set(!inputs.flywheel1.connected());
         flywheel2DisconnectedAlert.set(!inputs.flywheel2.connected());
         azimuthDisconnectedAlert.set(!inputs.azimuth.connected());
@@ -315,7 +322,9 @@ public class Turret extends SubsystemBase {
             }),
             Commands.runOnce(() -> {
                 setHoodVelocity.accept(0);
-            })
+            }),
+            // Wait for the hood motor velocity to be zero so we don't zero before we stop moving up
+            Commands.waitUntil(() -> Math.abs(inputs.hood.velocityRadPerSec() / TurretConstants.hoodMotorToRingReduction) < Units.degreesToRadians(10))
         );
     }
 
