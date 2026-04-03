@@ -27,90 +27,90 @@ public record ChoreoTraj(
     public static final ChoreoTraj CenterDepot = new ChoreoTraj(
         "CenterDepot",
         OptionalInt.empty(),
-        2.91953,
+        3.17096,
         new Pose2d(3.47272, 4.04414, Rotation2d.fromRadians(0)),
-        new Pose2d(1.3067, 5.10358, Rotation2d.fromRadians(-0.00425))
+        new Pose2d(1.3067, 5.10358, Rotation2d.fromRadians(-0.00032))
     );
     public static final ChoreoTraj CenterPreload = new ChoreoTraj(
         "CenterPreload",
         OptionalInt.empty(),
-        0.92847,
+        1.13664,
         new Pose2d(3.62515, 4.0272, Rotation2d.fromRadians(0)),
         new Pose2d(1.9844, 3.9977, Rotation2d.fromRadians(0))
     );
     public static final ChoreoTraj LeftDoubleSwipe = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.empty(),
-        7.51917,
+        8.95252,
         new Pose2d(4.50402, 7.34015, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(3.1335, 5.35427, Rotation2d.fromRadians(-0.17543))
+        new Pose2d(3.1335, 5.35427, Rotation2d.fromRadians(-0.52349))
     );
     /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
     public static final ChoreoTraj LeftDoubleSwipe$0 = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.of(0),
-        4.40529,
+        5.12173,
         new Pose2d(4.50402, 7.34015, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(3.44291, 7.48501, Rotation2d.fromRadians(1.58748))
+        new Pose2d(3.31398, 7.42481, Rotation2d.fromRadians(3.12666))
     );
     /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
     public static final ChoreoTraj LeftDoubleSwipe$1 = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.of(1),
-        2.6886200000000002,
-        new Pose2d(3.44291, 7.48501, Rotation2d.fromRadians(1.58748)),
-        new Pose2d(3.82339, 5.37826, Rotation2d.fromRadians(-0.17543))
+        3.3099800000000004,
+        new Pose2d(3.31398, 7.42481, Rotation2d.fromRadians(3.12666)),
+        new Pose2d(3.82339, 5.37826, Rotation2d.fromRadians(-0.50379))
     );
     /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
     public static final ChoreoTraj LeftDoubleSwipe$2 = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.of(2),
-        0.42525999999999975,
-        new Pose2d(3.82339, 5.37826, Rotation2d.fromRadians(-0.17543)),
-        new Pose2d(3.1335, 5.35427, Rotation2d.fromRadians(-0.17543))
+        0.5208099999999991,
+        new Pose2d(3.82339, 5.37826, Rotation2d.fromRadians(-0.50379)),
+        new Pose2d(3.1335, 5.35427, Rotation2d.fromRadians(-0.52349))
     );
     public static final ChoreoTraj LeftSweepSwipe = new ChoreoTraj(
         "LeftSweepSwipe",
         OptionalInt.empty(),
-        8.95197,
+        10.43749,
         new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
         new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
     );
     public static final ChoreoTraj RightDoubleSwipeGenerated = new ChoreoTraj(
         "RightDoubleSwipeGenerated",
         OptionalInt.empty(),
-        7.51917,
+        8.95252,
         new Pose2d(4.50402, 0.70285, Rotation2d.fromRadians(-1.5708)),
-        new Pose2d(3.1335, 2.68873, Rotation2d.fromRadians(0.17543))
+        new Pose2d(3.1335, 2.68873, Rotation2d.fromRadians(0.52349))
     );
     /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
     public static final ChoreoTraj RightDoubleSwipeGenerated$0 = new ChoreoTraj(
         "RightDoubleSwipeGenerated",
         OptionalInt.of(0),
-        4.40529,
+        5.12173,
         new Pose2d(4.50402, 0.70285, Rotation2d.fromRadians(-1.5708)),
-        new Pose2d(3.44291, 0.55799, Rotation2d.fromRadians(-1.58748))
+        new Pose2d(3.31398, 0.61819, Rotation2d.fromRadians(-3.12666))
     );
     /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
     public static final ChoreoTraj RightDoubleSwipeGenerated$1 = new ChoreoTraj(
         "RightDoubleSwipeGenerated",
         OptionalInt.of(1),
-        2.6886200000000002,
-        new Pose2d(3.44291, 0.55799, Rotation2d.fromRadians(-1.58748)),
-        new Pose2d(3.82339, 2.66474, Rotation2d.fromRadians(0.17543))
+        3.3099800000000004,
+        new Pose2d(3.31398, 0.61819, Rotation2d.fromRadians(-3.12666)),
+        new Pose2d(3.82339, 2.66474, Rotation2d.fromRadians(0.50379))
     );
     /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
     public static final ChoreoTraj RightDoubleSwipeGenerated$2 = new ChoreoTraj(
         "RightDoubleSwipeGenerated",
         OptionalInt.of(2),
-        0.42525999999999975,
-        new Pose2d(3.82339, 2.66474, Rotation2d.fromRadians(0.17543)),
-        new Pose2d(3.1335, 2.68873, Rotation2d.fromRadians(0.17543))
+        0.5208099999999991,
+        new Pose2d(3.82339, 2.66474, Rotation2d.fromRadians(0.50379)),
+        new Pose2d(3.1335, 2.68873, Rotation2d.fromRadians(0.52349))
     );
     public static final ChoreoTraj RightSweepSwipeGenerated = new ChoreoTraj(
         "RightSweepSwipeGenerated",
         OptionalInt.empty(),
-        8.95198,
+        10.43749,
         new Pose2d(4.47674, 0.50919, Rotation2d.fromRadians(-1.5708)),
         new Pose2d(3.398, 7.38612, Rotation2d.fromRadians(-1.5708))
     );
