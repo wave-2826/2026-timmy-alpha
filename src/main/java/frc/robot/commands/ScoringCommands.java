@@ -50,13 +50,15 @@ public class ScoringCommands {
         }, turret, spindexer).withName("TeleopScoring");
     }
 
+    public static Command prep(Turret turret) {
+        return turret.runOnce(() -> {
+            turret.target = ShotCalculator.getInstance().calculate().target();
+        });
+    }
+
     public static Command autoScoreHopper(Turret turret, Spindexer spindexer, HopperVision hopperVision) {
         return Commands.sequence(
-            // Start transport early to spin up
-            spindexer.run(() -> {
-                spindexer.setPower(0.0, 1.0);
-            }).withTimeout(0.15),
-
+            Commands.waitSeconds(0.25),
             Commands.waitUntil(turret::atSetpoint),
             
             // Run spin until no pieces remain

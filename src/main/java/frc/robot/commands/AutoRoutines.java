@@ -158,6 +158,7 @@ public class AutoRoutines {
 
         routine.active().onTrue(Commands.sequence(
             traj0.resetOdometry(),
+            ScoringCommands.prep(turret),
             traj0.cmd(),
             stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)),
             traj1.cmd(),
@@ -177,6 +178,7 @@ public class AutoRoutines {
         
         routine.active().onTrue(Commands.sequence(
             traj.resetOdometry(),
+            ScoringCommands.prep(turret),
             traj.cmd(),
             stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
         ));
@@ -210,6 +212,7 @@ public class AutoRoutines {
 
         routine.active().onTrue(Commands.sequence(
             traj.resetOdometry(),
+            ScoringCommands.prep(turret),
             traj.cmd(),
             stopDrive(),
             noTurretControl ? Commands.sequence(
@@ -250,6 +253,7 @@ public class AutoRoutines {
         
         routine.active().onTrue(Commands.sequence(
             traj.resetOdometry(),
+            ScoringCommands.prep(turret),
             traj.cmd(),
             stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
         ));

@@ -19,8 +19,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
-import frc.robot.subsystems.turret.Turret.TurretTarget;
-import frc.robot.subsystems.turret.TurretConstants;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.intake.Intake;
