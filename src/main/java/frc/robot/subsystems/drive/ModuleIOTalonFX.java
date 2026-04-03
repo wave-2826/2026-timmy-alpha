@@ -103,7 +103,7 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
 
     private void configureMotors() {
         var driveConfig = constants.DriveMotorInitialConfigs;
-        driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        driveConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         driveConfig.Slot0 = constants.DriveMotorGains;
         driveConfig.TorqueCurrent.PeakForwardTorqueCurrent = constants.SlipCurrent;
         driveConfig.TorqueCurrent.PeakReverseTorqueCurrent = -constants.SlipCurrent;
