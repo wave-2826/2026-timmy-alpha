@@ -9,8 +9,8 @@ public class IntakeConstants {
     public static final int intakeRollerLCanId = 30;
     public static final int intakeRollerRCanId = 33;
     
-    public static final int intakeDeployRCanId = 31;
-    public static final int intakeDeployLCanId = 32;
+    public static final int intakeDeployRCanId = 32;
+    public static final int intakeDeployLCanId = 31;
 
     public static final double rollerMotorReduction = 1.0;
     
