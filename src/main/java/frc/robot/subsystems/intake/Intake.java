@@ -1,7 +1,11 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -83,8 +87,9 @@ public class Intake extends SubsystemBase {
     
     /** Set the intake position. Positive numbers are inward. */
     public Command setIntakePosition(DoubleSupplier position) {
+        SlewRateLimiter limiter = new SlewRateLimiter(Units.inchesToMeters(14.75) * 2);
         return run(() -> {
-            io.setDeployPosition(position.getAsDouble());
+            io.setDeployPosition(limiter.calculate(position.getAsDouble()));
         });
     }
     
