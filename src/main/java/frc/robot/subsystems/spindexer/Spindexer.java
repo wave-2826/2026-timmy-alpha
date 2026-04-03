@@ -38,10 +38,11 @@ public class Spindexer extends SubsystemBase {
         transferDisconnectedAlert.set(!inputs.transfer.connected());
     }
 
-    public Command runManual(DoubleSupplier percent, BooleanSupplier runDexter) {
+    public Command runManual(DoubleSupplier percent, DoubleSupplier percentOverride, BooleanSupplier runDexter) {
         return runPercent(
             () -> percent.getAsDouble(),
-            () -> runDexter.getAsBoolean() ? Math.pow(Math.abs(percent.getAsDouble()), 0.1) : 0.
+            () -> 
+                (runDexter.getAsBoolean() ? Math.pow(Math.abs(percent.getAsDouble()), 0.1) : 0.) + percentOverride.getAsDouble()
         );
     }
 

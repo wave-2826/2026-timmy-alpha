@@ -96,8 +96,9 @@ public class Controls {
             coDriver::getLeftX
         ));
         turretControlCodriver.whileTrue(spindexer.runManual(
-            () -> coDriver.getLeftTriggerAxis() + MathUtil.applyDeadband(coDriver.getRightY(), 0.2),
-            () -> turret.atSetpoint()
+            coDriver::getLeftTriggerAxis,
+            () -> MathUtil.applyDeadband(coDriver.getRightY(), 0.2),
+            turret::atSetpoint
         ));
         turretControlCodriver.and(coDriver.start()).onTrue(turret.reset());
         turretControlCodriver.and(coDriver.leftBumper()).onTrue(turret.zeroRoutine());
