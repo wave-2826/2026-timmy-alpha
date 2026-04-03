@@ -61,6 +61,7 @@ public class IntakeIOReal implements IntakeIO {
         
         var deployBaseConfig = new SparkMaxConfig();
         deployBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(deployCurrentLimit).voltageCompensation(Constants.voltageCompensation);
+        deployBaseConfig.inverted(true);
         deployBaseConfig.encoder
             .positionConversionFactor(2.0 * Math.PI * pinionRadiusMeters / pinionReduction) // Rotor Rotations -> Deploy Meters
             .velocityConversionFactor((2.0 * Math.PI) / 60.0 * pinionRadiusMeters / pinionReduction)
@@ -74,7 +75,6 @@ public class IntakeIOReal implements IntakeIO {
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
         
-        deployLConfig.inverted(false);
         deployRConfig.follow(deployL, true);
 
         var rollerLConfig = new SparkMaxConfig().apply(rollerConfig);
@@ -156,7 +156,7 @@ public class IntakeIOReal implements IntakeIO {
             deployR.resumeFollowerModeAsync();
             deployFollowing = true;
         }
-        deployController.setSetpoint(-positionMeters, ControlType.kPosition);
+        deployController.setSetpoint(-positionMeters, ControlType.kMAXMotionPositionControl);
     }
 
     @Override
