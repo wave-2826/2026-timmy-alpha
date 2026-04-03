@@ -254,14 +254,14 @@ public class TurretController {
         ) constructSystem();
 
         // Get motor-shaft velocities instead
-        double flyMotorVel  = inputs.topFlywheel.velocityRadPerSec();
-        double aziMotorVel  = inputs.azimuth.internalEncoderVelocity();
-        double hoodMotorVel = inputs.hood.velocityRadPerSec();
+        double flyMotorVel  = inputs.flywheel1.velocityRadPerSec()     / TurretConstants.totalFlywheelGearing;
+        double aziMotorVel  = inputs.azimuth.internalEncoderVelocity() / TurretConstants.aziMotorToRingReduction;
+        double hoodMotorVel = inputs.hood.velocityRadPerSec()          / TurretConstants.hoodMotorToRingReduction;
 
         // Empirical feedforward currents
         // The models return steady-state current for the given operating point
-        double ffAzimuth  = AzimuthFF(flyMotorVel, aziMotorVel, hoodMotorVel) * lqrFFContribution.get();
-        double ffHood     = HoodFF(flyMotorVel, aziMotorVel, hoodMotorVel) * lqrFFContribution.get();
+        double ffAzimuth  = AzimuthFF (flyMotorVel, aziMotorVel, hoodMotorVel) * lqrFFContribution.get();
+        double ffHood     = HoodFF    (flyMotorVel, aziMotorVel, hoodMotorVel) * lqrFFContribution.get();
         double ffFlywheel = FlywheelFF(flyMotorVel, aziMotorVel, hoodMotorVel) * lqrFFContribution.get();
 
         // Build reference vector

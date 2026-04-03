@@ -31,7 +31,7 @@ public class TurretIOTalonHighFrequency implements TurretIO {
             frequencyHz,
             io.azimuthInternalAngle,
             io.azimuthInternalVelocity,
-            io.topFlywheelVelocity,
+            io.flywheel1Velocity,
             io.hoodAngle,
             io.hoodVelocity
         );

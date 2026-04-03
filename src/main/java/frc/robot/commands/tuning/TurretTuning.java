@@ -72,7 +72,7 @@ public class TurretTuning {
         this.io = io;
         this.controller = controller;
         this.motors = new Motor[] {
-            new Motor("Flywheel", () -> inputs.get().topFlywheel.velocityRadPerSec(), () -> inputs.get().topFlywheel.currentAmps(), 4000),
+            new Motor("Flywheel", () -> inputs.get().flywheel1.velocityRadPerSec(), () -> inputs.get().flywheel1.currentAmps(), 4000),
             new Motor("Hood", () -> inputs.get().hood.velocityRadPerSec(), () -> inputs.get().hood.currentAmps(), 4000),
             new Motor("Azimuth", () -> inputs.get().azimuth.internalEncoderVelocity(), () -> inputs.get().azimuth.currentAmps(), 600)
         };

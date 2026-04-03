@@ -46,20 +46,20 @@ public class TurretIOTalonFX implements TurretIO {
 
     protected final DigitalInput azimuthZeroSensor = new DigitalInput(TurretConstants.azimuthZeroDIOPort);
 
-    protected final TalonFX topFlywheelTalon = new TalonFX(TurretConstants.topFlywheelCanID, TurretConstants.CANBus);
-    protected final TalonFX bottomFlywheelTalon = new TalonFX(TurretConstants.bottomFlywheelCanID, TurretConstants.CANBus);
+    protected final TalonFX flywheel1Talon = new TalonFX(TurretConstants.flywheel1CanID, TurretConstants.CANBus);
+    protected final TalonFX flywheel2Talon = new TalonFX(TurretConstants.flywheel2CanID, TurretConstants.CANBus);
     protected final TalonFX azimuthTalon = new TalonFX(TurretConstants.azimuthCanID, TurretConstants.CANBus);
     protected final TalonFX hoodTalon = new TalonFX(TurretConstants.hoodCanID, TurretConstants.CANBus);
     // protected final CANcoder azimuthCancoder = new CANcoder(TurretConstants.azimuthCancoderID, TurretConstants.CANBus);
     
     /** Base unit: motor **rotations per second** */
-    protected final StatusSignal<AngularVelocity> topFlywheelVelocity;
+    protected final StatusSignal<AngularVelocity> flywheel1Velocity;
     /** Base unit: stator **amps** */
-    protected final StatusSignal<Current> topFlywheelCurrent;
+    protected final StatusSignal<Current> flywheel1Current;
     /** Base unit: motor **rotations per second** */
-    protected final StatusSignal<AngularVelocity> bottomFlywheelVelocity;
+    protected final StatusSignal<AngularVelocity> flywheel2Velocity;
     /** Base unit: stator **amps** */
-    protected final StatusSignal<Current> bottomFlywheelCurrent;
+    protected final StatusSignal<Current> flywheel2Current;
 
     /** Base unit: mechanism **rotations** */
     protected final StatusSignal<Angle> azimuthInternalAngle;
@@ -87,12 +87,15 @@ public class TurretIOTalonFX implements TurretIO {
         baseConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
         baseConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive; // Only clockwise motor
         baseConfig.MotorOutput.ControlTimesyncFreqHz = 250;
-        applyTorqueCurrentLimit(baseConfig, TurretConstants.flywheelCurrentLimit);
 
-        TurretConstants.flywheelMotorPID.applyConfigAndRegister(baseConfig, topFlywheelTalon, bottomFlywheelTalon);
+        var flywheelConfig = baseConfig.clone();
+        flywheelConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.totalFlywheelGearing;
+        applyTorqueCurrentLimit(flywheelConfig, TurretConstants.flywheelCurrentLimit);
 
-        tryUntilOk(5, () -> topFlywheelTalon.getConfigurator().apply(baseConfig, 0.25));
-        tryUntilOk(5, () -> bottomFlywheelTalon.getConfigurator().apply(baseConfig, 0.25));
+        TurretConstants.flywheelMotorPID.applyConfigAndRegister(baseConfig, flywheel1Talon, flywheel2Talon);
+
+        tryUntilOk(5, () -> flywheel1Talon.getConfigurator().apply(flywheelConfig, 0.25));
+        tryUntilOk(5, () -> flywheel2Talon.getConfigurator().apply(flywheelConfig, 0.25));
 
         var azimuthConfig = baseConfig.clone();
         azimuthConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
@@ -113,14 +116,14 @@ public class TurretIOTalonFX implements TurretIO {
 
         tryUntilOk(5, () -> hoodTalon.getConfigurator().apply(hoodConfig, 0.25));
 
-        followerRequest = new Follower(topFlywheelTalon.getDeviceID(), MotorAlignmentValue.Opposed);
+        followerRequest = new Follower(flywheel1Talon.getDeviceID(), MotorAlignmentValue.Aligned);
 
         // We just don't configure the CANCoder - configure with Phoenix Tuner instead
 
-        topFlywheelVelocity = topFlywheelTalon.getVelocity();
-        topFlywheelCurrent = topFlywheelTalon.getStatorCurrent();
-        bottomFlywheelVelocity = bottomFlywheelTalon.getVelocity();
-        bottomFlywheelCurrent = bottomFlywheelTalon.getStatorCurrent();
+        flywheel1Velocity = flywheel1Talon.getVelocity();
+        flywheel1Current = flywheel1Talon.getStatorCurrent();
+        flywheel2Velocity = flywheel2Talon.getVelocity();
+        flywheel2Current = flywheel2Talon.getStatorCurrent();
 
         // azimuthAbsAngle = azimuthCancoder.getAbsolutePosition();
         // azimuthAbsVelocity = azimuthCancoder.getVelocity();
@@ -135,15 +138,15 @@ public class TurretIOTalonFX implements TurretIO {
 
         // 50 for all except the leader current
         BaseStatusSignal.setUpdateFrequencyForAll(50.0,
-            topFlywheelVelocity,
-            bottomFlywheelVelocity, bottomFlywheelCurrent,
-            //azimuthAbsAngle, azimuthAbsVelocity,
+            flywheel1Velocity,
+            flywheel2Velocity, flywheel2Current,
             azimuthInternalAngle, azimuthInternalVelocity, azimuthCurrent,
             hoodAngle, hoodVelocity, hoodCurrent);
+        
         // Leader update frequency so follower can track more accurately
-        topFlywheelCurrent.setUpdateFrequency(250.0);
+        flywheel1Current.setUpdateFrequency(250.0);
         ParentDevice.optimizeBusUtilizationForAll(
-            topFlywheelTalon, bottomFlywheelTalon, azimuthTalon, hoodTalon
+            flywheel1Talon, flywheel2Talon, azimuthTalon, hoodTalon
         );
 
         resetAzimuth(Rotation2d.kZero);
@@ -152,24 +155,34 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void setPIDOutputs(TurretIOPIDOutputs outputs) {
-        if(outputs.flywheelSpeedRadPerSec() < Units.degreesToRadians(10)) topFlywheelTalon.setControl(coastRequest);
-        else topFlywheelTalon.setControl(velocityRequest.withVelocity(
+        // TODO: debounce
+        var flywheel1Connected = flywheel1Velocity.getStatus().isOK();
+        var velocityReq = velocityRequest.withVelocity(
             outputs.flywheelSpeedRadPerSec() / (2 * Math.PI) / TurretConstants.totalFlywheelGearing
-        ).withSlot(0));
-        bottomFlywheelTalon.setControl(followerRequest);
+        ).withSlot(0);
+        if(flywheel1Connected) {
+            if(outputs.flywheelSpeedRadPerSec() < Units.degreesToRadians(10)) {
+                flywheel1Talon.setControl(coastRequest);
+            } else {
+                flywheel1Talon.setControl(velocityReq);
+            }
+            flywheel2Talon.setControl(followerRequest);
+        } else {
+            // Fallback for redundancy
+            flywheel2Talon.setControl(velocityReq);
+        }
 
         azimuthTalon.setControl(positionRequest.withPosition(
             outputs.azimuthAngleRad() / (2 * Math.PI)
         ).withSlot(0));
 
         double azimuthRingRotations = azimuthInternalAngle.getValueAsDouble();
-        double hoodRingRotations =
-            azimuthRingRotations - outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction / (2 * Math.PI);
+        double hoodRingRotations = azimuthRingRotations - outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction / (2 * Math.PI);
         hoodTalon.setControl(positionRequest.withPosition(hoodRingRotations).withSlot(0));
     }
   
     public void updateLQRInputs(TurretIOInputs inputs) {
-        BaseStatusSignal.refreshAll(azimuthInternalAngle, azimuthInternalVelocity, topFlywheelVelocity, hoodAngle, hoodVelocity);
+        BaseStatusSignal.refreshAll(azimuthInternalAngle, azimuthInternalVelocity, flywheel1Velocity, hoodAngle, hoodVelocity);
         inputs.azimuth = new TurretIOInputs.AzimuthMotorInputs(
             inputs.azimuth.connected(),
             azimuthInternalAngle.getValueAsDouble() * (2 * Math.PI),
@@ -182,17 +195,22 @@ public class TurretIOTalonFX implements TurretIO {
             hoodVelocity.getValueAsDouble() * (2 * Math.PI),
             inputs.hood.currentAmps()
         );
-        inputs.topFlywheel = new TurretIOInputs.FlywheelMotorInputs(
-            inputs.topFlywheel.connected(),
-            topFlywheelVelocity.getValueAsDouble() * (2 * Math.PI),
-            inputs.topFlywheel.currentAmps()
+        inputs.flywheel1 = new TurretIOInputs.FlywheelMotorInputs(
+            inputs.flywheel1.connected(),
+            flywheel1Velocity.getValueAsDouble() * (2 * Math.PI),
+            inputs.flywheel1.currentAmps()
+        );
+        inputs.flywheel2 = new TurretIOInputs.FlywheelMotorInputs(
+            inputs.flywheel2.connected(),
+            flywheel2Velocity.getValueAsDouble() * (2 * Math.PI),
+            inputs.flywheel2.currentAmps()
         );
     }
 
     @Override
     public void updateInputs(TurretIOInputs inputs) {
-        var topFlywheelStatus = BaseStatusSignal.refreshAll(topFlywheelVelocity, topFlywheelCurrent);
-        var bottomFlywheelStatus = BaseStatusSignal.refreshAll(bottomFlywheelVelocity, bottomFlywheelCurrent);
+        var flywheel1Status = BaseStatusSignal.refreshAll(flywheel1Velocity, flywheel1Current);
+        var flywheel2Status = BaseStatusSignal.refreshAll(flywheel2Velocity, flywheel2Current);
         // var azimuthEncoderStatus = BaseStatusSignal.refreshAll(azimuthAbsAngle, azimuthAbsVelocity);
         var azimuthMotorStatus = BaseStatusSignal.refreshAll(azimuthInternalAngle, azimuthInternalVelocity, azimuthCurrent);
         var hoodStatus = BaseStatusSignal.refreshAll(hoodAngle, hoodVelocity, hoodCurrent);
@@ -203,15 +221,15 @@ public class TurretIOTalonFX implements TurretIO {
             azimuthInternalVelocity.getValueAsDouble() * (2 * Math.PI),
             azimuthCurrent.getValueAsDouble()
         );
-        inputs.topFlywheel = new TurretIOInputs.FlywheelMotorInputs(
-            topFlywheelStatus.isOK(),
-            topFlywheelVelocity.getValueAsDouble() * (2 * Math.PI),
-            topFlywheelCurrent.getValueAsDouble()
+        inputs.flywheel1 = new TurretIOInputs.FlywheelMotorInputs(
+            flywheel1Status.isOK(),
+            flywheel1Velocity.getValueAsDouble() * (2 * Math.PI),
+            flywheel1Current.getValueAsDouble()
         );
-        inputs.bottomFlywheel = new TurretIOInputs.FlywheelMotorInputs(
-            bottomFlywheelStatus.isOK(),
-            bottomFlywheelVelocity.getValueAsDouble() * (2 * Math.PI),
-            bottomFlywheelCurrent.getValueAsDouble()
+        inputs.flywheel2 = new TurretIOInputs.FlywheelMotorInputs(
+            flywheel2Status.isOK(),
+            flywheel2Velocity.getValueAsDouble() * (2 * Math.PI),
+            flywheel2Current.getValueAsDouble()
         );
 
         inputs.hood = new TurretIOInputs.HoodMotorInputs(
@@ -227,15 +245,15 @@ public class TurretIOTalonFX implements TurretIO {
     @Override
     public void setVelocityOutputs(double flywheelVelocityRadPerSec, double azimuthVelocityRadPerSec,
             double hoodVelocityRadPerSec) {
-        topFlywheelTalon.setControl(velocityRequest.withVelocity(flywheelVelocityRadPerSec / (Math.PI * 2)).withSlot(1));
-        bottomFlywheelTalon.setControl(followerRequest);
+        flywheel1Talon.setControl(velocityRequest.withVelocity(flywheelVelocityRadPerSec / (Math.PI * 2)).withSlot(1));
+        flywheel2Talon.setControl(followerRequest);
         azimuthTalon.setControl(velocityRequest.withVelocity(azimuthVelocityRadPerSec / (Math.PI * 2)).withSlot(1));
         hoodTalon.setControl(velocityRequest.withVelocity(hoodVelocityRadPerSec / (Math.PI * 2)).withSlot(1));
     }
 
     public void setLQROutputs(TurretLQROutputs outputs) {
-        topFlywheelTalon.setControl(torqueCurrentRequest.withOutput(outputs.flywheelCurrent()));
-        bottomFlywheelTalon.setControl(followerRequest);
+        flywheel1Talon.setControl(torqueCurrentRequest.withOutput(outputs.flywheelCurrent()));
+        flywheel2Talon.setControl(followerRequest);
         azimuthTalon.setControl(torqueCurrentRequest.withOutput(outputs.azimuthCurrent()));
         hoodTalon.setControl(torqueCurrentRequest.withOutput(outputs.hoodCurrent()));
     }
@@ -258,8 +276,8 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void stop() {
-        topFlywheelTalon.stopMotor();
-        bottomFlywheelTalon.stopMotor();
+        flywheel1Talon.stopMotor();
+        flywheel2Talon.stopMotor();
         azimuthTalon.stopMotor();
         hoodTalon.stopMotor();
     }

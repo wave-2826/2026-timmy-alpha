@@ -88,33 +88,33 @@ public class ShotCalculator {
     static {
         // Hub shots
 
-        // 1.486m: 2680 rpm / 29.9 deg / 1.10s
-        // 2.28m: 2770 rpm / 37.4 deg / 1.04s
-        // 2.64m: 2810 rpm / 40.7 deg / 0.933s
-        // 3.41m: 3235 rpm / 40.9 deg / 1.17s
-        // 4.33m: 3530 rpm / 41.9 deg / 1.39s
-        // 5.35m: 4185 rpm / 41.9 deg / 1.45s
+        // 1.486m: 2219.9 rpm / 29.9 deg / 1.10s
+        // 2.28m:  2294.4 rpm / 37.4 deg / 1.04s
+        // 2.64m:  2327.6 rpm / 40.7 deg / 0.93s
+        // 3.41m:  2679.6 rpm / 40.9 deg / 1.17s
+        // 4.33m:  2924.0 rpm / 41.9 deg / 1.39s
+        // 5.35m:  3476.5 rpm / 41.9 deg / 1.45s
 
         hubShots.hoodAngleMap.put(1.486, 29.9);
-        hubShots.hoodAngleMap.put(2.28, 37.4);
-        hubShots.hoodAngleMap.put(2.64, 40.7);
-        hubShots.hoodAngleMap.put(3.41, 40.9);
-        hubShots.hoodAngleMap.put(4.33, 41.9);
-        hubShots.hoodAngleMap.put(5.35, 41.9);
+        hubShots.hoodAngleMap.put(2.28,  37.4);
+        hubShots.hoodAngleMap.put(2.64,  40.7);
+        hubShots.hoodAngleMap.put(3.41,  40.9);
+        hubShots.hoodAngleMap.put(4.33,  41.9);
+        hubShots.hoodAngleMap.put(5.35,  41.9);
 
-        hubShots.flywheelSpeedMap.put(1.486, 2680.0);
-        hubShots.flywheelSpeedMap.put(2.28, 2770.0);
-        hubShots.flywheelSpeedMap.put(2.64, 2810.0);
-        hubShots.flywheelSpeedMap.put(3.41, 3235.0);
-        hubShots.flywheelSpeedMap.put(4.33, 3530.0);
-        hubShots.flywheelSpeedMap.put(5.35, 4185.0);
+        hubShots.flywheelSpeedMap.put(1.486, 2219.9);
+        hubShots.flywheelSpeedMap.put(2.28,  2294.4);
+        hubShots.flywheelSpeedMap.put(2.64,  2327.6);
+        hubShots.flywheelSpeedMap.put(3.41,  2679.6);
+        hubShots.flywheelSpeedMap.put(4.33,  2924.0);
+        hubShots.flywheelSpeedMap.put(5.35,  3476.5);
 
         hubShots.timeOfFlightMap.put(1.486, 1.10);
-        hubShots.timeOfFlightMap.put(2.28, 1.04);
-        hubShots.timeOfFlightMap.put(2.64, 0.933);
-        hubShots.timeOfFlightMap.put(3.41, 1.17);
-        hubShots.timeOfFlightMap.put(4.33, 1.39);
-        hubShots.timeOfFlightMap.put(5.35, 1.45);
+        hubShots.timeOfFlightMap.put(2.28,  1.04);
+        hubShots.timeOfFlightMap.put(2.64,  0.93);
+        hubShots.timeOfFlightMap.put(3.41,  1.17);
+        hubShots.timeOfFlightMap.put(4.33,  1.39);
+        hubShots.timeOfFlightMap.put(5.35,  1.45);
 
         // Passing shots
         passShots.hoodAngleMap.put(5.46,  40.0);

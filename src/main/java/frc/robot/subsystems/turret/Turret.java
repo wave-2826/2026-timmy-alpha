@@ -41,8 +41,14 @@ import frc.robot.util.tunables.LoggedTunableNumber;
  */
 public class Turret extends SubsystemBase {
     public static class TurretTarget {
+        /** The target velocity of the flywheel itself in radians/second */
         public double flywheelSpeedRadPerSec;
+        /** The target angle of the azimuth relative to the robot base in radians. */
         public double azimuthAngleRad;
+        /**
+         * The target hood angle relative to the turret surface; 0 rad would be shooting
+         * straight up and pi/2 rad would theoretically be shots directly outward.
+         */
         public double hoodAngleRad;
 
         public TurretTarget(double flywheelSpeedRadPerSec, double azimuthAngleRad, double hoodAngleRad) {

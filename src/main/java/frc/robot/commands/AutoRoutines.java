@@ -2,7 +2,6 @@ package frc.robot.commands;
 
 import org.littletonrobotics.junction.Logger;
 
-import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
@@ -113,8 +112,8 @@ public class AutoRoutines {
 
         double[] forcesN = new double[4];
         for(int i = 0; i < 4; i++) {
-            double forceX = sample.moduleForcesX()[i] ;
-            double forceY = sample.moduleForcesY()[i] ;
+            double forceX = sample.moduleForcesX()[i];
+            double forceY = sample.moduleForcesY()[i];
             forcesN[i] = Math.sqrt(forceX * forceX + forceY * forceY);
         }
 
@@ -212,7 +211,7 @@ public class AutoRoutines {
             Commands.sequence(
                 Commands.runOnce(() -> {
                     turret.target = new TurretTarget(
-                        Units.rotationsPerMinuteToRadiansPerSecond(5100),
+                        Units.rotationsPerMinuteToRadiansPerSecond(4225),
                         0.0,
                         TurretConstants.hoodMinAngle
                     );

@@ -10,8 +10,8 @@ import frc.robot.subsystems.turret.TurretSim.SimTurretState;
 
 public class TurretIOSim extends TurretIOTalonHighFrequency {
     // Spark simulation objects
-    protected TalonFXSimState flywheelTalonSim = io.topFlywheelTalon.getSimState();
-    protected TalonFXSimState bottomFlywheelTalonSim = io.bottomFlywheelTalon.getSimState();
+    protected TalonFXSimState flywheelTalonSim = io.flywheel1Talon.getSimState();
+    protected TalonFXSimState flywheel2TalonSim = io.flywheel2Talon.getSimState();
     protected TalonFXSimState azimuthTalonSim = io.azimuthTalon.getSimState();
     protected TalonFXSimState hoodTalonSim = io.hoodTalon.getSimState();
 
@@ -22,12 +22,12 @@ public class TurretIOSim extends TurretIOTalonHighFrequency {
         super();
 
         flywheelTalonSim.setMotorType(MotorType.KrakenX60);
-        bottomFlywheelTalonSim.setMotorType(MotorType.KrakenX60);
+        flywheel2TalonSim.setMotorType(MotorType.KrakenX60);
         azimuthTalonSim.setMotorType(MotorType.KrakenX60);
         hoodTalonSim.setMotorType(MotorType.KrakenX60);
 
         flywheelTalonSim.Orientation = ChassisReference.CounterClockwise_Positive;
-        bottomFlywheelTalonSim.Orientation = ChassisReference.Clockwise_Positive;
+        flywheel2TalonSim.Orientation = ChassisReference.Clockwise_Positive;
 
         azimuthTalonSim.Orientation = ChassisReference.CounterClockwise_Positive;
         hoodTalonSim.Orientation = ChassisReference.CounterClockwise_Positive;
@@ -49,7 +49,7 @@ public class TurretIOSim extends TurretIOTalonHighFrequency {
         super.periodic();
 
         flywheelTalonSim.setRotorVelocity(turretState.flywheelMotorVelRps() / (2 * Math.PI));
-        bottomFlywheelTalonSim.setRotorVelocity(turretState.flywheelMotorVelRps() / (2 * Math.PI));
+        flywheel2TalonSim.setRotorVelocity(turretState.flywheelMotorVelRps() / (2 * Math.PI));
 
         hoodTalonSim.setRawRotorPosition(turretState.hoodMotorPosRad() / (2 * Math.PI));
         hoodTalonSim.setRotorVelocity(turretState.hoodMotorVelRps() / (2 * Math.PI));

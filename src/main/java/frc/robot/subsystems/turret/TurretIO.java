@@ -13,7 +13,10 @@ public interface TurretIO {
         public record FlywheelMotorInputs(
             /** Whether the motor is connected */
             boolean connected,
-            /** The measured motor flywheel angular velocity. */
+            /**
+             * The measured flywheel angular velocity, not including coaxial coupling.
+             * This is purely motor velocity times the mechanism ratio.
+             */
             double velocityRadPerSec,
             /** The motor current draw. */
             double currentAmps
@@ -36,14 +39,14 @@ public interface TurretIO {
              * The actual hood angle is the difference between this and the azimuth ring angle (and reductions).
              */
             double angleRad,
-            /** The measured velocity of the hood motor in rad/sec. */
+            /** The measured velocity of the hood ring in rad/sec. */
             double velocityRadPerSec,
             /** The motor current draw. */
             double currentAmps
         ) {}
 
-        public FlywheelMotorInputs topFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
-        public FlywheelMotorInputs bottomFlywheel = new FlywheelMotorInputs(false, 0.0, 0.0);
+        public FlywheelMotorInputs flywheel1 = new FlywheelMotorInputs(false, 0.0, 0.0);
+        public FlywheelMotorInputs flywheel2 = new FlywheelMotorInputs(false, 0.0, 0.0);
 
         public AzimuthMotorInputs azimuth = new AzimuthMotorInputs(false, 0.0, 0.0, 0.0);
 
@@ -61,13 +64,11 @@ public interface TurretIO {
 
         /**
          * Get the flywheel mechanism velocity in rad/s. Positive = shooting direction.
-         * The physical gearing inverts the motor direction, so we negate totalFlywheelGearing
-         * to keep a consistent positive-current to positive-velocity convention.
          */
         public double getFlywheelVelocityRadPerSecond() {
             return (
-                topFlywheel.velocityRadPerSec() + bottomFlywheel.velocityRadPerSec()
-            ) / 2 * TurretConstants.totalFlywheelGearing -
+                flywheel1.velocityRadPerSec() + flywheel2.velocityRadPerSec()
+            ) / 2 -
                 azimuth.internalEncoderVelocity() * TurretConstants.azimuthFlyCoupling;
         }
         public double getHoodAngleRad() {
@@ -87,7 +88,7 @@ public interface TurretIO {
     }
 
     public static record TurretIOPIDOutputs(
-        /** The target flywheel speed. */
+        /** The target flywheel speed at the wheel itself. */
         double flywheelSpeedRadPerSec,
         /** The turret azimuth angle relative to the robot base, in counterclockwise rotations */
         double azimuthAngleRad,

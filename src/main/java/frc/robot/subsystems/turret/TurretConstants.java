@@ -14,8 +14,8 @@ import frc.robot.util.tunables.TunablePID;
 
 public class TurretConstants {
     // CAN IDs
-    public static final int topFlywheelCanID = 51;
-    public static final int bottomFlywheelCanID = 52;
+    public static final int flywheel1CanID = 51;
+    public static final int flywheel2CanID = 52;
     public static final int azimuthCanID = 53;
     public static final int hoodCanID = 54;
     public static final int azimuthCancoderID = 55;
@@ -27,13 +27,13 @@ public class TurretConstants {
 
     // Reductions; all are a ratio between output and input.
     // All stages have the same 31:200 reduction, but the hood and azimuth are further reduced by the bevel and planetary stages.
-    public static final double flyMotorToRingReduction = 35.0 / 200.0;
+    public static final double flyMotorToRingReduction = (44. / 20.) * (35.0 / 200.0);
     public static final double aziMotorToRingReduction = 18.0 / 200.0;
     public static final double hoodMotorToRingReduction = 35.0 / 200.0;
     
     public static final double flywheelPlanetReduction = 213.0 / 25.0;
     public static final double hoodPlanetReduction = 213.0 / 25.0;
-
+    
     public static final double flywheelRingToFlyReduction = 10.0 / 18.0 * TurretConstants.flywheelPlanetReduction;
     public static final double hoodRingToHoodReduction = 1.0 / 202.0 * TurretConstants.hoodPlanetReduction;
 
