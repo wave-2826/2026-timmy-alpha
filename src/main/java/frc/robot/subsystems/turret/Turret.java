@@ -6,7 +6,9 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -73,6 +75,11 @@ public class Turret extends SubsystemBase {
 
     public TurretTarget target = null;
 
+    private final Alert flywheel1DisconnectedAlert = new Alert("Flywheel motor 1 disconnected! Using only 2 as a fallback. Recovery performance will be reduced.", AlertType.kError);
+    private final Alert flywheel2DisconnectedAlert = new Alert("Flywheel motor 2 disconnected! Recovery performance will be reduced.", AlertType.kError);
+    private final Alert azimuthDisconnectedAlert = new Alert("Turret azimuth motor disconnected!", AlertType.kError);
+    private final Alert hoodDisconnectedAlert = new Alert("Turret hood motor disconnected!", AlertType.kError);
+
     public Turret(TurretIO io) {
         this.io = io;
 
@@ -92,6 +99,11 @@ public class Turret extends SubsystemBase {
 
         io.updateInputs(inputs);
         Logger.processInputs("Turret", (TurretIOInputsAutoLogged)inputs);
+
+        flywheel1DisconnectedAlert.set(!inputs.flywheel1.connected());
+        flywheel2DisconnectedAlert.set(!inputs.flywheel2.connected());
+        azimuthDisconnectedAlert.set(!inputs.azimuth.connected());
+        hoodDisconnectedAlert.set(!inputs.hood.connected());
 
         if(target == null) {
             io.stop();

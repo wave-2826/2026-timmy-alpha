@@ -14,6 +14,9 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import frc.robot.Constants;
 
 import com.revrobotics.spark.config.SparkMaxConfig;
+
+import edu.wpi.first.math.filter.Debouncer;
+
 import com.revrobotics.spark.config.SparkFlexConfig;
 
 
@@ -23,6 +26,9 @@ public class SpindexerIOReal implements SpindexerIO {
     private final RelativeEncoder spinEncoder = spinnerMotor.getEncoder();
     private final RelativeEncoder transferEncoder = transferMotor.getEncoder();
   
+    private final Debouncer spinConnectedDebounce = new Debouncer(0.5);
+    private final Debouncer transferConnectedDebounce = new Debouncer(0.5);
+
     public SpindexerIOReal() {
         var spinnerConfig = new SparkFlexConfig();
         spinnerConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(spinnerCurrentLimit).voltageCompensation(Constants.voltageCompensation);
@@ -57,11 +63,11 @@ public class SpindexerIOReal implements SpindexerIO {
     public void updateInputs(SpindexerIOInputs inputs) {
         var spinnerVelocity = getIfOk(spinnerMotor, spinEncoder::getVelocity, 0.0);
         var spinnerCurrent = getIfOk(spinnerMotor, spinnerMotor::getOutputCurrent, 0.0);
-        inputs.spinner = new SpindexerIOInputs.SpinnerMotorInputs(!sparkStickyFault, spinnerVelocity, spinnerCurrent);
+        inputs.spinner = new SpindexerIOInputs.SpinnerMotorInputs(spinConnectedDebounce.calculate(!checkFault()), spinnerVelocity, spinnerCurrent);
 
         var transferVelocity = getIfOk(transferMotor, transferEncoder::getVelocity, 0.0);
         var transferCurrent = getIfOk(transferMotor, transferMotor::getOutputCurrent, 0.0);
-        inputs.transfer = new SpindexerIOInputs.TransferMotorInputs(!sparkStickyFault, transferVelocity, transferCurrent);
+        inputs.transfer = new SpindexerIOInputs.TransferMotorInputs(transferConnectedDebounce.calculate(!checkFault()), transferVelocity, transferCurrent);
     }
   
     @Override

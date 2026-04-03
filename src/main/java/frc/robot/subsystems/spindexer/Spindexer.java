@@ -1,5 +1,7 @@
 package frc.robot.subsystems.spindexer;
 
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -12,6 +14,9 @@ import org.littletonrobotics.junction.Logger;
 public class Spindexer extends SubsystemBase {
     private final SpindexerIO io;
     private final SpindexerIOInputsAutoLogged inputs = new SpindexerIOInputsAutoLogged();
+
+    private final Alert spinDisconnectedAlert = new Alert("Spin motor disconnected!", AlertType.kError);
+    private final Alert transferDisconnectedAlert = new Alert("Dexter motor disconnected!", AlertType.kError);
 
     public Spindexer(SpindexerIO io) {
         this.io = io;
@@ -28,6 +33,9 @@ public class Spindexer extends SubsystemBase {
     public void periodic() {
         io.updateInputs(inputs);
         Logger.processInputs("Spindexer", inputs);
+
+        spinDisconnectedAlert.set(!inputs.spinner.connected());
+        transferDisconnectedAlert.set(!inputs.transfer.connected());
     }
 
     public Command runManual(DoubleSupplier percent, BooleanSupplier runDexter) {

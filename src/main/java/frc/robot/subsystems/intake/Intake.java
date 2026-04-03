@@ -1,6 +1,8 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -15,6 +17,11 @@ public class Intake extends SubsystemBase {
 
     private static final LoggedTunableNumber intakeRollerSpeed = new LoggedTunableNumber("Intake/RollerSpeed", 4000);
     
+    private final Alert leftDeployDisconnectedAlert = new Alert("Left intake deploy motor disconnected!", AlertType.kError);
+    private final Alert rightDeployDisconnectedAlert = new Alert("Right intake deploy motor disconnected!", AlertType.kError);
+    private final Alert leftRollerDisconnectedAlert = new Alert("Left intake roller motor disconnected!", AlertType.kError);
+    private final Alert rightRollerDisconnectedAlert = new Alert("Right intake roller motor disconnected!", AlertType.kError);
+
     public Intake(IntakeIO io) {
         this.io = io;
     }
@@ -24,6 +31,10 @@ public class Intake extends SubsystemBase {
         io.updateInputs(inputs);
         Logger.processInputs("Intake", inputs);
         
+        leftDeployDisconnectedAlert.set(!inputs.deployL.connected());
+        rightDeployDisconnectedAlert.set(!inputs.deployR.connected());
+        leftRollerDisconnectedAlert.set(!inputs.rollerL.connected());
+        rightRollerDisconnectedAlert.set(!inputs.rollerR.connected());
     }
 
     public Command enable() {

@@ -12,11 +12,11 @@ public class SpindexerIOSim implements SpindexerIO {
     DCMotor transferMotor = DCMotor.getNeo550(1);
 
     DCMotorSim spinner = new DCMotorSim(
-        LinearSystemId.createDCMotorSystem(spinnerMotor, 0.05, SpindexerConstants.spinnerMotorReduction),
+        LinearSystemId.createDCMotorSystem(spinnerMotor, 0.005, SpindexerConstants.spinnerMotorReduction),
         spinnerMotor
     );
     DCMotorSim transfer = new DCMotorSim(
-        LinearSystemId.createDCMotorSystem(transferMotor, 0.05, SpindexerConstants.transferMotorReduction),
+        LinearSystemId.createDCMotorSystem(transferMotor, 0.005, SpindexerConstants.transferMotorReduction),
         transferMotor
     );
 

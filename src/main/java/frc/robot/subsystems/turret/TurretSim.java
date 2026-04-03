@@ -61,20 +61,6 @@ public class TurretSim {
         );
     }
 
-    // Small Coulomb friction in amps
-    private static final double coulombFrictionAmps = 2.0;
-
-    /** Apply Coulomb friction: subtract a fixed opposing current, clamped so it can't reverse. */
-    private double applyCoulombFriction(double current, double velocity) {
-        if(Math.abs(velocity) < 1e-3) {
-            // Static friction: absorb current up to the friction threshold
-            if(Math.abs(current) < coulombFrictionAmps) return 0.0;
-            return current - Math.copySign(coulombFrictionAmps, current);
-        }
-        // Kinetic friction: always opposes velocity
-        return current - Math.copySign(coulombFrictionAmps, velocity);
-    }
-
     /**
      * Iterate the turret simulation by the given time step, and return the current state.
      */

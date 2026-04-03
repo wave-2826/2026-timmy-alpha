@@ -17,6 +17,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -35,7 +36,10 @@ import static frc.robot.util.PhoenixUtil.tryUntilOk;
  * 
  */
 public class TurretIOTalonFX implements TurretIO {
-    // private static final boolean DISABLE_AZIMUTH_ABS_ENCODER = true;
+    protected final Debouncer flywheel1ConnectedDebouncer = new Debouncer(0.5);
+    protected final Debouncer flywheel2ConnectedDebouncer = new Debouncer(0.5);
+    protected final Debouncer azimuthConnectedDebouncer = new Debouncer(0.5);
+    protected final Debouncer hoodConnectedDebouncer = new Debouncer(0.5);
 
     protected final TorqueCurrentFOC torqueCurrentRequest = new TorqueCurrentFOC(0).withUseTimesync(true);
     protected final VelocityVoltage velocityRequest = new VelocityVoltage(0).withEnableFOC(true).withUseTimesync(true);
@@ -155,8 +159,7 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void setPIDOutputs(TurretIOPIDOutputs outputs) {
-        // TODO: debounce
-        var flywheel1Connected = flywheel1Velocity.getStatus().isOK();
+        var flywheel1Connected = flywheel1ConnectedDebouncer.calculate(flywheel1Velocity.getStatus().isOK());
         var velocityReq = velocityRequest.withVelocity(
             outputs.flywheelSpeedRadPerSec() / (2 * Math.PI) / TurretConstants.totalFlywheelGearing
         ).withSlot(0);
@@ -216,24 +219,24 @@ public class TurretIOTalonFX implements TurretIO {
         var hoodStatus = BaseStatusSignal.refreshAll(hoodAngle, hoodVelocity, hoodCurrent);
         
         inputs.azimuth = new TurretIOInputs.AzimuthMotorInputs(
-            azimuthMotorStatus.isOK(),
+            azimuthConnectedDebouncer.calculate(azimuthMotorStatus.isOK()),
             azimuthInternalAngle.getValueAsDouble() * (2 * Math.PI),
             azimuthInternalVelocity.getValueAsDouble() * (2 * Math.PI),
             azimuthCurrent.getValueAsDouble()
         );
         inputs.flywheel1 = new TurretIOInputs.FlywheelMotorInputs(
-            flywheel1Status.isOK(),
+            flywheel1ConnectedDebouncer.calculate(flywheel1Status.isOK()),
             flywheel1Velocity.getValueAsDouble() * (2 * Math.PI),
             flywheel1Current.getValueAsDouble()
         );
         inputs.flywheel2 = new TurretIOInputs.FlywheelMotorInputs(
-            flywheel2Status.isOK(),
+            flywheel2ConnectedDebouncer.calculate(flywheel2Status.isOK()),
             flywheel2Velocity.getValueAsDouble() * (2 * Math.PI),
             flywheel2Current.getValueAsDouble()
         );
 
         inputs.hood = new TurretIOInputs.HoodMotorInputs(
-            hoodStatus.isOK(),
+            hoodConnectedDebouncer.calculate(hoodStatus.isOK()),
             hoodAngle.getValueAsDouble() * (2 * Math.PI),
             hoodVelocity.getValueAsDouble() * (2 * Math.PI),
             hoodCurrent.getValueAsDouble()

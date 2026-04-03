@@ -13,6 +13,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants;
 import frc.robot.util.SparkUtil;
@@ -35,6 +36,11 @@ public class IntakeIOReal implements IntakeIO {
     protected final RelativeEncoder rollerREncoder = rollerR.getEncoder();
     protected final RelativeEncoder deployEncoderL = deployL.getEncoder();
     protected final RelativeEncoder deployEncoderR = deployR.getEncoder();
+
+    protected final Debouncer deployLConnectedDebouncer = new Debouncer(0.5);
+    protected final Debouncer deployRConnectedDebouncer = new Debouncer(0.5);
+    protected final Debouncer rollerLConnectedDebouncer = new Debouncer(0.5);
+    protected final Debouncer rollerRConnectedDebouncer = new Debouncer(0.5);
 
     protected final SparkClosedLoopController deployController;
 
@@ -91,24 +97,36 @@ public class IntakeIOReal implements IntakeIO {
     public void updateInputs(IntakeIOInputs inputs) {
         var rollerLVelocity = getIfOk(rollerL, rollerLEncoder::getVelocity, 0.0);
         var rollerLCurrent = getIfOk(rollerL, rollerL::getOutputCurrent, 0.0);
-        inputs.rollerL = new IntakeIOInputs.RollerMotorInputs(!checkFault(), rollerLVelocity, rollerLCurrent);
+        inputs.rollerL = new IntakeIOInputs.RollerMotorInputs(
+            rollerLConnectedDebouncer.calculate(!checkFault()),
+            rollerLVelocity, rollerLCurrent
+        );
         
         var rollerRVelocity = getIfOk(rollerR, () -> -rollerREncoder.getVelocity(), 0.0);
         var rollerRCurrent = getIfOk(rollerR, rollerR::getOutputCurrent, 0.0);
-        inputs.rollerR = new IntakeIOInputs.RollerMotorInputs(!checkFault(), rollerRVelocity, rollerRCurrent);
+        inputs.rollerR = new IntakeIOInputs.RollerMotorInputs(
+            rollerRConnectedDebouncer.calculate(!checkFault()),
+            rollerRVelocity, rollerRCurrent
+        );
 
         var deployLCurrent = getIfOk(deployL, deployL::getOutputCurrent, 0.0);
         var deployLPosition = getIfOk(deployL, deployEncoderL::getPosition, 0.0);
-        inputs.deployL = new IntakeIOInputs.DeployMotorInputs(!checkFault(), deployLCurrent, deployLPosition);
+        inputs.deployL = new IntakeIOInputs.DeployMotorInputs(
+            deployLConnectedDebouncer.calculate(!checkFault()),
+            deployLCurrent, deployLPosition
+        );
 
         var deployRCurrent = getIfOk(deployR, deployR::getOutputCurrent, 0.0);
         var deployRPosition = getIfOk(deployR, deployEncoderR::getPosition, 0.0);
-        inputs.deployR = new IntakeIOInputs.DeployMotorInputs(!checkFault(), deployRCurrent, deployRPosition);
+        inputs.deployR = new IntakeIOInputs.DeployMotorInputs(
+            deployRConnectedDebouncer.calculate(!checkFault()),
+            deployRCurrent, deployRPosition
+        );
     }
   
     @Override
     public void setRollerSpeed(double velocityRPM) {
-        rollerLController.setSetpoint(Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
+        rollerLController.setSetpoint( Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
         rollerRController.setSetpoint(-Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
     }
 
