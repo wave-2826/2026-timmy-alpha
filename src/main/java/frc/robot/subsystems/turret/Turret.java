@@ -7,6 +7,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -124,7 +125,11 @@ public class Turret extends SubsystemBase {
                     return;
                 case PID: {
                     TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
-                        Math.max(3000, target.flywheelSpeedRadPerSec),
+                        MathUtil.clamp(
+                            target.flywheelSpeedRadPerSec,
+                            DriverStation.isFMSAttached() ? Units.rotationsPerMinuteToRadiansPerSecond(2000) : 0.,
+                            Units.rotationsPerMinuteToRadiansPerSecond(5500)
+                        ),
                         target.azimuthAngleRad % (Math.PI * 2),
                         MathUtil.clamp(
                             target.hoodAngleRad - TurretConstants.hoodMinAngle,
