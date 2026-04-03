@@ -59,7 +59,7 @@ public class ScoringCommands {
     public static Command autoScoreHopper(Turret turret, Spindexer spindexer, HopperVision hopperVision) {
         return Commands.sequence(
             Commands.waitSeconds(0.25),
-            Commands.waitUntil(turret::atSetpoint),
+            Commands.waitUntil(turret::atSetpoint).withTimeout(3.0),
             
             // Run spin until no pieces remain
             spindexer.run(() -> {
