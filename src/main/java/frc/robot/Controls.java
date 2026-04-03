@@ -169,13 +169,12 @@ public class Controls {
     }
 
     /** Updates the controls, including shown alerts. */
-    public void update() {
+    public void updateAlerts() {
         // Controller disconnected alerts
         int driverPort = driver.getHID().getPort();
         int coDriverPort = coDriver.getHID().getPort();
         driverDisconnectedAlert.set(!DriverStation.isJoystickConnected(driverPort) || !DriverStation.getJoystickIsXbox(driverPort));
         coDriverDisconnectedAlert.set(!DriverStation.isJoystickConnected(coDriverPort) || !DriverStation.getJoystickIsXbox(coDriverPort));
-        shiftYours.set(ShiftHelpers.currentShiftIsYours());
+        // shiftYours.set(ShiftHelpers.currentShiftIsYours());
     }
-
 }

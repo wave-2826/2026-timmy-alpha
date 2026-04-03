@@ -56,8 +56,8 @@ public class RioAlerts {
         CANStatus status = RobotController.getCANStatus();
         canBusFault.set(status.busOffCount > 0 || status.receiveErrorCount > 0 || status.transmitErrorCount > 0);
 
-        CANBusStatus fdStatus = DriveConstants.CANBus.getStatus();
-        fdCanBusFault.set(fdStatus.BusOffCount > 0 || fdStatus.REC > 0 || fdStatus.TEC > 0 || fdStatus.TxFullCount > 0);
+        // CANBusStatus fdStatus = DriveConstants.CANBus.getStatus();
+        // fdCanBusFault.set(fdStatus.BusOffCount > 0 || fdStatus.REC > 0 || fdStatus.TEC > 0 || fdStatus.TxFullCount > 0);
 
         lowBatteryAlert.set(batteryLow());
     }

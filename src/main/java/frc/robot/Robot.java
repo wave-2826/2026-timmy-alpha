@@ -250,8 +250,8 @@ public class Robot extends LoggedRobot {
 
         // Alert-related updates
         RioAlerts.getInstance().update();
-        Controls.getInstance().update();
-        SparkUtil.updateFaultAlerts();
+        Controls.getInstance().updateAlerts();
+        // SparkUtil.updateFaultAlerts();
         noAutoSelectedAlert.set(DriverStation.isDisabled() && robotContainer.noAutoSelected());
         logReceiverQueueAlert.set(Logger.getReceiverQueueFault());
         LoggedTracer.record("Alerts");
