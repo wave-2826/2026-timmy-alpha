@@ -63,8 +63,8 @@ public class IntakeIOReal implements IntakeIO {
         deployBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(deployCurrentLimit).voltageCompensation(Constants.voltageCompensation);
         deployBaseConfig.inverted(true);
         deployBaseConfig.encoder
-            .positionConversionFactor(2.0 * Math.PI * pinionRadiusMeters * pinionReduction) // Rotor Rotations -> Deploy Meters
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0 * pinionRadiusMeters * pinionReduction)
+            .positionConversionFactor(2.0 * Math.PI * pinionRadiusMeters / pinionReduction) // Rotor Rotations -> Deploy Meters
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0 * pinionRadiusMeters / pinionReduction)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
         deployBaseConfig.closedLoop.maxMotion
