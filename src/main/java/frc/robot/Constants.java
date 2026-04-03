@@ -48,7 +48,7 @@ public final class Constants {
      * there are spooky issues going on with the robot, disabling this (if enabled) is a good first step. Only use this
      * as a last resort. Here be dragons.
      */
-    public static boolean useSuperDangerousRTThreadPriority = true;
+    public static boolean useSuperDangerousRTThreadPriority = false;
 
     public static final double voltageCompensation = 12.0;
 }
