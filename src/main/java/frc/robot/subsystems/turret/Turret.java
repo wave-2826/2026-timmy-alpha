@@ -124,9 +124,13 @@ public class Turret extends SubsystemBase {
                     return;
                 case PID: {
                     TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
-                        target.flywheelSpeedRadPerSec,
+                        Math.max(3000, target.flywheelSpeedRadPerSec),
                         target.azimuthAngleRad % (Math.PI * 2),
-                        MathUtil.clamp(target.hoodAngleRad - TurretConstants.hoodMinAngle, TurretConstants.hoodMinAngle, TurretConstants.hoodMaxAngle)
+                        MathUtil.clamp(
+                            target.hoodAngleRad - TurretConstants.hoodMinAngle,
+                            TurretConstants.hoodMinAngle,
+                            TurretConstants.hoodMaxAngle - Units.degreesToRadians(0.5)
+                        )
                     );
                     io.setPIDOutputs(outputs);
                     break;
@@ -205,9 +209,9 @@ public class Turret extends SubsystemBase {
             var parameters = ShotCalculator.getInstance().calculate();
             double calcRPM = Units.radiansPerSecondToRotationsPerMinute(parameters.target().flywheelSpeedRadPerSec);
 
-            target.flywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(flyLimiter.calculate(
+            target.flywheelSpeedRadPerSec = Math.max(3500, Units.rotationsPerMinuteToRadiansPerSecond(flyLimiter.calculate(
                 flywheelScalar.getAsDouble() * (calcRPM + manualFlywheelSpeed.get())
-            ));
+            )));
             
             manualControlAzimuthOffset -= MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.02;
             target.azimuthAngleRad = MathUtil.angleModulus(

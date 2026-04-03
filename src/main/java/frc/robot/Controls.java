@@ -19,12 +19,13 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.Turret.TurretTarget;
+import frc.robot.subsystems.turret.TurretConstants;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.util.Elastic;
 import frc.robot.util.simUtils.Simulation;
-import frc.robot.util.ShiftHelpers;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
 public class Controls {
@@ -100,7 +101,9 @@ public class Controls {
         ));
         turretControlCodriver.and(coDriver.start()).onTrue(turret.reset());
         turretControlCodriver.and(coDriver.leftBumper()).onTrue(turret.zeroRoutine());
-        RobotModeTriggers.disabled().onFalse(turret.zeroRoutine()/*.unless(turret::zeroed)*/);
+        RobotModeTriggers.disabled().onFalse(turret.zeroRoutine().andThen(() -> {
+            turret.target = new TurretTarget(0., 0., TurretConstants.hoodMinAngle);
+        }).unless(turret::zeroed));
 
         // Reset turret at the start of teleop
         RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {

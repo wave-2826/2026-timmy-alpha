@@ -139,7 +139,7 @@ public class RobotContainer {
         // Set up auto routines
         autoChooser = new LoggedAutoChooser("Auto Choices");
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
-        
+
         routines = new AutoRoutines(this, autoChooser);
 
         Controls.getInstance().configureControls(this);
