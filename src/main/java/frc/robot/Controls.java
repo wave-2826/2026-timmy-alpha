@@ -102,9 +102,7 @@ public class Controls {
         ));
         turretControlCodriver.and(coDriver.start()).onTrue(turret.reset());
         turretControlCodriver.and(coDriver.leftBumper()).onTrue(turret.zeroRoutine());
-        RobotModeTriggers.disabled().onFalse(turret.zeroRoutine().andThen(() -> {
-            turret.target = new TurretTarget(0., 0., TurretConstants.hoodMinAngle);
-        }).unless(turret::zeroed));
+        RobotModeTriggers.teleop().onFalse(turret.zeroRoutine().unless(turret::zeroed));
 
         // Reset turret at the start of teleop
         RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
