@@ -22,15 +22,17 @@ public class ModuleIOSim extends ModuleIOTalonFX {
     private final TalonFXSimState turnSimState = turnTalon.getSimState();
     private final CANcoderSimState cancoderSimState = cancoder.getSimState();
 
+    private final double driveInertia = 0.03;
+    private final double turnInertia = 0.004;
+
     private final DCMotorSim driveSim = new DCMotorSim(
-        LinearSystemId.createDCMotorSystem(DriveConstants.driveMotorModel, 0.01, DriveConstants.driveGearRatio),
+        LinearSystemId.createDCMotorSystem(DriveConstants.driveMotorModel, driveInertia, DriveConstants.driveGearRatio),
         DriveConstants.driveMotorModel
     );
-    private final DCMotorSim turnSim = new DCMotorSim(LinearSystemId.createDCMotorSystem(
-            DriveConstants.turnMotorModel,
-            0.004,
-            DriveConstants.steerGearRatio
-        ), DriveConstants.turnMotorModel);
+    private final DCMotorSim turnSim = new DCMotorSim(
+        LinearSystemId.createDCMotorSystem(DriveConstants.turnMotorModel, turnInertia,DriveConstants.steerGearRatio),
+        DriveConstants.turnMotorModel
+    );
     
     public ModuleIOSim(SwerveModuleConfig config) {
         super(config);
@@ -54,6 +56,15 @@ public class ModuleIOSim extends ModuleIOTalonFX {
 
         driveSim.update(0.02);
         turnSim.update(0.02);
+
+        // Constant resistant coulomb friction
+        double frictionNM = 0.5;
+        driveSim.setAngularVelocity(driveSim.getAngularVelocityRadPerSec() + Math.tanh(10. * driveSim.getAngularVelocityRadPerSec()) * frictionNM / driveInertia);
+        turnSim.setAngularVelocity(turnSim.getAngularVelocityRadPerSec() + Math.tanh(10. * turnSim.getAngularVelocityRadPerSec()) * frictionNM / turnInertia);
+
+        // Linear drive friction from things like carpet interactions, air resistence, idk what else but probably a bunch
+        double driveFrictionNMSperRad = 0.1;
+        driveSim.setAngularVelocity(driveSim.getAngularVelocityRadPerSec() + Math.tanh(10. * driveSim.getAngularVelocityRadPerSec()) * driveFrictionNMSperRad / driveInertia);
 
         driveSimState.setRawRotorPosition(driveSim.getAngularPositionRad());
         driveSimState.setRotorVelocity(driveSim.getAngularVelocityRadPerSec());
