@@ -15,12 +15,12 @@ public class IntakeConstants {
     public static final double rollerMotorReduction = 1.0;
     
     public static final int rollerCurrentLimit = 40;
-    public static final int deployCurrentLimit = 50;
+    public static final int deployCurrentLimit = 55;
     
     /** The current we use to detect the motors at the end of their travel */
-    public static final double deployStallCurrent = 45;
+    public static final double deployStallCurrent = 50;
     
-    public static final double pinionReduction = 9.;
+    public static final double pinionReduction = 9. * 1.5; // ??????
     public static final double pinionRadiusMeters = Units.inchesToMeters(2.857143/2);
     public static final double trackLengthMeters = Units.inchesToMeters(14.75);
 
@@ -31,6 +31,6 @@ public class IntakeConstants {
         .addRealRobotGains(new GenericPIDConstants(0.0015, 0, 0, 1. / DCMotor.getNeoVortex(1).KvRadPerSecPerVolt))
         .addSimGains(new GenericPIDConstants(0.005, 0, 0));
     public static final TunablePID deployPID = new TunablePID("Intake/Deploy")
-        .addRealRobotGains(new GenericPIDConstants(2.5, 0, 0))
+        .addRealRobotGains(new GenericPIDConstants(1.25, 0, 0))
         .addSimGains(new GenericPIDConstants(0.005, 0, 0));
 }

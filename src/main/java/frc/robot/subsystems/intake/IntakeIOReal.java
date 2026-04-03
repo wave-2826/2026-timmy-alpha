@@ -42,9 +42,8 @@ public class IntakeIOReal implements IntakeIO {
     protected final Debouncer rollerLConnectedDebouncer = new Debouncer(0.5);
     protected final Debouncer rollerRConnectedDebouncer = new Debouncer(0.5);
 
-    protected final SparkClosedLoopController deployController;
-
-    protected boolean deployFollowing = true;
+    protected final SparkClosedLoopController deployLController;
+    protected final SparkClosedLoopController deployRController;
 
     public IntakeIOReal() {
         var rollerConfig = new SparkMaxConfig();
@@ -75,8 +74,6 @@ public class IntakeIOReal implements IntakeIO {
         var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
         
-        deployRConfig.follow(deployL, true);
-
         var rollerLConfig = new SparkMaxConfig().apply(rollerConfig);
         var rollerRConfig = new SparkMaxConfig().apply(rollerConfig);
 
@@ -90,7 +87,8 @@ public class IntakeIOReal implements IntakeIO {
         tryUntilOk(deployL, 5, () -> deployL.configure(deployLConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
         tryUntilOk(deployR, 5, () -> deployR.configure(deployRConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
 
-        deployController = deployL.getClosedLoopController();
+        deployLController = deployL.getClosedLoopController();
+        deployRController = deployR.getClosedLoopController();
     }
   
     @Override
@@ -137,11 +135,8 @@ public class IntakeIOReal implements IntakeIO {
 
     @Override
     public void setDeployPowerR(double power) {
-        if(deployFollowing) {
-            deployR.pauseFollowerModeAsync();
-            deployFollowing = false;
-        }
         deployR.getClosedLoopController().setSetpoint(power, ControlType.kDutyCycle);
+        deployL.getClosedLoopController().setSetpoint(-power, ControlType.kDutyCycle);
     }
 
     @Override
@@ -152,18 +147,13 @@ public class IntakeIOReal implements IntakeIO {
 
     @Override
     public void setDeployPosition(double positionMeters) {
-        if(!deployFollowing) {
-            deployR.resumeFollowerModeAsync();
-            deployFollowing = true;
-        }
-        deployController.setSetpoint(-positionMeters, ControlType.kPosition);
+        deployLController.setSetpoint(-positionMeters, ControlType.kPosition);
+        deployRController.setSetpoint(positionMeters, ControlType.kPosition);
     }
 
     @Override
     public void stopDeploy() {
         deployL.stopMotor();
-        if(!deployFollowing) {
-            deployR.stopMotor();
-        }
+        deployR.stopMotor();
     }
 }
