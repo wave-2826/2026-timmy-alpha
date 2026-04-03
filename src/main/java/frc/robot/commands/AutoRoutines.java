@@ -190,15 +190,21 @@ public class AutoRoutines {
         var choreoTraj = right ? ChoreoTraj.RightSweepSwipeGenerated : ChoreoTraj.LeftSweepSwipe;
         var routine = autoFactory.newRoutine(choreoTraj.name());
         
-        AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
+        var choreoTraj1 = right ? ChoreoTraj.RightSweepSwipeGenerated$0 : ChoreoTraj.LeftSweepSwipe$0;
+        var choreoTraj2 = right ? ChoreoTraj.RightSweepSwipeGenerated$1 : ChoreoTraj.LeftSweepSwipe$1;
+        AutoTrajectory traj1 = choreoTraj1.asAutoTraj(routine);
+        AutoTrajectory traj2 = choreoTraj2.asAutoTraj(routine);
 
-        traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
-        traj.atTime("Intake Stop").onTrue(intake.disable());
-        traj.atTime("Outtake").onTrue(intake.enableOutward());
+        traj1.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
+        traj1.atTime("Intake Stop").onTrue(intake.disable());
         
         routine.active().onTrue(Commands.sequence(
-            traj.resetOdometry(),
-            traj.cmd()
+            traj1.resetOdometry(),
+            ScoringCommands.prep(turret),
+            traj1.cmd(),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)),
+            traj2.cmd(),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
         ));
 
         return routine;
