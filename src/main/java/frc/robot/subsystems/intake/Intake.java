@@ -1,6 +1,8 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -57,20 +59,20 @@ public class Intake extends SubsystemBase {
         return Commands.run(() -> io.setRollerSpeed(percent.getAsDouble() * intakeRollerSpeed.get()));
     }
 
-    private LinearFilter deployLCurrentFilter = LinearFilter.movingAverage(5);
-    private LinearFilter deployRCurrentFilter = LinearFilter.movingAverage(5);
+    private Debouncer deployLDebouncer = new Debouncer(0.2, DebounceType.kRising);
+    private Debouncer deployRDebouncer = new Debouncer(0.2, DebounceType.kRising);
 
     public boolean isDeployed() {
         return Math.abs((inputs.deployL.motorPosition() + inputs.deployR.motorPosition()) / 2) < 0.1;
     }
     
     public Command deployIntake() {
-        final double deployPower = 0.6;
+        final double deployPower = 0.2;
         return Commands.parallel(
             Commands.runEnd(() -> io.setDeployPowerL(deployPower), () -> io.setDeployPowerL(0.0))
-                .until(() -> deployLCurrentFilter.calculate(inputs.deployL.currentAmps()) > IntakeConstants.deployStallCurrent),
+                .until(() -> deployLDebouncer.calculate(inputs.deployL.currentAmps() > IntakeConstants.deployStallCurrent)),
             Commands.runEnd(() -> io.setDeployPowerR(deployPower), () -> io.setDeployPowerR(0.0))
-                .until(() -> deployRCurrentFilter.calculate(inputs.deployR.currentAmps()) > IntakeConstants.deployStallCurrent)
+                .until(() -> deployRDebouncer.calculate(inputs.deployR.currentAmps() > IntakeConstants.deployStallCurrent))
         ).withTimeout(1.0).andThen(() -> {
             io.resetDeployEncoders();
         });
