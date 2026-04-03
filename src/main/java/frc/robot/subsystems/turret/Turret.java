@@ -214,9 +214,9 @@ public class Turret extends SubsystemBase {
             var parameters = ShotCalculator.getInstance().calculate();
             double calcRPM = Units.radiansPerSecondToRotationsPerMinute(parameters.target().flywheelSpeedRadPerSec);
 
-            target.flywheelSpeedRadPerSec = Math.max(3500, Units.rotationsPerMinuteToRadiansPerSecond(flyLimiter.calculate(
+            target.flywheelSpeedRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(flyLimiter.calculate(
                 flywheelScalar.getAsDouble() * (calcRPM + manualFlywheelSpeed.get())
-            )));
+            ));
             
             manualControlAzimuthOffset -= MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.02;
             target.azimuthAngleRad = MathUtil.angleModulus(

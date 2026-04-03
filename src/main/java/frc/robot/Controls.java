@@ -79,7 +79,7 @@ public class Controls {
         normalCodriver.and(coDriver.povUp()).onTrue(intakeCommands.overrideIn());
         normalCodriver.and(coDriver.povLeft().or(coDriver.povRight())).onTrue(intakeCommands.overrideOff());
 
-        intake.setDefaultCommand(intakeCommands.run(intake, driver::getLeftTriggerAxis, driver.leftBumper()));
+        RobotModeTriggers.teleop().whileTrue(intakeCommands.run(intake, driver::getLeftTriggerAxis, driver.leftBumper()));
 
         // turret.setDefaultCommand(ScoringCommands.autoShoot(
         //     turret, spindexer,
