@@ -101,7 +101,7 @@ public class Turret extends SubsystemBase {
         Logger.processInputs("Turret", (TurretIOInputsAutoLogged)inputs);
 
         // Clamp hood if in an unreasonable position
-        if(inputs.getHoodAngleRad() > TurretConstants.hoodMaxAngle + Units.degreesToRadians(95)) {
+        if(inputs.getHoodAngleRad() > TurretConstants.hoodMaxAngle + Units.degreesToRadians(0.5)) {
             // Hood will be mechanically limited in range but the motor can keep spinning; clamp so our
             // understanding of the hood position is at least close
             io.resetHoodTo(TurretConstants.hoodMaxAngle);
