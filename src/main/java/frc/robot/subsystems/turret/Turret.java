@@ -97,7 +97,7 @@ public class Turret extends SubsystemBase {
             io.setControlMode(controlMode);
         }
 
-     \   io.updateInputs(inputs);
+        io.updateInputs(inputs);
         Logger.processInputs("Turret", (TurretIOInputsAutoLogged)inputs);
 
         // Clamp hood if in an unreasonable position
