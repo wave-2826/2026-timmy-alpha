@@ -109,8 +109,8 @@ public class ShotCalculator {
         hubShots.flywheelSpeedMap.put(2.64,  3142.2);
         hubShots.flywheelSpeedMap.put(3.71,  3640.4);
         hubShots.flywheelSpeedMap.put(4.33,  3860.4);
-        hubShots.flywheelSpeedMap.put(5.35,  4593.2);
-        hubShots.flywheelSpeedMap.put(6.41,  4990.0);
+        hubShots.flywheelSpeedMap.put(5.35,  3827.6);
+        hubShots.flywheelSpeedMap.put(6.41,  4158.3);
 
         hubShots.timeOfFlightMap.put(1.486, 1.10);
         hubShots.timeOfFlightMap.put(2.28,  1.04);

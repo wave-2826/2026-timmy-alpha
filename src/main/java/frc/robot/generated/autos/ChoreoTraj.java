@@ -41,7 +41,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj LeftDangerSweep = new ChoreoTraj(
         "LeftDangerSweep",
         OptionalInt.empty(),
-        10.66559,
+        10.88659,
         new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
         new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
     );
@@ -49,7 +49,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj LeftDangerSweep$0 = new ChoreoTraj(
         "LeftDangerSweep",
         OptionalInt.of(0),
-        4.77178,
+        4.9928,
         new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
         new Pose2d(3.62778, 0.62436, Rotation2d.fromRadians(3.14154))
     );
@@ -57,7 +57,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj LeftDangerSweep$1 = new ChoreoTraj(
         "LeftDangerSweep",
         OptionalInt.of(1),
-        5.89381,
+        5.89379,
         new Pose2d(3.62778, 0.62436, Rotation2d.fromRadians(3.14154)),
         new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
     );
@@ -118,7 +118,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj RightDangerSweepGenerated = new ChoreoTraj(
         "RightDangerSweepGenerated",
         OptionalInt.empty(),
-        10.70086,
+        10.88643,
         new Pose2d(4.47674, 0.50919, Rotation2d.fromRadians(-1.5708)),
         new Pose2d(3.398, 7.38612, Rotation2d.fromRadians(-1.5708))
     );
@@ -126,7 +126,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj RightDangerSweepGenerated$0 = new ChoreoTraj(
         "RightDangerSweepGenerated",
         OptionalInt.of(0),
-        4.80706,
+        4.99264,
         new Pose2d(4.47674, 0.50919, Rotation2d.fromRadians(-1.5708)),
         new Pose2d(3.62778, 7.41864, Rotation2d.fromRadians(-3.14154))
     );
@@ -134,7 +134,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj RightDangerSweepGenerated$1 = new ChoreoTraj(
         "RightDangerSweepGenerated",
         OptionalInt.of(1),
-        5.893800000000001,
+        5.893790000000001,
         new Pose2d(3.62778, 7.41864, Rotation2d.fromRadians(-3.14154)),
         new Pose2d(3.398, 7.38612, Rotation2d.fromRadians(-1.5708))
     );
