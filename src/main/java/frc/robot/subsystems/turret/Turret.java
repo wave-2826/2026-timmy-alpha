@@ -368,8 +368,8 @@ public class Turret extends SubsystemBase {
 
     private Command zeroAzimuth(DoubleConsumer setAzimuthVelocity) {
         Container<Boolean> startZeroValue = new Container<>(false);
-        double triggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(60);
-        double detriggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(10);
+        double triggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(45);
+        double detriggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(5);
         return Commands.sequence(
             Commands.runOnce(() -> {
                 startZeroValue.value = inputs.azimuthZeroTriggered;

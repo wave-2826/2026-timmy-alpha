@@ -21,7 +21,7 @@ public class TurretConstants {
     public static final int azimuthCancoderID = 55;
 
     public static final int azimuthZeroDIOPort = 1;
-    public static final Rotation2d azimuthResetAngle = Rotation2d.fromDegrees(180. - 26.);
+    public static final Rotation2d azimuthResetAngle = Rotation2d.fromDegrees(180. - 27.);
 
     public static final CANBus CANBus = DriveConstants.CANBus;
 
