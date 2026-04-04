@@ -41,8 +41,9 @@ public class Spindexer extends SubsystemBase {
     public Command runManual(DoubleSupplier percent, DoubleSupplier percentOverride, BooleanSupplier runDexter) {
         return runPercent(
             () -> percent.getAsDouble() + percentOverride.getAsDouble(),
-            () -> 
-                (runDexter.getAsBoolean() ? Math.pow(Math.abs(percent.getAsDouble()), 0.1) : 0.) + percentOverride.getAsDouble()
+            () -> (
+                runDexter.getAsBoolean() ? Math.pow(Math.abs(percent.getAsDouble()), 0.1) * 0.7 : 0.
+            ) + percentOverride.getAsDouble()
         );
     }
 
