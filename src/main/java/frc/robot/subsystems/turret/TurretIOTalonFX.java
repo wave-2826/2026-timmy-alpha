@@ -46,7 +46,7 @@ public class TurretIOTalonFX implements TurretIO {
     protected final VelocityVoltage velocityRequest = new VelocityVoltage(0).withEnableFOC(true).withUseTimesync(true);
     protected final PositionVoltage positionRequest = new PositionVoltage(0).withEnableFOC(true).withUseTimesync(true);
     protected final CoastOut coastRequest = new CoastOut();
-    protected final VelocityTorqueCurrentFOC flywheelVelocityRequest = new VelocityTorqueCurrentFOC(0).withUseTimesync(true);
+    // protected final VelocityTorqueCurrentFOC flywheelVelocityRequest = new VelocityTorqueCurrentFOC(0).withUseTimesync(true);
     
     protected final Follower followerRequest;
 
@@ -163,7 +163,7 @@ public class TurretIOTalonFX implements TurretIO {
     @Override
     public void setPIDOutputs(TurretIOPIDOutputs outputs) {
         var flywheel1Connected = flywheel1ConnectedDebouncer.calculate(flywheel1Velocity.getStatus().isOK());
-        var velocityReq = flywheelVelocityRequest.withVelocity(outputs.flywheelSpeedRadPerSec() / (2 * Math.PI)).withSlot(0);
+        var velocityReq = velocityRequest.withVelocity(outputs.flywheelSpeedRadPerSec() / (2 * Math.PI)).withSlot(0);
         if(flywheel1Connected) {
             if(outputs.flywheelSpeedRadPerSec() < Units.degreesToRadians(10)) {
                 flywheel1Talon.setControl(coastRequest);
