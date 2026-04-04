@@ -6,6 +6,7 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -19,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
+import frc.robot.subsystems.turret.TurretConstants;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.intake.Intake;
@@ -101,6 +103,22 @@ public class Controls {
         turretControlCodriver.and(coDriver.start()).onTrue(turret.reset());
         turretControlCodriver.and(coDriver.leftBumper()).onTrue(turret.zeroRoutine());
         RobotModeTriggers.teleop().onFalse(turret.zeroRoutine().unless(turret::zeroed));
+
+        normalCodriver.and(coDriver.x()).onTrue(turret.runOnce(() -> {
+            // Shoot into ourself lol
+            turret.target = new Turret.TurretTarget(
+                Units.rotationsPerMinuteToRadiansPerSecond(800),
+                TurretConstants.hoodMaxAngle - Units.degreesToRadians(5),
+                Units.degreesToRadians(135.)
+            );
+        }));
+        normalCodriver.and(coDriver.y()).onTrue(turret.runOnce(() -> {
+            turret.target = new Turret.TurretTarget(
+                Units.rotationsPerMinuteToRadiansPerSecond(2800),
+                Units.degreesToRadians(40),
+                Units.degreesToRadians(-RobotState.getInstance().getEstimatedPose().getRotation().getRadians())
+            );
+        }));
 
         // Reset turret at the start of teleop
         RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {

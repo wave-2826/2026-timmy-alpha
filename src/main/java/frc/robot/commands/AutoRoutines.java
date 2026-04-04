@@ -75,6 +75,9 @@ public class AutoRoutines {
 
         autoChooser.addRoutine("Left Sweep Swipe", () -> this.getSweepSwipe(false));
         autoChooser.addRoutine("Right Sweep Swipe", () -> this.getSweepSwipe(true));
+        
+        autoChooser.addRoutine("Left Danger Sweep Swipe", () -> this.getSweepSwipe(false));
+        autoChooser.addRoutine("Right Danger Sweep Swipe", () -> this.getSweepSwipe(true));
 
         autoChooser.addRoutine("Center Preload Simplified", () -> this.getCenterPreload(true));
         autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload(false));
