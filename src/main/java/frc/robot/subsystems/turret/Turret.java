@@ -1,8 +1,10 @@
 package frc.robot.subsystems.turret;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -210,7 +212,7 @@ public class Turret extends SubsystemBase {
         DoubleSupplier flywheelScalar,
         DoubleSupplier azimuthSpeed
     ) {
-        SlewRateLimiter flyLimiter = new SlewRateLimiter(5000);
+        SlewRateLimiter flyLimiter = new SlewRateLimiter(4000);
         return Commands.runEnd(() -> {
             if(target == null) {
                 target = new TurretTarget(0.0, inputs.getAzimuthAngleRad(), TurretConstants.hoodMinAngle);
@@ -263,6 +265,8 @@ public class Turret extends SubsystemBase {
         }, this);
     }
 
+    private final Debouncer setpointDebouncer = new Debouncer(0.15, DebounceType.kFalling);
+
     @AutoLogOutput(key = "Turret/AtSetpoint")
     public boolean atSetpoint() {
         if(target == null) return true;
@@ -275,9 +279,11 @@ public class Turret extends SubsystemBase {
         Logger.recordOutput("Turret/Errors/Azimuth", azimuthError, Radians);
         Logger.recordOutput("Turret/Errors/Hood", hoodError, Radians);
 
-        return flywheelError < TurretConstants.flywheelToleranceRadPerSec
+        return setpointDebouncer.calculate(
+            flywheelError < TurretConstants.flywheelToleranceRadPerSec
             && azimuthError < TurretConstants.azimuthToleranceRad
-            && hoodError < TurretConstants.hoodToleranceRad;
+            && hoodError < TurretConstants.hoodToleranceRad
+        );
     }
 
     public LinearVelocity getShotVelocity() {

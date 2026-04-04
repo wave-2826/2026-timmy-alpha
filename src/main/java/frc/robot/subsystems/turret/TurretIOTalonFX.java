@@ -7,7 +7,6 @@ import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
-import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
