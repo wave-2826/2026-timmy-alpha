@@ -41,7 +41,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj LeftDangerSweep = new ChoreoTraj(
         "LeftDangerSweep",
         OptionalInt.empty(),
-        10.70037,
+        10.66559,
         new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
         new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
     );
@@ -49,7 +49,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj LeftDangerSweep$0 = new ChoreoTraj(
         "LeftDangerSweep",
         OptionalInt.of(0),
-        4.80656,
+        4.77178,
         new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
         new Pose2d(3.62778, 0.62436, Rotation2d.fromRadians(3.14154))
     );
@@ -57,7 +57,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj LeftDangerSweep$1 = new ChoreoTraj(
         "LeftDangerSweep",
         OptionalInt.of(1),
-        5.893809999999999,
+        5.89381,
         new Pose2d(3.62778, 0.62436, Rotation2d.fromRadians(3.14154)),
         new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
     );
