@@ -93,7 +93,7 @@ public class Turret extends SubsystemBase {
         RobotModeTriggers.autonomous().onTrue(reset());
     }
 
-    private boolean resetting = false;
+    private boolean zeroing = false;
 
     @Override
     public void periodic() {
@@ -107,7 +107,7 @@ public class Turret extends SubsystemBase {
         Logger.processInputs("Turret", (TurretIOInputsAutoLogged)inputs);
 
         // Clamp hood if in an unreasonable position
-        if(!resetting && inputs.getHoodAngleRad() > TurretConstants.hoodMaxAngle + Units.degreesToRadians(0.5)) {
+        if(!zeroing && inputs.getHoodAngleRad() > TurretConstants.hoodMaxAngle + Units.degreesToRadians(0.5)) {
             // Hood will be mechanically limited in range but the motor can keep spinning; clamp so our
             // understanding of the hood position is at least close
             io.resetHoodTo(TurretConstants.hoodMaxAngle);
@@ -137,10 +137,10 @@ public class Turret extends SubsystemBase {
                         ),
                         target.azimuthAngleRad % (Math.PI * 2),
                         MathUtil.clamp(
-                            target.hoodAngleRad - TurretConstants.hoodMinAngle,
+                            target.hoodAngleRad,
                             TurretConstants.hoodMinAngle,
                             TurretConstants.hoodMaxAngle - Units.degreesToRadians(0.5)
-                        )
+                        ) - TurretConstants.hoodMinAngle
                     );
                     io.setPIDOutputs(outputs);
                     break;
@@ -302,7 +302,7 @@ public class Turret extends SubsystemBase {
 
         return Commands.sequence(
             Commands.runOnce(() -> {
-                resetting = true;
+                zeroing = true;
             }),
 
             Commands.parallel(
@@ -320,7 +320,7 @@ public class Turret extends SubsystemBase {
                 hasZeroed = true;
             })
         ).finallyDo(() -> {
-            resetting = false;
+            zeroing = false;
         }).withName("TurretZero");
     }
 

@@ -102,21 +102,21 @@ public class Controls {
         ));
         turretControlCodriver.and(coDriver.start()).onTrue(turret.reset());
         turretControlCodriver.and(coDriver.leftBumper()).onTrue(turret.zeroRoutine());
-        RobotModeTriggers.teleop().onFalse(turret.zeroRoutine().unless(turret::zeroed));
+        RobotModeTriggers.teleop().onTrue(turret.zeroRoutine().unless(turret::zeroed));
 
         normalCodriver.and(coDriver.x()).onTrue(turret.runOnce(() -> {
             // Shoot into ourself lol
             turret.target = new Turret.TurretTarget(
                 Units.rotationsPerMinuteToRadiansPerSecond(200),
-                TurretConstants.hoodMaxAngle - Units.degreesToRadians(5),
-                Units.degreesToRadians(100.)
+                Units.degreesToRadians(100.),
+                TurretConstants.hoodMaxAngle - Units.degreesToRadians(5)
             );
         }));
         normalCodriver.and(coDriver.y()).onTrue(turret.runOnce(() -> {
             turret.target = new Turret.TurretTarget(
                 Units.rotationsPerMinuteToRadiansPerSecond(2800),
-                Units.degreesToRadians(40),
-                Units.degreesToRadians(-RobotState.getInstance().getEstimatedPose().getRotation().getRadians())
+                Units.degreesToRadians(-RobotState.getInstance().getEstimatedPose().getRotation().getRadians()),
+                Units.degreesToRadians(40)
             );
         }));
 
