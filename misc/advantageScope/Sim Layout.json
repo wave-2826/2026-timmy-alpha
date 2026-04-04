@@ -164,11 +164,11 @@
                   },
                   {
                     "type": "robot",
-                    "logKey": "/RealOutputs/FieldSimulation/RobotPosition",
+                    "logKey": "/RealOutputs/Odometry/Best",
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {
-                      "model": "2026 KitBot"
+                      "model": "WaveRobotics"
                     }
                   },
                   {

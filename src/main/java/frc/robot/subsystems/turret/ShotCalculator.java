@@ -99,7 +99,7 @@ public class ShotCalculator {
         hubShots.hoodAngleMap.put(1.486, 29.9);
         hubShots.hoodAngleMap.put(2.28,  37.4);
         hubShots.hoodAngleMap.put(2.64,  40.7);
-        hubShots.hoodAngleMap.put(3.41,  40.9);
+        hubShots.hoodAngleMap.put(3.71,  42.2);
         hubShots.hoodAngleMap.put(4.4,   42.9);
         hubShots.hoodAngleMap.put(5.35,  44.0);
         hubShots.hoodAngleMap.put(6.41,  44.0);
@@ -107,7 +107,7 @@ public class ShotCalculator {
         hubShots.flywheelSpeedMap.put(1.486, 2996.8);
         hubShots.flywheelSpeedMap.put(2.28,  3097.4);
         hubShots.flywheelSpeedMap.put(2.64,  3142.2);
-        hubShots.flywheelSpeedMap.put(3.41,  3617.4);
+        hubShots.flywheelSpeedMap.put(3.71,  3640.4);
         hubShots.flywheelSpeedMap.put(4.33,  3860.4);
         hubShots.flywheelSpeedMap.put(5.35,  4593.2);
         hubShots.flywheelSpeedMap.put(6.41,  4990.0);
