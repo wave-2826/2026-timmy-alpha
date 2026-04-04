@@ -95,7 +95,7 @@ public class Controls {
             coDriver::getRightTriggerAxis,
             coDriver::getLeftX
         ));
-        turretControlCodriver.whileTrue(spindexer.runManual(
+        spindexer.setDefaultCommand(spindexer.runManual(
             coDriver::getLeftTriggerAxis,
             () -> MathUtil.applyDeadband(coDriver.getRightY(), 0.2),
             turret::atSetpoint
@@ -107,7 +107,7 @@ public class Controls {
         normalCodriver.and(coDriver.x()).onTrue(turret.runOnce(() -> {
             // Shoot into ourself lol
             turret.target = new Turret.TurretTarget(
-                Units.rotationsPerMinuteToRadiansPerSecond(800),
+                Units.rotationsPerMinuteToRadiansPerSecond(400),
                 TurretConstants.hoodMaxAngle - Units.degreesToRadians(5),
                 Units.degreesToRadians(135.)
             );

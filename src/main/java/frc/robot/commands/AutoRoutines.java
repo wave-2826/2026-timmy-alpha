@@ -76,8 +76,8 @@ public class AutoRoutines {
         autoChooser.addRoutine("Left Sweep Swipe", () -> this.getSweepSwipe(false));
         autoChooser.addRoutine("Right Sweep Swipe", () -> this.getSweepSwipe(true));
         
-        autoChooser.addRoutine("Left Danger Sweep Swipe", () -> this.getSweepSwipe(false));
-        autoChooser.addRoutine("Right Danger Sweep Swipe", () -> this.getSweepSwipe(true));
+        autoChooser.addRoutine("Left Danger Sweep Swipe", () -> this.getDangerSweepSwipe(false));
+        autoChooser.addRoutine("Right Danger Sweep Swipe", () -> this.getDangerSweepSwipe(true));
 
         autoChooser.addRoutine("Center Preload Simplified", () -> this.getCenterPreload(true));
         autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload(false));
@@ -195,6 +195,30 @@ public class AutoRoutines {
         
         var choreoTraj1 = right ? ChoreoTraj.RightSweepSwipeGenerated$0 : ChoreoTraj.LeftSweepSwipe$0;
         var choreoTraj2 = right ? ChoreoTraj.RightSweepSwipeGenerated$1 : ChoreoTraj.LeftSweepSwipe$1;
+        AutoTrajectory traj1 = choreoTraj1.asAutoTraj(routine);
+        AutoTrajectory traj2 = choreoTraj2.asAutoTraj(routine);
+
+        traj1.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
+        traj1.atTime("Intake Stop").onTrue(intake.disable());
+        
+        routine.active().onTrue(Commands.sequence(
+            traj1.resetOdometry(),
+            ScoringCommands.prep(turret),
+            traj1.cmd(),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)),
+            traj2.cmd(),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
+        ));
+
+        return routine;
+    }
+
+    private AutoRoutine getDangerSweepSwipe(boolean right) {
+        var choreoTraj = right ? ChoreoTraj.RightDangerSweepGenerated : ChoreoTraj.LeftDangerSweep;
+        var routine = autoFactory.newRoutine(choreoTraj.name());
+        
+        var choreoTraj1 = right ? ChoreoTraj.RightDangerSweepGenerated$0 : ChoreoTraj.LeftDangerSweep$0;
+        var choreoTraj2 = right ? ChoreoTraj.RightDangerSweepGenerated$1 : ChoreoTraj.LeftDangerSweep$1;
         AutoTrajectory traj1 = choreoTraj1.asAutoTraj(routine);
         AutoTrajectory traj2 = choreoTraj2.asAutoTraj(routine);
 
