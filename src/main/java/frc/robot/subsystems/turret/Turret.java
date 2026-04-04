@@ -93,6 +93,8 @@ public class Turret extends SubsystemBase {
         RobotModeTriggers.autonomous().onTrue(reset());
     }
 
+    private boolean resetting = false;
+
     @Override
     public void periodic() {
         var controlMode = controlModeChooser.get();
@@ -105,7 +107,7 @@ public class Turret extends SubsystemBase {
         Logger.processInputs("Turret", (TurretIOInputsAutoLogged)inputs);
 
         // Clamp hood if in an unreasonable position
-        if(inputs.getHoodAngleRad() > TurretConstants.hoodMaxAngle + Units.degreesToRadians(0.5)) {
+        if(!resetting && inputs.getHoodAngleRad() > TurretConstants.hoodMaxAngle + Units.degreesToRadians(0.5)) {
             // Hood will be mechanically limited in range but the motor can keep spinning; clamp so our
             // understanding of the hood position is at least close
             io.resetHoodTo(TurretConstants.hoodMaxAngle);
@@ -299,6 +301,10 @@ public class Turret extends SubsystemBase {
         Container<Double> hoodVelocity = new Container<>(0.);
 
         return Commands.sequence(
+            Commands.runOnce(() -> {
+                resetting = true;
+            }),
+
             Commands.parallel(
                 zeroAzimuth((v) -> azimuthVelocity.value = v),
                 zeroHood((v) -> hoodVelocity.value = v)
@@ -313,7 +319,9 @@ public class Turret extends SubsystemBase {
                 manualHoodOffset.set(0.0);
                 hasZeroed = true;
             })
-        ).withName("TurretZero");
+        ).finallyDo(() -> {
+            resetting = false;
+        }).withName("TurretZero");
     }
 
     private Command zeroHood(DoubleConsumer setHoodVelocity) {

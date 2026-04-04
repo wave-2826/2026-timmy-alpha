@@ -107,9 +107,9 @@ public class Controls {
         normalCodriver.and(coDriver.x()).onTrue(turret.runOnce(() -> {
             // Shoot into ourself lol
             turret.target = new Turret.TurretTarget(
-                Units.rotationsPerMinuteToRadiansPerSecond(400),
+                Units.rotationsPerMinuteToRadiansPerSecond(200),
                 TurretConstants.hoodMaxAngle - Units.degreesToRadians(5),
-                Units.degreesToRadians(135.)
+                Units.degreesToRadians(100.)
             );
         }));
         normalCodriver.and(coDriver.y()).onTrue(turret.runOnce(() -> {
