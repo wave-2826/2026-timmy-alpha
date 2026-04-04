@@ -34,6 +34,7 @@ public class ShotCalculator {
     private static LoggedTunableNumber fudgeAzimuthOffsetDegCCW = new LoggedTunableNumber("ShotCalculator/FudgeAzimuthOffsetDegCCW", 0.0);
     private static LoggedTunableNumber fudgeHoodOffsetDeg = new LoggedTunableNumber("ShotCalculator/FudgeHoodOffsetDeg", 0.0);
     private static LoggedTunableNumber fudgeTimeOfFlightScale = new LoggedTunableNumber("ShotCalculator/FudgeTOFScale", 1.0);
+    private static LoggedTunableNumber secondOrderCompensation = new LoggedTunableNumber("ShotCalculator/SecondOrderCompensation", 1.0);
     
     private static LoggedTunableNumber fudgeHubX = new LoggedTunableNumber("ShotCalculator/FudgeHubXInches", 0.0);
     private static LoggedTunableNumber fudgeHubY = new LoggedTunableNumber("ShotCalculator/FudgeHubYInches", 0.0);
@@ -191,7 +192,9 @@ public class ShotCalculator {
     private double applyPhaseDelay(double vel, double accel) {
         double phaseDelayDt = phaseDelay.get();
         if(Constants.isSim) return vel * phaseDelayDt * 0.4; // Hacky but oh well
-        return vel * phaseDelayDt + 0.5 * accel * phaseDelayDt * phaseDelayDt;
+        double firstOrder = vel * phaseDelayDt;
+        double seconndOrder = vel * phaseDelayDt + 0.5 * accel * phaseDelayDt * phaseDelayDt;
+        return MathUtil.interpolate(firstOrder, seconndOrder, secondOrderCompensation.get());
     }
 
     public ShotParameters calculate() {
