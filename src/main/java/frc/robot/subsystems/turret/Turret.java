@@ -1,10 +1,8 @@
 package frc.robot.subsystems.turret;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -24,7 +22,6 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 
-import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -97,6 +94,8 @@ public class Turret extends SubsystemBase {
 
     private boolean zeroing = false;
 
+    private boolean atSetpoint = false;
+
     @Override
     public void periodic() {
         var controlMode = controlModeChooser.get();
@@ -114,6 +113,29 @@ public class Turret extends SubsystemBase {
             // understanding of the hood position is at least close
             io.resetHoodTo(TurretConstants.hoodMaxAngle);
         }
+
+        // Setpoints
+        
+
+        double flywheelError = Math.abs(inputs.getFlywheelVelocityRadPerSecond() - target.flywheelSpeedRadPerSec);
+        double azimuthError = Math.abs(MathUtil.angleModulus(inputs.getAzimuthAngleRad() - target.azimuthAngleRad));
+        double hoodError = Math.abs(inputs.getHoodAngleRad() - target.hoodAngleRad);
+
+        Logger.recordOutput("Turret/Errors/Flywheel", flywheelError, RadiansPerSecond);
+        Logger.recordOutput("Turret/Errors/Azimuth", azimuthError, Radians);
+        Logger.recordOutput("Turret/Errors/Hood", hoodError, Radians);
+
+        boolean hoodAzimuthAtSetpoint = azimuthError < TurretConstants.azimuthToleranceRad && hoodError < TurretConstants.hoodToleranceRad;
+        boolean withinEnterSetpoint = flywheelError < TurretConstants.flywheelToleranceRadPerSecEnter && hoodAzimuthAtSetpoint;
+        boolean withinExitSetpoint = flywheelError < TurretConstants.flywheelToleranceRadPerSecExit && hoodAzimuthAtSetpoint;
+
+        if(atSetpoint && !withinExitSetpoint) {
+            atSetpoint = false;
+        } else if(!atSetpoint && withinEnterSetpoint) {
+            atSetpoint = true;
+        }
+
+        Logger.recordOutput("Turret/AtSetpoint", atSetpoint);
 
         flywheel1DisconnectedAlert.set(!inputs.flywheel1.connected());
         flywheel2DisconnectedAlert.set(!inputs.flywheel2.connected());
@@ -265,25 +287,9 @@ public class Turret extends SubsystemBase {
         }, this);
     }
 
-    private final Debouncer setpointDebouncer = new Debouncer(0.15, DebounceType.kFalling);
-
-    @AutoLogOutput(key = "Turret/AtSetpoint")
     public boolean atSetpoint() {
         if(target == null) return true;
-
-        double flywheelError = Math.abs(inputs.getFlywheelVelocityRadPerSecond() - target.flywheelSpeedRadPerSec);
-        double azimuthError = Math.abs(MathUtil.angleModulus(inputs.getAzimuthAngleRad() - target.azimuthAngleRad));
-        double hoodError = Math.abs(inputs.getHoodAngleRad() - target.hoodAngleRad);
-
-        Logger.recordOutput("Turret/Errors/Flywheel", flywheelError, RadiansPerSecond);
-        Logger.recordOutput("Turret/Errors/Azimuth", azimuthError, Radians);
-        Logger.recordOutput("Turret/Errors/Hood", hoodError, Radians);
-
-        return setpointDebouncer.calculate(
-            flywheelError < TurretConstants.flywheelToleranceRadPerSec
-            && azimuthError < TurretConstants.azimuthToleranceRad
-            && hoodError < TurretConstants.hoodToleranceRad
-        );
+        return atSetpoint;
     }
 
     public LinearVelocity getShotVelocity() {
