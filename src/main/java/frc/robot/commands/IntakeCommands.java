@@ -31,7 +31,7 @@ public class IntakeCommands {
     public Command run(Intake intake, DoubleSupplier pullIn, BooleanSupplier runRoller) {
         return Commands.parallel(
             intake.runRollerScaled(() -> rollerSpeed + (runRoller.getAsBoolean() ? 1. : 0.)),
-            intake.setIntakePosition(() -> {
+            intake.setIntakePositionNormalized(() -> {
                 return pullIn.getAsDouble() * 0.9; // + (runRoller.getAsBoolean() ? 0.0 : 0.1);
             })
         );
