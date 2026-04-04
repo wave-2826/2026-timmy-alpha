@@ -190,7 +190,7 @@ public class VisionTuningCommands {
             }, vision),
             drive.runEnd(() -> drive.runVelocity(new ChassisSpeeds(
                 0., 0.,
-                anyCamerasSee.value ? Units.degreesToRadians(4) : Units.degreesToRadians(20)
+                anyCamerasSee.value ? Units.degreesToRadians(6) : Units.degreesToRadians(20)
             ), false), () -> drive.stop())
         )).finallyDo(() -> {
             System.out.flush();

@@ -51,7 +51,6 @@
             "/Drive/ModuleBackLeft/OdometryTurnPositions/0",
             "/RealOutputs/LaunchCalculator/Calculated",
             "/Turret/BottomFlywheel",
-            "/Tuning/ShotCalculator",
             "/RealOutputs/Turret/Measured",
             "/Spindexer/Transfer",
             "/Tuning/Turret/Azimuth",
@@ -60,21 +59,24 @@
             "/RealOutputs/Vision/Camera0/TagPoses",
             "/RealOutputs/Vision/Camera1",
             "/RealOutputs/Vision/Camera1/TagPoses",
-            "/Tuning/Drive",
             "/Tuning/Drive/Tuning",
             "/Intake/RollerR",
             "/Intake/RollerL",
             "/URCL/Spark-33",
-            "/URCL",
             "/URCL/Spark-30",
             "/PowerDistribution",
             "/RealOutputs",
-            "/RealOutputs/Odometry",
-            "/RealOutputs/Odometry/Auto"
+            "/RealOutputs/Odometry/Auto",
+            "/Turret/Flywheel2",
+            "/Turret/Flywheel1",
+            "/Tuning",
+            "/RealOutputs/Turret",
+            "/Tuning/ShotCalculator",
+            "/RealOutputs/LaunchCalculator"
           ]
         },
         "tabs": {
-          "selected": 1,
+          "selected": 10,
           "tabs": [
             {
               "type": 0,
@@ -346,6 +348,41 @@
                 "rightFilter": 0
               },
               "controllerUUID": "uigj8mul6c2cner7x88labgzgw9nmvih",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "Line Graph",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "/PowerDistribution/TotalCurrent",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [],
+                "discreteSources": [],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "rightUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "xakk1bpxurjxwk9gg0rplznl7lifhlr6",
               "renderer": null,
               "controlsHeight": 200
             },
@@ -810,7 +847,7 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Turret/Measured/Azimuth",
                     "logType": "Number",
-                    "visible": false,
+                    "visible": true,
                     "options": {
                       "color": "#2b66a2",
                       "size": "normal"
@@ -820,7 +857,7 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Turret/Measured/Hood",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#af2437",
                       "size": "normal"
@@ -830,7 +867,7 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Turret/Target/Azimuth",
                     "logType": "Number",
-                    "visible": false,
+                    "visible": true,
                     "options": {
                       "color": "#2b66a2",
                       "size": "bold"
@@ -840,7 +877,7 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Turret/Target/Hood",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#af2437",
                       "size": "bold"
@@ -878,10 +915,25 @@
                     "options": {
                       "color": "#80588e"
                     }
+                  },
+                  {
+                    "type": "stripes",
+                    "logKey": "/RealOutputs/Turret/AtSetpoint",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#e48b32"
+                    }
                   }
                 ],
-                "leftLockedRange": null,
-                "rightLockedRange": null,
+                "leftLockedRange": [
+                  -3.45849609375,
+                  72.62841796875
+                ],
+                "rightLockedRange": [
+                  -814.28199609375,
+                  5432.101605468751
+                ],
                 "leftUnitConversion": {
                   "autoTarget": null,
                   "preset": {
@@ -916,19 +968,9 @@
                     "type": "stepped",
                     "logKey": "/Turret/Azimuth/currentAmps",
                     "logType": "Number",
-                    "visible": true,
-                    "options": {
-                      "color": "#2b66a2",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "stepped",
-                    "logKey": "/Turret/TopFlywheel/currentAmps",
-                    "logType": "Number",
                     "visible": false,
                     "options": {
-                      "color": "#e5b31b",
+                      "color": "#2b66a2",
                       "size": "normal"
                     }
                   },
@@ -944,39 +986,19 @@
                   },
                   {
                     "type": "stepped",
-                    "logKey": "/RealOutputs/Turret/LQRSetpoints/azimuthCurrent",
-                    "logType": "Number",
-                    "visible": true,
-                    "options": {
-                      "color": "#2b66a2",
-                      "size": "bold"
-                    }
-                  },
-                  {
-                    "type": "stepped",
-                    "logKey": "/RealOutputs/Turret/LQRSetpoints/flywheelCurrent",
+                    "logKey": "/Turret/Flywheel1/currentAmps",
                     "logType": "Number",
                     "visible": true,
                     "options": {
                       "color": "#e5b31b",
-                      "size": "bold"
+                      "size": "normal"
                     }
                   },
                   {
                     "type": "stepped",
-                    "logKey": "/RealOutputs/Turret/LQRSetpoints/hoodCurrent",
+                    "logKey": "/Turret/Flywheel2/currentAmps",
                     "logType": "Number",
                     "visible": true,
-                    "options": {
-                      "color": "#af2437",
-                      "size": "bold"
-                    }
-                  },
-                  {
-                    "type": "stepped",
-                    "logKey": "/Turret/BottomFlywheel/currentAmps",
-                    "logType": "Number",
-                    "visible": false,
                     "options": {
                       "color": "#e48b32",
                       "size": "normal"
@@ -1149,17 +1171,7 @@
               "type": 6,
               "title": "All current usage",
               "controller": {
-                "sources": [
-                  {
-                    "type": "independent",
-                    "logKey": "/SystemStats/BatteryVoltage",
-                    "logType": "Number",
-                    "visible": true,
-                    "options": {
-                      "color": "#2b66a2"
-                    }
-                  }
-                ],
+                "sources": [],
                 "timeRange": "enabled",
                 "rangeMin": 6,
                 "rangeMax": 13,
@@ -1303,5 +1315,5 @@
     }
   ],
   "satellites": [],
-  "version": "26.0.0"
+  "version": "26.0.1"
 }
