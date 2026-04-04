@@ -116,22 +116,25 @@ public class Turret extends SubsystemBase {
 
         // Setpoints
         
-
-        double flywheelError = Math.abs(inputs.getFlywheelVelocityRadPerSecond() - target.flywheelSpeedRadPerSec);
-        double azimuthError = Math.abs(MathUtil.angleModulus(inputs.getAzimuthAngleRad() - target.azimuthAngleRad));
-        double hoodError = Math.abs(inputs.getHoodAngleRad() - target.hoodAngleRad);
-
-        Logger.recordOutput("Turret/Errors/Flywheel", flywheelError, RadiansPerSecond);
-        Logger.recordOutput("Turret/Errors/Azimuth", azimuthError, Radians);
-        Logger.recordOutput("Turret/Errors/Hood", hoodError, Radians);
-
-        boolean hoodAzimuthAtSetpoint = azimuthError < TurretConstants.azimuthToleranceRad && hoodError < TurretConstants.hoodToleranceRad;
-        boolean withinEnterSetpoint = flywheelError < TurretConstants.flywheelToleranceRadPerSecEnter && hoodAzimuthAtSetpoint;
-        boolean withinExitSetpoint = flywheelError < TurretConstants.flywheelToleranceRadPerSecExit && hoodAzimuthAtSetpoint;
-
-        if(atSetpoint && !withinExitSetpoint) {
-            atSetpoint = false;
-        } else if(!atSetpoint && withinEnterSetpoint) {
+        if(target != null) {
+            double flywheelError = Math.abs(inputs.getFlywheelVelocityRadPerSecond() - target.flywheelSpeedRadPerSec);
+            double azimuthError = Math.abs(MathUtil.angleModulus(inputs.getAzimuthAngleRad() - target.azimuthAngleRad));
+            double hoodError = Math.abs(inputs.getHoodAngleRad() - target.hoodAngleRad);
+    
+            Logger.recordOutput("Turret/Errors/Flywheel", flywheelError, RadiansPerSecond);
+            Logger.recordOutput("Turret/Errors/Azimuth", azimuthError, Radians);
+            Logger.recordOutput("Turret/Errors/Hood", hoodError, Radians);
+    
+            boolean hoodAzimuthAtSetpoint = azimuthError < TurretConstants.azimuthToleranceRad && hoodError < TurretConstants.hoodToleranceRad;
+            boolean withinEnterSetpoint = flywheelError < TurretConstants.flywheelToleranceRadPerSecEnter && hoodAzimuthAtSetpoint;
+            boolean withinExitSetpoint = flywheelError < TurretConstants.flywheelToleranceRadPerSecExit && hoodAzimuthAtSetpoint;
+    
+            if(atSetpoint && !withinExitSetpoint) {
+                atSetpoint = false;
+            } else if(!atSetpoint && withinEnterSetpoint) {
+                atSetpoint = true;
+            }
+        } else {
             atSetpoint = true;
         }
 
