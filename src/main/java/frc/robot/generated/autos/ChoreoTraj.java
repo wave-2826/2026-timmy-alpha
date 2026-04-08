@@ -118,7 +118,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj RightDangerSweepGenerated = new ChoreoTraj(
         "RightDangerSweepGenerated",
         OptionalInt.empty(),
-        10.88643,
+        10.88659,
         new Pose2d(4.47674, 0.50919, Rotation2d.fromRadians(-1.5708)),
         new Pose2d(3.398, 7.38612, Rotation2d.fromRadians(-1.5708))
     );
@@ -126,7 +126,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj RightDangerSweepGenerated$0 = new ChoreoTraj(
         "RightDangerSweepGenerated",
         OptionalInt.of(0),
-        4.99264,
+        4.9928,
         new Pose2d(4.47674, 0.50919, Rotation2d.fromRadians(-1.5708)),
         new Pose2d(3.62778, 7.41864, Rotation2d.fromRadians(-3.14154))
     );
@@ -134,7 +134,7 @@ public record ChoreoTraj(
     public static final ChoreoTraj RightDangerSweepGenerated$1 = new ChoreoTraj(
         "RightDangerSweepGenerated",
         OptionalInt.of(1),
-        5.893790000000001,
+        5.89379,
         new Pose2d(3.62778, 7.41864, Rotation2d.fromRadians(-3.14154)),
         new Pose2d(3.398, 7.38612, Rotation2d.fromRadians(-1.5708))
     );

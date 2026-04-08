@@ -24,5 +24,5 @@ function OpenIfNotRunning {
     }
 }
 
-OpenIfNotRunning -ProgramPath "C:\Users\Public\wpilib\2026\advantagescope\AdvantageScope (WPILib).exe"
-OpenIfNotRunning -ProgramPath "C:\Users\Public\wpilib\2026\elastic\elastic_dashboard.exe"
+# OpenIfNotRunning -ProgramPath "C:\Users\Public\wpilib\2026\advantagescope\AdvantageScope (WPILib).exe"
+# OpenIfNotRunning -ProgramPath "C:\Users\Public\wpilib\2026\elastic\elastic_dashboard.exe"

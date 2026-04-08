@@ -27,7 +27,7 @@ public class TurretConstants {
 
     // Reductions; all are a ratio between output and input.
     // All stages have the same 31:200 reduction, but the hood and azimuth are further reduced by the bevel and planetary stages.
-    public static final double flyMotorToRingReduction = (44. / 20.) * (35.0 / 200.0);
+    public static final double flyMotorToRingReduction = (36. / 28.) * (35.0 / 200.0);
     public static final double aziMotorToRingReduction = 18.0 / 200.0;
     public static final double hoodMotorToRingReduction = 35.0 / 200.0;
     
@@ -111,7 +111,7 @@ public class TurretConstants {
     public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * aziMotorToRingReduction * 0.8;
 
     // Current limits
-    public static final int flywheelCurrentLimit = 60; // amps each
+    public static final int flywheelCurrentLimit = 70; // amps each
     public static final int azimuthCurrentLimit = 50; // amps
     public static final int hoodCurrentLimit = 30; // amps
 
@@ -122,13 +122,13 @@ public class TurretConstants {
         .addGains(0.0, 12.0 / maxFlywheelSpeedRadPerSec, flywheelMotorKA);
     
     public static final TunablePID flywheelMotorPID = new TunablePID("Turret/Flywheel")
-        .addRealRobotGains(new GenericPIDConstants(0.15, 0.0, 0.0, 0.081)) // velocity voltage
+        .addRealRobotGains(new GenericPIDConstants(0.15, 0.0, 0.0, 0.123)) // velocity voltage
         .addRealRobotGains(new GenericPIDConstants(0.1, 0, 0, 0.2, PIDSlot.Slot1))
         .addSimGains(new GenericPIDConstants(0.2, 5, 0, 0.15));
     
     public static final TunablePID azimuthMotorPID = new TunablePID("Turret/Azimuth")
         .addRealRobotGains(new GenericPIDConstants(100, 30, 1)) // position voltage
-        .addRealRobotGains(new GenericPIDConstants(0.8, 0, 0, 0.2, PIDSlot.Slot1))
+        .addRealRobotGains(new GenericPIDConstants(3.0, 3.0, 0, 3.0, PIDSlot.Slot1))
         .addSimGains(new GenericPIDConstants(100, 15, 2));
     
     public static final TunablePID hoodMotorPID = new TunablePID("Turret/Hood")

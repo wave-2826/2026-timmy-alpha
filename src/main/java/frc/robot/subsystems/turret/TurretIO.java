@@ -19,7 +19,8 @@ public interface TurretIO {
              */
             double velocityRadPerSec,
             /** The motor current draw. */
-            double currentAmps
+            double currentAmps,
+            double temperatureCelsius
         ) {}
         public record AzimuthMotorInputs(
             /** Whether the motor is connected */
@@ -45,8 +46,8 @@ public interface TurretIO {
             double currentAmps
         ) {}
 
-        public FlywheelMotorInputs flywheel1 = new FlywheelMotorInputs(false, 0.0, 0.0);
-        public FlywheelMotorInputs flywheel2 = new FlywheelMotorInputs(false, 0.0, 0.0);
+        public FlywheelMotorInputs flywheel1 = new FlywheelMotorInputs(false, 0.0, 0.0, 0.0);
+        public FlywheelMotorInputs flywheel2 = new FlywheelMotorInputs(false, 0.0, 0.0, 0.0);
 
         public AzimuthMotorInputs azimuth = new AzimuthMotorInputs(false, 0.0, 0.0, 0.0);
 

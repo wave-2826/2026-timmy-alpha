@@ -2,10 +2,11 @@
 import os
 import json
 
+ANSI_RESET = "\u001b[0m"
+ANSI_RED = "\u001b[31m"
+
 FIELD_WIDTH_Y = 8.043
 
-def flip_y(y):
-    return FIELD_WIDTH_Y - point[1]
 def flip_heading(heading):
     return -heading
 def flip_expression_value_y(val):
@@ -45,3 +46,5 @@ for filename in os.listdir(choreoDir):
         
         with open(os.path.join(choreoDir, newfilename), "w") as f:
             json.dump(data, f, indent=4)
+
+print(f"{ANSI_RED}Make sure to reopen the project and regenerate trajectories in choreo!{ANSI_RESET}")

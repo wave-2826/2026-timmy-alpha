@@ -1,8 +1,10 @@
 package frc.robot.subsystems.turret;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
@@ -325,6 +327,8 @@ public class Turret extends SubsystemBase {
                 zeroHood((v) -> hoodVelocity.value = v)
             ).raceWith(run(() -> {
                 target = null;
+                Logger.recordOutput("Turret/Reset/Azimuth", azimuthVelocity.value);
+                Logger.recordOutput("Turret/Reset/Hood", hoodVelocity.value);
                 io.setVelocityOutputs(0, azimuthVelocity.value, hoodVelocity.value);
             })),
 
@@ -367,26 +371,40 @@ public class Turret extends SubsystemBase {
     }
 
     private Command zeroAzimuth(DoubleConsumer setAzimuthVelocity) {
-        Container<Boolean> startZeroValue = new Container<>(false);
-        double triggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(45);
-        double detriggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(5);
+        Container<Boolean> previousZeroTriggered = new Container<>(false);
+        double triggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(15);
+        double detriggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(-4);
+        Debouncer negativeVelocityDebouncer = new Debouncer(0.3, DebounceType.kFalling);
         return Commands.sequence(
             Commands.runOnce(() -> {
-                startZeroValue.value = inputs.azimuthZeroTriggered;
+                previousZeroTriggered.value = inputs.azimuthZeroTriggered;
             }),
 
             // Clockwise until the sensor value is the opposite of what it started
             Commands.run(() -> {
                 target = null;
-                setAzimuthVelocity.accept(startZeroValue.value ? detriggerSpeed : triggerSpeed);
-            }).until(() -> inputs.azimuthZeroTriggered != startZeroValue.value).withTimeout(5),
-            // Counterclockwise until no longer triggered
-            // TODO: search for falling edge while also traveling in correct direction
+                setAzimuthVelocity.accept(triggerSpeed);
+                previousZeroTriggered.value = inputs.azimuthZeroTriggered;
+            }).until(() -> inputs.azimuthZeroTriggered)
+                .withTimeout(6)
+                .onlyIf(() -> !inputs.azimuthZeroTriggered),
+            
+            // Counterclockwise until falling edge while also traveling in correct direction
             Commands.run(() -> {
                 target = null;
-                setAzimuthVelocity.accept(-Units.rotationsPerMinuteToRadiansPerSecond(detriggerSpeed));
-            }).until(() -> !inputs.azimuthZeroTriggered).withTimeout(1),
-            Commands.runOnce(() -> io.resetAzimuth(TurretConstants.azimuthResetAngle))
+                setAzimuthVelocity.accept(detriggerSpeed);
+            }).until(() -> {
+                boolean fallingEdge = previousZeroTriggered.value && !inputs.azimuthZeroTriggered;
+                boolean negativeVelocity = negativeVelocityDebouncer.calculate(inputs.azimuth.internalEncoderVelocity() < detriggerSpeed / 3.);
+                previousZeroTriggered.value = inputs.azimuthZeroTriggered;
+                return fallingEdge && negativeVelocity;
+            })
+                .withTimeout(1),
+            
+            Commands.runOnce(() -> {
+                io.resetAzimuth(TurretConstants.azimuthResetAngle);
+                setAzimuthVelocity.accept(0.);
+            })
         );
     }
 
