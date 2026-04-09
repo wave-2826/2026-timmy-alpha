@@ -112,7 +112,7 @@ public class TurretConstants {
 
     // Current limits
     public static final int flywheelCurrentLimit = 70; // amps each
-    public static final int azimuthCurrentLimit = 50; // amps
+    public static final int azimuthCurrentLimit = 35; // amps
     public static final int hoodCurrentLimit = 30; // amps
 
     public static final int hoodResetCurrent = 20; // amps
@@ -139,6 +139,6 @@ public class TurretConstants {
     // Control tolerances
     public static final double flywheelToleranceRadPerSecEnter = Units.rotationsPerMinuteToRadiansPerSecond(80);
     public static final double flywheelToleranceRadPerSecExit = Units.rotationsPerMinuteToRadiansPerSecond(180);
-    public static final double azimuthToleranceRad = Units.degreesToRadians(3);
+    public static final double azimuthToleranceRad = Units.degreesToRadians(4);
     public static final double hoodToleranceRad = Units.degreesToRadians(2);
 }
