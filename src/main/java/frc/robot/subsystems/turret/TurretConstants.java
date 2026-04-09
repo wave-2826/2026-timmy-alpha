@@ -127,7 +127,7 @@ public class TurretConstants {
         .addSimGains(new GenericPIDConstants(0.2, 5, 0, 0.15));
     
     public static final TunablePID azimuthMotorPID = new TunablePID("Turret/Azimuth")
-        .addRealRobotGains(new GenericPIDConstants(100, 30, 1)) // position voltage
+        .addRealRobotGains(new GenericPIDConstants(160, 250, 0).kV(3.7)) // position voltage
         .addRealRobotGains(new GenericPIDConstants(3.0, 3.0, 0, 3.0, PIDSlot.Slot1))
         .addSimGains(new GenericPIDConstants(100, 15, 2));
     
@@ -139,6 +139,6 @@ public class TurretConstants {
     // Control tolerances
     public static final double flywheelToleranceRadPerSecEnter = Units.rotationsPerMinuteToRadiansPerSecond(80);
     public static final double flywheelToleranceRadPerSecExit = Units.rotationsPerMinuteToRadiansPerSecond(180);
-    public static final double azimuthToleranceRad = Units.degreesToRadians(2);
+    public static final double azimuthToleranceRad = Units.degreesToRadians(3);
     public static final double hoodToleranceRad = Units.degreesToRadians(2);
 }

@@ -50,6 +50,8 @@ public class Turret extends SubsystemBase {
         public double flywheelSpeedRadPerSec;
         /** The target angle of the azimuth relative to the robot base in radians. */
         public double azimuthAngleRad;
+        /** The current feedforward of the azimuth in rad/sec^2. */
+        public double azimuthFeedforwardRadPerSec;
         /**
          * The target hood angle relative to the turret surface; 0 rad would be shooting
          * straight up and pi/2 rad would theoretically be shots directly outward.
@@ -59,6 +61,14 @@ public class Turret extends SubsystemBase {
         public TurretTarget(double flywheelSpeedRadPerSec, double azimuthAngleRad, double hoodAngleRad) {
             this.flywheelSpeedRadPerSec = flywheelSpeedRadPerSec;
             this.azimuthAngleRad = azimuthAngleRad;
+            this.azimuthFeedforwardRadPerSec = 0;
+            this.hoodAngleRad = hoodAngleRad;
+        }
+
+        public TurretTarget(double flywheelSpeedRadPerSec, double azimuthAngleRad, double azimuthFeedforwardRadPerSec, double hoodAngleRad) {
+            this.flywheelSpeedRadPerSec = flywheelSpeedRadPerSec;
+            this.azimuthAngleRad = azimuthAngleRad;
+            this.azimuthFeedforwardRadPerSec = azimuthFeedforwardRadPerSec;
             this.hoodAngleRad = hoodAngleRad;
         }
     }
@@ -151,6 +161,7 @@ public class Turret extends SubsystemBase {
             io.stop();
 
             Logger.recordOutput("Turret/Target/Azimuth", 0.0, Radians);
+            Logger.recordOutput("Turret/Target/AzimuthVel", 0.0, RadiansPerSecond);
             Logger.recordOutput("Turret/Target/Hood", 0.0, Radians);
             Logger.recordOutput("Turret/Target/Flywheel", 0.0, RadiansPerSecond);
         } else {
@@ -165,6 +176,7 @@ public class Turret extends SubsystemBase {
                             Units.rotationsPerMinuteToRadiansPerSecond(5500)
                         ),
                         target.azimuthAngleRad % (Math.PI * 2),
+                        target.azimuthFeedforwardRadPerSec,
                         MathUtil.clamp(
                             target.hoodAngleRad,
                             TurretConstants.hoodMinAngle,
@@ -187,6 +199,7 @@ public class Turret extends SubsystemBase {
             }
             
             Logger.recordOutput("Turret/Target/Azimuth", target.azimuthAngleRad, Radians);
+            Logger.recordOutput("Turret/Target/AzimuthVel", target.azimuthFeedforwardRadPerSec, RadiansPerSecond);
             Logger.recordOutput("Turret/Target/Hood", target.hoodAngleRad, Radians);
             Logger.recordOutput("Turret/Target/Flywheel", target.flywheelSpeedRadPerSec, RadiansPerSecond);
         }
@@ -200,6 +213,9 @@ public class Turret extends SubsystemBase {
         Logger.recordOutput("Turret/Measured/HoodVelocity", inputs.getHoodVelocityRadPerSec(), RadiansPerSecond);
         Logger.recordOutput("Turret/Measured/Azimuth", inputs.getAzimuthAngleRad(), Radians);
         Logger.recordOutput("Turret/Measured/AzimuthVelocity", inputs.getAzimuthVelocityRadPerSec(), RadiansPerSecond);
+
+        // If not updating the target, reset the feedforward
+        if(target != null) target.azimuthFeedforwardRadPerSec = 0;
     }
 
     public Command runManualVelocity(
@@ -260,6 +276,7 @@ public class Turret extends SubsystemBase {
 
             // target.hoodAngleRad = TurretConstants.hoodMinAngle + manualHoodOffset.get();
             target.hoodAngleRad = parameters.target().hoodAngleRad + manualHoodOffset.get();
+            target.azimuthFeedforwardRadPerSec = parameters.target().azimuthFeedforwardRadPerSec;
         }, () -> {
             target = null;
         }, this);

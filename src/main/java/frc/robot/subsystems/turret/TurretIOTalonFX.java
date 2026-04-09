@@ -5,6 +5,7 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -185,7 +186,10 @@ public class TurretIOTalonFX implements TurretIO {
 
         azimuthTalon.setControl(positionRequest.withPosition(
             outputs.azimuthAngleRad() / (2 * Math.PI)
+        ).withVelocity(
+            outputs.azimuthFeedforwardRadPerSec() / (2 * Math.PI)
         ).withSlot(0));
+
 
         double azimuthRingRotations = azimuthInternalAngle.getValueAsDouble();
         double hoodRingRotations = azimuthRingRotations - outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction / (2 * Math.PI);

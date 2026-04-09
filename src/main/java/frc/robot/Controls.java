@@ -136,7 +136,7 @@ public class Controls {
         
         driver.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
         
-        turretControlCodriver.whileTrue(controllerRumbleWhileRunning(coDriver, RumbleType.kRightRumble).withName("TurretCodriverControls"));
+        // turretControlCodriver.whileTrue(controllerRumbleWhileRunning(coDriver, RumbleType.kRightRumble).withName("TurretCodriverControls"));
         coDriver.rightBumper().onTrue(Commands.runOnce(() -> {
             if(codriverMode == CodriverMode.Normal) {
                 codriverMode = CodriverMode.TurretControl;

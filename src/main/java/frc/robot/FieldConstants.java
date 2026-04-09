@@ -27,7 +27,7 @@ import java.nio.file.Path;
 */
 public class FieldConstants {
     public static final FieldType fieldType = FieldType.ANDYMARK;
-    public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.OFFICIAL;
+    public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.HOME;
     
     // AprilTag related constants
     public static final int aprilTagCount = AprilTagLayoutType.OFFICIAL.getLayout().getTags().size();
