@@ -81,6 +81,7 @@ public class Turret extends SubsystemBase {
 
     public static interface ControlTarget {
         public static ControlTarget NONE = new ControlTarget.None();
+        public static ControlTarget SHOT_CALCULATOR_DEFAULT = new ControlTarget.ShotCalculator();
         public static ControlTarget SHOT_CALCULATOR = new ControlTarget.ShotCalculator();
         
         public static class None implements ControlTarget {};
@@ -89,7 +90,7 @@ public class Turret extends SubsystemBase {
             public Manual(TurretTarget target) { this.target = target; }
         };
         public static class ShotCalculator implements ControlTarget {
-            public double maxFlyVelocityRadPerSec = 0;
+            public double maxFlyVelocityRadPerSec = 6000;
             public double azimuthOffsetRad = 0;
             public double hoodOffsetRad = 0;
             public double flyOffsetRadPerSec = 0;
@@ -143,8 +144,6 @@ public class Turret extends SubsystemBase {
             io.resetHoodTo(TurretConstants.hoodMaxAngle);
         }
 
-        Logger.recordOutput("Turret/AtSetpoint", atSetpoint);
-
         flywheel1DisconnectedAlert.set(!inputs.flywheel1.connected());
         flywheel2DisconnectedAlert.set(!inputs.flywheel2.connected());
         azimuthDisconnectedAlert.set(!inputs.azimuth.connected());
@@ -197,6 +196,7 @@ public class Turret extends SubsystemBase {
                 case NONE:
                     return;
                 case PID: {
+                    // TODO: limit fly target slew rate right here, mayhaps?
                     TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
                         MathUtil.clamp(
                             calculatedTarget.flywheelSpeedRadPerSec,
@@ -236,6 +236,7 @@ public class Turret extends SubsystemBase {
                 calculatedTarget.hoodAngleRad, inputs.getHoodAngleRad()
             );
         }
+        Logger.recordOutput("Turret/AtSetpoint", atSetpoint);
 
         Logger.recordOutput("Turret/Measured/FlywheelVelocity", inputs.getFlywheelVelocityRadPerSecond(), RadiansPerSecond);
         Logger.recordOutput("Turret/Measured/Hood", inputs.getHoodAngleRad(), Radians);
@@ -267,11 +268,12 @@ public class Turret extends SubsystemBase {
             Logger.recordOutput("Turret/ManualControlAzimuthOffsetDeg", Units.radiansToDegrees(manualControlAzimuthOffset));
 
             ControlTarget.ShotCalculator shotTarget = (ControlTarget.ShotCalculator)target;
+            // TODO: better limiting logic
             shotTarget.maxFlyVelocityRadPerSec = Units.radiansPerSecondToRotationsPerMinute(flyLimiter.calculate(
                 flywheelScalar.getAsDouble() * 6500
             ));
             shotTarget.azimuthOffsetRad = manualControlAzimuthOffset;
-            shotTarget.flyOffsetRadPerSec = Units.radiansPerSecondToRotationsPerMinute(manualFlywheelSpeed.get());
+            shotTarget.flyOffsetRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(manualFlywheelSpeed.get());
             shotTarget.hoodOffsetRad = manualHoodOffset.get();
         }, () -> {
             target = ControlTarget.NONE;
@@ -304,7 +306,6 @@ public class Turret extends SubsystemBase {
     }
 
     public boolean atSetpoint() {
-        if(target == null) return true;
         return atSetpoint;
     }
 

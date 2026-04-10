@@ -53,7 +53,7 @@ public class ScoringCommands {
 
     public static Command prep(Turret turret) {
         return turret.runOnce(() -> {
-            turret.target = ControlTarget.SHOT_CALCULATOR;
+            turret.target = ControlTarget.SHOT_CALCULATOR_DEFAULT;
         });
     }
 
@@ -71,7 +71,7 @@ public class ScoringCommands {
                 );
             }).raceWith(hopperVision.waitForNoPieces(1.0, 4.0, 8.0))
         ).raceWith(
-            turret.run(() -> { turret.target = ControlTarget.SHOT_CALCULATOR; })
+            turret.run(() -> { turret.target = ControlTarget.SHOT_CALCULATOR_DEFAULT; })
         ).andThen(
             // Reset turret/spin
             spindexer.run(() -> {

@@ -205,6 +205,10 @@ public class ShotCalculator {
         return MathUtil.interpolate(firstOrder, seconndOrder, secondOrderCompensation.get());
     }
 
+    private double getEffectiveTOF(double tof) {
+        return (1 - Math.exp(-dragConstant.get() * tof)) / dragConstant.get();
+    }
+    
     public ShotParameters calculate() {
         Pose2d estimatedPose = RobotState.getInstance().getEstimatedPose();
 
@@ -261,15 +265,16 @@ public class ShotCalculator {
             * (TurretConstants.robotToTurret.getX() * Math.cos(robotAngle)
             - TurretConstants.robotToTurret.getY() * Math.sin(robotAngle));
 
-        double timeOfFlight = 0, effectiveTimeOfFlight = 0;
+        double timeOfFlight = type.shotMapData.getTimeOfFlight(turretToTargetDistance), effectiveTimeOfFlight = 0;
         Translation2d virtualTarget = target;
         double lookaheadTurretToTargetDistance = turretToTargetDistance;
+        double initialToEffectiveTOFScalar = timeOfFlight / getEffectiveTOF(timeOfFlight); // hack but it works?
         for(int i = 0; i < 20; i++) {
             timeOfFlight = type.shotMapData.getTimeOfFlight(lookaheadTurretToTargetDistance);
             // Calculate the effective time of flight, including induced linear drag. See
             // https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html
             // (Described in https://www.chiefdelphi.com/t/recursive-time-of-flight-fire-control-simulator-for-frc-docs-preview/513819/10)
-            effectiveTimeOfFlight = (1 - Math.exp(-dragConstant.get() * timeOfFlight)) / dragConstant.get();
+            effectiveTimeOfFlight = getEffectiveTOF(timeOfFlight) * initialToEffectiveTOFScalar;
 
             Translation2d offset = new Translation2d(turretVelocityX * effectiveTimeOfFlight, turretVelocityY * effectiveTimeOfFlight);
             virtualTarget = target.minus(offset);

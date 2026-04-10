@@ -127,7 +127,7 @@ public class TurretConstants {
         .addSimGains(new GenericPIDConstants(0.2, 5, 0, 0.15));
     
     public static final TunablePID azimuthMotorPID = new TunablePID("Turret/Azimuth")
-        .addRealRobotGains(new GenericPIDConstants(160, 250, 0).kV(3.7)) // position voltage
+        .addRealRobotGains(new GenericPIDConstants(160, 200, 0).kV(3.7)) // position voltage
         .addRealRobotGains(new GenericPIDConstants(3.0, 3.0, 0, 3.0, PIDSlot.Slot1))
         .addSimGains(new GenericPIDConstants(100, 15, 2));
     
