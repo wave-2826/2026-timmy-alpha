@@ -11,6 +11,7 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.ShotCalculator;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.ShotCalculator.ShotType;
+import frc.robot.subsystems.turret.Turret.ControlTarget;
 
 public class ScoringCommands {
     /**
@@ -29,30 +30,30 @@ public class ScoringCommands {
         BooleanSupplier codriverStop
     ) {
         return Commands.runEnd(() -> {
-            var parameters = ShotCalculator.getInstance().calculate();
+            var parameters = ShotCalculator.getInstance().getLatestResult();
             double spinPower;
             if(parameters.shotType() != ShotType.NONE && driverShoot.getAsDouble() > 0.25) {
-                turret.target = parameters.target();
+                turret.target = ControlTarget.SHOT_CALCULATOR;
                 spinPower = turret.atSetpoint() ? 1.0 : 0.0;
             } else {
                 spinPower = 0.0;
             }
 
             if(codriverStop.getAsBoolean()) {
-                turret.target = null;
+                turret.target = ControlTarget.NONE;
             }
 
             double codriverOverride = codriverOverrideAxis.getAsDouble();
             spindexer.setPower(Math.abs(codriverOverride) > 0.1 ? codriverOverride : spinPower, 1.0);
         }, () -> {
-            turret.target = null;
+            turret.target = ControlTarget.NONE;
             spindexer.setPower(0.0, 0.0);
         }, turret, spindexer).withName("TeleopScoring");
     }
 
     public static Command prep(Turret turret) {
         return turret.runOnce(() -> {
-            turret.target = ShotCalculator.getInstance().calculate().target();
+            turret.target = ControlTarget.SHOT_CALCULATOR;
         });
     }
 
@@ -68,18 +69,16 @@ public class ScoringCommands {
                     ((Math.sin(Timer.getFPGATimestamp() * 7.) * 0.5 + 0.5) * 1.2 - 0.2) * 1.0,
                     turret.atSetpoint() ? 1.0 : 0.0
                 );
-            }).raceWith(hopperVision.waitForNoPieces(1.0, 4.0, 8.0)),
-
+            }).raceWith(hopperVision.waitForNoPieces(1.0, 4.0, 8.0))
+        ).raceWith(
+            turret.run(() -> { turret.target = ControlTarget.SHOT_CALCULATOR; })
+        ).andThen(
             // Reset turret/spin
             spindexer.run(() -> {
-                turret.target = null;
+                turret.target = ControlTarget.NONE;
                 spindexer.setPower(0.0, 0.0);
             }).until(() -> {
                 return true;
-            })
-        ).raceWith(
-            turret.run(() -> {
-                turret.target = ShotCalculator.getInstance().calculate().target();
             })
         ).withName("AutoScoreHopper");
     }

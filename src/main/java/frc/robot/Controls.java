@@ -21,6 +21,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretConstants;
+import frc.robot.subsystems.turret.Turret.ControlTarget;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.intake.Intake;
@@ -106,23 +107,23 @@ public class Controls {
 
         normalCodriver.and(coDriver.x()).onTrue(turret.runOnce(() -> {
             // Shoot into ourself lol
-            turret.target = new Turret.TurretTarget(
+            turret.target = new ControlTarget.Manual(new Turret.TurretTarget(
                 Units.rotationsPerMinuteToRadiansPerSecond(1000),
                 Units.degreesToRadians(100.),
                 TurretConstants.hoodMaxAngle - Units.degreesToRadians(5)
-            );
+            ));
         }));
         normalCodriver.and(coDriver.y()).onTrue(turret.runOnce(() -> {
-            turret.target = new Turret.TurretTarget(
+            turret.target = new ControlTarget.Manual(new Turret.TurretTarget(
                 Units.rotationsPerMinuteToRadiansPerSecond(2800),
                 Units.degreesToRadians(-RobotState.getInstance().getEstimatedPose().getRotation().getRadians()),
                 Units.degreesToRadians(40)
-            );
+            ));
         }));
 
         // Reset turret at the start of teleop
         RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
-            turret.target = null;
+            turret.target = ControlTarget.NONE;
         }));
 
         // Reset gyro or odometry if in simulation

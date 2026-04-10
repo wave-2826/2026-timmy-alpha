@@ -1,7 +1,5 @@
 package frc.robot.subsystems.turret;
 
-import javax.sound.sampled.Line;
-
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.MathUtil;
@@ -34,10 +32,10 @@ public class ShotCalculator {
     }
 
     private static LoggedTunableNumber fudgeSpeedScale = new LoggedTunableNumber("ShotCalculator/FudgeSpeedScale", 1.0);
-    private static LoggedTunableNumber fudgeAzimuthOffsetDegCCW = new LoggedTunableNumber("ShotCalculator/FudgeAzimuthOffsetDegCCW", 3.0);
+    private static LoggedTunableNumber fudgeAzimuthOffsetDegCCW = new LoggedTunableNumber("ShotCalculator/FudgeAzimuthOffsetDegCCW", 0.0);
     private static LoggedTunableNumber fudgeHoodOffsetDeg = new LoggedTunableNumber("ShotCalculator/FudgeHoodOffsetDeg", 0.0);
     private static LoggedTunableNumber fudgeTimeOfFlightScale = new LoggedTunableNumber("ShotCalculator/FudgeTOFScale", 1.0);
-    private static LoggedTunableNumber secondOrderCompensation = new LoggedTunableNumber("ShotCalculator/SecondOrderCompensation", 1.0);
+    private static LoggedTunableNumber secondOrderCompensation = new LoggedTunableNumber("ShotCalculator/SecondOrderCompensation", 0.0);
     
     private static LoggedTunableNumber fudgeHubX = new LoggedTunableNumber("ShotCalculator/FudgeHubXInches", 0.0);
     private static LoggedTunableNumber fudgeHubY = new LoggedTunableNumber("ShotCalculator/FudgeHubYInches", 0.0);
@@ -77,7 +75,7 @@ public class ShotCalculator {
     private static ShotMapData hubShots = new ShotMapData();
     private static ShotMapData passShots = new ShotMapData();
     
-    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.02);
+    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.04);
     /**
      * See https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html#the-drag-constant-k.
      * For fuel, we found that the piece lost 19.4% of its velocity over 6.3s. The linear velocity drag can be represented as v(t) = v_0 * e^-kt or
@@ -88,6 +86,8 @@ public class ShotCalculator {
      * Bias on our shot target away from the robot position. Can make fuel bounces more consistent.
      */
     private static LoggedTunableNumber hubOutwardBiasInches = new LoggedTunableNumber("ShotCalculator/HubOutwardBiasInches", 6);
+
+    private ShotParameters latestResult = null;
 
     static {
         // Hub shots
@@ -320,7 +320,7 @@ public class ShotCalculator {
         Logger.recordOutput("LaunchCalculator/Calculated/AzimuthVelocity", azimuthVelocity);
         Logger.recordOutput("LaunchCalculator/Calculated/Azimuth", turretAngleRobotRelative);
 
-        return new ShotParameters(
+        latestResult = new ShotParameters(
             type,
             new TurretTarget(
                 flywheelVelocity,
@@ -329,5 +329,10 @@ public class ShotCalculator {
                 hoodAngleRad
             )
         );
+        return latestResult;
+    }
+
+    public ShotParameters getLatestResult() {
+        return latestResult;
     }
 }

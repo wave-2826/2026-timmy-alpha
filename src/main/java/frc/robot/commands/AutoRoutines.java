@@ -27,6 +27,7 @@ import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.TurretConstants;
+import frc.robot.subsystems.turret.Turret.ControlTarget;
 import frc.robot.subsystems.turret.Turret.TurretTarget;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LoggedAutoChooser;
@@ -250,11 +251,11 @@ public class AutoRoutines {
             stopDrive(),
             noTurretControl ? Commands.sequence(
                 Commands.runOnce(() -> {
-                    turret.target = new TurretTarget(
+                    turret.target = new ControlTarget.Manual(new TurretTarget(
                         Units.rotationsPerMinuteToRadiansPerSecond(4225),
                         0.0,
                         TurretConstants.hoodMinAngle
-                    );
+                    ));
                 }),
 
                 Commands.waitSeconds(1.0),

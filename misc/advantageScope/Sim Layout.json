@@ -20,7 +20,6 @@
             "/RealOutputs/TurretSim/Motors",
             "/RealOutputs/TurretSim/Setpoints",
             "/RealOutputs/Turret/Setpoints",
-            "/RealOutputs/Turret/Target",
             "/Turret/TopFlywheel",
             "/RealOutputs/thing",
             "/RealOutputs/thing/ModelInput",
@@ -51,10 +50,7 @@
             "/Drive/ModuleBackLeft/OdometryTurnPositions/0",
             "/RealOutputs/LaunchCalculator/Calculated",
             "/Turret/BottomFlywheel",
-            "/RealOutputs/Turret/Measured",
             "/Spindexer/Transfer",
-            "/Tuning/Turret/Azimuth",
-            "/Tuning/Vision",
             "/RealOutputs/Vision/Camera0",
             "/RealOutputs/Vision/Camera0/TagPoses",
             "/RealOutputs/Vision/Camera1",
@@ -64,19 +60,25 @@
             "/Intake/RollerL",
             "/URCL/Spark-33",
             "/URCL/Spark-30",
-            "/PowerDistribution",
             "/RealOutputs",
             "/RealOutputs/Odometry/Auto",
             "/Turret/Flywheel2",
             "/Turret/Flywheel1",
-            "/Tuning",
-            "/RealOutputs/Turret",
             "/Tuning/ShotCalculator",
-            "/RealOutputs/LaunchCalculator"
+            "/RealOutputs/LaunchCalculator",
+            "/PowerDistribution/ChannelCurrent",
+            "/Turret/Azimuth",
+            "/Tuning",
+            "/Tuning/Turret",
+            "/Tuning/Turret/Azimuth",
+            "/Tuning/Turret/Hood",
+            "/RealOutputs/Turret/Target",
+            "/RealOutputs/Turret",
+            "/Turret"
           ]
         },
         "tabs": {
-          "selected": 10,
+          "selected": 11,
           "tabs": [
             {
               "type": 0,
@@ -112,7 +114,7 @@
                   },
                   {
                     "type": "ghost",
-                    "logKey": "/RealOutputs/LaunchCalculator/LookaheadPose",
+                    "logKey": "/RealOutputs/LaunchCalculator/TurretPosition",
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {
@@ -121,7 +123,7 @@
                   },
                   {
                     "type": "vision",
-                    "logKey": "/RealOutputs/LaunchCalculator/TargetPosition",
+                    "logKey": "/RealOutputs/LaunchCalculator/VirtualTarget",
                     "logType": "Translation2d",
                     "visible": true,
                     "options": {
@@ -139,6 +141,96 @@
               "controlsHeight": 200
             },
             {
+              "type": 1,
+              "title": "Line Graph",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "/Turret/Azimuth/internalEncoderVelocity",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Turret/Reset/Azimuth",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "/Turret/AzimuthZeroTriggered",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#e5b31b"
+                    }
+                  }
+                ],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "rightUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "npzw66ydggafc28uwxgea9m63xjtgunh",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 1,
+              "title": "Line Graph",
+              "controller": {
+                "leftSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "/Spindexer/Transfer/motorCurrentAmps",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#2b66a2",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "rightSources": [],
+                "discreteSources": [],
+                "leftLockedRange": null,
+                "rightLockedRange": null,
+                "leftUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "rightUnitConversion": {
+                  "autoTarget": null,
+                  "preset": null
+                },
+                "leftFilter": 0,
+                "rightFilter": 0
+              },
+              "controllerUUID": "0qqf99xujft3lng6smpc3bodw7ot573e",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
               "type": 3,
               "title": "3D Field",
               "controller": {
@@ -147,7 +239,7 @@
                     "type": "ghost",
                     "logKey": "/RealOutputs/Odometry/Robot",
                     "logType": "Pose2d",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "model": "WaveRobotics",
                       "color": "#00ff00"
@@ -195,7 +287,7 @@
                     "type": "ghost",
                     "logKey": "/RealOutputs/Vision/Summary/RobotPosesAccepted",
                     "logType": "Pose3d[]",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "model": "2026 KitBot",
                       "color": "#ff00ff"
@@ -206,20 +298,28 @@
               },
               "controllerUUID": "14f8828b7pmhir95dvxmozbzzzb7u1co",
               "renderer": {
-                "cameraIndex": -1,
+                "cameraIndex": -2,
                 "orbitFov": 80,
                 "cameraPosition": [
-                  -8.906687875368458,
-                  5.028997164068986,
-                  -2.138212183933635
+                  1.1861951258808148,
+                  1.462569272798712,
+                  0.7292392945338901
                 ],
                 "cameraTarget": [
-                  -4.690716053535525,
-                  -0.2956939949292884,
-                  0.5609335785731436
+                  0.33321212487245194,
+                  1.0187569921773674,
+                  0.4545564600493739
                 ]
               },
               "controlsHeight": 200
+            },
+            {
+              "type": 7,
+              "title": "Video",
+              "controller": null,
+              "controllerUUID": "h224wonytf87vkuyjg84ghfoz6p3sl3x",
+              "renderer": null,
+              "controlsHeight": 85
             },
             {
               "type": 1,
@@ -855,16 +955,6 @@
                   },
                   {
                     "type": "stepped",
-                    "logKey": "/RealOutputs/Turret/Measured/Hood",
-                    "logType": "Number",
-                    "visible": false,
-                    "options": {
-                      "color": "#af2437",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "stepped",
                     "logKey": "/RealOutputs/Turret/Target/Azimuth",
                     "logType": "Number",
                     "visible": true,
@@ -875,12 +965,32 @@
                   },
                   {
                     "type": "stepped",
+                    "logKey": "/RealOutputs/Turret/Measured/Hood",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#af2437",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
                     "logKey": "/RealOutputs/Turret/Target/Hood",
                     "logType": "Number",
                     "visible": false,
                     "options": {
                       "color": "#af2437",
                       "size": "bold"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Turret/Target/AzimuthVel",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#c0b487",
+                      "size": "normal"
                     }
                   }
                 ],
@@ -903,6 +1013,16 @@
                     "options": {
                       "color": "#e5b31b",
                       "size": "bold"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/RealOutputs/Turret/Errors/Azimuth",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#3b875a",
+                      "size": "normal"
                     }
                   }
                 ],
@@ -927,13 +1047,10 @@
                   }
                 ],
                 "leftLockedRange": [
-                  -3.45849609375,
-                  72.62841796875
+                  -73.7314453125016,
+                  163.90722656250009
                 ],
-                "rightLockedRange": [
-                  -814.28199609375,
-                  5432.101605468751
-                ],
+                "rightLockedRange": null,
                 "leftUnitConversion": {
                   "autoTarget": null,
                   "preset": {
@@ -944,13 +1061,8 @@
                   }
                 },
                 "rightUnitConversion": {
-                  "autoTarget": null,
-                  "preset": {
-                    "type": "angular velocity",
-                    "factor": 1,
-                    "from": "radians/second",
-                    "to": "rotations/minute"
-                  }
+                  "autoTarget": "rotations/minute",
+                  "preset": null
                 },
                 "leftFilter": 0,
                 "rightFilter": 0
@@ -968,7 +1080,7 @@
                     "type": "stepped",
                     "logKey": "/Turret/Azimuth/currentAmps",
                     "logType": "Number",
-                    "visible": false,
+                    "visible": true,
                     "options": {
                       "color": "#2b66a2",
                       "size": "normal"

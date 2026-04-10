@@ -67,9 +67,14 @@ public interface TurretIO {
          * Get the flywheel mechanism velocity in rad/s. Positive = shooting direction.
          */
         public double getFlywheelVelocityRadPerSecond() {
-            return (
+            double flyVel = 0;
+            if(!flywheel1.connected) flyVel = flywheel2.velocityRadPerSec;
+            else if(!flywheel2.connected) flyVel = flywheel1.velocityRadPerSec;
+            else flyVel = (
                 flywheel1.velocityRadPerSec() + flywheel2.velocityRadPerSec()
-            ) / 2 - azimuth.internalEncoderVelocity() * TurretConstants.azimuthFlyCoupling;
+            ) / 2;
+            
+            return flyVel - azimuth.internalEncoderVelocity() * TurretConstants.azimuthFlyCoupling;
         }
         public double getHoodAngleRad() {
             return (azimuth.internalEncoderAngle - hood.angleRad) * TurretConstants.hoodRingToHoodReduction +
