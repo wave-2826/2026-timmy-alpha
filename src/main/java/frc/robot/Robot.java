@@ -1,5 +1,6 @@
 package frc.robot;
 
+import com.ctre.phoenix6.Orchestra;
 import com.ctre.phoenix6.SignalLogger;
 import com.revrobotics.util.StatusLogger;
 
@@ -19,14 +20,13 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Watchdog;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
-import edu.wpi.first.wpilibj.simulation.SimDeviceSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.LoggedTracer;
 import frc.robot.util.NTClientLogger;
 import frc.robot.util.RioAlerts;
+import frc.robot.util.ShiftHelpers;
 import frc.robot.util.SimDeviceLogger;
-import frc.robot.util.SparkUtil;
 import frc.robot.util.ThreadPriorityDummyLogReceiver;
 import frc.robot.util.VirtualSubsystem;
 import frc.robot.util.simUtils.Simulation;
@@ -40,7 +40,6 @@ import java.util.function.BiConsumer;
 
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.LogFileUtil;
-import org.littletonrobotics.junction.LoggedPowerDistribution;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
@@ -66,6 +65,8 @@ public class Robot extends LoggedRobot {
     
     private final Alert logReceiverQueueAlert = new Alert("Logging queue exceeded capacity; data isn't being logged! This may fix itself.", AlertType.kError);
     private final Alert noAutoSelectedAlert = new Alert("No auto selected!", AlertType.kWarning);
+
+    public static Orchestra orchestra = new Orchestra();
 
     public Robot() {
         // Record metadata
@@ -145,7 +146,7 @@ public class Robot extends LoggedRobot {
         // brownout voltage of 6.25 before it was increased, so we're comfortable
         // setting it to 6.0. This hasn't caused issues in the past, but it's obviously
         // not an ideal solution.
-        RobotController.setBrownoutVoltage(6.0);
+        RobotController.setBrownoutVoltage(6.25);
 
         // For GrappleHook
         // if(Constants.currentMode == Constants.Mode.REAL && Robot.tuningMode()) {
@@ -247,7 +248,9 @@ public class Robot extends LoggedRobot {
         LoggedTracer.record("Commands");
 
         TunablePID.periodic();
-        LoggedTracer.record("Tunables");
+        ShiftHelpers.getInstance().periodic();
+        
+        LoggedTracer.record("Miscellaneous");
 
         // Alert-related updates
         RioAlerts.getInstance().update();

@@ -114,8 +114,8 @@
           },
           {
             "title": "ManualFlywheelSpeed",
-            "x": 0.0,
-            "y": 512.0,
+            "x": 512.0,
+            "y": 640.0,
             "width": 512.0,
             "height": 128.0,
             "type": "Number Slider",
@@ -131,8 +131,8 @@
           },
           {
             "title": "ManualHoodAngleOffset",
-            "x": 0.0,
-            "y": 384.0,
+            "x": 512.0,
+            "y": 512.0,
             "width": 512.0,
             "height": 128.0,
             "type": "Number Slider",
@@ -148,9 +148,9 @@
           },
           {
             "title": "AtSetpoint",
-            "x": 256.0,
-            "y": 256.0,
-            "width": 128.0,
+            "x": 1024.0,
+            "y": 384.0,
+            "width": 256.0,
             "height": 128.0,
             "type": "Boolean Box",
             "properties": {
@@ -164,18 +164,47 @@
             }
           },
           {
-            "title": "AtSetpoint",
-            "x": 896.0,
+            "title": "CurrentShift",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 512.0,
+            "height": 256.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/ShiftHelpers/CurrentShift",
+              "period": 0.06,
+              "data_type": "string"
+            }
+          },
+          {
+            "title": "ShiftTimeRemaining",
+            "x": 0.0,
+            "y": 256.0,
+            "width": 512.0,
+            "height": 256.0,
+            "type": "Match Time",
+            "properties": {
+              "topic": "/ShiftHelpers/ShiftTimeRemaining",
+              "period": 0.06,
+              "data_type": "double",
+              "time_display_mode": "Minutes and Seconds",
+              "red_start_time": 20,
+              "yellow_start_time": 30
+            }
+          },
+          {
+            "title": "Can Score",
+            "x": 0.0,
             "y": 512.0,
-            "width": 256.0,
+            "width": 512.0,
             "height": 128.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/Turret/AtSetpoint",
               "period": 0.06,
               "data_type": "boolean",
-              "true_color": 4283215696,
-              "false_color": 4294198070,
+              "true_color": 4293916499,
+              "false_color": 4279572505,
               "true_icon": "None",
               "false_icon": "None"
             }
@@ -190,9 +219,9 @@
         "containers": [
           {
             "title": "Test Command",
-            "x": 0.0,
-            "y": 256.0,
-            "width": 512.0,
+            "x": 512.0,
+            "y": 384.0,
+            "width": 768.0,
             "height": 128.0,
             "type": "ComboBox Chooser",
             "properties": {
@@ -274,7 +303,7 @@
           },
           {
             "title": "RSLState",
-            "x": 1152.0,
+            "x": 896.0,
             "y": 512.0,
             "width": 128.0,
             "height": 128.0,
@@ -291,9 +320,9 @@
           },
           {
             "title": "AtSetpoint",
-            "x": 896.0,
+            "x": 512.0,
             "y": 512.0,
-            "width": 256.0,
+            "width": 384.0,
             "height": 128.0,
             "type": "Boolean Box",
             "properties": {
@@ -304,6 +333,35 @@
               "false_color": 4294198070,
               "true_icon": "None",
               "false_icon": "None"
+            }
+          },
+          {
+            "title": "ShiftTimeRemaining",
+            "x": 0.0,
+            "y": 256.0,
+            "width": 512.0,
+            "height": 256.0,
+            "type": "Match Time",
+            "properties": {
+              "topic": "/ShiftHelpers/ShiftTimeRemaining",
+              "period": 0.06,
+              "data_type": "double",
+              "time_display_mode": "Minutes and Seconds",
+              "red_start_time": 20,
+              "yellow_start_time": 30
+            }
+          },
+          {
+            "title": "CurrentShift",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 512.0,
+            "height": 256.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/ShiftHelpers/CurrentShift",
+              "period": 0.06,
+              "data_type": "string"
             }
           }
         ]

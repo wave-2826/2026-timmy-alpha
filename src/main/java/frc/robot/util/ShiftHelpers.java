@@ -1,65 +1,137 @@
 package frc.robot.util;
 
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import org.littletonrobotics.junction.networktables.LoggedNetworkString;
-
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
 public class ShiftHelpers {
-    static LoggedNetworkString overrideFMS = new LoggedNetworkString("/Overrides/AutoWin");
-
+    private static ShiftHelpers instance;
+    public static ShiftHelpers getInstance() {
+        if(instance == null) {
+            instance = new ShiftHelpers();
+        }
+        return instance;
+    }
+    
+    private static LoggedNetworkString overrideFMS = new LoggedNetworkString("/Overrides/AutoWin");
     public static boolean blueWonAuto() {
         String matchInfo = DriverStation.getGameSpecificMessage();
         String override = overrideFMS.toString().trim().toUpperCase();
-        if (!override.isEmpty()) {
+        if(!override.isEmpty()) {
             matchInfo = override;
         }
-        if (matchInfo != null && matchInfo.length() > 0) {
+        if(matchInfo != null && matchInfo.length() > 0) {
             return matchInfo.charAt(0) == 'B';
         }
-        // Safe default if data isn't ready yet
+
+        // Default if data isn't ready yet
         return false;
     }
+        
+    public enum Shift {
+        // Order matters here!
+        DISABLED(false, false, 0., false, "Disabled"),
+        AUTO(true, true, 20., false, "Autonomous"),
+        TRANSITION(true, true, 10., "Transition"),
+        SHIFT1(true, false, 25., "Shift 1"),
+        SHIFT2(false, true, 25., "Shift 2"),
+        SHIFT3(true, false, 25., "Shift 3"),
+        SHIFT4(false, true, 25., "Shift 4"),
+        ENDGAME(true, true, 30., false, "Endgame");
 
-    public static int timeLeftInShiftSeconds(double currentMatchTime) {
-        if (currentMatchTime >= 130) {
-            return (int)(currentMatchTime - 130);
-        } else if (currentMatchTime >= 105 && currentMatchTime <= 130) {
-            return (int)(currentMatchTime - 105);
-        } else if (currentMatchTime >= 80 && currentMatchTime <= 105) {
-            return (int)(currentMatchTime - 80);
-        } else if (currentMatchTime >= 55 && currentMatchTime <= 80) {
-            return (int)(currentMatchTime - 55);
-        } else if (currentMatchTime >= 30 && currentMatchTime <= 55) {
-            return (int)(currentMatchTime - 30);
-        } else {
-            return (int)currentMatchTime;
+        public boolean winnerCanScore;
+        public boolean loserCanScore;
+        /** The duration of this shift. If zero, the shift won't advance automatically. */
+        public double duration;
+        public String text;
+        public boolean advanceAfterDuration = true;
+
+        private Shift(boolean winnerCanScore, boolean loserCanScore, double duration, String name) {
+            this.winnerCanScore = winnerCanScore;
+            this.loserCanScore = loserCanScore;
+            this.duration = duration;
+            this.text = name;
+        }
+
+        private Shift(boolean winnerCanScore, boolean loserCanScore, double duration, boolean advanceAfterDuration, String name) {
+            this(winnerCanScore, loserCanScore, duration, name);
+            this.advanceAfterDuration = advanceAfterDuration;
+        }
+
+        public boolean canScore() {
+            if(this == DISABLED) return false;
+            boolean isBlueAlliance = DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue).equals(DriverStation.Alliance.Blue);
+            boolean isWinningAlliance = blueWonAuto() ? isBlueAlliance : !isBlueAlliance;
+            return (isWinningAlliance && winnerCanScore) || (!isWinningAlliance && loserCanScore);
+        }
+    }
+    
+    private Shift currentShift = Shift.DISABLED;
+    
+    /**
+     * The timer for the current shift, restarted when a new shift begins.
+     * We track independently of the FMS because its time reports aren't reliable.
+     */
+    private Timer shiftTimer = new Timer();
+
+    public void advanceShiftIfNeeded() {
+        if(
+            currentShift.duration > 0. &&
+            currentShift.advanceAfterDuration &&
+            shiftTimer.advanceIfElapsed(currentShift.duration)
+        ) {
+            // Next shift ordinal
+            int nextOrdinal = (currentShift.ordinal() + 1) % Shift.values().length;
+            currentShift = Shift.values()[nextOrdinal];
         }
     }
 
-    public static boolean isCurrentShiftBlue(double currentMatchTime) {
-        if (currentMatchTime >= 105 && currentMatchTime <= 130) {
-            return blueWonAuto() ? false : true;
-        } else if (currentMatchTime >= 80 && currentMatchTime <= 105) {
-            return blueWonAuto() ? true : false;
-        } else if (currentMatchTime >= 55 && currentMatchTime <= 80) {
-            return blueWonAuto() ? false : true;
-        } else if (currentMatchTime >= 30 && currentMatchTime <= 55) {
-            return blueWonAuto() ? true : false;
-        } else {
-            return true;
-        }
+    private LoggedNetworkString currentShiftEntry = new LoggedNetworkString("/ShiftHelpers/CurrentShift");
+    private LoggedNetworkNumber shiftTimeRemainingEntry = new LoggedNetworkNumber("/ShiftHelpers/ShiftTimeRemaining");
+    private LoggedNetworkBoolean canScoreEntry = new LoggedNetworkBoolean("/ShiftHelpers/CanScore");
+    public ShiftHelpers() {
+        RobotModeTriggers.autonomous().onTrue(Commands.runOnce(() -> {
+            currentShift = Shift.AUTO;
+            shiftTimer.restart();
+        }).ignoringDisable(true));
+        RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> {
+            currentShift = Shift.TRANSITION;
+            shiftTimer.restart();
+        }).ignoringDisable(true));
+        RobotModeTriggers.disabled().onTrue(Commands.runOnce(() -> {
+            currentShift = Shift.DISABLED;
+            shiftTimer.stop();
+        }).ignoringDisable(true));
+
+        // TODO: Shift LEDs
     }
 
-    public static boolean currentShiftIsYours() {
-        double currentMatchTime = DriverStation.getMatchTime();
-        boolean isBlueShift = isCurrentShiftBlue(currentMatchTime);
-        if (DriverStation.getAlliance()
-                .orElse(DriverStation.Alliance.Blue)
-                .equals(DriverStation.Alliance.Blue)) 
-            {
-            return isBlueShift;
-        } else {
-            return !isBlueShift;
+    /** Updates the shift helpers' logging. */
+    public void periodic() {
+        advanceShiftIfNeeded();
+
+        currentShiftEntry.set(currentShift.text);
+        shiftTimeRemainingEntry.set(Math.max(0., currentShift.duration - shiftTimer.get()));
+        canScoreEntry.set(currentShift.canScore());
+    }
+
+    public Shift getActiveShift() {
+        return currentShift;
+    }
+
+    public Shift getShiftIn(double seconds) {
+        if(currentShift.duration > 0.) {
+            double timeUntilNextShift = currentShift.duration - shiftTimer.get();
+            if(seconds >= timeUntilNextShift) {
+                int shiftsToAdvance = 1 + (int)((seconds - timeUntilNextShift) / Shift.values()[0].duration);
+                int nextOrdinal = (currentShift.ordinal() + shiftsToAdvance) % Shift.values().length;
+                return Shift.values()[nextOrdinal];
+            }
         }
+        return currentShift;
     }
 }

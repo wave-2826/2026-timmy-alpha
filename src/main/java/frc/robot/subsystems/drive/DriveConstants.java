@@ -196,7 +196,7 @@ public class DriveConstants {
         MetersPerSecondPerSecond.of(18) /* measuered "magic value" - max linear acceleration */,
         RadiansPerSecondPerSecond.of(18 * (maxAngularSpeedRadPerSec / maxSpeedMetersPerSec)),
         MetersPerSecondPerSecond.of(17.5), /* Skid acceleration limit */
-        MetersPerSecondPerSecond.of(10), /* Max tilt acceleration X */
+        MetersPerSecondPerSecond.of(8), /* Max tilt acceleration X */
         MetersPerSecondPerSecond.of(16) /* Max tilt acceleration Y */
     );
     

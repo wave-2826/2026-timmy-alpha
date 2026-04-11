@@ -5,7 +5,6 @@ import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
@@ -19,6 +18,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.DigitalInput;
+import frc.robot.Robot;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -166,6 +166,11 @@ public class TurretIOTalonFX implements TurretIO {
 
         resetAzimuth(Rotation2d.kZero);
         resetHoodTo(TurretConstants.hoodMinAngle);
+
+        Robot.orchestra.addInstrument(azimuthTalon);
+        Robot.orchestra.addInstrument(flywheel1Talon);
+        Robot.orchestra.addInstrument(flywheel2Talon);
+        Robot.orchestra.addInstrument(hoodTalon);
     }
 
     @Override
@@ -189,7 +194,6 @@ public class TurretIOTalonFX implements TurretIO {
         ).withVelocity(
             outputs.azimuthFeedforwardRadPerSec() / (2 * Math.PI)
         ).withSlot(0));
-
 
         double azimuthRingRotations = azimuthInternalAngle.getValueAsDouble();
         double hoodRingRotations = azimuthRingRotations - outputs.hoodAngleRad() / TurretConstants.hoodRingToHoodReduction / (2 * Math.PI);
