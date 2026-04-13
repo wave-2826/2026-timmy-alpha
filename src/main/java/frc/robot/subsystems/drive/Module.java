@@ -8,6 +8,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.robot.RobotState;
+import frc.robot.util.ModuleFeedforward;
 import frc.robot.util.tunables.LoggedTunableNumber;
 
 import org.littletonrobotics.junction.Logger;
@@ -99,40 +101,28 @@ public class Module {
         turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
     }
 
-    private record OptimizePair(SwerveModuleState state, double acceleration) {}
     /**
-     * Optimize the module state and 
-     * @param currentAngle
-     * @param accelerationFFN
-     * @return
+     * Runs the module with the specified setpoint state. Mutates the state to optimize it.  
+     * The returned module state is for feedforward visualization, not logic.
      */
-    private OptimizePair optimizeState(SwerveModuleState state, Rotation2d currentAngle, double accelerationFFN) {
-        var delta = state.angle.minus(currentAngle);
-        if(Math.abs(delta.getDegrees()) > 90.0) {
-            state.speedMetersPerSecond *= -1;
-            state.angle = state.angle.rotateBy(Rotation2d.kPi);
-            accelerationFFN *= -1;
-        }
-        return new OptimizePair(state, accelerationFFN);
-    }
-
-    /** Runs the module with the specified setpoint state. Mutates the state to optimize it. */
-    public void runSetpoint(SwerveModuleState state, double ffForceN) {
+    public SwerveModuleState runSetpoint(SwerveModuleState state, ModuleFeedforward feedforward) {
         // Optimize velocity setpoint
-        var pair = optimizeState(state, getAngle(), ffForceN);
-        state = pair.state;
-        ffForceN = pair.acceleration;
+        state.optimize(getAngle());
 
         state.cosineScale(inputs.turnAbsolutePosition);
-        // also cosine scale FF
-        ffForceN *= state.angle.minus(inputs.turnAbsolutePosition).getCos();
 
         // Apply setpoints
+        double feedforwardForceN = feedforward != null ? feedforward.getCosineScaledForceN(
+            // Not sure I really like this separation of concerns but oh well
+            inputs.turnAbsolutePosition, state.angle, RobotState.getInstance().getRotation()
+        ) : 0.;
         io.setDriveVelocity(
             state.speedMetersPerSecond / Drive.tuningResults.wheelRadiusResults.radiusMeters * speedScalar.get(),
-            ffForceN * Drive.tuningResults.wheelRadiusResults.radiusMeters
+            feedforwardForceN * Drive.tuningResults.wheelRadiusResults.radiusMeters
         );
         io.setTurnPosition(state.angle);
+
+        return new SwerveModuleState(feedforwardForceN / 10., state.angle);
     }
 
     /** Runs the module with the drive stator curent output while controlling to zero degrees. */

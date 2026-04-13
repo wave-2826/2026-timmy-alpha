@@ -54,7 +54,7 @@ import frc.robot.util.tunables.LoggedTunableNumber;
  */
 public class DriveTuningCommands {
     private static final double FF_START_DELAY = 1.0; // Secs
-    private static final double FF_RAMP_RATE = 1.0; // Amps/Sec
+    private static final double FF_RAMP_RATE = 0.2; // Volts/Sec
 
     private static final LoggedTunableNumber SLIP_START_DELAY = new LoggedTunableNumber("Drive/Tuning/SlipStartDelay", 1.0); // Secs
     private static final LoggedTunableNumber SLIP_START_SETPOINT = new LoggedTunableNumber("Drive/Tuning/SlipStartSetpoint", 20.0); // Amps
@@ -437,56 +437,124 @@ public class DriveTuningCommands {
      * This command should only be used in voltage control mode.
      */
     public static Command feedforwardCharacterization(Drive drive) {
-        List<Double> velocitySamples = new LinkedList<>();
-        List<Double> voltageSamples = new LinkedList<>();
+        final boolean TUNE_FOR_VOLTAGE = false;
         Timer timer = new Timer();
 
-        return Commands.sequence(
-            // Reset data
-            Commands.runOnce(() -> {
-                velocitySamples.clear();
-                voltageSamples.clear();
-            }),
+        if(TUNE_FOR_VOLTAGE) {
+            List<Double> velocitySamples = new LinkedList<>();
+            List<Double> voltageSamples = new LinkedList<>();
 
-            // Allow modules to orient
-            Commands.run(() -> {
-                drive.runCharacterizationCurrent(0.0);
-            }).withTimeout(FF_START_DELAY),
+            return Commands.sequence(
+                // Reset data
+                Commands.runOnce(() -> {
+                    velocitySamples.clear();
+                    voltageSamples.clear();
+                }),
 
-            // Start timer
-            Commands.runOnce(timer::restart),
+                // Allow modules to orient
+                Commands.run(() -> {
+                    drive.runCharacterizationVoltage(0.0);
+                }).withTimeout(FF_START_DELAY),
 
-            // Accelerate and gather data
-            Commands.run(() -> {
-                double voltage = timer.get() * FF_RAMP_RATE;
-                drive.runCharacterizationCurrent(voltage);
-                velocitySamples.add(drive.getFFCharacterizationVelocity());
-                voltageSamples.add(voltage);
-            }).finallyDo(() -> { // When cancelled, calculate and print results
-                int n = velocitySamples.size();
-                double sumX = 0.0;
-                double sumY = 0.0;
-                double sumXY = 0.0;
-                double sumX2 = 0.0;
-                for(int i = 0; i < n; i++) {
-                    sumX += velocitySamples.get(i);
-                    sumY += voltageSamples.get(i);
-                    sumXY += velocitySamples.get(i) * voltageSamples.get(i);
-                    sumX2 += velocitySamples.get(i) * velocitySamples.get(i);
-                }
-                double kS = (sumY * sumX2 - sumX * sumXY) / (n * sumX2 - sumX * sumX);
-                double kV = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+                // Start timer
+                Commands.runOnce(timer::restart),
 
+                // Accelerate and gather data
+                Commands.run(() -> {
+                    double setpoint = timer.get() * FF_RAMP_RATE;
+                    drive.runCharacterizationVoltage(setpoint);
+                    velocitySamples.add(drive.getFFCharacterizationVelocity());
+                    voltageSamples.add(setpoint);
+                }).finallyDo(() -> { // When cancelled, calculate and print results
+                    drive.runCharacterizationVoltage(0.0);
+
+                    int n = velocitySamples.size();
+                    double sumX = 0.0;
+                    double sumY = 0.0;
+                    double sumXY = 0.0;
+                    double sumX2 = 0.0;
+                    for(int i = 0; i < n; i++) {
+                        sumX += velocitySamples.get(i);
+                        sumY += voltageSamples.get(i);
+                        sumXY += velocitySamples.get(i) * voltageSamples.get(i);
+                        sumX2 += velocitySamples.get(i) * velocitySamples.get(i);
+                    }
+                    double kS = (sumY * sumX2 - sumX * sumXY) / (n * sumX2 - sumX * sumX);
+                    double kV = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+
+                    NumberFormat formatter = new DecimalFormat("#0.00000");
+                    System.out.println("********** Drive FF Characterization Results For Voltage **********");
+                    System.out.println("\tkS: " + formatter.format(kS));
+                    System.out.println("\tkV: " + formatter.format(kV));
+                    System.out.flush();
+
+                    Drive.tuningResults.feedforwardResults = new TuningResults.FeedforwardTuningResults(kS, kV);
+                    Drive.tuningResults.save();
+                })
+            ).alongWith(require(drive));
+        } else {
+            double[] initialPositions = new double[4];
+            List<Double> currentSamples = new ArrayList<>();
+            List<Double> results = new ArrayList<>();
+            return Commands.sequence(
+                // Allow modules to orient
+                Commands.run(() -> {
+                    drive.runCharacterizationVoltage(0.0);
+                }).withTimeout(FF_START_DELAY),
+                
+                Commands.repeatingSequence(
+                    // Start timer
+                    Commands.runOnce(() -> {
+                        timer.restart();
+                        for(int i = 0; i < 4; i++) {
+                            initialPositions[i] = drive.getModuleCharacterizationPosition(i);
+                        }
+                    }),
+
+                    // Accelerate and gather data
+                    Commands.run(() -> {
+                        double setpoint = timer.get() * FF_RAMP_RATE;
+                        drive.runCharacterizationVoltage(setpoint);
+                        currentSamples.add(drive.getCharacterizationCurrent());
+                    }).until(() -> {
+                        double maxChange = 0.0;
+                        for(int i = 0; i < 4; i++) {
+                            maxChange = Math.max(maxChange, Math.abs(
+                                initialPositions[i] - drive.getModuleCharacterizationPosition(i)
+                            ));
+                        }
+                        return maxChange > Units.degreesToRadians(1);
+                    }),
+
+                    Commands.runOnce(() -> {
+                        // Add result
+                        drive.runCharacterizationVoltage(0.0);
+
+                        double setpoint = currentSamples.get(currentSamples.size() - 8);
+                        results.add(setpoint);
+                    }),
+                    
+                    // TODO: we could move the wheel a bit between samples to find a better average but like. whatever
+
+                    Commands.waitSeconds(0.5)
+                ).withTimeout(30.0)
+            ).finallyDo(() -> { // When cancelled, calculate and print results
+                drive.runCharacterizationVoltage(0.0);
+
+                double averageResult = results.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+                double minResult = results.stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
+                double maxResult = results.stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
+                
                 NumberFormat formatter = new DecimalFormat("#0.00000");
-                System.out.println("********** Drive FF Characterization Results **********");
-                System.out.println("\tkS: " + formatter.format(kS));
-                System.out.println("\tkV: " + formatter.format(kV));
+                System.out.println("********** Drive FF Characterization Results For Voltage **********");
+                System.out.println("\tkS: " + formatter.format(averageResult) + " [" + formatter.format(minResult) + " to " + formatter.format(maxResult) + "]");
+                System.out.println("\tkV: (always) 0.00");
                 System.out.flush();
 
-                Drive.tuningResults.feedforwardResults = new TuningResults.FeedforwardTuningResults(kS, kV);
+                Drive.tuningResults.feedforwardResults = new TuningResults.FeedforwardTuningResults(averageResult, 0.);
                 Drive.tuningResults.save();
-            })
-        ).alongWith(require(drive));
+            }).alongWith(require(drive));
+        }
     }
 
     private static class WheelRadiusCharacterizationState {

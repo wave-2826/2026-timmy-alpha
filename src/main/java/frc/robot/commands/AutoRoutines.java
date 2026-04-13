@@ -31,6 +31,7 @@ import frc.robot.subsystems.turret.Turret.ControlTarget;
 import frc.robot.subsystems.turret.Turret.TurretTarget;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LoggedAutoChooser;
+import frc.robot.util.ModuleFeedforward;
 import frc.robot.util.GenericPIDConstants.PIDSlot;
 import frc.robot.util.simUtils.Simulation;
 
@@ -118,17 +119,13 @@ public class AutoRoutines {
 
         var baseSpeeds = sample.getChassisSpeeds();
 
-        double[] forcesN = new double[4];
-        for(int i = 0; i < 4; i++) {
-            double forceX = sample.moduleForcesX()[i];
-            double forceY = sample.moduleForcesY()[i];
-            forcesN[i] = Math.sqrt(forceX * forceX + forceY * forceY);
-        }
+        ModuleFeedforward[] feedforwards = new ModuleFeedforward[4];
+        for(int i = 0; i < 4; i++) feedforwards[i] = new ModuleFeedforward(sample.moduleForcesX()[i], sample.moduleForcesY()[i]);
 
-        followPathToTarget(latestTrajectoryTarget, forcesN, baseSpeeds);
+        followPathToTarget(latestTrajectoryTarget, feedforwards, baseSpeeds);
     }
 
-    public void followPathToTarget(Pose2d targetPose, double[] ffForcesN, ChassisSpeeds baseSpeeds) {
+    public void followPathToTarget(Pose2d targetPose, ModuleFeedforward[] feedforwards, ChassisSpeeds baseSpeeds) {
         var pose = RobotState.getInstance().getEstimatedPose();
 
         Logger.recordOutput("Odometry/Auto/CurrentPose", pose);
@@ -141,7 +138,7 @@ public class AutoRoutines {
         baseSpeeds.omegaRadiansPerSecond += thetaController.calculate(pose.getRotation().getRadians(), targetPose.getRotation().getRadians());
         drive.runVelocity(
             ChassisSpeeds.fromFieldRelativeSpeeds(baseSpeeds, RobotState.getInstance().getRotation()),
-            ffForcesN, false
+            feedforwards, false
         );
     }
 
@@ -278,17 +275,19 @@ public class AutoRoutines {
     }
 
     private AutoRoutine getCenterDepot() {
-        var choreoTraj = ChoreoTraj.CenterDepot;
-        var routine = autoFactory.newRoutine(choreoTraj.name());
-        
-        AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
+        var routine = autoFactory.newRoutine(ChoreoTraj.CenterDepot.name());
+        AutoTrajectory traj1 = ChoreoTraj.CenterDepot$0.asAutoTraj(routine);
+        AutoTrajectory traj2 = ChoreoTraj.CenterDepot$1.asAutoTraj(routine);
 
-        traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
+        traj1.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
         
         routine.active().onTrue(Commands.sequence(
-            traj.resetOdometry(),
+            traj1.resetOdometry(),
             ScoringCommands.prep(turret),
-            traj.cmd(),
+            traj1.cmd(),
+            stopDrive(),
+            Commands.waitSeconds(1.),
+            traj2.cmd(),
             stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
         ));
 

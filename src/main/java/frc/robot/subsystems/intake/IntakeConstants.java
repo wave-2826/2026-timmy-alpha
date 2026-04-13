@@ -12,7 +12,7 @@ public class IntakeConstants {
     public static final int intakeDeployRCanId = 32;
     public static final int intakeDeployLCanId = 31;
 
-    public static final double rollerMotorReduction = 1.0;
+    public static final double rollerMotorReduction = 2.0;
     
     public static final int rollerCurrentLimit = 50;
     public static final int deployCurrentLimit = 60;

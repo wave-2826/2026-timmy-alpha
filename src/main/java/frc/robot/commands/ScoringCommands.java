@@ -3,7 +3,6 @@ package frc.robot.commands;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.hopperVision.HopperVision;
@@ -64,12 +63,8 @@ public class ScoringCommands {
             
             // Run spin until no pieces remain
             spindexer.run(() -> {
-                spindexer.setPower(
-                    // Oscillation to unstuck pieces
-                    ((Math.sin(Timer.getFPGATimestamp() * 7.) * 0.5 + 0.5) * 1.2 - 0.2) * 1.0,
-                    turret.atSetpoint() ? 1.0 : 0.0
-                );
-            }).raceWith(hopperVision.waitForNoPieces(1.0, 4.0, 8.0))
+                spindexer.setPower(1.0, turret.atSetpoint() ? 1.0 : 0.0);
+            }).raceWith(hopperVision.waitForNoPieces(1.0, 9.0, 8.0))
         ).raceWith(
             turret.run(() -> { turret.target = ControlTarget.SHOT_CALCULATOR_DEFAULT; })
         ).andThen(

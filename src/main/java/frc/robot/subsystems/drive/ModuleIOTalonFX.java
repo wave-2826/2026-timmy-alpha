@@ -199,6 +199,7 @@ public abstract class ModuleIOTalonFX implements ModuleIO {
         driveTalon.setControl(
             velocityTorqueCurrentRequest
                 .withVelocity(motorVelocityRotPerSec)
+                // Feedforward sign isn't relative to the motor velocity - it's relative to positive velocity.
                 .withFeedForward(motorForceNM)
         );
     }

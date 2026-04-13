@@ -57,7 +57,6 @@ public class IntakeIOReal implements IntakeIO {
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
         rollerConfig.signals.apply(SparkUtil.defaultSignals).primaryEncoderVelocityPeriodMs(20);
-        rollerConfig.inverted(true);
         
         var deployBaseConfig = new SparkMaxConfig();
         deployBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(deployCurrentLimit).voltageCompensation(Constants.voltageCompensation);
@@ -79,6 +78,8 @@ public class IntakeIOReal implements IntakeIO {
         
         var rollerLConfig = new SparkMaxConfig().apply(rollerConfig);
         var rollerRConfig = new SparkMaxConfig().apply(rollerConfig);
+        rollerLConfig.inverted(false);
+        rollerRConfig.inverted(true);
 
         IntakeConstants.rollerPID.applyConfigAndRegister(rollerLConfig, rollerL);
         IntakeConstants.rollerPID.applyConfigAndRegister(rollerRConfig, rollerR);
@@ -127,8 +128,8 @@ public class IntakeIOReal implements IntakeIO {
   
     @Override
     public void setRollerSpeed(double velocityRPM) {
-        rollerLController.setSetpoint( Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
-        rollerRController.setSetpoint(-Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
+        rollerLController.setSetpoint(Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
+        rollerRController.setSetpoint(Units.rotationsPerMinuteToRadiansPerSecond(velocityRPM), ControlType.kVelocity);
     }
 
     @Override

@@ -58,27 +58,26 @@
             "/Tuning/Drive/Tuning",
             "/Intake/RollerR",
             "/Intake/RollerL",
-            "/URCL/Spark-33",
-            "/URCL/Spark-30",
-            "/RealOutputs",
-            "/RealOutputs/Odometry/Auto",
             "/Turret/Flywheel2",
             "/Turret/Flywheel1",
-            "/Tuning/ShotCalculator",
-            "/RealOutputs/LaunchCalculator",
-            "/PowerDistribution/ChannelCurrent",
             "/Turret/Azimuth",
-            "/Tuning",
-            "/Tuning/Turret",
             "/Tuning/Turret/Azimuth",
             "/Tuning/Turret/Hood",
             "/RealOutputs/Turret/Target",
-            "/RealOutputs/Turret",
-            "/Turret"
+            "/RealOutputs",
+            "/SystemStats",
+            "/RealOutputs/Odometry",
+            "/RealOutputs/Odometry/Auto",
+            "/Tuning",
+            "/Tuning/Autos",
+            "/Tuning/Autos/Linear",
+            "/Tuning/Autos/Angular",
+            "/Drive",
+            "/Drive/ModuleBackLeft"
           ]
         },
         "tabs": {
-          "selected": 11,
+          "selected": 7,
           "tabs": [
             {
               "type": 0,
@@ -103,6 +102,36 @@
                     }
                   },
                   {
+                    "type": "swerveStates",
+                    "logKey": "/RealOutputs/SwerveStates/SetpointsOptimized",
+                    "logType": "SwerveModuleState[]",
+                    "visible": false,
+                    "options": {
+                      "color": "#00ff00",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "/RealOutputs/SwerveStates/Measured",
+                    "logType": "SwerveModuleState[]",
+                    "visible": false,
+                    "options": {
+                      "color": "#ff0000",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "swerveStates",
+                    "logKey": "/RealOutputs/SwerveStates/FeedforwardForces",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff00ff",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
                     "type": "trajectory",
                     "logKey": "/RealOutputs/Odometry/Trajectory",
                     "logType": "Pose2d[]",
@@ -116,7 +145,7 @@
                     "type": "ghost",
                     "logKey": "/RealOutputs/LaunchCalculator/TurretPosition",
                     "logType": "Pose2d",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#ff8c00"
                     }
@@ -125,10 +154,19 @@
                     "type": "vision",
                     "logKey": "/RealOutputs/LaunchCalculator/VirtualTarget",
                     "logType": "Translation2d",
+                    "visible": false,
+                    "options": {
+                      "color": "#ff8c00",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "ghost",
+                    "logKey": "/RealOutputs/Odometry/Auto/TargetPose",
+                    "logType": "Pose2d",
                     "visible": true,
                     "options": {
-                      "color": "#00ff00",
-                      "size": "normal"
+                      "color": "#ff00ff"
                     }
                   }
                 ],
@@ -520,12 +558,29 @@
                       "color": "#00ff00",
                       "arrangement": "0,1,2,3"
                     }
+                  },
+                  {
+                    "type": "states",
+                    "logKey": "/RealOutputs/SwerveStates/FeedforwardForces",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff00ff",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "rotation",
+                    "logKey": "/RealOutputs/Odometry/Best/rotation",
+                    "logType": "Rotation2d",
+                    "visible": true,
+                    "options": {}
                   }
                 ],
                 "maxSpeed": 5,
                 "sizeX": 0.65,
                 "sizeY": 0.65,
-                "orientation": 1
+                "orientation": 2
               },
               "controllerUUID": "8o6f64pqbrnsryfpwvqz8hb5xpk4kt91",
               "renderer": null,
@@ -1019,7 +1074,7 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Turret/Errors/Azimuth",
                     "logType": "Number",
-                    "visible": false,
+                    "visible": true,
                     "options": {
                       "color": "#3b875a",
                       "size": "normal"
@@ -1047,8 +1102,8 @@
                   }
                 ],
                 "leftLockedRange": [
-                  -73.7314453125016,
-                  163.90722656250009
+                  -197.52270674440598,
+                  196.95326033472483
                 ],
                 "rightLockedRange": null,
                 "leftUnitConversion": {
@@ -1061,7 +1116,7 @@
                   }
                 },
                 "rightUnitConversion": {
-                  "autoTarget": "rotations/minute",
+                  "autoTarget": "degrees",
                   "preset": null
                 },
                 "leftFilter": 0,
@@ -1069,7 +1124,7 @@
               },
               "controllerUUID": "dd9u5uojl63sv3lzvuvchj2mcsy3xltl",
               "renderer": null,
-              "controlsHeight": 200
+              "controlsHeight": 196
             },
             {
               "type": 1,
@@ -1100,7 +1155,7 @@
                     "type": "stepped",
                     "logKey": "/Turret/Flywheel1/currentAmps",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#e5b31b",
                       "size": "normal"
@@ -1110,7 +1165,7 @@
                     "type": "stepped",
                     "logKey": "/Turret/Flywheel2/currentAmps",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#e48b32",
                       "size": "normal"
@@ -1122,7 +1177,7 @@
                     "type": "stepped",
                     "logKey": "/RealOutputs/Turret/Target/Flywheel",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#80588e",
                       "size": "normal"
@@ -1302,7 +1357,7 @@
                     "type": "stepped",
                     "logKey": "/URCL/Spark-30/CurrentOutput",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#2b66a2",
                       "size": "normal"
@@ -1312,17 +1367,71 @@
                     "type": "stepped",
                     "logKey": "/URCL/Spark-33/CurrentOutput",
                     "logType": "Number",
-                    "visible": true,
+                    "visible": false,
                     "options": {
                       "color": "#e5b31b",
                       "size": "normal"
                     }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/URCL/Spark-30/CurrentInput",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#af2437",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/URCL/Spark-33/CurrentInput",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#80588e",
+                      "size": "normal"
+                    }
                   }
                 ],
-                "rightSources": [],
-                "discreteSources": [],
+                "rightSources": [
+                  {
+                    "type": "stepped",
+                    "logKey": "/PowerDistribution/Voltage",
+                    "logType": "Number",
+                    "visible": false,
+                    "options": {
+                      "color": "#e48b32",
+                      "size": "normal"
+                    }
+                  },
+                  {
+                    "type": "stepped",
+                    "logKey": "/SystemStats/BatteryVoltage",
+                    "logType": "Number",
+                    "visible": true,
+                    "options": {
+                      "color": "#c0b487",
+                      "size": "normal"
+                    }
+                  }
+                ],
+                "discreteSources": [
+                  {
+                    "type": "stripes",
+                    "logKey": "/SystemStats/BrownedOut",
+                    "logType": "Boolean",
+                    "visible": true,
+                    "options": {
+                      "color": "#858584"
+                    }
+                  }
+                ],
                 "leftLockedRange": null,
-                "rightLockedRange": null,
+                "rightLockedRange": [
+                  5.9,
+                  13.084375
+                ],
                 "leftUnitConversion": {
                   "autoTarget": null,
                   "preset": null
@@ -1426,6 +1535,18 @@
       }
     }
   ],
-  "satellites": [],
+  "satellites": [
+    {
+      "x": 151,
+      "y": 86,
+      "width": 641,
+      "height": 690,
+      "state": {
+        "type": 9,
+        "visualizer": null
+      },
+      "uuid": "8o6f64pqbrnsryfpwvqz8hb5xpk4kt91"
+    }
+  ],
   "version": "26.0.1"
 }

@@ -48,3 +48,6 @@ setup-hotswap:
 
 flip-autos:
     python ./misc/scripts/flipAutos.py
+
+upload-tags TAGS:
+    python ./misc/scripts/uploadTagMap.py {{TAGS}}

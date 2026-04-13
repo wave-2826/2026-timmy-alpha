@@ -27,9 +27,25 @@ public record ChoreoTraj(
     public static final ChoreoTraj CenterDepot = new ChoreoTraj(
         "CenterDepot",
         OptionalInt.empty(),
-        3.17096,
+        4.21379,
         new Pose2d(3.47272, 4.04414, Rotation2d.fromRadians(0)),
-        new Pose2d(1.3067, 5.10358, Rotation2d.fromRadians(-0.00032))
+        new Pose2d(1.3067, 5.10358, Rotation2d.fromRadians(-0.0036))
+    );
+    /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
+    public static final ChoreoTraj CenterDepot$0 = new ChoreoTraj(
+        "CenterDepot",
+        OptionalInt.of(0),
+        3.06712,
+        new Pose2d(3.47272, 4.04414, Rotation2d.fromRadians(0)),
+        new Pose2d(0.79437, 5.94351, Rotation2d.fromRadians(0))
+    );
+    /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
+    public static final ChoreoTraj CenterDepot$1 = new ChoreoTraj(
+        "CenterDepot",
+        OptionalInt.of(1),
+        1.1466700000000003,
+        new Pose2d(0.79437, 5.94351, Rotation2d.fromRadians(0)),
+        new Pose2d(1.3067, 5.10358, Rotation2d.fromRadians(-0.0036))
     );
     public static final ChoreoTraj CenterPreload = new ChoreoTraj(
         "CenterPreload",
@@ -199,6 +215,8 @@ public record ChoreoTraj(
      */
     public static final Map<String, ChoreoTraj> ALL_TRAJECTORIES = Map.ofEntries(
         Map.entry("CenterDepot", CenterDepot),
+        Map.entry("CenterDepot$0", CenterDepot$0),
+        Map.entry("CenterDepot$1", CenterDepot$1),
         Map.entry("CenterPreload", CenterPreload),
         Map.entry("LeftDangerSweep", LeftDangerSweep),
         Map.entry("LeftDangerSweep$0", LeftDangerSweep$0),

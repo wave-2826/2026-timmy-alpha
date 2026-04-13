@@ -20,14 +20,13 @@ import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.RobotState;
 import frc.robot.commands.drive.DriveTuningCommands.TuningResults;
+import frc.robot.util.ModuleFeedforward;
 
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
-
-import frc.robot.util.DriveFeedforwards;
 
 public class Drive extends SubsystemBase {
     /**
@@ -127,21 +126,11 @@ public class Drive extends SubsystemBase {
     }
 
     /**
-     * Runs the drive at the desired robot-relative velocity with the specified feedforwards.  
-     * Doesn't use kinematic constraints because feedfoward control should already be within the robot's capabilities.
-     *
-     * @param speeds
-     */
-    public void runVelocityWithFeedforward(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
-        runVelocity(speeds, feedforwards.accelerationsMPSSq(), false);
-    }
-
-    /**
      * Runs the drive at the desired robot-relative velocity. Doesn't account for acceleration.
      * @param speeds
      */
     public void runVelocity(ChassisSpeeds speeds, boolean useKinematicConstraints) {
-        runVelocity(speeds, new double[4], useKinematicConstraints);
+        runVelocity(speeds, null, useKinematicConstraints);
     }
 
     /**
@@ -152,7 +141,7 @@ public class Drive extends SubsystemBase {
      * @param useKinematicConstraints Whether to apply kinematic constraints to the chassis speeds before calculating module setpoints. 
      *   Should be true for normal operation, but false for autonomous when paths should already be kinematically feasible.
      */
-    public void runVelocity(ChassisSpeeds speeds, double[] ffForcesN, boolean useKinematicConstraints) {
+    public void runVelocity(ChassisSpeeds speeds, ModuleFeedforward[] feedforwards, boolean useKinematicConstraints) {
         if(useKinematicConstraints) speeds = DriveConstants.kinematicConstraints.constrainChassisSpeeds(speeds);
         
         // Calculate module setpoints
@@ -160,22 +149,19 @@ public class Drive extends SubsystemBase {
         SwerveModuleState[] setpointStates = robotState.kinematics.toSwerveModuleStates(speeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, DriveConstants.linearFreeSpeed);
  
-        // for(int i = 0; i < 4; i++) setpointStates[i] = new SwerveModuleState(
-        //     Math.sin(Timer.getFPGATimestamp() * 2) * 5,
-        //     Rotation2d.fromRotations(Timer.getFPGATimestamp() / 2)
-        // );
-
         // Log unoptimized setpoints and setpoint speeds
         Logger.recordOutput("SwerveStates/Setpoints", setpointStates);
         Logger.recordOutput("SwerveChassisSpeeds/Setpoints", speeds);
 
         // Send setpoints to modules
+        SwerveModuleState[] feedforwardForces = new SwerveModuleState[4];
         for(int i = 0; i < 4; i++) {
-            modules[i].runSetpoint(setpointStates[i], ffForcesN[i]);
+            feedforwardForces[i] = modules[i].runSetpoint(setpointStates[i], feedforwards == null ? null : feedforwards[i]);
         }
 
         // Log optimized setpoints (runSetpoint mutates each state)
         Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
+        Logger.recordOutput("SwerveStates/FeedforwardForces", feedforwardForces);
     }
 
     /** Stops the drive. */
@@ -244,6 +230,10 @@ public class Drive extends SubsystemBase {
         modules[module].runCharacterizationCurrent(current);
     }
     /** Runs a particular module in a straight line with the specified drive voltage. */
+    public void runCharacterizationVoltage(double voltage) {
+        for(int i = 0; i < 4; i++) modules[i].runCharacterizationVoltage(voltage);
+    }
+    /** Runs a particular module in a straight line with the specified drive voltage. */
     public void runCharacterizationVoltage(int module, double voltage) {
         modules[module].runCharacterizationVoltage(voltage);
     }
@@ -256,6 +246,12 @@ public class Drive extends SubsystemBase {
     /** Sets the current limit on the drive motors temporarily for slip current measurement. Pass null to reset. */
     public void setSlipMeasurementCurrentLimit(Current limit) {
         for(int i = 0; i < 4; i++) modules[i].setSlipMeasurementCurrentLimit(limit);
+    }
+    /** Returns the average drive motor **stator** current draw of all modules in amps. */
+    public double getCharacterizationCurrent() {
+        double output = 0.0;
+        for(int i = 0; i < 4; i++) output += modules[i].getCharacterizationCurrent() / 4.0;
+        return output;
     }
     /** Returns the drive motor **stator** current draw of a particular module in amps. */
     public double getCharacterizationCurrent(int module) {
