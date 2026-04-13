@@ -1,5 +1,7 @@
 package frc.robot.subsystems.turret;
 
+import java.nio.file.Path;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.MathUtil;
@@ -12,6 +14,8 @@ import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.FieldConstants.LeftTrench;
@@ -70,6 +74,29 @@ public class ShotCalculator {
         public double getTimeOfFlight(double distanceMeters) {
             return timeOfFlightMap.get(distanceMeters) * fudgeTimeOfFlightScale.get();
         }
+
+        private double getFlywheelVelocityRPM(double linearSpeedMPS) {
+            return 5700 + -1380*linearSpeedMPS + 120*linearSpeedMPS*linearSpeedMPS;
+        }
+
+        public void loadFromCsv(String csvPath) {
+            var path = Path.of(Filesystem.getDeployDirectory().getPath(), csvPath);
+            try(var reader = java.nio.file.Files.newBufferedReader(path)) {
+                String line;
+                reader.readLine(); // skip header
+                while((line = reader.readLine()) != null) {
+                    String[] parts = line.split(",");
+                    if(parts.length < 4) continue;
+                    // distance,velocity,hood,tof
+                    double distance = Double.parseDouble(parts[0]);
+                    flywheelSpeedMap.put(distance, getFlywheelVelocityRPM(Double.parseDouble(parts[1])));
+                    hoodAngleMap.put(distance, Double.parseDouble(parts[2]));
+                    timeOfFlightMap.put(distance, Double.parseDouble(parts[3]));
+                }
+            } catch (Exception e) {
+                DriverStation.reportError("Failed to load shot map!", false);
+            }
+        }
     }
 
     private static ShotMapData hubShots = new ShotMapData();
@@ -99,29 +126,7 @@ public class ShotCalculator {
         // 4.33m:  2924.0 rpm / 41.9 deg / 1.39s
         // 5.35m:  3476.5 rpm / 41.9 deg / 1.45s
 
-        hubShots.hoodAngleMap.put(1.486, 29.9);
-        hubShots.hoodAngleMap.put(2.28,  37.4);
-        hubShots.hoodAngleMap.put(2.64,  40.7);
-        hubShots.hoodAngleMap.put(3.71,  42.2);
-        hubShots.hoodAngleMap.put(4.4,   42.9);
-        hubShots.hoodAngleMap.put(5.35,  44.0);
-        hubShots.hoodAngleMap.put(6.41,  44.0);
-
-        hubShots.flywheelSpeedMap.put(1.486, 2996.8);
-        hubShots.flywheelSpeedMap.put(2.28,  3097.4);
-        hubShots.flywheelSpeedMap.put(2.64,  3142.2);
-        hubShots.flywheelSpeedMap.put(3.71,  3640.4);
-        hubShots.flywheelSpeedMap.put(4.33,  3860.4);
-        hubShots.flywheelSpeedMap.put(5.35,  3827.6);
-        hubShots.flywheelSpeedMap.put(6.41,  4158.3);
-
-        hubShots.timeOfFlightMap.put(1.486, 1.10);
-        hubShots.timeOfFlightMap.put(2.28,  1.04);
-        hubShots.timeOfFlightMap.put(2.64,  0.93);
-        hubShots.timeOfFlightMap.put(3.41,  1.17);
-        hubShots.timeOfFlightMap.put(4.33,  1.39);
-        hubShots.timeOfFlightMap.put(5.35,  1.45);
-        hubShots.timeOfFlightMap.put(6.41,  1.58);
+        hubShots.loadFromCsv("shot_parameters.csv");
 
         // Passing shots
         passShots.hoodAngleMap.put(5.46,  40.0);
@@ -206,7 +211,16 @@ public class ShotCalculator {
     }
 
     private double getEffectiveTOF(double tof) {
+        // Calculate the effective time of flight, including induced linear drag. See
+        // https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html
+        // (Described in https://www.chiefdelphi.com/t/recursive-time-of-flight-fire-control-simulator-for-frc-docs-preview/513819/10)
+        // (1 - e^(-kx) / k
         return (1 - Math.exp(-dragConstant.get() * tof)) / dragConstant.get();
+    }
+    private double getEffectiveTOFDerivative(double tof) {
+        // Analytical derivative of effective tof wrt the input tof:
+        // d/dt [ (1 - e^(-kt)) / k ] = e^(-kt)
+        return Math.exp(-dragConstant.get() * tof);
     }
     
     public ShotParameters calculate() {
@@ -268,17 +282,40 @@ public class ShotCalculator {
         double timeOfFlight = type.shotMapData.getTimeOfFlight(turretToTargetDistance), effectiveTimeOfFlight = 0;
         Translation2d virtualTarget = target;
         double lookaheadTurretToTargetDistance = turretToTargetDistance;
-        double initialToEffectiveTOFScalar = timeOfFlight / getEffectiveTOF(timeOfFlight); // hack but it works?
-        for(int i = 0; i < 20; i++) {
-            timeOfFlight = type.shotMapData.getTimeOfFlight(lookaheadTurretToTargetDistance);
-            // Calculate the effective time of flight, including induced linear drag. See
-            // https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html
-            // (Described in https://www.chiefdelphi.com/t/recursive-time-of-flight-fire-control-simulator-for-frc-docs-preview/513819/10)
-            effectiveTimeOfFlight = getEffectiveTOF(timeOfFlight) * initialToEffectiveTOFScalar;
-
+        
+        // Use Newton's method to converge faster and more often
+        // We could warm start this with the previous state but that probably
+        // wouldn't help much since the target changes discontinuously when we switch shot types
+        for(int i = 0; i < 5; i++) {
+            // Evaluate current timeOfFlight to get distance and mapped target ToF
+            effectiveTimeOfFlight = getEffectiveTOF(timeOfFlight);
             Translation2d offset = new Translation2d(turretVelocityX * effectiveTimeOfFlight, turretVelocityY * effectiveTimeOfFlight);
             virtualTarget = target.minus(offset);
-            lookaheadTurretToTargetDistance = virtualTarget.getDistance(turretPosition.getTranslation());
+            
+            double dx = virtualTarget.getX() - turretPosition.getX();
+            double dy = virtualTarget.getY() - turretPosition.getY();
+            lookaheadTurretToTargetDistance = Math.hypot(dx, dy);
+            
+            double mappedToF = type.shotMapData.getTimeOfFlight(lookaheadTurretToTargetDistance);
+            double deltaToF = timeOfFlight - mappedToF; // f(t) = t - mapped(t)
+            
+            if(Math.abs(deltaToF) < 1e-4) break; // Converged
+            
+            // Analytical derivative of distance wrt effective ToF
+            double distanceDerivative = lookaheadTurretToTargetDistance > 1e-6 ? 
+                (dx * -turretVelocityX + dy * -turretVelocityY) / lookaheadTurretToTargetDistance : 0.0;
+                
+            // Numerical derivative of the lookup map (since it lacks an analytical expression)
+            double h = 1e-3;
+            double tofMapDerivative = (type.shotMapData.getTimeOfFlight(lookaheadTurretToTargetDistance + h) - mappedToF) / h;
+            
+            // Chain rule f'(t) = 1 - (d_map / d_dist) * (d_dist / d_teff) * (d_teff / d_t)
+            double derivative = 1.0 - (tofMapDerivative * distanceDerivative * getEffectiveTOFDerivative(timeOfFlight));
+            
+            // Prevent division by zero
+            if(Math.abs(derivative) < 1e-6) break;
+            
+            timeOfFlight -= deltaToF / derivative;
         }
         
         Logger.recordOutput("LaunchCalculator/RealTarget", target);
@@ -299,7 +336,6 @@ public class ShotCalculator {
             TurretConstants.hoodMaxAngle
         );
 
-        // TODO: incorporate virtual target velocity
         if(previousShotType != type) {
             previousShotType = type;
             previousVirtualTarget = virtualTarget;
