@@ -6,6 +6,8 @@ import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.LinearAcceleration;
+import edu.wpi.first.wpilibj.Timer;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 
 /**
@@ -18,23 +20,21 @@ import frc.robot.subsystems.drive.DriveConstants;
 public class KinematicConstraints {
     private class AccelerationLimiter {
         private double value;
-        // private double lastTime;
 
         public AccelerationLimiter(double value) {
             this.value = value;
         }
+
+        // public double calculate(double maxAccelerataion, double target) {
+        //     return calculate(maxAccelerataion, target, 0.02);
+        // }
 
         /**
          * @param maxAccelerataion Maximum acceleration in units per second
          * @param target Target value to approach
          * @return
          */
-        public double calculate(double maxAccelerataion, double target) {
-            // double time = Timer.getFPGATimestamp();
-            // double deltaTime = Math.min(time - lastTime, 0.1);
-            // lastTime = time;
-            double deltaTime = 0.02; // whatever
-
+        public double calculate(double maxAccelerataion, double target, double deltaTime) {
             value += Math.copySign(Math.min(maxAccelerataion * deltaTime, Math.abs(target - value)), target - value);
             return value;
         }
@@ -44,6 +44,8 @@ public class KinematicConstraints {
     AccelerationLimiter chassisAngularSpeedRadPerSec = new AccelerationLimiter(0);
     AccelerationLimiter tiltXAccelLimiter = new AccelerationLimiter(0);
     AccelerationLimiter tiltYAccelLimiter = new AccelerationLimiter(0);
+
+    private double lastTime;
 
     LinearAcceleration maxLinearAcceleration;
     AngularAcceleration maxAngularAcceleration;
@@ -90,24 +92,40 @@ public class KinematicConstraints {
         this.maxTiltAccelerationY = maxTiltAccelerationY;
     }
     
+    private double currentLimitSaturationCurve(double saturation) {
+        // Theoretical torque we can get
+        double currentAtSaturation = DriveConstants.driveMotorModel.stallCurrentAmps * (1 - saturation);
+        // Ratio as current limited
+        double currentScalar = Math.min(1, currentAtSaturation / Drive.tuningResults.slipResults.slipCurrentAmps);
+        // Scale so that at 100% current limit we have 10% of acceleration left (arbitrary, but seems reasonable based on testing)
+        return (1 - currentScalar) * (1 - 0.1);
+    }
+
     public ChassisSpeeds constrainChassisSpeeds(ChassisSpeeds speeds) {
+        double time = Timer.getFPGATimestamp();
+        double deltaTime = Math.min(time - lastTime, 0.1);
+        lastTime = time;
+
         // Tilt limits
-        double vxMetersPerSecond = tiltXAccelLimiter.calculate(maxTiltAccelerationX.in(MetersPerSecondPerSecond), speeds.vxMetersPerSecond);
-        double vyMetersPerSecond = tiltYAccelLimiter.calculate(maxTiltAccelerationY.in(MetersPerSecondPerSecond), speeds.vyMetersPerSecond);
+        double vxMetersPerSecond = tiltXAccelLimiter.calculate(maxTiltAccelerationX.in(MetersPerSecondPerSecond), speeds.vxMetersPerSecond, deltaTime);
+        double vyMetersPerSecond = tiltYAccelLimiter.calculate(maxTiltAccelerationY.in(MetersPerSecondPerSecond), speeds.vyMetersPerSecond, deltaTime);
         
         // Forward limits
-        // TODO: Account for rotational velocity contribution
+        // TODO: Account for rotational velocity contribution properly instead of
+        // having two saturations
         double linearSpeedMPS = Math.hypot(vxMetersPerSecond, vyMetersPerSecond);
-        double saturation = linearSpeedMPS / DriveConstants.linearFreeSpeed.in(MetersPerSecond);
+        double saturation = currentLimitSaturationCurve(linearSpeedMPS / DriveConstants.linearFreeSpeed.in(MetersPerSecond));
         double forwardLimitAccel = maxLinearAcceleration.in(MetersPerSecondPerSecond) * (1 - saturation);
 
         // Skid limits are just constant
         double limitedLinearSpeed = chassisSpeedMPS.calculate(Math.min(
             forwardLimitAccel, skidAccelerationLimit.in(MetersPerSecondPerSecond)
-        ), linearSpeedMPS);
+        ), linearSpeedMPS, deltaTime);
+        double angularSaturation = currentLimitSaturationCurve(Math.abs(speeds.omegaRadiansPerSecond) / DriveConstants.maxAngularSpeedRadPerSec);
         double limitedAngularSpeed = chassisAngularSpeedRadPerSec.calculate(
-            maxAngularAcceleration.in(edu.wpi.first.units.Units.RadiansPerSecondPerSecond) * (1 - saturation),
-            speeds.omegaRadiansPerSecond
+            maxAngularAcceleration.in(edu.wpi.first.units.Units.RadiansPerSecondPerSecond) * (1 - angularSaturation),
+            speeds.omegaRadiansPerSecond,
+            deltaTime
         );
         
         double scale = linearSpeedMPS > 1e-6 ? limitedLinearSpeed / linearSpeedMPS : 0.0;
