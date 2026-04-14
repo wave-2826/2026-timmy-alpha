@@ -269,8 +269,8 @@ public class Turret extends SubsystemBase {
 
             ControlTarget.ShotCalculator shotTarget = (ControlTarget.ShotCalculator)target;
             // TODO: better limiting logic
-            shotTarget.maxFlyVelocityRadPerSec = Units.radiansPerSecondToRotationsPerMinute(flyLimiter.calculate(
-                flywheelScalar.getAsDouble() * 6500
+            shotTarget.maxFlyVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(flyLimiter.calculate(
+                flywheelScalar.getAsDouble() * 6000
             ));
             shotTarget.azimuthOffsetRad = manualControlAzimuthOffset;
             shotTarget.flyOffsetRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(manualFlywheelSpeed.get());
@@ -371,8 +371,8 @@ public class Turret extends SubsystemBase {
             Commands.run(() -> {
                 setHoodVelocity.accept(hoodRunVelocity);
             }).until(() -> {
-                return Math.abs(inputs.getHoodAngleRad() - hoodStartPos.value) > zeroRangeRad ||
-                    hoodCurrentFilter.calculate(inputs.hood.currentAmps()) > TurretConstants.hoodResetCurrent;
+                return Math.abs(inputs.getHoodAngleRad() - hoodStartPos.value) > zeroRangeRad;
+                //  || hoodCurrentFilter.calculate(inputs.hood.currentAmps()) > TurretConstants.hoodResetCurrent;
             }),
             Commands.runOnce(() -> {
                 setHoodVelocity.accept(0);

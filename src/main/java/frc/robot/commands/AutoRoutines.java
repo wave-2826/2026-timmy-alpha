@@ -81,8 +81,7 @@ public class AutoRoutines {
         autoChooser.addRoutine("Left Danger Sweep Swipe", () -> this.getDangerSweepSwipe(false));
         autoChooser.addRoutine("Right Danger Sweep Swipe", () -> this.getDangerSweepSwipe(true));
 
-        autoChooser.addRoutine("Center Preload Simplified", () -> this.getCenterPreload(true));
-        autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload(false));
+        autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload());
         autoChooser.addRoutine("Center Depot", () -> this.getCenterDepot(), true);
         autoChooser.addCmd("Shoot Only (intake facing DS)", () -> this.getShootOnly());
     }
@@ -235,7 +234,7 @@ public class AutoRoutines {
         return routine;
     }
 
-    private AutoRoutine getCenterPreload(boolean noTurretControl) {
+    private AutoRoutine getCenterPreload() {
         var choreoTraj = ChoreoTraj.CenterPreload;
         var routine = autoFactory.newRoutine(choreoTraj.name());
         
@@ -246,29 +245,7 @@ public class AutoRoutines {
             ScoringCommands.prep(turret),
             traj.cmd(),
             stopDrive(),
-            noTurretControl ? Commands.sequence(
-                Commands.runOnce(() -> {
-                    turret.target = new ControlTarget.Manual(new TurretTarget(
-                        Units.rotationsPerMinuteToRadiansPerSecond(4225),
-                        0.0,
-                        TurretConstants.hoodMinAngle
-                    ));
-                }),
-
-                Commands.waitSeconds(1.0),
-
-                Commands.run(() -> {
-                    spindexer.setPower(0.0, 1.0);
-                }).withTimeout(0.5),
-                
-                Commands.run(() -> {
-                    spindexer.setPower(
-                        // Oscillation to unstuck pieces
-                        (Math.sin(Timer.getFPGATimestamp() * 4) * 0.75 + 0.25) * 1.0,
-                        1.0
-                    );
-                }).withTimeout(10)
-            ) : ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)
+            ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)
         ));
 
         return routine;

@@ -193,17 +193,17 @@
             }
           },
           {
-            "title": "Can Score",
+            "title": "CanScore",
             "x": 0.0,
             "y": 512.0,
             "width": 512.0,
             "height": 128.0,
             "type": "Boolean Box",
             "properties": {
-              "topic": "/AdvantageKit/RealOutputs/Turret/AtSetpoint",
+              "topic": "/ShiftHelpers/CanScore",
               "period": 0.06,
               "data_type": "boolean",
-              "true_color": 4293916499,
+              "true_color": 4294039853,
               "false_color": 4279572505,
               "true_icon": "None",
               "false_icon": "None"

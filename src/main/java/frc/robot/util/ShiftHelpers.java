@@ -31,12 +31,16 @@ public class ShiftHelpers {
         // Default if data isn't ready yet
         return false;
     }
+    public static boolean currentAllianceWonAuto() {
+        boolean isBlueAlliance = DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue).equals(DriverStation.Alliance.Blue);
+        return blueWonAuto() ? isBlueAlliance : !isBlueAlliance;
+    }
         
     public enum Shift {
         // Order matters here!
         DISABLED(false, false, 0., false, "Disabled"),
         AUTO(true, true, 20., false, "Autonomous"),
-        TRANSITION(true, true, 10., "Transition"),
+        TRANSITION(true, true, 10., "Transition - WON AUTO", "Transition - LOST AUTO"),
         SHIFT1(true, false, 25., "Shift 1"),
         SHIFT2(false, true, 25., "Shift 2"),
         SHIFT3(true, false, 25., "Shift 3"),
@@ -47,26 +51,34 @@ public class ShiftHelpers {
         public boolean loserCanScore;
         /** The duration of this shift. If zero, the shift won't advance automatically. */
         public double duration;
-        public String text;
+        public String winText;
+        public String loseText;
         public boolean advanceAfterDuration = true;
 
-        private Shift(boolean winnerCanScore, boolean loserCanScore, double duration, String name) {
+        private Shift(boolean winnerCanScore, boolean loserCanScore, double duration, String winName, String loseName) {
             this.winnerCanScore = winnerCanScore;
             this.loserCanScore = loserCanScore;
             this.duration = duration;
-            this.text = name;
+            this.winText = winName;
+            this.loseText = loseName;
+        }
+        
+        private Shift(boolean winnerCanScore, boolean loserCanScore, double duration, String name) {
+            this(winnerCanScore, loserCanScore, duration, name, name);
         }
 
         private Shift(boolean winnerCanScore, boolean loserCanScore, double duration, boolean advanceAfterDuration, String name) {
-            this(winnerCanScore, loserCanScore, duration, name);
+            this(winnerCanScore, loserCanScore, duration, name, name);
             this.advanceAfterDuration = advanceAfterDuration;
         }
 
         public boolean canScore() {
             if(this == DISABLED) return false;
-            boolean isBlueAlliance = DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue).equals(DriverStation.Alliance.Blue);
-            boolean isWinningAlliance = blueWonAuto() ? isBlueAlliance : !isBlueAlliance;
+            boolean isWinningAlliance = currentAllianceWonAuto();
             return (isWinningAlliance && winnerCanScore) || (!isWinningAlliance && loserCanScore);
+        }
+        public String getText() {
+            return currentAllianceWonAuto() ? winText : loseText;
         }
     }
     
@@ -114,7 +126,7 @@ public class ShiftHelpers {
     public void periodic() {
         advanceShiftIfNeeded();
 
-        currentShiftEntry.set(currentShift.text);
+        currentShiftEntry.set(currentShift.getText());
         shiftTimeRemainingEntry.set(Math.max(0., currentShift.duration - shiftTimer.get()));
         canScoreEntry.set(currentShift.canScore());
     }

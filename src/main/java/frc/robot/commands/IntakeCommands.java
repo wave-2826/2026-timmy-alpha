@@ -10,21 +10,9 @@ import frc.robot.subsystems.intake.Intake;
 public class IntakeCommands {
     double overrideSpeed = 0;
 
-    public Command overrideIn() {
-        return Commands.runOnce(() -> {
-            overrideSpeed = 1;
-        });
-    }
-    
-    public Command overrideOut() {
-        return Commands.runOnce(() -> {
-            overrideSpeed = -1;
-        });
-    }
-    
-    public Command overrideOff() {
-        return Commands.runOnce(() -> {
-            overrideSpeed = 0;
+    public Command outtakeSet(BooleanSupplier outtake) {
+        return Commands.run(() -> {
+            overrideSpeed = outtake.getAsBoolean() ? -1 : 0;
         });
     }
 

@@ -38,7 +38,7 @@ public class ShotCalculator {
     private static LoggedTunableNumber fudgeSpeedScale = new LoggedTunableNumber("ShotCalculator/FudgeSpeedScale", 1.0);
     private static LoggedTunableNumber fudgeAzimuthOffsetDegCCW = new LoggedTunableNumber("ShotCalculator/FudgeAzimuthOffsetDegCCW", 0.0);
     private static LoggedTunableNumber fudgeHoodOffsetDeg = new LoggedTunableNumber("ShotCalculator/FudgeHoodOffsetDeg", 0.0);
-    private static LoggedTunableNumber fudgeTimeOfFlightScale = new LoggedTunableNumber("ShotCalculator/FudgeTOFScale", 1.0);
+    private static LoggedTunableNumber fudgeTimeOfFlightScale = new LoggedTunableNumber("ShotCalculator/FudgeTOFScale", 1.8);
     private static LoggedTunableNumber secondOrderCompensation = new LoggedTunableNumber("ShotCalculator/SecondOrderCompensation", 0.0);
     
     private static LoggedTunableNumber fudgeHubX = new LoggedTunableNumber("ShotCalculator/FudgeHubXInches", 0.0);
@@ -76,7 +76,7 @@ public class ShotCalculator {
         }
 
         private double getFlywheelVelocityRPM(double linearSpeedMPS) {
-            return 4490 + -853*linearSpeedMPS + 97.3*linearSpeedMPS*linearSpeedMPS;
+            return Units.radiansPerSecondToRotationsPerMinute(linearSpeedMPS / TurretConstants.flywheelRadius * 2. * 1.26);
         }
 
         public void loadFromCsv(String csvPath) {
@@ -129,8 +129,8 @@ public class ShotCalculator {
         hubShots.loadFromCsv("hub_shots.csv");
 
         // Passing shots
-        passShots.hoodAngleMap.put(5.46,  40.0);
-        passShots.hoodAngleMap.put(17.16, 40.0);
+        passShots.hoodAngleMap.put(5.46,  43.0);
+        passShots.hoodAngleMap.put(17.16, 43.0);
 
         passShots.flywheelSpeedMap.put(5.46, 3274.0);
         passShots.flywheelSpeedMap.put(6.62, 3683.3);
@@ -177,9 +177,9 @@ public class ShotCalculator {
     private Translation2d getTargetPosition(ShotType type, Translation2d turretPosition) {
         switch(type) {
             case PASS_LEFT:
-                return AllianceFlipUtil.apply(new Translation2d(2.094, FieldConstants.fieldWidthY - 1.372));
+                return AllianceFlipUtil.apply(new Translation2d(3.47, FieldConstants.fieldWidthY - 2.47));
             case PASS_RIGHT:
-                return AllianceFlipUtil.apply(new Translation2d(2.094, 1.372));
+                return AllianceFlipUtil.apply(new Translation2d(3.47, 2.47));
             default: // Hub shot
                 Translation2d hubCenter = AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
                 return hubCenter.plus(
@@ -286,6 +286,7 @@ public class ShotCalculator {
         // Use Newton's method to converge faster and more often
         // We could warm start this with the previous state but that probably
         // wouldn't help much since the target changes discontinuously when we switch shot types
+        int iterations = 0;
         for(int i = 0; i < 5; i++) {
             // Evaluate current timeOfFlight to get distance and mapped target ToF
             effectiveTimeOfFlight = getEffectiveTOF(timeOfFlight);
@@ -316,8 +317,10 @@ public class ShotCalculator {
             if(Math.abs(derivative) < 1e-6) break;
             
             timeOfFlight -= deltaToF / derivative;
+            iterations += 1;
         }
         
+        Logger.recordOutput("LaunchCalculator/NewtonIterations", iterations);
         Logger.recordOutput("LaunchCalculator/RealTarget", target);
         Logger.recordOutput("LaunchCalculator/VirtualTarget", virtualTarget);
         Logger.recordOutput("LaunchCalculator/TimeOfFlight", timeOfFlight);

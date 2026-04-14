@@ -21,7 +21,7 @@ public class TurretConstants {
     public static final int azimuthCancoderID = 55;
 
     public static final int azimuthZeroDIOPort = 1;
-    public static final Rotation2d azimuthResetAngle = Rotation2d.fromDegrees(180. - 27.);
+    public static final Rotation2d azimuthResetAngle = Rotation2d.fromDegrees(180. - 24.);
 
     public static final CANBus CANBus = DriveConstants.CANBus;
 
@@ -113,9 +113,9 @@ public class TurretConstants {
     // Current limits
     public static final int flywheelCurrentLimit = 70; // amps each
     public static final int azimuthCurrentLimit = 50; // amps
-    public static final int hoodCurrentLimit = 30; // amps
+    public static final int hoodCurrentLimit = 35; // amps
 
-    public static final int hoodResetCurrent = 20; // amps
+    public static final int hoodResetCurrent = 30; // amps
 
     // PIDs
     public static final TunableSimpleMotorFF flywheelMotorFF = new TunableSimpleMotorFF("Turret/FlywheelFF")
