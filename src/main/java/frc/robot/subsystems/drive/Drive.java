@@ -142,6 +142,7 @@ public class Drive extends SubsystemBase {
      *   Should be true for normal operation, but false for autonomous when paths should already be kinematically feasible.
      */
     public void runVelocity(ChassisSpeeds speeds, ModuleFeedforward[] feedforwards, boolean useKinematicConstraints) {
+        Logger.recordOutput("SwerveChassisSpeeds/PreConstrainedSpeeds", speeds);
         if(useKinematicConstraints) speeds = DriveConstants.kinematicConstraints.constrainChassisSpeeds(speeds);
         
         // Calculate module setpoints

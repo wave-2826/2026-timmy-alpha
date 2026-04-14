@@ -1,10 +1,10 @@
 {
   "hubs": [
     {
-      "x": -8,
-      "y": -8,
-      "width": 1722,
-      "height": 1034,
+      "x": 0,
+      "y": 0,
+      "width": 1448,
+      "height": 947,
       "state": {
         "sidebar": {
           "width": 378,
@@ -66,18 +66,18 @@
             "/RealOutputs/Turret/Target",
             "/RealOutputs",
             "/SystemStats",
-            "/RealOutputs/Odometry",
             "/RealOutputs/Odometry/Auto",
             "/Tuning",
             "/Tuning/Autos",
             "/Tuning/Autos/Linear",
             "/Tuning/Autos/Angular",
             "/Drive",
-            "/Drive/ModuleBackLeft"
+            "/Drive/ModuleBackLeft",
+            "/RealOutputs/HopperSim"
           ]
         },
         "tabs": {
-          "selected": 7,
+          "selected": 2,
           "tabs": [
             {
               "type": 0,
@@ -179,96 +179,6 @@
               "controlsHeight": 200
             },
             {
-              "type": 1,
-              "title": "Line Graph",
-              "controller": {
-                "leftSources": [
-                  {
-                    "type": "stepped",
-                    "logKey": "/Turret/Azimuth/internalEncoderVelocity",
-                    "logType": "Number",
-                    "visible": true,
-                    "options": {
-                      "color": "#2b66a2",
-                      "size": "normal"
-                    }
-                  },
-                  {
-                    "type": "stepped",
-                    "logKey": "/RealOutputs/Turret/Reset/Azimuth",
-                    "logType": "Number",
-                    "visible": true,
-                    "options": {
-                      "color": "#af2437",
-                      "size": "normal"
-                    }
-                  }
-                ],
-                "rightSources": [],
-                "discreteSources": [
-                  {
-                    "type": "stripes",
-                    "logKey": "/Turret/AzimuthZeroTriggered",
-                    "logType": "Boolean",
-                    "visible": true,
-                    "options": {
-                      "color": "#e5b31b"
-                    }
-                  }
-                ],
-                "leftLockedRange": null,
-                "rightLockedRange": null,
-                "leftUnitConversion": {
-                  "autoTarget": null,
-                  "preset": null
-                },
-                "rightUnitConversion": {
-                  "autoTarget": null,
-                  "preset": null
-                },
-                "leftFilter": 0,
-                "rightFilter": 0
-              },
-              "controllerUUID": "npzw66ydggafc28uwxgea9m63xjtgunh",
-              "renderer": null,
-              "controlsHeight": 200
-            },
-            {
-              "type": 1,
-              "title": "Line Graph",
-              "controller": {
-                "leftSources": [
-                  {
-                    "type": "stepped",
-                    "logKey": "/Spindexer/Transfer/motorCurrentAmps",
-                    "logType": "Number",
-                    "visible": true,
-                    "options": {
-                      "color": "#2b66a2",
-                      "size": "normal"
-                    }
-                  }
-                ],
-                "rightSources": [],
-                "discreteSources": [],
-                "leftLockedRange": null,
-                "rightLockedRange": null,
-                "leftUnitConversion": {
-                  "autoTarget": null,
-                  "preset": null
-                },
-                "rightUnitConversion": {
-                  "autoTarget": null,
-                  "preset": null
-                },
-                "leftFilter": 0,
-                "rightFilter": 0
-              },
-              "controllerUUID": "0qqf99xujft3lng6smpc3bodw7ot573e",
-              "renderer": null,
-              "controlsHeight": 200
-            },
-            {
               "type": 3,
               "title": "3D Field",
               "controller": {
@@ -330,23 +240,32 @@
                       "model": "2026 KitBot",
                       "color": "#ff00ff"
                     }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "/RealOutputs/HopperSim/FuelPositions",
+                    "logType": "Translation3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Fuel"
+                    }
                   }
                 ],
                 "game": "FRC:2026 Field"
               },
               "controllerUUID": "14f8828b7pmhir95dvxmozbzzzb7u1co",
               "renderer": {
-                "cameraIndex": -2,
+                "cameraIndex": -1,
                 "orbitFov": 80,
                 "cameraPosition": [
-                  1.1861951258808148,
-                  1.462569272798712,
-                  0.7292392945338901
+                  -8.533123457379824,
+                  3.343221225416891,
+                  1.8360821397454552
                 ],
                 "cameraTarget": [
-                  0.33321212487245194,
-                  1.0187569921773674,
-                  0.4545564600493739
+                  -5.534594982085256,
+                  0.780838521452463,
+                  1.69053392291133
                 ]
               },
               "controlsHeight": 200
@@ -1535,18 +1454,6 @@
       }
     }
   ],
-  "satellites": [
-    {
-      "x": 151,
-      "y": 86,
-      "width": 641,
-      "height": 690,
-      "state": {
-        "type": 9,
-        "visualizer": null
-      },
-      "uuid": "8o6f64pqbrnsryfpwvqz8hb5xpk4kt91"
-    }
-  ],
+  "satellites": [],
   "version": "26.0.1"
 }

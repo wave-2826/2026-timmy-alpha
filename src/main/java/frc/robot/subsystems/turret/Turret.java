@@ -313,7 +313,7 @@ public class Turret extends SubsystemBase {
         return MetersPerSecond.of(
             inputs.getFlywheelVelocityRadPerSecond() * TurretConstants.flywheelRadius
                 * 0.5 // one fixed side
-                * 1.0 // efficiency - holy crap it works with 100%
+                / 1.2
         );
     }
     public Angle getShotAngle() {

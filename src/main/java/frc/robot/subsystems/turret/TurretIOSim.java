@@ -6,6 +6,8 @@ import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.subsystems.turret.TurretSim.SimTurretState;
 
 public class TurretIOSim extends TurretIOTalonHighFrequency {
@@ -31,6 +33,8 @@ public class TurretIOSim extends TurretIOTalonHighFrequency {
 
         azimuthTalonSim.Orientation = ChassisReference.CounterClockwise_Positive;
         hoodTalonSim.Orientation = ChassisReference.CounterClockwise_Positive;
+
+        RobotModeTriggers.disabled().onTrue(Commands.runOnce(turretSim::reset));
     }
   
     @Override
@@ -57,7 +61,7 @@ public class TurretIOSim extends TurretIOTalonHighFrequency {
         azimuthTalonSim.setRotorVelocity(turretState.azimuthMotorVelRps() / (2 * Math.PI));
 
         turretState = turretSim.updateAndGetState(
-            -flywheel1TalonSim.getTorqueCurrent(),
+            flywheel1TalonSim.getTorqueCurrent(),
             -hoodTalonSim.getTorqueCurrent(),
             -azimuthTalonSim.getTorqueCurrent(),
             1. / frequencyHz

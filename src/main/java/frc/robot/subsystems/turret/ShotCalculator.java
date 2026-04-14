@@ -35,6 +35,14 @@ public class ShotCalculator {
         return instance;
     }
 
+    public static void warmUp() {
+        // Warm up the shot calculator to construct it and
+        // hopefully JIT some of the hot paths
+        for(int i = 0; i < 100; i++) {
+            getInstance().calculate();
+        }
+    }
+
     private static LoggedTunableNumber fudgeSpeedScale = new LoggedTunableNumber("ShotCalculator/FudgeSpeedScale", 1.0);
     private static LoggedTunableNumber fudgeAzimuthOffsetDegCCW = new LoggedTunableNumber("ShotCalculator/FudgeAzimuthOffsetDegCCW", 0.0);
     private static LoggedTunableNumber fudgeHoodOffsetDeg = new LoggedTunableNumber("ShotCalculator/FudgeHoodOffsetDeg", 0.0);
@@ -76,7 +84,9 @@ public class ShotCalculator {
         }
 
         private double getFlywheelVelocityRPM(double linearSpeedMPS) {
-            return 4490 + -853*linearSpeedMPS + 97.3*linearSpeedMPS*linearSpeedMPS;
+            return Units.radiansPerSecondToRotationsPerMinute(
+                linearSpeedMPS / TurretConstants.flywheelRadius * 2.0 * 1.2
+            );
         }
 
         public void loadFromCsv(String csvPath) {

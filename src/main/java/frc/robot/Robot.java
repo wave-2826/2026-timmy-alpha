@@ -31,6 +31,7 @@ import frc.robot.util.ThreadPriorityDummyLogReceiver;
 import frc.robot.util.VirtualSubsystem;
 import frc.robot.util.simUtils.Simulation;
 import frc.robot.util.tunables.TunablePID;
+import frc.robot.subsystems.turret.ShotCalculator;
 import frc.robot.util.Elastic;
 
 import java.lang.reflect.Field;
@@ -163,6 +164,8 @@ public class Robot extends LoggedRobot {
         // https://www.chiefdelphi.com/t/elastic-2026-the-next-dimension/506888/79
         // This is.. unfortunate
         Elastic.selectTab("Teleoperated");
+
+        ShotCalculator.warmUp();
 
         // De-anonymize ourselves
         HAL.report(tResourceType.kResourceType_Language, tInstances.kLanguage_Rust);
