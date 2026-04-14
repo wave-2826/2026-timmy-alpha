@@ -170,7 +170,7 @@ plt.figure(figsize=(10, 6))
 first_vel_guess = 6
 last_vel = first_vel_guess
 
-for d in distances:
+for i, d in enumerate(distances):
     # Initial guess
     res = minimize(
         cost_function, 
@@ -205,13 +205,14 @@ for d in distances:
     valid_idx = xs <= d
     x_shifted = xs[valid_idx] - d
 
-    plt.plot(x_shifted, ys[valid_idx], label=f'Dist={d:.1f}m')
-    plt.plot(0, hub_entrance_height_m, 'ro') # Target point
-    
-    # Turret (8 inches wide) at the starting point
-    turret_width_m = 8 * 0.0254
-    # TODO: color by something meaningful lol
-    plt.plot([-d - turret_width_m/2, -d + turret_width_m/2], [shooter_height_m, shooter_height_m], 'k-', lw=3)
+    if i % 5 == 0:
+        plt.plot(x_shifted, ys[valid_idx], label=f'Dist={d:.1f}m')
+        plt.plot(0, hub_entrance_height_m, 'ro') # Target point
+        
+        # Turret (8 inches wide) at the starting point
+        turret_width_m = 8 * 0.0254
+        # TODO: color by something meaningful lol
+        plt.plot([-d - turret_width_m/2, -d + turret_width_m/2], [shooter_height_m, shooter_height_m], 'k-', lw=3)
 
 plt.axhline(0, color='brown', linewidth=2, linestyle='solid', label='Floor')
 

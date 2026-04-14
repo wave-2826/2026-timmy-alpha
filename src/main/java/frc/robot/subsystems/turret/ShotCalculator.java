@@ -119,13 +119,6 @@ public class ShotCalculator {
     static {
         // Hub shots
 
-        // 1.486m: 2219.9 rpm / 29.9 deg / 1.10s
-        // 2.28m:  2294.4 rpm / 37.4 deg / 1.04s
-        // 2.64m:  2327.6 rpm / 40.7 deg / 0.93s
-        // 3.41m:  2679.6 rpm / 40.9 deg / 1.17s
-        // 4.33m:  2924.0 rpm / 41.9 deg / 1.39s
-        // 5.35m:  3476.5 rpm / 41.9 deg / 1.45s
-
         hubShots.loadFromCsv("hub_shots.csv");
 
         // Passing shots
