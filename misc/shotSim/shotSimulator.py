@@ -142,7 +142,7 @@ def cost_function(params, target_distance):
         # Buncha random constants yay
         entrance_x = target_distance - hub_target_offset - hub_entrance_width_m/2 - inches_to_meters(2)
         y_at_entrance = np.interp(entrance_x, xs, ys) if xs[0] <= entrance_x <= xs[-1] else float('nan')
-        entrance_height_err = max(0.0, hub_entrance_height_m + inches_to_meters(15) - y_at_entrance)
+        entrance_height_err = max(0.0, hub_entrance_height_m + inches_to_meters(5) - y_at_entrance)
 
         return (
             v0
@@ -259,4 +259,4 @@ with open('shot_parameters.csv', 'w', newline='') as csvfile:
 
 # copy shot_parameters.csv to ../../src/main/deploy
 import shutil
-shutil.copy('shot_parameters.csv', '../../src/main/deploy/shot_parameters.csv')
+shutil.copy('shot_parameters.csv', '../../src/main/deploy/hub_shots.csv')

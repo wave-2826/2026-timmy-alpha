@@ -76,7 +76,7 @@ public class ShotCalculator {
         }
 
         private double getFlywheelVelocityRPM(double linearSpeedMPS) {
-            return 5700 + -1380*linearSpeedMPS + 120*linearSpeedMPS*linearSpeedMPS;
+            return 4490 + -853*linearSpeedMPS + 97.3*linearSpeedMPS*linearSpeedMPS;
         }
 
         public void loadFromCsv(String csvPath) {
@@ -126,7 +126,7 @@ public class ShotCalculator {
         // 4.33m:  2924.0 rpm / 41.9 deg / 1.39s
         // 5.35m:  3476.5 rpm / 41.9 deg / 1.45s
 
-        hubShots.loadFromCsv("shot_parameters.csv");
+        hubShots.loadFromCsv("hub_shots.csv");
 
         // Passing shots
         passShots.hoodAngleMap.put(5.46,  40.0);
