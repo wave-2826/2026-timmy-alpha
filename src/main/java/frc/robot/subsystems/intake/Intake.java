@@ -1,11 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -20,7 +16,7 @@ public class Intake extends SubsystemBase {
     private final IntakeIO io;
     private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
-    private static final LoggedTunableNumber intakeRollerSpeed = new LoggedTunableNumber("Intake/RollerSpeed", 4000);
+    private static final LoggedTunableNumber intakeRollerSpeed = new LoggedTunableNumber("Intake/RollerSpeed", 5500 / IntakeConstants.rollerMotorReduction);
     
     private final Alert leftDeployDisconnectedAlert = new Alert("Left intake deploy motor disconnected!", AlertType.kError);
     private final Alert rightDeployDisconnectedAlert = new Alert("Right intake deploy motor disconnected!", AlertType.kError);
@@ -55,7 +51,7 @@ public class Intake extends SubsystemBase {
     }
     
     public Command runRollerScaledOnce(double percent) {
-        return runOnce(() -> io.setRollerSpeed(percent * intakeRollerSpeed.get()));
+        return Commands.runOnce(() -> io.setRollerSpeed(percent * intakeRollerSpeed.get()));
     }
     
     public Command runRollerScaled(DoubleSupplier percent) {
@@ -66,7 +62,7 @@ public class Intake extends SubsystemBase {
     private Debouncer deployRDebouncer = new Debouncer(0.5, DebounceType.kRising);
 
     public boolean isDeployed() {
-        return Math.abs((inputs.deployL.motorPosition() + inputs.deployR.motorPosition()) / 2) < 0.1;
+        return Math.abs((inputs.deployL.positionMeters() + inputs.deployR.positionMeters()) / 2) < 0.1;
     }
     
     public Command deployIntake() {
@@ -87,10 +83,7 @@ public class Intake extends SubsystemBase {
     
     /** Set the intake position. Positive numbers are inward. */
     public Command setIntakePosition(DoubleSupplier position) {
-        SlewRateLimiter limiter = new SlewRateLimiter(Units.inchesToMeters(14.75) * 2);
-        return run(() -> {
-            io.setDeployPosition(limiter.calculate(position.getAsDouble()));
-        });
+        return run(() -> io.setDeployPosition(position.getAsDouble()));
     }
     
     public Command setIntakePositionNormalized(DoubleSupplier triggerPosition) {

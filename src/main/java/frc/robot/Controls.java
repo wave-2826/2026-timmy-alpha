@@ -158,11 +158,6 @@ public class Controls {
         RobotModeTriggers.teleop().and(DriverStation::isFMSAttached).onTrue(Commands.runOnce(() -> {
             Elastic.selectTab("Teleoperated");
         }));
-
-        
-        // driver.b().whileTrue(climber.extendBoth()).onTrue(intake.bringIntakeIn(1));
-        // driver.a().whileTrue(climber.retractBoth());
-        // coDriver.rightBumper().whileTrue(climber.manualControls(coDriver::getLeftY, coDriver::getRightY));
     }
 
     private HashMap<Integer, Double> driverRumbleCommands = new HashMap<>();

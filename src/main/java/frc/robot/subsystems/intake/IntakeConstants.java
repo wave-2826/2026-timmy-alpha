@@ -12,7 +12,7 @@ public class IntakeConstants {
     public static final int intakeDeployRCanId = 32;
     public static final int intakeDeployLCanId = 31;
 
-    public static final double rollerMotorReduction = 2.0;
+    public static final double rollerMotorReduction = 36. / 16.;
     
     public static final int rollerCurrentLimit = 50;
     public static final int deployCurrentLimit = 60;
@@ -31,6 +31,6 @@ public class IntakeConstants {
         .addRealRobotGains(new GenericPIDConstants(0.002, 0, 0, 1. / DCMotor.getNeoVortex(1).KvRadPerSecPerVolt))
         .addSimGains(new GenericPIDConstants(0.005, 0, 0));
     public static final TunablePID deployPID = new TunablePID("Intake/Deploy")
-        .addRealRobotGains(new GenericPIDConstants(6.0, 0, 0))
+        .addRealRobotGains(new GenericPIDConstants(6.0, 0, 0).sva(0.0, 1.0, 0.0))
         .addSimGains(new GenericPIDConstants(0.005, 0, 0));
 }

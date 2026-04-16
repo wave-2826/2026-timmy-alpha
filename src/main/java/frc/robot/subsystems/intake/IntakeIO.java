@@ -19,7 +19,7 @@ public interface IntakeIO {
             /** The motor current draw. */
             double currentAmps,
             /** The motor's position according to the encoder in meters. Positive numbers are outward. */
-            double motorPosition
+            double positionMeters
         ) {}
         
         RollerMotorInputs rollerL = new RollerMotorInputs(false, 0.0, 0.0);

@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.util.Container;
 
 public class HopperVision extends SubsystemBase {
     private HopperVisionIOInputsAutoLogged inputs = new HopperVisionIOInputsAutoLogged();
@@ -18,21 +19,24 @@ public class HopperVision extends SubsystemBase {
     private static Alert disconnectedAlert = new Alert("Hopper vision camera disconnected!", AlertType.kError);
 
     public Command waitForNoPieces(double waitAfter, double fallbackWait, double timeout) {
-        double startTime = Timer.getFPGATimestamp();
+        Container<Double> startTime = new Container<Double>(0.);
         Debouncer hasPiecesDebouncer = new Debouncer(1.0, DebounceType.kFalling);
         return Commands.sequence(
-            Commands.runOnce(() -> hasPiecesDebouncer.calculate(true)),
+            Commands.runOnce(() -> {
+                hasPiecesDebouncer.calculate(true);
+                startTime.value = Timer.getFPGATimestamp();
+            }),
             Commands.waitUntil(() -> {
                 if(!inputs.connected) {
                     // If we're not connected, wait the fallback time and hope for the best
-                    return Timer.getFPGATimestamp() - startTime > fallbackWait;
+                    return Timer.getFPGATimestamp() - startTime.value > fallbackWait;
                 } else {
                     // If we're connected, wait until we see no targets
                     return !hasPiecesDebouncer.calculate(inputs.targets != 0);
                 }
             }),
             Commands.waitSeconds(waitAfter)
-        ).withTimeout(timeout);
+        ).withTimeout(timeout).withName("HopperVisionWait");
     }
 
     public HopperVision(HopperVisionIO io) {

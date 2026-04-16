@@ -68,8 +68,9 @@ public class IntakeIOReal implements IntakeIO {
             .uvwAverageDepth(2);
         deployBaseConfig.closedLoop.maxMotion
             // TODO: reasonable values
-            .cruiseVelocity(2.0) // m/s
-            .maxAcceleration(3.0); // m/s^2
+            .cruiseVelocity(Units.inchesToMeters(14.75) * 2) // m/s
+            .maxAcceleration(Units.inchesToMeters(60.0)) // m/s^2
+            .allowedProfileError(Units.inchesToMeters(5.)); // m
         deployBaseConfig.signals.apply(SparkUtil.defaultSignals).primaryEncoderPositionPeriodMs(20);
 
         // Per-motor
@@ -150,8 +151,8 @@ public class IntakeIOReal implements IntakeIO {
 
     @Override
     public void setDeployPosition(double positionMeters) {
-        deployRController.setSetpoint(positionMeters, ControlType.kPosition);
-        deployLController.setSetpoint(-positionMeters, ControlType.kPosition);
+        deployRController.setSetpoint(positionMeters, ControlType.kMAXMotionPositionControl);
+        deployLController.setSetpoint(-positionMeters, ControlType.kMAXMotionPositionControl);
     }
 
     @Override

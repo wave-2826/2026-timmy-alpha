@@ -160,9 +160,9 @@ public class AutoRoutines {
             traj0.resetOdometry(),
             ScoringCommands.prep(turret),
             traj0.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision)),
             traj1.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision))
         ));
 
         return routine;
@@ -180,7 +180,7 @@ public class AutoRoutines {
             traj.resetOdometry(),
             ScoringCommands.prep(turret),
             traj.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision))
         ));
 
         return routine;
@@ -202,9 +202,9 @@ public class AutoRoutines {
             traj1.resetOdometry(),
             ScoringCommands.prep(turret),
             traj1.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision)),
             traj2.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision))
         ));
 
         return routine;
@@ -226,9 +226,9 @@ public class AutoRoutines {
             traj1.resetOdometry(),
             ScoringCommands.prep(turret),
             traj1.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision)),
             traj2.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision))
         ));
 
         return routine;
@@ -245,7 +245,7 @@ public class AutoRoutines {
             ScoringCommands.prep(turret),
             traj.cmd(),
             stopDrive(),
-            ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)
+            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision)
         ));
 
         return routine;
@@ -257,15 +257,16 @@ public class AutoRoutines {
         AutoTrajectory traj2 = ChoreoTraj.CenterDepot$1.asAutoTraj(routine);
 
         traj1.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
-        
+        traj2.atTime("Score").onTrue(
+            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision)
+        );
+
         routine.active().onTrue(Commands.sequence(
             traj1.resetOdometry(),
             ScoringCommands.prep(turret),
             traj1.cmd(),
-            stopDrive(),
-            Commands.waitSeconds(1.),
-            traj2.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision))
+            Commands.waitSeconds(0.5),
+            traj2.cmd(), stopDrive()
         ));
 
         return routine;
@@ -274,7 +275,7 @@ public class AutoRoutines {
     private Command getShootOnly() {
         return Commands.sequence(
             Commands.runOnce(() -> drive.setPose(new Pose2d(new Translation2d(2., FieldConstants.fieldWidthY / 2.), Rotation2d.kZero))),
-            ScoringCommands.autoScoreHopper(turret, spindexer, hopperVision)
+            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision)
         );
     }
 }

@@ -3,9 +3,11 @@ package frc.robot.commands;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.hopperVision.HopperVision;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.ShotCalculator;
 import frc.robot.subsystems.turret.Turret;
@@ -56,15 +58,16 @@ public class ScoringCommands {
         });
     }
 
-    public static Command autoScoreHopper(Turret turret, Spindexer spindexer, HopperVision hopperVision) {
+    public static Command autoScoreHopper(Turret turret, Spindexer spindexer, Intake intake, HopperVision hopperVision) {
         return Commands.sequence(
-            Commands.waitSeconds(0.25),
             Commands.waitUntil(turret::atSetpoint).withTimeout(3.0),
             
             // Run spin until no pieces remain
             spindexer.run(() -> {
                 spindexer.setPower(1.0, turret.atSetpoint() ? 1.0 : 0.0);
-            }).raceWith(hopperVision.waitForNoPieces(1.0, 9.0, 8.0))
+            }).alongWith(
+                intake.setIntakePositionNormalized(() -> Math.sin(Timer.getFPGATimestamp() * 3.) * 0.4 + 0.5)
+            ).raceWith(hopperVision.waitForNoPieces(1.0, 8.0, 10.0))
         ).raceWith(
             turret.run(() -> { turret.target = ControlTarget.SHOT_CALCULATOR_DEFAULT; })
         ).andThen(

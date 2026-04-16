@@ -46,8 +46,5 @@ tune-turret:
 setup-hotswap:
     python ./misc/scripts/setup-hotswap.py
 
-flip-autos:
-    python ./misc/scripts/flipAutos.py
-
 upload-tags TAGS:
     python ./misc/scripts/uploadTagMap.py {{TAGS}}

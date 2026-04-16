@@ -135,6 +135,8 @@ public class TunablePID {
             config.i(c.i == null ? 0. : c.i.get(), c.slot.rev);
             config.d(c.d == null ? 0. : c.d.get(), c.slot.rev);
             config.feedForward.kV(c.fkV == null ? 0. : c.fkV.get(), c.slot.rev);
+            config.feedForward.kA(c.fkA == null ? 0. : c.fkA.get(), c.slot.rev);
+            config.feedForward.kS(c.fkS == null ? 0. : c.fkS.get(), c.slot.rev);
             if(c.iZone != null) config.iZone(c.iZone.get(), c.slot.rev);
         }
         return config;
