@@ -226,11 +226,11 @@ public class ShotCalculator {
         Pose2d estimatedPose = RobotState.getInstance().getEstimatedPose();
 
         // Distance from turret to target
-        Pose2d turretPosition = estimatedPose.transformBy(
+        Pose2d turretPose = estimatedPose.transformBy(
             new Transform2d(TurretConstants.robotToTurret.toTranslation2d(), Rotation2d.kZero)
         );
 
-        Pose2d zoneCheckPosition = AllianceFlipUtil.apply(turretPosition);
+        Pose2d zoneCheckPosition = AllianceFlipUtil.apply(turretPose);
         ShotType type = ShotType.HUB;
         if(FieldConstants.Tower.bounds.contains(zoneCheckPosition)) {
             type = ShotType.NONE;
@@ -265,8 +265,8 @@ public class ShotCalculator {
         lastRobotVy = robotRelativeVelocity.vyMetersPerSecond;
         lastRobotOmega = robotRelativeVelocity.omegaRadiansPerSecond;
         
-        Translation2d target = getTargetPosition(type, turretPosition.getTranslation());
-        double turretToTargetDistance = target.getDistance(turretPosition.getTranslation());
+        Translation2d target = getTargetPosition(type, turretPose.getTranslation());
+        double turretToTargetDistance = target.getDistance(turretPose.getTranslation());
 
         // Calculate field relative turret velocity
         ChassisSpeeds robotVelocity = RobotState.getInstance().getFieldVelocity();
@@ -292,8 +292,8 @@ public class ShotCalculator {
             Translation2d offset = new Translation2d(turretVelocityX * effectiveTimeOfFlight, turretVelocityY * effectiveTimeOfFlight);
             virtualTarget = target.minus(offset);
             
-            double dx = virtualTarget.getX() - turretPosition.getX();
-            double dy = virtualTarget.getY() - turretPosition.getY();
+            double dx = virtualTarget.getX() - turretPose.getX();
+            double dy = virtualTarget.getY() - turretPose.getY();
             lookaheadTurretToTargetDistance = Math.hypot(dx, dy);
             
             double mappedToF = type.shotMapData.getTimeOfFlight(lookaheadTurretToTargetDistance);
@@ -324,10 +324,10 @@ public class ShotCalculator {
         Logger.recordOutput("LaunchCalculator/VirtualTarget", virtualTarget);
         Logger.recordOutput("LaunchCalculator/TimeOfFlight", timeOfFlight);
         Logger.recordOutput("LaunchCalculator/EffectiveTimeOfFlight", effectiveTimeOfFlight);
-        Logger.recordOutput("LaunchCalculator/TurretPosition", turretPosition);
+        Logger.recordOutput("LaunchCalculator/TurretPosition", turretPose);
         Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);
 
-        var shotDirection = virtualTarget.minus(turretPosition.getTranslation());
+        var shotDirection = virtualTarget.minus(turretPose.getTranslation());
         Rotation2d turretAngleAbsolute = shotDirection.getAngle().plus(
             Rotation2d.fromDegrees(fudgeAzimuthOffsetDegCCW.get())
         );

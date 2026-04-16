@@ -3,7 +3,7 @@ import time
 
 # Run `python3 -m evdev.evtest` to find - look for something like "AT Translated Set 2 keyboard"
 # Note that the first one you see may not be the right device!
-KEYBOARD_PATH = "/dev/input/event16"
+KEYBOARD_PATH = "/dev/input/event17"
 
 dev = InputDevice(KEYBOARD_PATH)
 

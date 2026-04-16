@@ -3,26 +3,202 @@ package frc.robot.commands.drive;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.GenericPIDConstants;
+import frc.robot.util.GenericPIDConstants.PIDSlot;
+import frc.robot.util.tunables.TunablePID;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
+import org.littletonrobotics.junction.Logger;
+
 public class DriveCommands {
     private static final double DEADBAND = 0.1;
+
+    private interface DriverAssist {
+        public ChassisSpeeds apply(ChassisSpeeds fieldSpeeds, double joystickFieldX, double joystickFieldY);
+        public default void log() {};
+    }
+
+    /**
+     * A driver assist feature to keep the robot on a line if:
+     * - Near the line
+     * - Commanding movement roughly along the line
+     * - OR actively moving into the line with clear intention to be on it
+     */
+    private static class LineDriverAssist implements DriverAssist {
+        protected Translation2d lineStart;
+        protected Translation2d lineEnd;
+
+        protected static TunablePID lineAssistGains = new TunablePID("Drive/LineAssist")
+            .addRealRobotGains(new GenericPIDConstants(2.0, 0.0, 0.1))
+            .copyRealGainsInSim();
+        protected PIDController lineCenterController = new PIDController(0., 0., 0.);
+
+        private static Translation3d[][] assistLines = new Translation3d[][] {};
+
+        public LineDriverAssist(Translation2d lineStart, Translation2d lineEnd) {
+            this.lineStart = lineStart;
+            this.lineEnd = lineEnd;
+            // note: leaks controller
+            lineAssistGains.configureController(lineCenterController, PIDSlot.Slot0);
+        }
+
+        protected Translation2d nearestPointOnLine(Translation2d point) {
+            Translation2d lineVector = lineEnd.minus(lineStart);
+            double t = point.minus(lineStart).dot(lineVector) / lineVector.getSquaredNorm();
+            t = MathUtil.clamp(t, 0.0, 1.0);
+            return lineStart.plus(lineVector.times(t));
+        }
+
+        public void flip() {
+            lineStart = AllianceFlipUtil.flip(lineStart);
+            lineEnd = AllianceFlipUtil.flip(lineEnd);
+        }
+
+        public void log() {
+            var newLines = new Translation3d[assistLines.length + 1][2];
+            for(int i = 0; i < assistLines.length; i++) {
+                newLines[i] = assistLines[i];
+            }
+            newLines[assistLines.length] = new Translation3d[] {
+                new Translation3d(lineStart.getX(), lineStart.getY(), 0.1),
+                new Translation3d(lineEnd.getX(), lineEnd.getY(), 0.1)
+            };
+            assistLines = newLines;
+
+            Logger.recordOutput("Drive/AssistLines", assistLines);
+        }
+
+        @Override
+        public ChassisSpeeds apply(ChassisSpeeds fieldSpeeds, double joystickFieldX, double joystickFieldY) {
+            Translation2d robotPos = RobotState.getInstance().getEstimatedPose().getTranslation();
+            
+            Translation2d nearestPoint = nearestPointOnLine(robotPos);
+            double distanceFromLine = robotPos.getDistance(nearestPoint);
+
+            // If the robot is close enough to the line, and the driver is commanding movement roughly along the line,
+            // or is intentionally moving toward the line, apply assist to keep the robot centered on the line.
+
+            final double LINE_PROXIMITY_THRESHOLD = 0.4; // meters
+            final double ANGLE_ALLOWANCE = Units.degreesToRadians(25);
+            final double INTENT_TOWARD_LINE_THRESHOLD = 0.2; // joystick magnitude toward line
+            final double INTENT_ALONG_LINE_THRESHOLD = 0.2; // joystick magnitude along line
+            final double MAX_CORRECTION_VEL = 1.5; // max correction velocity in m/s
+
+            if(distanceFromLine > LINE_PROXIMITY_THRESHOLD) {
+                return fieldSpeeds; // too far, no assist
+            }
+
+            // Vector along the line
+            Translation2d lineVec = lineEnd.minus(lineStart);
+            lineVec = lineVec.div(lineVec.getNorm()); // normalize
+            // Vector from robot to nearest point on line
+            Translation2d toLine = nearestPoint.minus(robotPos);
+            Translation2d toLineNorm = toLine.div(toLine.getNorm() == 0 ? 1 : toLine.getNorm()); // normalize
+            // Joystick vector (field-relative)
+            Translation2d joystickVec = new Translation2d(joystickFieldX, joystickFieldY);
+
+            // Project joystick vector onto line direction
+            double alongLine = joystickVec.dot(lineVec);
+            double towardLine = joystickVec.dot(toLineNorm);
+
+            double intentHeuristic = 0.0;
+            if(alongLine > 0 && Math.acos(lineVec.dot(joystickVec.div(joystickVec.getNorm() == 0 ? 1 : joystickVec.getNorm()))) < ANGLE_ALLOWANCE) {
+                // Moving along the line in the correct direction
+                intentHeuristic = Math.max(intentHeuristic, Math.min(alongLine / INTENT_ALONG_LINE_THRESHOLD, 1.0));
+            }
+            if(towardLine > 0 && Math.acos(toLineNorm.dot(joystickVec.div(joystickVec.getNorm() == 0 ? 1 : joystickVec.getNorm()))) < ANGLE_ALLOWANCE) {
+                // Moving toward the line
+                intentHeuristic = Math.max(intentHeuristic, Math.min(towardLine / INTENT_TOWARD_LINE_THRESHOLD, 1.0));
+            }
+            intentHeuristic *= MathUtil.clamp(1.0 - (distanceFromLine / LINE_PROXIMITY_THRESHOLD), 0.0, 1.0); // scale down intention based on distance
+            intentHeuristic *= MathUtil.clamp(joystickVec.getNorm() / 0.5, 0.0, 1.0); // scale down intention if joystick input is small
+
+            // Only assist if close to line and moving along or toward it
+            if(intentHeuristic > 0.25) {
+                // Amount of correction depends on how close we are to "full intention"
+                double correctionMagnitude = Math.max(
+                    Math.abs(alongLine) / INTENT_ALONG_LINE_THRESHOLD,
+                    towardLine / INTENT_TOWARD_LINE_THRESHOLD
+                );
+
+                // PID correction to center on the line (perpendicular direction)
+                double correction = lineCenterController.calculate(distanceFromLine, 0) * correctionMagnitude;
+                
+                // Apply correction perpendicular to the line
+                Translation2d correctionVec = toLineNorm.times(
+                    Math.min(correction, MAX_CORRECTION_VEL) * -1
+                );
+
+                double speed = Math.hypot(fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond);
+                // Project speed along the line direction
+                Translation2d alongLineVec = lineVec.times(speed);
+
+                double lineDirectionFactor = (intentHeuristic - 0.25) / (1.0 - 0.25);
+                Translation2d usedSpeed = new Translation2d(
+                    MathUtil.interpolate(fieldSpeeds.vxMetersPerSecond, alongLineVec.getX(), lineDirectionFactor),
+                    MathUtil.interpolate(fieldSpeeds.vyMetersPerSecond, alongLineVec.getY(), lineDirectionFactor)
+                );
+
+                return new ChassisSpeeds(
+                    usedSpeed.getX() + correctionVec.getX(),
+                    usedSpeed.getY() + correctionVec.getY(),
+                    fieldSpeeds.omegaRadiansPerSecond
+                );
+            } else {
+                // No assist
+                return fieldSpeeds;
+            }
+        }
+    }
+
+    private static class TrenchDriverAssist extends LineDriverAssist {
+        private static Translation2d lineOffset = new Translation2d(Units.inchesToMeters(35), 0.);
+
+        public TrenchDriverAssist(boolean red, boolean leftTrench) {
+            super(
+                (leftTrench ? FieldConstants.LeftTrench.center : FieldConstants.RightTrench.center).plus(lineOffset),
+                (leftTrench ? FieldConstants.LeftTrench.center : FieldConstants.RightTrench.center).minus(lineOffset)
+            );
+            if(red) flip();
+        }
+    }
     
     private DriveCommands() {}
+
+    private static DriverAssist[] driverAssists = new DriverAssist[] {
+        // new TrenchDriverAssist(true, true),
+        // new TrenchDriverAssist(true, false),
+        // new TrenchDriverAssist(false, true),
+        // new TrenchDriverAssist(false, false)
+    };
+
+    static {
+        if(Constants.isSim) {
+            for(DriverAssist assist : driverAssists) {
+                assist.log();
+            }
+        }
+    }
 
     private static Translation2d getLinearVelocityFromJoysticks(double x, double y, double speedScalar) {
         // Apply deadband
@@ -67,6 +243,13 @@ public class DriveCommands {
                 omega * DriveConstants.maxAngularSpeedRadPerSec * 0.5);
             boolean isFlipped = DriverStation.getAlliance().isPresent()
                 && DriverStation.getAlliance().get() == Alliance.Red;
+
+            double fieldStickX = isFlipped ? -xSupplier.getAsDouble() : xSupplier.getAsDouble();
+            double fieldStickY = isFlipped ? -ySupplier.getAsDouble() : ySupplier.getAsDouble();
+            for(DriverAssist assist : DriveCommands.driverAssists) {
+                speeds = assist.apply(speeds, fieldStickX, fieldStickY);
+            }
+            
             drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(
                 speeds,
                 isFlipped ? robotState.getRotation().plus(new Rotation2d(Math.PI)) : robotState.getRotation()),

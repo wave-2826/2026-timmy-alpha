@@ -120,9 +120,9 @@ public class DriveConstants {
 
     // Tuned by hand
     public static final Slot0Configs steerGains = new Slot0Configs()
-        .withKP(Constants.isSim ? 500 : 3000)
+        .withKP(Constants.isSim ? 100 : 3000)
         .withKI(Constants.isSim ? 0   : 0)
-        .withKD(Constants.isSim ? 5   : 32)
+        .withKD(Constants.isSim ? 6   : 32)
         .withKS(Constants.isSim ? 0.1 : 0.1)
         .withKV(Constants.isSim ? 0.0 : 0.0)
         .withKA(Constants.isSim ? 0   : 0)

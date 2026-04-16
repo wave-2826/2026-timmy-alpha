@@ -22,8 +22,8 @@ public class ModuleIOSim extends ModuleIOTalonFX {
     private final TalonFXSimState turnSimState = turnTalon.getSimState();
     private final CANcoderSimState cancoderSimState = cancoder.getSimState();
 
-    private final double driveInertia = 0.03;
-    private final double turnInertia = 0.004;
+    private final double driveInertia = 0.02;
+    private final double turnInertia = 0.01;
 
     private final DCMotorSim driveSim = new DCMotorSim(
         LinearSystemId.createDCMotorSystem(DriveConstants.driveMotorModel, driveInertia, DriveConstants.driveGearRatio),

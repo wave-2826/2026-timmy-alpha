@@ -175,6 +175,8 @@ public class FieldConstants {
         // Relevant reference points on opposing side
         public static final Translation3d oppOpeningTopLeft = new Translation3d(LinesVertical.oppHubCenter, fieldWidthY, openingHeight);
         public static final Translation3d oppOpeningTopRight = new Translation3d(LinesVertical.oppHubCenter, fieldWidthY - openingWidth, openingHeight);
+    
+        public static final Translation2d center = new Translation2d(LinesVertical.hubCenter, fieldWidthY - (openingWidth / 2.0));
     }
     
     public static class RightTrench {
@@ -192,6 +194,8 @@ public class FieldConstants {
         // Relevant reference points on opposing side
         public static final Translation3d oppOpeningTopLeft = new Translation3d(LinesVertical.oppHubCenter, openingWidth, openingHeight);
         public static final Translation3d oppOpeningTopRight = new Translation3d(LinesVertical.oppHubCenter, 0, openingHeight);
+
+        public static final Translation2d center = new Translation2d(LinesVertical.hubCenter, openingWidth / 2.0);
     }
     
     /** Tower related constants */
