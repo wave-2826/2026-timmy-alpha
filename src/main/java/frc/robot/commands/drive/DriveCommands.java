@@ -21,6 +21,7 @@ import frc.robot.RobotState;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.FieldBounds;
 import frc.robot.util.GenericPIDConstants;
 import frc.robot.util.GenericPIDConstants.PIDSlot;
 import frc.robot.util.tunables.TunablePID;
@@ -182,14 +183,108 @@ public class DriveCommands {
             if(red) flip();
         }
     }
+
+    private static class ZoneAssist implements DriverAssist {
+        protected FieldBounds bounds;
+        protected double lookaheadSeconds;
+
+        private static Translation3d[][] assistZones = new Translation3d[][] {};
+        
+        public ZoneAssist(FieldBounds bounds, double lookaheadSeconds) {
+            this.bounds = bounds;
+            this.lookaheadSeconds = lookaheadSeconds;
+        }
+
+        @Override
+        public ChassisSpeeds apply(ChassisSpeeds fieldSpeeds, double joystickFieldX, double joystickFieldY) {
+            Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+            Translation2d futurePos = robotPose.exp(fieldSpeeds.toTwist2d(lookaheadSeconds)).getTranslation();
+
+            if(bounds.contains(futurePos)) {
+                return applyInZone(fieldSpeeds);
+            }
+            return fieldSpeeds;
+        }
+
+        public ChassisSpeeds applyInZone(ChassisSpeeds fieldSpeeds) {
+            throw new UnsupportedOperationException("Must implement applyInZone for ZoneAssist");
+        }
+
+        @Override
+        public void log() {
+            var newZones = new Translation3d[assistZones.length + 1][4];
+            for(int i = 0; i < assistZones.length; i++) {
+                newZones[i] = assistZones[i];
+            }
+            newZones[assistZones.length] = new Translation3d[] {
+                new Translation3d(bounds.minX(), bounds.minY(), 0.2),
+                new Translation3d(bounds.maxX(), bounds.minY(), 0.2),
+                new Translation3d(bounds.maxX(), bounds.maxY(), 0.2),
+                new Translation3d(bounds.minX(), bounds.maxY(), 0.2),
+                new Translation3d(bounds.minX(), bounds.minY(), 0.2)
+            };
+            assistZones = newZones;
+
+            Logger.recordOutput("Drive/AssistZones", assistZones);
+        }
+    }
+
+    private static class BumpDriverAssist extends ZoneAssist {
+        // Turn the robot so it's not hotdog when traveling toward the bump or on it
+        private PIDController thetaController = new PIDController(0.0, 0.0, 0.0);
+        private TunablePID thetaGains = new TunablePID("Drive/BumpAssist")
+            .addRealRobotGains(new GenericPIDConstants(3.0, 0.0, 0.1))
+            .copyRealGainsInSim();
+
+        public BumpDriverAssist(boolean red, boolean leftBump) {
+            super(
+                new FieldBounds(
+                    leftBump ? FieldConstants.LeftBump.center : FieldConstants.RightBump.center,
+                    Units.inchesToMeters(65),
+                    FieldConstants.LeftBump.width
+                ),
+                0.25
+            );
+            if(red) {
+                bounds = bounds.flipped();
+            }
+
+            // note: leaks controller
+            thetaGains.configureController(thetaController, PIDSlot.Slot0);
+            thetaController.enableContinuousInput(-Math.PI / 2, Math.PI / 2);
+        }
+
+        @Override
+        public ChassisSpeeds applyInZone(ChassisSpeeds fieldSpeeds) {
+            // If theta is greater than 30deg off from straight forward or straight backward, correct
+
+            Pose2d robotPose = RobotState.getInstance().getEstimatedPose();
+            Rotation2d angle = robotPose.getRotation();
+
+            if(Math.abs(angle.getCos()) < 0.866) { // more than 30deg off from straight forward/backward
+                double targetAngle = angle.getCos() > 0 ? 0 : Math.PI; // target straight forward or backward
+                double correction = thetaController.calculate(angle.getRadians(), targetAngle);
+                return new ChassisSpeeds(
+                    fieldSpeeds.vxMetersPerSecond,
+                    fieldSpeeds.vyMetersPerSecond,
+                    fieldSpeeds.omegaRadiansPerSecond + correction
+                );
+            }
+            return fieldSpeeds;
+        }
+    }
     
     private DriveCommands() {}
 
     private static DriverAssist[] driverAssists = new DriverAssist[] {
-        // new TrenchDriverAssist(true, true),
-        // new TrenchDriverAssist(true, false),
-        // new TrenchDriverAssist(false, true),
-        // new TrenchDriverAssist(false, false)
+        new TrenchDriverAssist(true, true),
+        new TrenchDriverAssist(true, false),
+        new TrenchDriverAssist(false, true),
+        new TrenchDriverAssist(false, false),
+        new BumpDriverAssist(true, true),
+        new BumpDriverAssist(true, false),
+        new BumpDriverAssist(false, true),
+        new BumpDriverAssist(false, false)
     };
 
     static {
@@ -246,8 +341,10 @@ public class DriveCommands {
 
             double fieldStickX = isFlipped ? -xSupplier.getAsDouble() : xSupplier.getAsDouble();
             double fieldStickY = isFlipped ? -ySupplier.getAsDouble() : ySupplier.getAsDouble();
-            for(DriverAssist assist : DriveCommands.driverAssists) {
-                speeds = assist.apply(speeds, fieldStickX, fieldStickY);
+            if(!robotState.odometryImpaired()) {
+                for(DriverAssist assist : DriveCommands.driverAssists) {
+                    speeds = assist.apply(speeds, fieldStickX, fieldStickY);
+                }
             }
             
             drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(

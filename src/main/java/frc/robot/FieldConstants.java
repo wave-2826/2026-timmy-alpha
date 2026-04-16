@@ -137,6 +137,8 @@ public class FieldConstants {
         public static final Translation2d oppNearRightCorner = Hub.oppNearLeftCorner;
         public static final Translation2d oppFarLeftCorner = new Translation2d(LinesVertical.hubCenter + width / 2, Units.inchesToMeters(255));
         public static final Translation2d oppFarRightCorner = Hub.oppFarLeftCorner;
+
+        public static final Translation2d center = new Translation2d(LinesVertical.hubCenter, (fieldWidthY / 2.0) - (Hub.width / 2.0) - (width / 2.0));
     }
     
     /** Right Bump related constants */
@@ -157,6 +159,8 @@ public class FieldConstants {
         public static final Translation2d oppNearRightCorner = Hub.oppNearLeftCorner;
         public static final Translation2d oppFarLeftCorner = new Translation2d(LinesVertical.hubCenter - width / 2, Units.inchesToMeters(255));
         public static final Translation2d oppFarRightCorner = Hub.oppFarLeftCorner;
+
+        public static final Translation2d center = new Translation2d(LinesVertical.hubCenter, (fieldWidthY / 2.0) + (Hub.width / 2.0) + (width / 2.0));
     }
     
     /** Left Trench related constants */

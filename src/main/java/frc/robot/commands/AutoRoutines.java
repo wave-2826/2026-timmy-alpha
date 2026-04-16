@@ -11,8 +11,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
@@ -26,9 +24,6 @@ import frc.robot.subsystems.hopperVision.HopperVision;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
-import frc.robot.subsystems.turret.TurretConstants;
-import frc.robot.subsystems.turret.Turret.ControlTarget;
-import frc.robot.subsystems.turret.Turret.TurretTarget;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LoggedAutoChooser;
 import frc.robot.util.ModuleFeedforward;
@@ -145,14 +140,14 @@ public class AutoRoutines {
         return Commands.runOnce(() -> drive.stop());
     }
 
+    private AutoTrajectory flipIf(boolean condition, AutoTrajectory traj) {
+        return condition ? traj.mirrorY() : traj;
+    }
+
     private AutoRoutine getDoubleSwipe(boolean right) {
-        var fullTraj = right ? ChoreoTraj.RightDoubleSwipeGenerated : ChoreoTraj.LeftDoubleSwipe;
-        var routine = autoFactory.newRoutine(fullTraj.name());
-        
-        var chorTraj0 = right ? ChoreoTraj.RightDoubleSwipeGenerated$0 : ChoreoTraj.LeftDoubleSwipe$0;
-        var chorTraj1 = right ? ChoreoTraj.RightDoubleSwipeGenerated$1 : ChoreoTraj.LeftDoubleSwipe$1;
-        AutoTrajectory traj0 = chorTraj0.asAutoTraj(routine);
-        AutoTrajectory traj1 = chorTraj1.asAutoTraj(routine);
+        var routine = autoFactory.newRoutine((right ? "Right" : "Left") + "DoubleSwipe");
+        AutoTrajectory traj0 = flipIf(right, ChoreoTraj.LeftDoubleSwipe$0.asAutoTraj(routine));
+        AutoTrajectory traj1 = flipIf(right, ChoreoTraj.LeftDoubleSwipe$1.asAutoTraj(routine));
 
         traj0.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
 
@@ -169,10 +164,9 @@ public class AutoRoutines {
     }
 
     private AutoRoutine getSingleSwipe(boolean right) {
-        var choreoTraj = right ? ChoreoTraj.RightDoubleSwipeGenerated$0 : ChoreoTraj.LeftDoubleSwipe$0;
-        var routine = autoFactory.newRoutine(choreoTraj.name());
+        var routine = autoFactory.newRoutine((right ? "Right" : "Left") + "SingleSwipe");
         
-        AutoTrajectory traj = choreoTraj.asAutoTraj(routine);
+        AutoTrajectory traj = flipIf(right, ChoreoTraj.LeftDoubleSwipe$0.asAutoTraj(routine));
 
         traj.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
         
@@ -187,13 +181,10 @@ public class AutoRoutines {
     }
 
     private AutoRoutine getSweepSwipe(boolean right) {
-        var choreoTraj = right ? ChoreoTraj.RightSweepSwipeGenerated : ChoreoTraj.LeftSweepSwipe;
-        var routine = autoFactory.newRoutine(choreoTraj.name());
+        var routine = autoFactory.newRoutine((right ? "Right" : "Left") + "SweepSwipe");
         
-        var choreoTraj1 = right ? ChoreoTraj.RightSweepSwipeGenerated$0 : ChoreoTraj.LeftSweepSwipe$0;
-        var choreoTraj2 = right ? ChoreoTraj.RightSweepSwipeGenerated$1 : ChoreoTraj.LeftSweepSwipe$1;
-        AutoTrajectory traj1 = choreoTraj1.asAutoTraj(routine);
-        AutoTrajectory traj2 = choreoTraj2.asAutoTraj(routine);
+        AutoTrajectory traj1 = flipIf(right, ChoreoTraj.LeftSweepSwipe$0.asAutoTraj(routine));
+        AutoTrajectory traj2 = flipIf(right, ChoreoTraj.LeftSweepSwipe$1.asAutoTraj(routine));
 
         traj1.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
         traj1.atTime("Intake Stop").onTrue(intake.disable());
@@ -211,13 +202,10 @@ public class AutoRoutines {
     }
 
     private AutoRoutine getDangerSweepSwipe(boolean right) {
-        var choreoTraj = right ? ChoreoTraj.RightDangerSweepGenerated : ChoreoTraj.LeftDangerSweep;
-        var routine = autoFactory.newRoutine(choreoTraj.name());
-        
-        var choreoTraj1 = right ? ChoreoTraj.RightDangerSweepGenerated$0 : ChoreoTraj.LeftDangerSweep$0;
-        var choreoTraj2 = right ? ChoreoTraj.RightDangerSweepGenerated$1 : ChoreoTraj.LeftDangerSweep$1;
-        AutoTrajectory traj1 = choreoTraj1.asAutoTraj(routine);
-        AutoTrajectory traj2 = choreoTraj2.asAutoTraj(routine);
+        var routine = autoFactory.newRoutine((right ? "Right" : "Left") + "DangerSweep");
+
+        AutoTrajectory traj1 = flipIf(right, ChoreoTraj.LeftDangerSweep$0.asAutoTraj(routine));
+        AutoTrajectory traj2 = flipIf(right, ChoreoTraj.LeftDangerSweep$1.asAutoTraj(routine));
 
         traj1.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
         traj1.atTime("Intake Stop").onTrue(intake.disable());

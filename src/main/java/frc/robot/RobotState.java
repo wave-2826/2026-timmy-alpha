@@ -52,6 +52,14 @@ public class RobotState {
     @AutoLogOutput(key = "Odometry/RobotVelocity")
     private ChassisSpeeds robotVelocity = new ChassisSpeeds();
 
+    private boolean impairedOdometry = false;
+    public boolean odometryImpaired() {
+        return impairedOdometry;
+    }
+    public void setDroppedCameraCount(int droppedCameras) {
+        impairedOdometry = droppedCameras > 1;
+    }
+
     /**
      * Gets the pose at the specified timestamp. This includes vision compensation, so it's a real estimated field pose.
      */
