@@ -16,7 +16,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
-import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.FieldConstants.LeftTrench;
 import frc.robot.FieldConstants.LinesVertical;
@@ -110,7 +109,7 @@ public class ShotCalculator {
     private static ShotMapData hubShots = new ShotMapData();
     private static ShotMapData passShots = new ShotMapData();
     
-    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.04);
+    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.02);
     /**
      * See https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html#the-drag-constant-k.
      * For fuel, we found that the piece lost 19.4% of its velocity over 6.3s. The linear velocity drag can be represented as v(t) = v_0 * e^-kt or
@@ -205,7 +204,6 @@ public class ShotCalculator {
 
     private double applyPhaseDelay(double vel, double accel) {
         double phaseDelayDt = phaseDelay.get();
-        if(Constants.isSim) return vel * phaseDelayDt * 0.4; // Hacky but oh well
         double firstOrder = vel * phaseDelayDt;
         double seconndOrder = vel * phaseDelayDt + 0.5 * accel * phaseDelayDt * phaseDelayDt;
         return MathUtil.interpolate(firstOrder, seconndOrder, secondOrderCompensation.get());

@@ -102,7 +102,7 @@ public class TurretConstants {
     
     /** The translation from the robot origin to the turret shot position. */
     public static final Translation3d robotToTurret = new Translation3d(
-        Units.inchesToMeters(-4.06), Units.inchesToMeters(2.329), Units.inchesToMeters(16.3)
+        Units.inchesToMeters(2.329), Units.inchesToMeters(-4.06), Units.inchesToMeters(16.3)
     );
 
     // Limits
