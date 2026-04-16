@@ -137,6 +137,8 @@ public class FieldConstants {
         public static final Translation2d oppNearRightCorner = Hub.oppNearLeftCorner;
         public static final Translation2d oppFarLeftCorner = new Translation2d(LinesVertical.hubCenter + width / 2, Units.inchesToMeters(255));
         public static final Translation2d oppFarRightCorner = Hub.oppFarLeftCorner;
+
+        public static final Translation2d center = new Translation2d(LinesVertical.hubCenter, (fieldWidthY / 2.0) - (Hub.width / 2.0) - (width / 2.0));
     }
     
     /** Right Bump related constants */
@@ -157,6 +159,8 @@ public class FieldConstants {
         public static final Translation2d oppNearRightCorner = Hub.oppNearLeftCorner;
         public static final Translation2d oppFarLeftCorner = new Translation2d(LinesVertical.hubCenter - width / 2, Units.inchesToMeters(255));
         public static final Translation2d oppFarRightCorner = Hub.oppFarLeftCorner;
+
+        public static final Translation2d center = new Translation2d(LinesVertical.hubCenter, (fieldWidthY / 2.0) + (Hub.width / 2.0) + (width / 2.0));
     }
     
     /** Left Trench related constants */
@@ -175,6 +179,8 @@ public class FieldConstants {
         // Relevant reference points on opposing side
         public static final Translation3d oppOpeningTopLeft = new Translation3d(LinesVertical.oppHubCenter, fieldWidthY, openingHeight);
         public static final Translation3d oppOpeningTopRight = new Translation3d(LinesVertical.oppHubCenter, fieldWidthY - openingWidth, openingHeight);
+    
+        public static final Translation2d center = new Translation2d(LinesVertical.hubCenter, fieldWidthY - (openingWidth / 2.0));
     }
     
     public static class RightTrench {
@@ -192,6 +198,8 @@ public class FieldConstants {
         // Relevant reference points on opposing side
         public static final Translation3d oppOpeningTopLeft = new Translation3d(LinesVertical.oppHubCenter, openingWidth, openingHeight);
         public static final Translation3d oppOpeningTopRight = new Translation3d(LinesVertical.oppHubCenter, 0, openingHeight);
+
+        public static final Translation2d center = new Translation2d(LinesVertical.hubCenter, openingWidth / 2.0);
     }
     
     /** Tower related constants */

@@ -69,10 +69,13 @@ public class Vision extends SubsystemBase {
 
         var robotState = RobotState.getInstance();
 
+        int disconnectedCameras = 0;
+
         // Loop over cameras
         for(int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
             // Update disconnected alert
             disconnectedAlerts[cameraIndex].set(!inputs[cameraIndex].connected);
+            disconnectedCameras += inputs[cameraIndex].connected ? 0 : 1;
 
             // Initialize logging values
             List<Pose3d> tagPoses = new LinkedList<>();
@@ -133,6 +136,8 @@ public class Vision extends SubsystemBase {
             allRobotPosesAccepted.addAll(robotPosesAccepted);
             allRobotPosesRejected.addAll(robotPosesRejected);
         }
+
+        robotState.setDroppedCameraCount(disconnectedCameras);
 
         // Log summary data
         Logger.recordOutput("Vision/Summary/TagPoses", allTagPoses.toArray(new Pose3d[allTagPoses.size()]));

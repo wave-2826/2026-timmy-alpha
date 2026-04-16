@@ -244,9 +244,9 @@ public class LEDs extends VirtualSubsystem {
      */
     private Color allianceDark() {
         if(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue) {
-            return Color.kBlue;
+            return new Color(0.0f, 0.0f, 1.0f);
         } else {
-            return Color.kRed;
+            return new Color(1.0f, 0.0f, 0.0f);
         }
     }
 
@@ -255,9 +255,9 @@ public class LEDs extends VirtualSubsystem {
      */
     private Color allianceLight() {
         if(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue) {
-            return Color.kDarkBlue;
+            return new Color(0.0f, 0.0f, 0.3f);
         } else {
-            return Color.kDarkRed;
+            return new Color(0.3f, 0.0f, 0.0f);
         }
     }
 

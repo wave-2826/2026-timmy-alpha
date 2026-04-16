@@ -16,7 +16,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
-import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.FieldConstants.LeftTrench;
 import frc.robot.FieldConstants.LinesVertical;
@@ -110,7 +109,7 @@ public class ShotCalculator {
     private static ShotMapData hubShots = new ShotMapData();
     private static ShotMapData passShots = new ShotMapData();
     
-    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.04);
+    private static LoggedTunableNumber phaseDelay = new LoggedTunableNumber("ShotCalculator/PhaseDelay", 0.02);
     /**
      * See https://frc-docs--3242.org.readthedocs.build/en/3242/docs/software/advanced-controls/fire-control/linear-drag.html#the-drag-constant-k.
      * For fuel, we found that the piece lost 19.4% of its velocity over 6.3s. The linear velocity drag can be represented as v(t) = v_0 * e^-kt or
@@ -205,7 +204,6 @@ public class ShotCalculator {
 
     private double applyPhaseDelay(double vel, double accel) {
         double phaseDelayDt = phaseDelay.get();
-        if(Constants.isSim) return vel * phaseDelayDt * 0.4; // Hacky but oh well
         double firstOrder = vel * phaseDelayDt;
         double seconndOrder = vel * phaseDelayDt + 0.5 * accel * phaseDelayDt * phaseDelayDt;
         return MathUtil.interpolate(firstOrder, seconndOrder, secondOrderCompensation.get());
@@ -228,11 +226,11 @@ public class ShotCalculator {
         Pose2d estimatedPose = RobotState.getInstance().getEstimatedPose();
 
         // Distance from turret to target
-        Pose2d turretPosition = estimatedPose.transformBy(
+        Pose2d turretPose = estimatedPose.transformBy(
             new Transform2d(TurretConstants.robotToTurret.toTranslation2d(), Rotation2d.kZero)
         );
 
-        Pose2d zoneCheckPosition = AllianceFlipUtil.apply(turretPosition);
+        Pose2d zoneCheckPosition = AllianceFlipUtil.apply(turretPose);
         ShotType type = ShotType.HUB;
         if(FieldConstants.Tower.bounds.contains(zoneCheckPosition)) {
             type = ShotType.NONE;
@@ -267,8 +265,8 @@ public class ShotCalculator {
         lastRobotVy = robotRelativeVelocity.vyMetersPerSecond;
         lastRobotOmega = robotRelativeVelocity.omegaRadiansPerSecond;
         
-        Translation2d target = getTargetPosition(type, turretPosition.getTranslation());
-        double turretToTargetDistance = target.getDistance(turretPosition.getTranslation());
+        Translation2d target = getTargetPosition(type, turretPose.getTranslation());
+        double turretToTargetDistance = target.getDistance(turretPose.getTranslation());
 
         // Calculate field relative turret velocity
         ChassisSpeeds robotVelocity = RobotState.getInstance().getFieldVelocity();
@@ -294,8 +292,8 @@ public class ShotCalculator {
             Translation2d offset = new Translation2d(turretVelocityX * effectiveTimeOfFlight, turretVelocityY * effectiveTimeOfFlight);
             virtualTarget = target.minus(offset);
             
-            double dx = virtualTarget.getX() - turretPosition.getX();
-            double dy = virtualTarget.getY() - turretPosition.getY();
+            double dx = virtualTarget.getX() - turretPose.getX();
+            double dy = virtualTarget.getY() - turretPose.getY();
             lookaheadTurretToTargetDistance = Math.hypot(dx, dy);
             
             double mappedToF = type.shotMapData.getTimeOfFlight(lookaheadTurretToTargetDistance);
@@ -326,10 +324,10 @@ public class ShotCalculator {
         Logger.recordOutput("LaunchCalculator/VirtualTarget", virtualTarget);
         Logger.recordOutput("LaunchCalculator/TimeOfFlight", timeOfFlight);
         Logger.recordOutput("LaunchCalculator/EffectiveTimeOfFlight", effectiveTimeOfFlight);
-        Logger.recordOutput("LaunchCalculator/TurretPosition", turretPosition);
+        Logger.recordOutput("LaunchCalculator/TurretPosition", turretPose);
         Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);
 
-        var shotDirection = virtualTarget.minus(turretPosition.getTranslation());
+        var shotDirection = virtualTarget.minus(turretPose.getTranslation());
         Rotation2d turretAngleAbsolute = shotDirection.getAngle().plus(
             Rotation2d.fromDegrees(fudgeAzimuthOffsetDegCCW.get())
         );
