@@ -10,6 +10,8 @@ import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GainSchedBehaviorValue;
+import com.ctre.phoenix6.signals.GainSchedKpBehaviorValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -119,6 +121,10 @@ public class TurretIOTalonFX implements TurretIO {
         applyTorqueCurrentLimit(azimuthConfig, TurretConstants.azimuthCurrentLimit);
 
         TurretConstants.azimuthMotorPID.applyConfigAndRegister(azimuthConfig, azimuthTalon);
+        // TODO: This will break when adjusting PID tuning
+        azimuthConfig.Slot0.GainSchedBehavior = GainSchedBehaviorValue.ZeroOutput;
+        azimuthConfig.ClosedLoopGeneral.GainSchedErrorThreshold = Units.degreesToRadians(0.5);
+        azimuthConfig.ClosedLoopGeneral.GainSchedKpBehavior = GainSchedKpBehaviorValue.Discontinuous;
         azimuthConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.totalAzimuthGearing;
         azimuthConfig.ClosedLoopGeneral.ContinuousWrap = true;
 
