@@ -331,6 +331,7 @@ public class DriveCommands {
             // Square rotation value for more precise control
             omega = Math.copySign(omega * omega, omega) * speedScalar * (1 + linearVelocity.getNorm() * 0.3);
 
+            
             // Convert to field relative speeds & send command
             ChassisSpeeds speeds = new ChassisSpeeds(
                 linearVelocity.getX() * DriveConstants.linearFreeSpeed.in(MetersPerSecond),
