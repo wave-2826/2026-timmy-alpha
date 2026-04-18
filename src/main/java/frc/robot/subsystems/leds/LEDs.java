@@ -109,7 +109,9 @@ public class LEDs extends VirtualSubsystem {
 
         AutonomousStart(LEDs::autonomousStart, LEDCompositingMode.Additive), // Active at the start of autonomous
 
+        ScoringRecovering((leds) -> leds.rainbow(0.6, 1.0)),
         Scoring((leds) -> leds.rainbow()), //
+        
         Compacting((leds) -> leds.pulse(Color.kPurple, Color.kPink, 0.3)), //
 
         // CoralSeen((leds) -> leds.rainbow(0.5, 0.5)),

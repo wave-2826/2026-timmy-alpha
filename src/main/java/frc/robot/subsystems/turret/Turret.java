@@ -289,6 +289,7 @@ public class Turret extends SubsystemBase {
                 manualFlywheelSpeed.get() - (1.0 - flySpeed) * 200
             );
 
+            leds.setStateActive(LEDState.ScoringRecovering, runFly && !atSetpoint);
             leds.setStateActive(LEDState.Scoring, runFly);
 
             shotTarget.azimuthOffsetRad = manualControlAzimuthOffset;
