@@ -311,7 +311,7 @@ def hub_margin_cost(target_height, target_distance, xs, ys):
     return 2000. * entrance_height_err
 
 hub_distances = np.linspace(1.8, 7.0, 50) # target distances in meters
-lob_distances = np.linspace(1.8, 8.0, 50) # target distances in meters
+lob_distances = np.linspace(1.8, 9.0, 50) # target distances in meters
 
 simulate_and_save('hub', '../../src/main/deploy/hub_shots.csv', hub_entrance_height_m, hub_distances, plot_hub, hub_margin_cost)
 simulate_and_save('lob', '../../src/main/deploy/lob_shots.csv', 0., lob_distances)
