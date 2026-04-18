@@ -126,9 +126,9 @@ public class TurretIOTalonFX implements TurretIO {
         var hoodConfig = baseConfig.clone();
         
         // TODO: This will break when adjusting PID tuning
-        hoodConfig.Slot0.GainSchedBehavior = GainSchedBehaviorValue.ZeroOutput;
-        hoodConfig.ClosedLoopGeneral.GainSchedErrorThreshold = Units.degreesToRadians(0.5) / TurretConstants.hoodRingToHoodReduction / (2 * Math.PI);
-        hoodConfig.ClosedLoopGeneral.GainSchedKpBehavior = GainSchedKpBehaviorValue.Discontinuous;
+        // hoodConfig.Slot0.GainSchedBehavior = GainSchedBehaviorValue.ZeroOutput;
+        // hoodConfig.ClosedLoopGeneral.GainSchedErrorThreshold = Units.degreesToRadians(0.5) / TurretConstants.hoodRingToHoodReduction / (2 * Math.PI);
+        // hoodConfig.ClosedLoopGeneral.GainSchedKpBehavior = GainSchedKpBehaviorValue.Discontinuous;
 
         hoodConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         applyTorqueCurrentLimit(hoodConfig, TurretConstants.hoodCurrentLimit);
