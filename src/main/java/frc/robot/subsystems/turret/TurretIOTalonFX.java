@@ -65,12 +65,16 @@ public class TurretIOTalonFX implements TurretIO {
     protected final StatusSignal<Current> flywheel1Current;
     /** Base unit: celsius */
     protected final StatusSignal<Temperature> flywheel1Temperature;
+    /** Boolean */
+    protected final StatusSignal<Boolean> flywheel1Overtemperature;
     /** Base unit: motor **rotations per second** */
     protected final StatusSignal<AngularVelocity> flywheel2Velocity;
     /** Base unit: stator **amps** */
     protected final StatusSignal<Current> flywheel2Current;
     /** Base unit: celsius */
     protected final StatusSignal<Temperature> flywheel2Temperature;
+    /** Boolean */
+    protected final StatusSignal<Boolean> flywheel2Overtemperature;
 
     /** Base unit: mechanism **rotations** */
     protected final StatusSignal<Angle> azimuthInternalAngle;
@@ -102,6 +106,7 @@ public class TurretIOTalonFX implements TurretIO {
         var flywheelConfig = baseConfig.clone();
         flywheelConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.totalFlywheelGearing;
         flywheelConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
+        // flywheelConfig.Feedback.VelocityFilterTimeConstant = 0.002;
         applyTorqueCurrentLimit(flywheelConfig, TurretConstants.flywheelCurrentLimit);
 
         TurretConstants.flywheelMotorPID.applyConfigAndRegister(flywheelConfig, flywheel1Talon, flywheel2Talon);
@@ -135,9 +140,11 @@ public class TurretIOTalonFX implements TurretIO {
         flywheel1Velocity = flywheel1Talon.getVelocity();
         flywheel1Current = flywheel1Talon.getStatorCurrent();
         flywheel1Temperature = flywheel1Talon.getDeviceTemp();
+        flywheel1Overtemperature = flywheel1Talon.getFault_DeviceTemp();
         flywheel2Velocity = flywheel2Talon.getVelocity();
         flywheel2Current = flywheel2Talon.getStatorCurrent();
         flywheel2Temperature = flywheel2Talon.getDeviceTemp();
+        flywheel2Overtemperature = flywheel2Talon.getFault_DeviceTemp();
 
         // azimuthAbsAngle = azimuthCancoder.getAbsolutePosition();
         // azimuthAbsVelocity = azimuthCancoder.getVelocity();
@@ -218,13 +225,15 @@ public class TurretIOTalonFX implements TurretIO {
             inputs.flywheel1.connected(),
             flywheel1Velocity.getValueAsDouble() * (2 * Math.PI),
             inputs.flywheel1.currentAmps(),
-            inputs.flywheel1.temperatureCelsius()
+            inputs.flywheel1.temperatureCelsius(),
+            flywheel1Overtemperature.getValue()
         );
         inputs.flywheel2 = new TurretIOInputs.FlywheelMotorInputs(
             inputs.flywheel2.connected(),
             flywheel2Velocity.getValueAsDouble() * (2 * Math.PI),
             inputs.flywheel2.currentAmps(),
-            inputs.flywheel2.temperatureCelsius()
+            inputs.flywheel2.temperatureCelsius(),
+            flywheel2Overtemperature.getValue()
         );
     }
 
@@ -246,13 +255,15 @@ public class TurretIOTalonFX implements TurretIO {
             flywheel1ConnectedDebouncer.calculate(flywheel1Status.isOK()),
             flywheel1Velocity.getValueAsDouble() * (2 * Math.PI),
             flywheel1Current.getValueAsDouble(),
-            flywheel1Temperature.getValueAsDouble()
+            flywheel1Temperature.getValueAsDouble(),
+            flywheel1Overtemperature.getValue()
         );
         inputs.flywheel2 = new TurretIOInputs.FlywheelMotorInputs(
             flywheel2ConnectedDebouncer.calculate(flywheel2Status.isOK()),
             flywheel2Velocity.getValueAsDouble() * (2 * Math.PI),
             flywheel2Current.getValueAsDouble(),
-            flywheel2Temperature.getValueAsDouble()
+            flywheel2Temperature.getValueAsDouble(),
+            flywheel1Overtemperature.getValue()
         );
 
         inputs.hood = new TurretIOInputs.HoodMotorInputs(

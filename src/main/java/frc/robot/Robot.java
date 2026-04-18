@@ -166,6 +166,7 @@ public class Robot extends LoggedRobot {
         Elastic.selectTab("Teleoperated");
 
         ShotCalculator.warmUp();
+        robotContainer.routines.warmUp();
 
         // De-anonymize ourselves
         HAL.report(tResourceType.kResourceType_Language, tInstances.kLanguage_Rust);

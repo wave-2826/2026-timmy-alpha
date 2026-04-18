@@ -58,10 +58,10 @@ public class RobotContainer {
     public final Spindexer spindexer;
     public final Turret turret;
 
-    private final LEDs leds;
+    public final LEDs leds;
 
     // Dashboard inputs
-    private final AutoRoutines routines;
+    public final AutoRoutines routines;
     public final LoggedAutoChooser autoChooser;
     private final LoggedDashboardChooser<Command> testChooser;
 

@@ -341,7 +341,7 @@ public class DriveCommands {
 
             double fieldStickX = isFlipped ? -xSupplier.getAsDouble() : xSupplier.getAsDouble();
             double fieldStickY = isFlipped ? -ySupplier.getAsDouble() : ySupplier.getAsDouble();
-            if(!robotState.odometryImpaired()) {
+            if(!robotState.odometryImpaired() && !driveSlow.getAsBoolean()) {
                 for(DriverAssist assist : DriveCommands.driverAssists) {
                     speeds = assist.apply(speeds, fieldStickX, fieldStickY);
                 }
