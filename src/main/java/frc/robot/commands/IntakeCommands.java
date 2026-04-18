@@ -20,7 +20,7 @@ public class IntakeCommands {
         return Commands.parallel(
             intake.runRollerScaled(() -> overrideSpeed + (runRoller.getAsBoolean() ? 1. : 0.)),
             intake.setIntakePositionNormalized(() -> {
-                return pullIn.getAsDouble() * 0.9; // + (runRoller.getAsBoolean() ? 0.0 : 0.1);
+                return pullIn.getAsDouble() * 0.95; // + (runRoller.getAsBoolean() ? 0.0 : 0.1);
             })
         );
     }

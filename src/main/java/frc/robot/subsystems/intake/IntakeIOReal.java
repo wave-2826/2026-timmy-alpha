@@ -60,22 +60,21 @@ public class IntakeIOReal implements IntakeIO {
         
         var deployBaseConfig = new SparkMaxConfig();
         deployBaseConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(deployCurrentLimit).voltageCompensation(Constants.voltageCompensation);
-        deployBaseConfig.inverted(true);
         deployBaseConfig.encoder
             .positionConversionFactor(2.0 * Math.PI * pinionRadiusMeters / pinionReduction) // Rotor Rotations -> Deploy Meters
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0 * pinionRadiusMeters / pinionReduction)
-            .uvwMeasurementPeriod(10)
-            .uvwAverageDepth(2);
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0 * pinionRadiusMeters / pinionReduction);
         deployBaseConfig.closedLoop.maxMotion
-            // TODO: reasonable values
-            .cruiseVelocity(Units.inchesToMeters(14.75) * 2) // m/s
-            .maxAcceleration(Units.inchesToMeters(60.0)) // m/s^2
-            .allowedProfileError(Units.inchesToMeters(5.)); // m
+            // I have NO idea why there's a factor of 60 in here but we're going with it
+            .cruiseVelocity(Units.inchesToMeters(14.75 * 6) * 60.) // m/s
+            .maxAcceleration(Units.inchesToMeters(60.0) * 60. * 60.) // m/s^2
+            .allowedProfileError(1000.); // m
         deployBaseConfig.signals.apply(SparkUtil.defaultSignals).primaryEncoderPositionPeriodMs(20);
 
         // Per-motor
-        var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
         var deployLConfig = new SparkMaxConfig().apply(deployBaseConfig);
+        var deployRConfig = new SparkMaxConfig().apply(deployBaseConfig);
+        deployLConfig.inverted(false);
+        deployRConfig.inverted(true);
         
         var rollerLConfig = new SparkMaxConfig().apply(rollerConfig);
         var rollerRConfig = new SparkMaxConfig().apply(rollerConfig);
@@ -135,12 +134,12 @@ public class IntakeIOReal implements IntakeIO {
 
     @Override
     public void setDeployPowerL(double power) {
-        deployL.getClosedLoopController().setSetpoint(power, ControlType.kDutyCycle);
+        deployLController.setSetpoint(-power, ControlType.kDutyCycle);
     }
 
     @Override
     public void setDeployPowerR(double power) {
-        deployR.getClosedLoopController().setSetpoint(-power, ControlType.kDutyCycle);
+        deployRController.setSetpoint(-power, ControlType.kDutyCycle);
     }
 
     @Override
@@ -151,8 +150,8 @@ public class IntakeIOReal implements IntakeIO {
 
     @Override
     public void setDeployPosition(double positionMeters) {
+        deployLController.setSetpoint(positionMeters, ControlType.kMAXMotionPositionControl);
         deployRController.setSetpoint(positionMeters, ControlType.kMAXMotionPositionControl);
-        deployLController.setSetpoint(-positionMeters, ControlType.kMAXMotionPositionControl);
     }
 
     @Override
