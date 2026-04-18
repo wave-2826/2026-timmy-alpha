@@ -69,7 +69,7 @@ public class ScoringCommands {
                 spindexer.setPower(1.0, turret.atSetpoint() ? 1.0 : 0.0);
             }).alongWith(
                 intake.setIntakePositionNormalized(() -> Math.sin(Timer.getFPGATimestamp() * 1.5) * 0.5 + 0.5)
-            ).raceWith(hopperVision.waitForNoPieces(1.0, 8.0, 10.0)).alongWith(leds.runStateCommand(LEDState.Scoring))
+            ).alongWith(leds.runStateCommand(LEDState.Scoring)).raceWith(hopperVision.waitForNoPieces(1.0, 8.0, 10.0))
         ).raceWith(
             turret.run(() -> { turret.target = ControlTarget.SHOT_CALCULATOR_DEFAULT; })
         ).andThen(
