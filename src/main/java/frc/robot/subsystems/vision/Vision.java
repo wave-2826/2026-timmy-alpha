@@ -45,7 +45,7 @@ public class Vision extends SubsystemBase {
         setFPSLimit(VisionConstants.disabledFPSLimit);
         RobotModeTriggers.disabled().onChange(Commands.runOnce(() -> {
             setFPSLimit(DriverStation.isEnabled() ? -1 : VisionConstants.disabledFPSLimit);
-        }));
+        }).ignoringDisable(true));
     }
 
     private void setFPSLimit(int toFPS) {
