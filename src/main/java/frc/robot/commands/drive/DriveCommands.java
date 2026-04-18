@@ -150,6 +150,9 @@ public class DriveCommands {
                     Math.min(correction, MAX_CORRECTION_VEL) * -1
                 );
 
+                Logger.recordOutput("TrenchAssist/ToLineNorm", robotPos.plus(toLineNorm));
+                Logger.recordOutput("TrenchAssist/CorrectionVec", robotPos.plus(correctionVec));
+
                 double speed = Math.hypot(fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond);
                 // Project speed along the line direction
                 Translation2d alongLineVec = lineVec.times(speed);
@@ -277,10 +280,10 @@ public class DriveCommands {
     private DriveCommands() {}
 
     private static DriverAssist[] driverAssists = new DriverAssist[] {
-        new TrenchDriverAssist(true, true),
-        new TrenchDriverAssist(true, false),
-        new TrenchDriverAssist(false, true),
-        new TrenchDriverAssist(false, false),
+        // new TrenchDriverAssist(true, true),
+        // new TrenchDriverAssist(true, false),
+        // new TrenchDriverAssist(false, true),
+        // new TrenchDriverAssist(false, false),
         new BumpDriverAssist(true, true),
         new BumpDriverAssist(true, false),
         new BumpDriverAssist(false, true),
@@ -331,7 +334,6 @@ public class DriveCommands {
             // Square rotation value for more precise control
             omega = Math.copySign(omega * omega, omega) * speedScalar * (1 + linearVelocity.getNorm() * 0.3);
 
-            
             // Convert to field relative speeds & send command
             ChassisSpeeds speeds = new ChassisSpeeds(
                 linearVelocity.getX() * DriveConstants.linearFreeSpeed.in(MetersPerSecond),
@@ -343,6 +345,7 @@ public class DriveCommands {
             double fieldStickX = isFlipped ? -xSupplier.getAsDouble() : xSupplier.getAsDouble();
             double fieldStickY = isFlipped ? -ySupplier.getAsDouble() : ySupplier.getAsDouble();
             if(!robotState.odometryImpaired() && !driveSlow.getAsBoolean()) {
+                Logger.recordOutput("SwerveChassisSpeeds/PreAssist", speeds);
                 for(DriverAssist assist : DriveCommands.driverAssists) {
                     speeds = assist.apply(speeds, fieldStickX, fieldStickY);
                 }

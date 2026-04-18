@@ -122,7 +122,7 @@ if(!project.gradle.startParameter.taskNames.any({ it.toLowerCase().contains("rep
 
 // for replay, we do everything normally but turn off the simgui
 task("simReplay", type: JavaExec) {
-    dependsOn("simulateJava")
+    dependsOn("simulateJavaRelease")
 }
 
 // update simulateJavaRelease for fancy hotswap
