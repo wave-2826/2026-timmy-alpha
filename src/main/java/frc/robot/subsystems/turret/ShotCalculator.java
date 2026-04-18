@@ -127,21 +127,7 @@ public class ShotCalculator {
         // Hub shots
 
         hubShots.loadFromCsv("hub_shots.csv");
-
-        // Passing shots
-        passShots.hoodAngleMap.put(5.46,  43.0);
-        passShots.hoodAngleMap.put(17.16, 43.0);
-
-        passShots.flywheelSpeedMap.put(5.46, 3274.0);
-        passShots.flywheelSpeedMap.put(6.62, 3683.3);
-        passShots.flywheelSpeedMap.put(7.80, 4092.5);
-
-        passShots.timeOfFlightMap.put(5.46,  1.27);
-        passShots.timeOfFlightMap.put(6.62,  1.39);
-        passShots.timeOfFlightMap.put(7.8,   1.49);
-        passShots.timeOfFlightMap.put(11.0,  1.75);
-        passShots.timeOfFlightMap.put(13.0,  1.76);
-        passShots.timeOfFlightMap.put(17.16, 2.16);
+        passShots.loadFromCsv("lob_shots.csv");
     }
 
     public enum ShotType {
