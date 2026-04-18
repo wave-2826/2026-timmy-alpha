@@ -298,6 +298,9 @@ public class Turret extends SubsystemBase {
             shotTarget.hoodOffsetRad = manualHoodOffset.get();
         }, () -> {
             target = ControlTarget.NONE;
+            
+            leds.setStateActive(LEDState.ScoringRecovering, false);
+            leds.setStateActive(LEDState.Scoring, false);
         }, this);
     }
 

@@ -135,7 +135,7 @@ public class TurretIOTalonFX implements TurretIO {
         
         hoodConfig.Slot0.GainSchedBehavior = GainSchedBehaviorValue.ZeroOutput;
         hoodConfig.ClosedLoopGeneral.GainSchedErrorThreshold = Units.degreesToRadians(0.5) / TurretConstants.hoodRingToHoodReduction / (2 * Math.PI);
-        hoodConfig.ClosedLoopGeneral.GainSchedKpBehavior = GainSchedKpBehaviorValue.Discontinuous;
+        hoodConfig.ClosedLoopGeneral.GainSchedKpBehavior = GainSchedKpBehaviorValue.Continuous;
 
         hoodConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.hoodMotorToRingReduction;
 
