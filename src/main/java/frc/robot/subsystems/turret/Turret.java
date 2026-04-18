@@ -207,7 +207,8 @@ public class Turret extends SubsystemBase {
                     TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
                         MathUtil.clamp(
                             calculatedTarget.flywheelSpeedRadPerSec,
-                            DriverStation.isFMSAttached() ? Units.rotationsPerMinuteToRadiansPerSecond(2000) : 0.,
+                            // DriverStation.isFMSAttached() ? Units.rotationsPerMinuteToRadiansPerSecond(2000) : 0.,
+                            0.,
                             Units.rotationsPerMinuteToRadiansPerSecond(5500)
                         ),
                         calculatedTarget.azimuthAngleRad % (Math.PI * 2),
