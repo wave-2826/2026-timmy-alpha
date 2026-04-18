@@ -393,9 +393,10 @@ public class LEDs extends VirtualSubsystem {
                 break;
             }
             case Exclusive: {
-                buffer[index * 3] = (int) (color.red * 255);
-                buffer[index * 3 + 1] = (int) (color.green * 255);
-                buffer[index * 3 + 2] = (int) (color.blue * 255);
+                // TEMPORARY: LOWER BRIGHTNESS
+                buffer[index * 3] = (int) (color.red * 255 * 100);
+                buffer[index * 3 + 1] = (int) (color.green * 255 * 100);
+                buffer[index * 3 + 2] = (int) (color.blue * 255 * 100);
                 break;
             }
         }
