@@ -26,7 +26,7 @@ public class ShiftHelpers {
             matchInfo = override;
         }
         if(matchInfo != null && matchInfo.length() > 0) {
-            return matchInfo.charAt(0) == 'B';
+            return matchInfo.charAt(0) != 'B';
         }
 
         // Default if data isn't ready yet

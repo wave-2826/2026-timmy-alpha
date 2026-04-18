@@ -36,17 +36,38 @@ class TimedData:
         
         return min(candidates, key=lambda x: x[0])[1]
 
-logs = [
-    # ("../../../dlogs/akit_26-04-18_15-56-45_wicmp_q2.wpilog", "Quals 2"),
-    ("../../../dlogs/akit_26-04-18_14-59-19_wicmp_p12.wpilog", "Practice 12"),
-    ("../../../dlogs/akit_26-04-18_20-27-23_wicmp_q25.wpilog", "Quals 25"),
-]
+    def get_last_value(self, default: float):
+        if self.values:
+            return self.values[-1]
+        return default
+
+def enumerate_logs(base_path: str):
+    import os
+    logs: list[tuple[str, str]] = []
+
+    for entry in os.listdir(base_path):
+        if entry.endswith(".wpilog"):
+            path = os.path.join(base_path, entry)
+            name = entry[:-7].split('_')[-1]
+            if name.startswith("q"):
+                name = "Quals " + name[1:]
+            elif name.startswith("p"):
+                name = "Practice " + name[1:]
+            logs.append(("../" + path, name))
+    return logs
+
+# logs = [
+#     # ("../../../dlogs/akit_26-04-18_15-56-45_wicmp_q2.wpilog", "Quals 2"),
+#     ("../../../dlogs/akit_26-04-18_14-59-19_wicmp_p12.wpilog", "Practice 12"),
+#     ("../../../dlogs/akit_26-04-18_22-32-06_wicmp_q37.wpilog", "Quals 37"),
+# ]
+logs = enumerate_logs("../../dlogs/")
 
 @dataclass
 class LogResult:
     power_sum_per_channel: list[float]
     start_offset: float
-    power_integral: list[float]
+    power_integral: TimedData
     brownout_timestamps: list[float]
 
 log_results: list[LogResult] = []
@@ -72,18 +93,19 @@ for log_idx, log in enumerate(logs):
     prev_browned_out = False
 
     for field in source:
+        ts = field["timestamp"] / 1e6
         if field["name"].endswith("Voltage"):
-            voltages.add(field["timestamp"], field["data"])
+            voltages.add(ts, field["data"])
         if field["name"].endswith("ChannelCurrent"):
             for i, current in enumerate(field["data"]):
-                currents[i].add(field["timestamp"], current)
+                currents[i].add(ts, current)
         if field["name"].endswith("Enabled") and field["data"] == True and start_offset == 0:
-            start_offset = field["timestamp"]
+            start_offset = ts
         
         if field["name"].endswith("BrownedOut"):
             browned_out = field["data"]
             if browned_out and not prev_browned_out:
-                brownout_timestamps.append(field["timestamp"])
+                brownout_timestamps.append(ts)
             prev_browned_out = browned_out
     
     channel_power_sums = [0 for _ in range(24)]
@@ -97,7 +119,7 @@ for log_idx, log in enumerate(logs):
 
         print(f"Channel {i}: Total Energy = {channel_power_sums[i]:.2f} Wh")
     
-    power_integral = []
+    power_integral = TimedData()
 
     for ts in currents[0].timestamps:
         total_power = 0
@@ -105,12 +127,13 @@ for log_idx, log in enumerate(logs):
             voltage = voltages.get_nearest(ts)
             if voltage is not None:
                 total_power += joulesToWattHours(voltage * current.get_nearest(ts) * 0.02)
-        
-        power_integral.append((ts, (power_integral[-1] if len(power_integral) > 0 else (0, 0))[1] + total_power))
+
+        next_power = power_integral.get_last_value(0) + total_power
+        power_integral.add(ts, next_power)
     
     log_results.append(LogResult(channel_power_sums, start_offset, power_integral, brownout_timestamps))
 
-# Plot
+# Channel plot
 import matplotlib.pyplot as plt
 plt.figure(figsize=(12, 6))
 bar_width = 0.5 / len(logs)
@@ -125,14 +148,18 @@ plt.legend()
 plt.xticks(range(24))
 plt.grid(axis="y", linestyle="--", alpha=0.7)
 
+# Power integral plot
 plt.figure(figsize=(12, 6))
 for log_idx, (log_path, log_name) in enumerate(logs):
     result = log_results[log_idx]
-    timestamps, energies = zip(*result.power_integral)
+    timestamps = result.power_integral.timestamps
+    energies = result.power_integral.values
     plt.plot([ts - result.start_offset for ts in timestamps], energies, label=f"{log_name} (Total: {energies[-1]:.2f} Wh, {len(result.brownout_timestamps)} brownouts)")
     # Plot brownouts as red dots
     for brownout_ts in result.brownout_timestamps:
-        plt.plot(brownout_ts - result.start_offset, energies[-1], 'ro', label=f"{log_name} Brownout" if brownout_ts == result.brownout_timestamps[0] else "")
+        plt.plot(brownout_ts - result.start_offset, [
+            result.power_integral.get_nearest(brownout_ts) or 0
+        ], 'ro', label=f"{log_name} Brownout" if brownout_ts == result.brownout_timestamps[0] else "", markersize=4)
 
 plt.xlabel("Time (s)")
 plt.ylabel("Cumulative Energy (Wh)")

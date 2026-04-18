@@ -147,7 +147,7 @@ public class Robot extends LoggedRobot {
         // brownout voltage of 6.25 before it was increased, so we're comfortable
         // setting it to 6.0. This hasn't caused issues in the past, but it's obviously
         // not an ideal solution.
-        RobotController.setBrownoutVoltage(6.25);
+        RobotController.setBrownoutVoltage(6.0);
 
         // For GrappleHook
         // if(Constants.currentMode == Constants.Mode.REAL && Robot.tuningMode()) {
