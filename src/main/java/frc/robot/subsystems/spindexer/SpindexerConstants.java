@@ -11,8 +11,8 @@ public class SpindexerConstants {
     public static final double spinnerMotorReduction = 3.0;
     public static final double transferMotorReduction = GearRatios.UltraPlanetary.three * GearRatios.UltraPlanetary.four;
 
-    public static final int spinnerCurrentLimit = 50;
-    public static final int transferCurrentLimit = 35;
+    public static final int spinnerCurrentLimit = 40;
+    public static final int transferCurrentLimit = 30;
 
     public static final int ballsInSpin = 5;
 

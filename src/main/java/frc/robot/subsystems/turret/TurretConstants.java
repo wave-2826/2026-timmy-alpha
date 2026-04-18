@@ -111,9 +111,9 @@ public class TurretConstants {
     public static final double maxAzimuthSpeedRadPerSec = azimuthSimMotor.freeSpeedRadPerSec * aziMotorToRingReduction * 0.8;
 
     // Current limits
-    public static final int flywheelCurrentLimit = 70; // amps each
-    public static final int azimuthCurrentLimit = 50; // amps
-    public static final int hoodCurrentLimit = 35; // amps
+    public static final int flywheelCurrentLimit = 60; // amps each
+    public static final int azimuthCurrentLimit = 45; // amps
+    public static final int hoodCurrentLimit = 30; // amps
 
     public static final int hoodResetCurrent = 30; // amps
 
