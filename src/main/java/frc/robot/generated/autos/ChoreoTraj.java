@@ -27,9 +27,9 @@ public record ChoreoTraj(
     public static final ChoreoTraj CenterDepot = new ChoreoTraj(
         "CenterDepot",
         OptionalInt.empty(),
-        4.71764,
+        4.7185,
         new Pose2d(3.47272, 4.04414, Rotation2d.fromRadians(0)),
-        new Pose2d(1.47648, 6.37669, Rotation2d.fromRadians(0.17311))
+        new Pose2d(1.47648, 6.37669, Rotation2d.fromRadians(0.17029))
     );
     public static final ChoreoTraj CenterDepot$0 = new ChoreoTraj(
         "CenterDepot",
@@ -41,84 +41,84 @@ public record ChoreoTraj(
     public static final ChoreoTraj CenterDepot$1 = new ChoreoTraj(
         "CenterDepot",
         OptionalInt.of(1),
-        0.9293400000000003,
+        0.9301999999999997,
         new Pose2d(0.83717, 6.27466, Rotation2d.fromRadians(0.17527)),
-        new Pose2d(1.47648, 6.37669, Rotation2d.fromRadians(0.17311))
+        new Pose2d(1.47648, 6.37669, Rotation2d.fromRadians(0.17029))
     );
     public static final ChoreoTraj CenterPreload = new ChoreoTraj(
         "CenterPreload",
         OptionalInt.empty(),
-        1.13664,
+        1.05139,
         new Pose2d(3.62515, 4.0272, Rotation2d.fromRadians(0)),
         new Pose2d(1.9844, 3.9977, Rotation2d.fromRadians(0))
     );
     public static final ChoreoTraj LeftDangerSweep = new ChoreoTraj(
         "LeftDangerSweep",
         OptionalInt.empty(),
-        10.88659,
+        10.25275,
         new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
         new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
     );
     public static final ChoreoTraj LeftDangerSweep$0 = new ChoreoTraj(
         "LeftDangerSweep",
         OptionalInt.of(0),
-        4.9928,
+        4.66095,
         new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
         new Pose2d(3.62778, 0.62436, Rotation2d.fromRadians(3.14154))
     );
     public static final ChoreoTraj LeftDangerSweep$1 = new ChoreoTraj(
         "LeftDangerSweep",
         OptionalInt.of(1),
-        5.89379,
+        5.591800000000001,
         new Pose2d(3.62778, 0.62436, Rotation2d.fromRadians(3.14154)),
         new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
     );
     public static final ChoreoTraj LeftDoubleSwipe = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.empty(),
-        10.32503,
+        9.87276,
         new Pose2d(4.50402, 7.34015, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(3.1335, 5.35427, Rotation2d.fromRadians(-0.12428))
+        new Pose2d(3.1335, 5.35427, Rotation2d.fromRadians(-0.12314))
     );
     public static final ChoreoTraj LeftDoubleSwipe$0 = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.of(0),
-        5.95413,
+        5.72522,
         new Pose2d(4.50402, 7.34015, Rotation2d.fromRadians(1.5708)),
         new Pose2d(3.31398, 7.42481, Rotation2d.fromRadians(3.12666))
     );
     public static final ChoreoTraj LeftDoubleSwipe$1 = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.of(1),
-        3.8289599999999995,
+        3.6335700000000006,
         new Pose2d(3.31398, 7.42481, Rotation2d.fromRadians(3.12666)),
-        new Pose2d(3.82339, 5.37826, Rotation2d.fromRadians(-0.12367))
+        new Pose2d(3.82339, 5.37826, Rotation2d.fromRadians(-0.12246))
     );
     public static final ChoreoTraj LeftDoubleSwipe$2 = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.of(2),
-        0.5419400000000003,
-        new Pose2d(3.82339, 5.37826, Rotation2d.fromRadians(-0.12367)),
-        new Pose2d(3.1335, 5.35427, Rotation2d.fromRadians(-0.12428))
+        0.5139699999999987,
+        new Pose2d(3.82339, 5.37826, Rotation2d.fromRadians(-0.12246)),
+        new Pose2d(3.1335, 5.35427, Rotation2d.fromRadians(-0.12314))
     );
     public static final ChoreoTraj LeftSweepSwipe = new ChoreoTraj(
         "LeftSweepSwipe",
         OptionalInt.empty(),
-        10.43888,
+        9.83005,
         new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
         new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
     );
     public static final ChoreoTraj LeftSweepSwipe$0 = new ChoreoTraj(
         "LeftSweepSwipe",
         OptionalInt.of(0),
-        4.56783,
+        4.26923,
         new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
         new Pose2d(3.81092, 0.64037, Rotation2d.fromRadians(0))
     );
     public static final ChoreoTraj LeftSweepSwipe$1 = new ChoreoTraj(
         "LeftSweepSwipe",
         OptionalInt.of(1),
-        5.871049999999999,
+        5.56082,
         new Pose2d(3.81092, 0.64037, Rotation2d.fromRadians(0)),
         new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
     );

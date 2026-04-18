@@ -157,6 +157,7 @@ public class AutoRoutines {
         AutoTrajectory traj1 = flipIf(right, ChoreoTraj.LeftDoubleSwipe$1.asAutoTraj(routine));
 
         traj0.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
+        traj1.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
 
         routine.active().onTrue(Commands.sequence(
             traj0.resetOdometry(),
