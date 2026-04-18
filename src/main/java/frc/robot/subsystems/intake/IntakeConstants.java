@@ -15,7 +15,7 @@ public class IntakeConstants {
     public static final double rollerMotorReduction = 36. / 16.;
     
     public static final int rollerCurrentLimit = 40;
-    public static final int deployCurrentLimit = 40;
+    public static final int deployCurrentLimit = 60;
     
     /** The current we use to detect the motors at the end of their travel */
     public static final double deployStallCurrent = 55;

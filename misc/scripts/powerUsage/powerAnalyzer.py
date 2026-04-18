@@ -1,12 +1,6 @@
 import vlogger
 import urllib
 
-split = urllib.parse.urlsplit("wpilog://./log.wpilog")
-print(split.path.lstrip('/'))
-
-# "" regex matches with anything, i.e. any field
-source = vlogger.get_source("wpilog://./log.wpilog", "/PowerDistribution")
-
 class TimedData:
     timestamps: list[float]
     values: list[float]
@@ -41,33 +35,48 @@ class TimedData:
         
         return min(candidates, key=lambda x: x[0])[1]
 
-voltages = TimedData()
-currents = [TimedData() for i in range(24)]
+logs = [
+    # ("../../../dlogs/akit_26-04-18_14-59-19_wicmp_p12.wpilog", "Practice 12"),
+    ("../../../dlogs/akit_26-04-18_15-56-45_wicmp_q2.wpilog", "Quals 2"),
+    ("../../../dlogs/akit_26-04-18_16-47-42_wicmp_q8.wpilog", "Quals 8")
+]
 
-for field in source:
-    if field["name"].endswith("Voltage"):
-        voltages.add(field["timestamp"], field["data"])
-    if field["name"].endswith("ChannelCurrent"):
-        for i, current in enumerate(field["data"]):
-            currents[i].add(field["timestamp"], current)
 
-power_sums = [0 for _ in range(24)]
+log_power_sums = [
+    [0 for _ in range(24)] for _ in logs
+]
 
-for i, current in enumerate(currents):
-    for ts, val in zip(current.timestamps, current.values):
-        voltage = voltages.get_nearest(ts)
-        if voltage is not None:
-            power_sums[i] += voltage * val / 0.92
+for log_idx, log in enumerate(logs):
+    source = vlogger.get_source(f"wpilog://{log[0]}", "/PowerDistribution")
 
-    print(f"Channel {i}: Total Energy = {power_sums[i]} J")
+    voltages = TimedData()
+    currents = [TimedData() for i in range(24)]
+
+    for field in source:
+        if field["name"].endswith("Voltage"):
+            voltages.add(field["timestamp"], field["data"])
+        if field["name"].endswith("ChannelCurrent"):
+            for i, current in enumerate(field["data"]):
+                currents[i].add(field["timestamp"], current)
+
+    for i, current in enumerate(currents):
+        for ts, val in zip(current.timestamps, current.values):
+            voltage = voltages.get_nearest(ts)
+            if voltage is not None:
+                log_power_sums[log_idx][i] += voltage * val / 0.92
+
+        print(f"Channel {i}: Total Energy = {log_power_sums[log_idx][i]:.2f} Joules")
 
 # Plot
 import matplotlib.pyplot as plt
 plt.figure(figsize=(12, 6))
-plt.bar(range(24), power_sums)
+bar_width = 0.4 / len(logs)
+for log_idx, (log_path, log_name) in enumerate(logs):
+    plt.bar([x + log_idx * bar_width for x in range(24)], log_power_sums[log_idx], width=bar_width, label=log_name)
 plt.xlabel("Channel")
 plt.ylabel("Total Energy (Joules)")
 plt.title("Total Energy per Channel")
+plt.legend()
 plt.xticks(range(24))
 plt.grid(axis="y", linestyle="--", alpha=0.7)
 plt.show()
