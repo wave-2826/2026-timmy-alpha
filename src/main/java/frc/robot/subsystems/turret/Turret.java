@@ -29,6 +29,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import frc.robot.Controls;
 import frc.robot.commands.tuning.TurretTuning;
+import frc.robot.subsystems.leds.LEDs;
+import frc.robot.subsystems.leds.LEDs.LEDState;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.subsystems.turret.TurretIO.TurretIOPIDOutputs;
 import frc.robot.util.Container;
@@ -90,7 +92,7 @@ public class Turret extends SubsystemBase {
             public Manual(TurretTarget target) { this.target = target; }
         };
         public static class ShotCalculator implements ControlTarget {
-            public double maxFlyVelocityRadPerSec = 6000;
+            public double maxFlyVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(6000);
             public double azimuthOffsetRad = 0;
             public double hoodOffsetRad = 0;
             public double flyOffsetRadPerSec = 0;
@@ -108,6 +110,8 @@ public class Turret extends SubsystemBase {
 
     private final Alert flywheel1DisconnectedAlert = new Alert("Flywheel motor 1 disconnected! Using only 2 as a fallback. Recovery performance will be reduced.", AlertType.kError);
     private final Alert flywheel2DisconnectedAlert = new Alert("Flywheel motor 2 disconnected! Recovery performance will be reduced.", AlertType.kError);
+    private final Alert flywheel1OvertemperatureAlert = new Alert("Flywheel motor 1 overheating!", AlertType.kError);
+    private final Alert flywheel2OvertemperatureAlert = new Alert("Flywheel motor 2 overheating!", AlertType.kError);
     private final Alert azimuthDisconnectedAlert = new Alert("Turret azimuth motor disconnected!", AlertType.kError);
     private final Alert hoodDisconnectedAlert = new Alert("Turret hood motor disconnected!", AlertType.kError);
 
@@ -146,6 +150,8 @@ public class Turret extends SubsystemBase {
 
         flywheel1DisconnectedAlert.set(!inputs.flywheel1.connected());
         flywheel2DisconnectedAlert.set(!inputs.flywheel2.connected());
+        flywheel1OvertemperatureAlert.set(inputs.flywheel1.overtemperature());
+        flywheel2OvertemperatureAlert.set(inputs.flywheel2.overtemperature());
         azimuthDisconnectedAlert.set(!inputs.azimuth.connected());
         hoodDisconnectedAlert.set(!inputs.hood.connected());
 
@@ -166,9 +172,10 @@ public class Turret extends SubsystemBase {
                 ControlTarget.ShotCalculator shotTarget = (ControlTarget.ShotCalculator)target;
                 calculatedTarget = ShotCalculator.getInstance().calculate().target();
                 calculatedTarget.flywheelSpeedRadPerSec += shotTarget.flyOffsetRadPerSec;
+                calculatedTarget.flywheelSpeedRadPerSec = Math.min(shotTarget.maxFlyVelocityRadPerSec, calculatedTarget.flywheelSpeedRadPerSec);
+                
                 calculatedTarget.azimuthAngleRad += shotTarget.azimuthOffsetRad;
                 calculatedTarget.hoodAngleRad += shotTarget.hoodOffsetRad;
-                calculatedTarget.flywheelSpeedRadPerSec = Math.min(shotTarget.maxFlyVelocityRadPerSec, calculatedTarget.flywheelSpeedRadPerSec);
             }
 
             if(calculatedTarget == null) return;
@@ -258,9 +265,11 @@ public class Turret extends SubsystemBase {
 
     public Command runManual(
         DoubleSupplier flywheelScalar,
-        DoubleSupplier azimuthSpeed
+        DoubleSupplier azimuthSpeed,
+        LEDs leds
     ) {
         SlewRateLimiter flyLimiter = new SlewRateLimiter(5000);
+        Container<Boolean> flyRampEdgeActive = new Container<>(false);
         return Commands.runEnd(() -> {
             target = ControlTarget.SHOT_CALCULATOR;
             
@@ -268,12 +277,21 @@ public class Turret extends SubsystemBase {
             Logger.recordOutput("Turret/ManualControlAzimuthOffsetDeg", Units.radiansToDegrees(manualControlAzimuthOffset));
 
             ControlTarget.ShotCalculator shotTarget = (ControlTarget.ShotCalculator)target;
-            // TODO: better limiting logic
-            shotTarget.maxFlyVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(flyLimiter.calculate(
-                flywheelScalar.getAsDouble() * 6000
-            ));
+
+            double flySpeed = MathUtil.applyDeadband(flywheelScalar.getAsDouble(), 0.15);
+            boolean runFly = flySpeed > 0.;
+            if(flyRampEdgeActive.value != runFly) flyLimiter.reset(
+                Units.radiansPerSecondToRotationsPerMinute(inputs.getFlywheelVelocityRadPerSecond())
+            );
+            flyRampEdgeActive.value = runFly;
+            shotTarget.maxFlyVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(flyLimiter.calculate(runFly ? 6000 : 0.));
+            shotTarget.flyOffsetRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(
+                manualFlywheelSpeed.get() - (1.0 - flySpeed) * 200
+            );
+
+            leds.setStateActive(LEDState.Scoring, runFly);
+
             shotTarget.azimuthOffsetRad = manualControlAzimuthOffset;
-            shotTarget.flyOffsetRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(manualFlywheelSpeed.get());
             shotTarget.hoodOffsetRad = manualHoodOffset.get();
         }, () -> {
             target = ControlTarget.NONE;

@@ -23,7 +23,7 @@ public class LEDIORio implements LEDIO {
         leds.setBitTiming(350, 900, 900, 350);
         leds.setSyncTime(100);
 
-        leds.setColorOrder(ColorOrder.kGRB);
+        leds.setColorOrder(ColorOrder.kRGB);
 
         leds.setData(buffer);
         leds.start();

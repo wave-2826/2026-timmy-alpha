@@ -25,6 +25,7 @@ import frc.robot.subsystems.turret.Turret.ControlTarget;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.leds.LEDs;
 import frc.robot.util.Elastic;
 import frc.robot.util.simUtils.Simulation;
 import frc.robot.util.tunables.LoggedTunableNumber;
@@ -65,6 +66,7 @@ public class Controls {
         Turret turret = rc.turret;
         Spindexer spindexer = rc.spindexer;
         Intake intake = rc.intake;
+        LEDs leds = rc.leds;
         
         drive.setDefaultCommand(DriveCommands.joystickDrive(
             drive,
@@ -91,7 +93,8 @@ public class Controls {
         turretControlCodriver.and(coDriver.povDown()).onTrue(turret.adjustManualAngle(-1));
         turretControlCodriver.whileTrue(turret.runManual(
             coDriver::getRightTriggerAxis,
-            coDriver::getLeftX
+            coDriver::getLeftX,
+            leds
         ));
         spindexer.setDefaultCommand(spindexer.runManual(
             coDriver::getLeftTriggerAxis,
