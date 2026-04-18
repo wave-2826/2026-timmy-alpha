@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
@@ -22,6 +23,7 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.hopperVision.HopperVision;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.leds.LEDs;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.util.AllianceFlipUtil;
@@ -37,6 +39,7 @@ public class AutoRoutines {
     private final Turret turret;
     private final Spindexer spindexer;
     private final HopperVision hopperVision;
+    private final LEDs leds;
 
     /** The latest trajectory target. If null, no trajectory has been followed yet. */
     private Pose2d latestTrajectoryTarget = null;
@@ -56,6 +59,7 @@ public class AutoRoutines {
         this.turret = rc.turret;
         this.spindexer = rc.spindexer;
         this.hopperVision = rc.hopperVision;
+        this.leds = rc.leds;
 
         autoFactory = createAutoFactory();
 
@@ -73,14 +77,17 @@ public class AutoRoutines {
         autoChooser.addRoutine("Left Sweep Swipe", () -> this.getSweepSwipe(false));
         autoChooser.addRoutine("Right Sweep Swipe", () -> this.getSweepSwipe(true));
         
-        autoChooser.addRoutine("Left Danger Sweep Swipe", () -> this.getDangerSweepSwipe(false));
-        autoChooser.addRoutine("Right Danger Sweep Swipe", () -> this.getDangerSweepSwipe(true));
+        autoChooser.addRoutine("RTRRB Left Danger Sweep Swipe", () -> this.getDangerSweepSwipe(false));
+        autoChooser.addRoutine("RTRRB Right Danger Sweep Swipe", () -> this.getDangerSweepSwipe(true));
 
         autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload());
         autoChooser.addRoutine("Center Depot", () -> this.getCenterDepot(), true);
         autoChooser.addCmd("Shoot Only (intake facing DS)", () -> this.getShootOnly());
     }
 
+    public void warmUp() {
+        CommandScheduler.getInstance().schedule(autoFactory.warmupCmd());
+    }
     
     /**
      * Creates a new auto factory for this drivetrain with the given trajectory logger.
@@ -155,9 +162,9 @@ public class AutoRoutines {
             traj0.resetOdometry(),
             ScoringCommands.prep(turret),
             traj0.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision)),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds)),
             traj1.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision))
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds))
         ));
 
         return routine;
@@ -174,7 +181,7 @@ public class AutoRoutines {
             traj.resetOdometry(),
             ScoringCommands.prep(turret),
             traj.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision))
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds))
         ));
 
         return routine;
@@ -193,9 +200,9 @@ public class AutoRoutines {
             traj1.resetOdometry(),
             ScoringCommands.prep(turret),
             traj1.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision)),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds)),
             traj2.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision))
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds))
         ));
 
         return routine;
@@ -214,9 +221,9 @@ public class AutoRoutines {
             traj1.resetOdometry(),
             ScoringCommands.prep(turret),
             traj1.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision)),
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds)),
             traj2.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision))
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds))
         ));
 
         return routine;
@@ -233,7 +240,7 @@ public class AutoRoutines {
             ScoringCommands.prep(turret),
             traj.cmd(),
             stopDrive(),
-            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision)
+            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds)
         ));
 
         return routine;
@@ -246,7 +253,7 @@ public class AutoRoutines {
 
         traj1.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
         traj2.atTime("Score").onTrue(
-            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision)
+            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds)
         );
 
         routine.active().onTrue(Commands.sequence(
@@ -263,7 +270,7 @@ public class AutoRoutines {
     private Command getShootOnly() {
         return Commands.sequence(
             Commands.runOnce(() -> drive.setPose(new Pose2d(new Translation2d(2., FieldConstants.fieldWidthY / 2.), Rotation2d.kZero))),
-            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision)
+            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds)
         );
     }
 }
