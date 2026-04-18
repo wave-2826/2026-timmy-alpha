@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+from matplotlib.collections import LineCollection
 
 def inches_to_meters(inches: float) -> float:
     return inches * 0.0254
@@ -39,7 +40,7 @@ def rpm_to_rad_per_sec(rpm: float) -> float:
 
 def hood_angle_to_theta(hood_angle_rad: float) -> float:
     """Convert hood angle (0 = horizontal/straight up shot) to launch angle theta."""
-    return np.radians(90) - hood_angle_rad + np.radians(3)
+    return np.radians(90) - hood_angle_rad + np.radians(5)
 
 def magnus_cl_from_spin(v_mag: float, spin_rad_s: float) -> float:
     """Very simple lift-coefficient model using spin parameter S = (w*r)/v.
@@ -55,7 +56,7 @@ def simulate_shot(v0: float, theta: float, target_distance_m: float, *,
     stop_at_x: float | None = None):
     """Simulate a shot with quadratic drag and Magnus lift. x increases toward the target, y is up.
     Shooter starts at (0, shooter_height_m). Target plane is at x=target_distance_m.
-    Returns xs, ys, ts arrays and an interpolated (y_at_target, tof) if crossing occurred.
+    Returns xs, ys, ts, and velocities arrays and an interpolated (y_at_target, tof) if crossing occurred.
     """
     x = 0.0
     y = shooter_height_m
@@ -66,6 +67,7 @@ def simulate_shot(v0: float, theta: float, target_distance_m: float, *,
 
     xs = [x]
     ys = [y]
+    velocities = [v0]
     ts = [0.0]
 
     crossed = None  # (y_at_target, tof)
@@ -115,13 +117,14 @@ def simulate_shot(v0: float, theta: float, target_distance_m: float, *,
         xs.append(x)
         ys.append(y)
         ts.append(t)
+        velocities.append(v_mag)
 
         if y < -0.25:
             break
         if x >= x_stop:
             break
 
-    return np.array(xs), np.array(ys), np.array(ts), crossed
+    return np.array(xs), np.array(ys), np.array(ts), np.array(velocities), crossed
 
 def cost_function(params, target_distance):
     v0, hood_angle = params
@@ -130,7 +133,7 @@ def cost_function(params, target_distance):
     if v0 <= 0.0:
         return 1e9
 
-    xs, ys, ts, crossed = simulate_shot(v0, theta, target_distance)
+    xs, ys, ts, velocities, crossed = simulate_shot(v0, theta, target_distance)
     if crossed is not None:
         y_at_target, tof = crossed
         height_err = (y_at_target - hub_entrance_height_m)
@@ -191,7 +194,7 @@ for i, d in enumerate(distances):
 
     last_vel = v0_opt
 
-    xs, ys, ts, crossed = simulate_shot(v0_opt, theta_opt, d)
+    xs, ys, ts, velocities, crossed = simulate_shot(v0_opt, theta_opt, d)
     if crossed is None:
         # Shouldn't happen if optimizer succeeded, but be defensive.
         y_at_target, t_hit = float('nan'), float('nan')
@@ -211,7 +214,19 @@ for i, d in enumerate(distances):
         
         # Turret (8 inches wide) at the starting point
         turret_width_m = 8 * 0.0254
-        # TODO: color by something meaningful lol
+        
+        # Color trajectory by velocity
+        points = np.array([x_shifted, ys[valid_idx]]).T.reshape(-1, 1, 2)
+        segments = np.concatenate([points[:-1], points[1:]], axis=1)
+        norm = plt.Normalize(velocities[valid_idx].min(), velocities[valid_idx].max())
+        lc = LineCollection(segments, cmap='viridis', norm=norm)
+        lc.set_array(velocities[valid_idx][:-1])
+        lc.set_linewidth(2)
+        plt.gca().add_collection(lc)
+        plt.plot(0, hub_entrance_height_m, 'ro') # Target point
+
+        # Turret (8 inches wide) at the starting point
+        turret_width_m = 8 * 0.0254
         plt.plot([-d - turret_width_m/2, -d + turret_width_m/2], [shooter_height_m, shooter_height_m], 'k-', lw=3)
 
 plt.axhline(0, color='brown', linewidth=2, linestyle='solid', label='Floor')
