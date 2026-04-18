@@ -121,14 +121,16 @@ public class TurretIOTalonFX implements TurretIO {
         applyTorqueCurrentLimit(azimuthConfig, TurretConstants.azimuthCurrentLimit);
 
         TurretConstants.azimuthMotorPID.applyConfigAndRegister(azimuthConfig, azimuthTalon);
+        azimuthConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.totalAzimuthGearing;
+        azimuthConfig.ClosedLoopGeneral.ContinuousWrap = true;
+
         tryUntilOk(5, () -> azimuthTalon.getConfigurator().apply(azimuthConfig, 0.25));
-        
+
         var hoodConfig = baseConfig.clone();
         
-        // TODO: This will break when adjusting PID tuning
-        // hoodConfig.Slot0.GainSchedBehavior = GainSchedBehaviorValue.ZeroOutput;
-        // hoodConfig.ClosedLoopGeneral.GainSchedErrorThreshold = Units.degreesToRadians(0.5) / TurretConstants.hoodRingToHoodReduction / (2 * Math.PI);
-        // hoodConfig.ClosedLoopGeneral.GainSchedKpBehavior = GainSchedKpBehaviorValue.Discontinuous;
+        hoodConfig.Slot0.GainSchedBehavior = GainSchedBehaviorValue.ZeroOutput;
+        hoodConfig.ClosedLoopGeneral.GainSchedErrorThreshold = Units.degreesToRadians(0.5) / TurretConstants.hoodRingToHoodReduction / (2 * Math.PI);
+        hoodConfig.ClosedLoopGeneral.GainSchedKpBehavior = GainSchedKpBehaviorValue.Discontinuous;
 
         hoodConfig.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
         applyTorqueCurrentLimit(hoodConfig, TurretConstants.hoodCurrentLimit);
