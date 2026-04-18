@@ -176,6 +176,7 @@ public class Turret extends SubsystemBase {
                 
                 calculatedTarget.azimuthAngleRad += shotTarget.azimuthOffsetRad;
                 calculatedTarget.hoodAngleRad += shotTarget.hoodOffsetRad;
+                calculatedTarget.hoodAngleRad = MathUtil.clamp(calculatedTarget.hoodAngleRad, TurretConstants.hoodMinAngle, TurretConstants.hoodMaxAngle);
             }
 
             if(calculatedTarget == null) return;
