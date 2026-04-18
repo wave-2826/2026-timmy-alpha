@@ -1,5 +1,6 @@
 package frc.robot.util;
 
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import org.littletonrobotics.junction.networktables.LoggedNetworkString;
@@ -129,6 +130,8 @@ public class ShiftHelpers {
         currentShiftEntry.set(currentShift.getText());
         shiftTimeRemainingEntry.set(Math.max(0., currentShift.duration - shiftTimer.get()));
         canScoreEntry.set(currentShift.canScore());
+
+        Logger.recordOutput("ShiftHelpers/BlueWonAuto", blueWonAuto());
     }
 
     public Shift getActiveShift() {

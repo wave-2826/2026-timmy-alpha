@@ -13,5 +13,10 @@ public class HopperVisionIOPhoton implements HopperVisionIO {
     public void updateInputs(HopperVisionIOInputs inputs) {
         inputs.connected = camera.isConnected();
         inputs.targets = camera.getLatestResult().getTargets().size();
+        inputs.fpsLimit = camera.getFPSLimit();
+    }
+
+    public void setFPSLimit(int limit) {
+        camera.setFPSLimit(limit);
     }
 }

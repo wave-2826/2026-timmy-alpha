@@ -7,8 +7,11 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.networktables.NetworkTablesJNI;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.util.simUtils.Simulation;
@@ -37,6 +40,17 @@ public class Vision extends SubsystemBase {
         for(int i = 0; i < inputs.length; i++) {
             disconnectedAlerts[i] = new Alert("Vision camera " + io[i].getName() + " is disconnected.",
                 AlertType.kWarning);
+        }
+
+        setFPSLimit(VisionConstants.disabledFPSLimit);
+        RobotModeTriggers.disabled().onChange(Commands.runOnce(() -> {
+            setFPSLimit(DriverStation.isEnabled() ? -1 : VisionConstants.disabledFPSLimit);
+        }));
+    }
+
+    private void setFPSLimit(int toFPS) {
+        for(var camera : io) {
+            camera.limitFPS(toFPS);
         }
     }
 

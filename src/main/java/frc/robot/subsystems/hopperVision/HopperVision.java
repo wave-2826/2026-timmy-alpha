@@ -7,9 +7,12 @@ import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.util.Container;
 
 public class HopperVision extends SubsystemBase {
@@ -41,6 +44,15 @@ public class HopperVision extends SubsystemBase {
 
     public HopperVision(HopperVisionIO io) {
         this.io = io;
+        
+        setFPSLimit(VisionConstants.disabledFPSLimit);
+        RobotModeTriggers.disabled().onChange(Commands.runOnce(() -> {
+            setFPSLimit(DriverStation.isEnabled() ? -1 : VisionConstants.disabledFPSLimit);
+        }));
+    }
+
+    private void setFPSLimit(int fps) {
+        io.setFPSLimit(fps);
     }
 
     @Override

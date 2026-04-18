@@ -51,6 +51,8 @@ public class VisionConstants {
         new Transform3d(new Translation3d(0.12435679572761617, -0.38808136052967684, 0.43761855661407406), new Rotation3d(0.01568510376516497, -0.32001531584503656, -1.3666162015603929))
     );
 
+    public static final int disabledFPSLimit = 3;
+
     // Basic filtering thresholds
     public static final double maxAmbiguity = 0.3;
     public static final double maxZError = 0.75;

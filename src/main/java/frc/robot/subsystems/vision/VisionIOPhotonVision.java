@@ -106,6 +106,13 @@ public class VisionIOPhotonVision implements VisionIO {
         // Save pose observations to inputs object
         inputs.poseObservations = new PoseObservation[poseObservations.size()];
         for(int i = 0; i < poseObservations.size(); i++) inputs.poseObservations[i] = poseObservations.get(i);
+
+        inputs.fpsLimit = camera.getFPSLimit();
+    }
+
+    @Override
+    public void limitFPS(int toFPS) {
+        camera.setFPSLimit(toFPS);
     }
 
     @Override

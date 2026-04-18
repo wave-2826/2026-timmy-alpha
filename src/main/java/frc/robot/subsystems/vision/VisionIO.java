@@ -15,6 +15,7 @@ public interface VisionIO {
          */
         public Transform3d bestTagTransform = Transform3d.kZero;
         public PoseObservation[] poseObservations = new PoseObservation[0];
+        public int fpsLimit = 0;
     }
 
     /** Represents a robot pose sample used for pose estimation. */
@@ -27,4 +28,6 @@ public interface VisionIO {
     default String getName() {
         return "";
     }
+
+    default void limitFPS(int toFPS) {}
 }
