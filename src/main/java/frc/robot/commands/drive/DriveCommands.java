@@ -30,9 +30,12 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 public class DriveCommands {
     private static final double DEADBAND = 0.1;
+
+    public static final LoggedNetworkBoolean disableAssistOverride = new LoggedNetworkBoolean("Overrides/DisableAssist", false);
 
     private interface DriverAssist {
         public ChassisSpeeds apply(ChassisSpeeds fieldSpeeds, double joystickFieldX, double joystickFieldY);
@@ -349,7 +352,7 @@ public class DriveCommands {
                 linearVelocity.getY() * DriveConstants.linearFreeSpeed.in(MetersPerSecond),
                 omega * DriveConstants.maxAngularSpeedRadPerSec * 0.5);
 
-            if(!robotState.odometryImpaired() && !driveSlow.getAsBoolean()) {
+            if(!robotState.odometryImpaired() && !driveSlow.getAsBoolean() && !disableAssistOverride.getAsBoolean()) {
                 Logger.recordOutput("SwerveChassisSpeeds/PreAssist", ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotState.getRotation()));
                 for(DriverAssist assist : DriveCommands.driverAssists) {
                     speeds = assist.apply(speeds, fieldStickX, fieldStickY);
