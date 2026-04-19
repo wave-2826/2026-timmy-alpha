@@ -204,7 +204,6 @@ public class Turret extends SubsystemBase {
                 case NONE:
                     return;
                 case PID: {
-                    // TODO: limit fly target slew rate right here, mayhaps?
                     TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
                         MathUtil.clamp(
                             calculatedTarget.flywheelSpeedRadPerSec,
