@@ -138,7 +138,7 @@ public class TurretConstants {
     
     // Control tolerances
     public static final double flywheelToleranceRadPerSecEnter = Units.rotationsPerMinuteToRadiansPerSecond(180);
-    public static final double flywheelToleranceRadPerSecExit = Units.rotationsPerMinuteToRadiansPerSecond(550);
+    public static final double flywheelToleranceRadPerSecExit = Units.rotationsPerMinuteToRadiansPerSecond(240);
     public static final double azimuthToleranceRad = Units.degreesToRadians(4);
     public static final double hoodToleranceRad = Units.degreesToRadians(2);
 }

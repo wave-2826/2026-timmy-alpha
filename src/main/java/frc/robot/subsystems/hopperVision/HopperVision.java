@@ -21,7 +21,7 @@ public class HopperVision extends SubsystemBase {
 
     private static Alert disconnectedAlert = new Alert("Hopper vision camera disconnected!", AlertType.kError);
 
-    public Command waitForNoPieces(double waitAfter, double fallbackWait, double timeout) {
+    public Command waitForFewerThanNPieces(int pieces, double waitAfter, double fallbackWait, double timeout) {
         Container<Double> startTime = new Container<Double>(0.);
         Debouncer hasPiecesDebouncer = new Debouncer(1.0, DebounceType.kFalling);
         return Commands.sequence(
@@ -35,7 +35,7 @@ public class HopperVision extends SubsystemBase {
                     return Timer.getFPGATimestamp() - startTime.value > fallbackWait;
                 } else {
                     // If we're connected, wait until we see no targets
-                    return !hasPiecesDebouncer.calculate(inputs.targets != 0);
+                    return !hasPiecesDebouncer.calculate(inputs.targets < pieces);
                 }
             }),
             Commands.waitSeconds(waitAfter)

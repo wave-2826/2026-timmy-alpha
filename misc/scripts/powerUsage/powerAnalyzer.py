@@ -67,10 +67,11 @@ def find_log(match: str):
             return (path, extract_name(entry))
 
 # logs = [
-#     # ("../../dlogs/akit_26-04-18_15-56-45_wicmp_q2.wpilog", "Quals 2"),
-#     ("../../dlogs/akit_26-04-18_14-59-19_wicmp_p12.wpilog", "Practice 12"),
-#     # ("../../dlogs/akit_26-04-18_22-32-06_wicmp_q37.wpilog", "Quals 37"),
-#     find_log("q43")
+# #     # ("../../dlogs/akit_26-04-18_15-56-45_wicmp_q2.wpilog", "Quals 2"),
+# #     ("../../dlogs/akit_26-04-18_14-59-19_wicmp_p12.wpilog", "Practice 12"),
+# #     # ("../../dlogs/akit_26-04-18_22-32-06_wicmp_q37.wpilog", "Quals 37"),
+#     find_log("q53"),
+#     find_log("q57")
 # ]
 logs = enumerate_logs()
 
@@ -185,6 +186,7 @@ if __name__ == '__main__':
 
     plt.xlabel("Time (s)")
     plt.ylabel("Cumulative Energy (Wh)")
+    plt.yscale("linear")
     plt.title("Cumulative Energy over Time")
     plt.legend()
     plt.grid(axis="both", linestyle="--", alpha=0.7)
