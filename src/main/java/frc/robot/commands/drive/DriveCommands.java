@@ -156,11 +156,15 @@ public class DriveCommands {
                 double speed = Math.hypot(fieldSpeeds.vxMetersPerSecond, fieldSpeeds.vyMetersPerSecond);
                 // Project speed along the line direction
                 Translation2d alongLineVec = lineVec.times(speed);
+                // Flip if traveling backwards along the line
+                if(alongLine < 0) {
+                    alongLineVec = alongLineVec.times(-1);
+                }
 
-                double lineDirectionFactor = (intentHeuristic - 0.25) / (1.0 - 0.25);
+                double lineDirectionFactor = Math.abs(alongLine) * 0.5;
                 Translation2d usedSpeed = new Translation2d(
-                    MathUtil.interpolate(fieldSpeeds.vxMetersPerSecond, alongLineVec.getX(), lineDirectionFactor),
-                    MathUtil.interpolate(fieldSpeeds.vyMetersPerSecond, alongLineVec.getY(), lineDirectionFactor)
+                    MathUtil.interpolate(alongLineVec.getX(), fieldSpeeds.vxMetersPerSecond, lineDirectionFactor),
+                    MathUtil.interpolate(alongLineVec.getY(), fieldSpeeds.vyMetersPerSecond, lineDirectionFactor)
                 );
 
                 return new ChassisSpeeds(
@@ -280,10 +284,10 @@ public class DriveCommands {
     private DriveCommands() {}
 
     private static DriverAssist[] driverAssists = new DriverAssist[] {
-        // new TrenchDriverAssist(true, true),
-        // new TrenchDriverAssist(true, false),
-        // new TrenchDriverAssist(false, true),
-        // new TrenchDriverAssist(false, false),
+        new TrenchDriverAssist(true, true),
+        new TrenchDriverAssist(true, false),
+        new TrenchDriverAssist(false, true),
+        new TrenchDriverAssist(false, false),
         new BumpDriverAssist(true, true),
         new BumpDriverAssist(true, false),
         new BumpDriverAssist(false, true),
@@ -322,11 +326,16 @@ public class DriveCommands {
     ) {
         RobotState robotState = RobotState.getInstance();
         return Commands.run(() -> {
+            boolean isFlipped = DriverStation.getAlliance().isPresent()
+                && DriverStation.getAlliance().get() == Alliance.Red;
+
+            double fieldStickX = isFlipped ? -xSupplier.getAsDouble() : xSupplier.getAsDouble();
+            double fieldStickY = isFlipped ? -ySupplier.getAsDouble() : ySupplier.getAsDouble();
+
             double speedScalar = driveSlow.getAsBoolean() ? 0.5 : 1.0;
             
             // Get linear velocity
-            Translation2d linearVelocity =
-                getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble(), speedScalar);
+            Translation2d linearVelocity = getLinearVelocityFromJoysticks(fieldStickX, fieldStickY, speedScalar);
 
             // Apply rotation deadband
             double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
@@ -339,22 +348,18 @@ public class DriveCommands {
                 linearVelocity.getX() * DriveConstants.linearFreeSpeed.in(MetersPerSecond),
                 linearVelocity.getY() * DriveConstants.linearFreeSpeed.in(MetersPerSecond),
                 omega * DriveConstants.maxAngularSpeedRadPerSec * 0.5);
-            boolean isFlipped = DriverStation.getAlliance().isPresent()
-                && DriverStation.getAlliance().get() == Alliance.Red;
 
-            double fieldStickX = isFlipped ? -xSupplier.getAsDouble() : xSupplier.getAsDouble();
-            double fieldStickY = isFlipped ? -ySupplier.getAsDouble() : ySupplier.getAsDouble();
             if(!robotState.odometryImpaired() && !driveSlow.getAsBoolean()) {
-                Logger.recordOutput("SwerveChassisSpeeds/PreAssist", speeds);
+                Logger.recordOutput("SwerveChassisSpeeds/PreAssist", ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotState.getRotation()));
                 for(DriverAssist assist : DriveCommands.driverAssists) {
                     speeds = assist.apply(speeds, fieldStickX, fieldStickY);
                 }
             }
             
-            drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(
-                speeds,
-                isFlipped ? robotState.getRotation().plus(new Rotation2d(Math.PI)) : robotState.getRotation()),
-                true);
+            drive.runVelocity(
+                ChassisSpeeds.fromFieldRelativeSpeeds(speeds, robotState.getRotation()),
+                true
+            );
         }, drive);
     }
 }
