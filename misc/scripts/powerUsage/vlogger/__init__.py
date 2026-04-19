@@ -1,3 +1,5 @@
+# Modified VLogger by team Valor 6800.
+
 import re
 from vlogger import wpilog, hoot, pds
 import urllib.parse
@@ -16,7 +18,6 @@ def get_source(ident: str, regex: str | re.Pattern, **kwargs):
         if Source.SCHEME == url.scheme:
             return Source(url, re.compile(regex) if isinstance(regex, str) else regex, **kwargs)
 
-    # TODO: Find a real built in exception class or create new one SourceNotFound
     raise Exception("Source not found")
 
 def merge_sources(*sources):

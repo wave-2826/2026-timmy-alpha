@@ -1,5 +1,5 @@
 import vlogger
-import urllib
+import os
 from dataclasses import dataclass
 
 class TimedData:
@@ -41,27 +41,38 @@ class TimedData:
             return self.values[-1]
         return default
 
-def enumerate_logs(base_path: str):
-    import os
+LOGS_BASE = "../../dlogs/"
+
+def extract_name(log_file: str):
+    name = log_file[:-7].split('_')[-1]
+    if name.startswith("q"):
+        name = "Quals " + name[1:]
+    elif name.startswith("p"):
+        name = "Practice " + name[1:]
+    return name
+
+def enumerate_logs(base_path: str = LOGS_BASE):
     logs: list[tuple[str, str]] = []
 
     for entry in os.listdir(base_path):
         if entry.endswith(".wpilog"):
             path = os.path.join(base_path, entry)
-            name = entry[:-7].split('_')[-1]
-            if name.startswith("q"):
-                name = "Quals " + name[1:]
-            elif name.startswith("p"):
-                name = "Practice " + name[1:]
-            logs.append(("../" + path, name))
+            logs.append((path, extract_name(entry)))
     return logs
 
+def find_log(match: str):
+    for entry in os.listdir(LOGS_BASE):
+        if match in entry:
+            path = os.path.join(LOGS_BASE, entry)
+            return (path, extract_name(entry))
+
 # logs = [
-#     # ("../../../dlogs/akit_26-04-18_15-56-45_wicmp_q2.wpilog", "Quals 2"),
-#     ("../../../dlogs/akit_26-04-18_14-59-19_wicmp_p12.wpilog", "Practice 12"),
-#     ("../../../dlogs/akit_26-04-18_22-32-06_wicmp_q37.wpilog", "Quals 37"),
+#     # ("../../dlogs/akit_26-04-18_15-56-45_wicmp_q2.wpilog", "Quals 2"),
+#     ("../../dlogs/akit_26-04-18_14-59-19_wicmp_p12.wpilog", "Practice 12"),
+#     # ("../../dlogs/akit_26-04-18_22-32-06_wicmp_q37.wpilog", "Quals 37"),
+#     find_log("q43")
 # ]
-logs = enumerate_logs("../../dlogs/")
+logs = enumerate_logs()
 
 @dataclass
 class LogResult:
@@ -70,22 +81,18 @@ class LogResult:
     power_integral: TimedData
     brownout_timestamps: list[float]
 
-log_results: list[LogResult] = []
-
-# log_power_sums = [
-#     [0 for _ in range(24)] for _ in logs
-# ]
-# start_offsets = [0 for _ in logs]
-# log_power_integrals = []
-
 def joulesToWattHours(j: float):
     return j / 3600
 
-for log_idx, log in enumerate(logs):
-    source = vlogger.get_source(f"wpilog://{log[0]}", "/PowerDistribution|/DriverStation/Enabled|/SystemStats/BrownedOut")
+########### Analysis
+
+def analyze_log(log: tuple[str, str]):
+    print(f"Analyzing log {log[0]}")
+    
+    source = vlogger.get_source(f"wpilog://../{log[0]}", "/PowerDistribution|/DriverStation/Enabled|/SystemStats/BrownedOut")
 
     voltages = TimedData()
-    currents = [TimedData() for i in range(24)]
+    currents = [TimedData() for _ in range(24)]
 
     start_offset = 0
 
@@ -117,7 +124,7 @@ for log_idx, log in enumerate(logs):
                 power = joulesToWattHours(voltage * val * 0.02)
                 channel_power_sums[i] += power
 
-        print(f"Channel {i}: Total Energy = {channel_power_sums[i]:.2f} Wh")
+        print(f"[{log[1]}] Channel {i}: Total Energy = {channel_power_sums[i]:.2f} Wh")
     
     power_integral = TimedData()
 
@@ -131,40 +138,55 @@ for log_idx, log in enumerate(logs):
         next_power = power_integral.get_last_value(0) + total_power
         power_integral.add(ts, next_power)
     
-    log_results.append(LogResult(channel_power_sums, start_offset, power_integral, brownout_timestamps))
+    return LogResult(channel_power_sums, start_offset, power_integral, brownout_timestamps)
 
-# Channel plot
-import matplotlib.pyplot as plt
-plt.figure(figsize=(12, 6))
-bar_width = 0.5 / len(logs)
-for log_idx, (log_path, log_name) in enumerate(logs):
-    result = log_results[log_idx]
-    total_power = sum(result.power_sum_per_channel)
-    plt.bar([x + log_idx * bar_width for x in range(24)], result.power_sum_per_channel, width=bar_width, label=f"{log_name} (Total: {total_power:.2f} Wh, {len(result.brownout_timestamps)} brownouts)")
-plt.xlabel("Channel")
-plt.ylabel("Total Energy (Joules)")
-plt.title("Total Energy per Channel")
-plt.legend()
-plt.xticks(range(24))
-plt.grid(axis="y", linestyle="--", alpha=0.7)
+if __name__ == '__main__':
+    log_results: list[LogResult] = []
 
-# Power integral plot
-plt.figure(figsize=(12, 6))
-for log_idx, (log_path, log_name) in enumerate(logs):
-    result = log_results[log_idx]
-    timestamps = result.power_integral.timestamps
-    energies = result.power_integral.values
-    plt.plot([ts - result.start_offset for ts in timestamps], energies, label=f"{log_name} (Total: {energies[-1]:.2f} Wh, {len(result.brownout_timestamps)} brownouts)")
-    # Plot brownouts as red dots
-    for brownout_ts in result.brownout_timestamps:
-        plt.plot(brownout_ts - result.start_offset, [
-            result.power_integral.get_nearest(brownout_ts) or 0
-        ], 'ro', label=f"{log_name} Brownout" if brownout_ts == result.brownout_timestamps[0] else "", markersize=4)
+    import concurrent.futures
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        log_results.extend(executor.map(analyze_log, logs))
 
-plt.xlabel("Time (s)")
-plt.ylabel("Cumulative Energy (Wh)")
-plt.title("Cumulative Energy over Time")
-plt.legend()
-plt.grid(axis="both", linestyle="--", alpha=0.7)
+    ########### Plotting
 
-plt.show()
+    # Channel plot
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(12, 6))
+    bar_width = 0.8 / len(logs)
+    for log_idx, (log_path, log_name) in enumerate(logs):
+        result = log_results[log_idx]
+        total_power = sum(result.power_sum_per_channel)
+        plt.bar([x + log_idx * bar_width for x in range(24)], result.power_sum_per_channel, width=bar_width, label=f"{log_name} (Total: {total_power:.2f} Wh, {len(result.brownout_timestamps)} brownouts)")
+    plt.xlabel("Channel")
+    plt.ylabel("Total Energy (Joules)")
+    plt.title("Total Energy per Channel")
+    plt.legend()
+    plt.xticks(range(24))
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+
+    # Power integral plot
+    plt.figure(figsize=(12, 6))
+
+    # Draw a light red box in the background for auto and a light green box for teleop
+    max_energy = max(result.power_integral.get_last_value(0) for result in log_results) * 1.1
+    plt.gca().add_patch(plt.Rectangle((0, 0), 20, max_energy, facecolor="red", alpha=0.1))
+    plt.gca().add_patch(plt.Rectangle((23, 0), 140, max_energy, facecolor="green", alpha=0.1))
+
+    for log_idx, (log_path, log_name) in enumerate(logs):
+        result = log_results[log_idx]
+        timestamps = result.power_integral.timestamps
+        energies = result.power_integral.values
+        plt.plot([ts - result.start_offset for ts in timestamps], energies, label=f"{log_name} (Total: {energies[-1]:.2f} Wh, {len(result.brownout_timestamps)} brownouts)")
+        # Plot brownouts as red dots
+        for brownout_ts in result.brownout_timestamps:
+            plt.plot(brownout_ts - result.start_offset, [
+                result.power_integral.get_nearest(brownout_ts) or 0
+            ], 'ro', "", markersize=2)
+
+    plt.xlabel("Time (s)")
+    plt.ylabel("Cumulative Energy (Wh)")
+    plt.title("Cumulative Energy over Time")
+    plt.legend()
+    plt.grid(axis="both", linestyle="--", alpha=0.7)
+
+    plt.show()
