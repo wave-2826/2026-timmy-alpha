@@ -78,9 +78,17 @@ logs = enumerate_logs()
 @dataclass
 class LogResult:
     power_sum_per_channel: list[float]
+    amperage_sum_per_channel: list[float]
     start_offset: float
     power_integral: TimedData
+    amperage_integral: TimedData
     brownout_timestamps: list[float]
+    average_voltage_while_enabled: float
+
+    def integral(self, ty: str) -> TimedData:
+        if ty == "power":
+            return self.power_integral
+        return self.amperage_integral
 
 def joulesToWattHours(j: float):
     return j / 3600
@@ -99,16 +107,25 @@ def analyze_log(log: tuple[str, str]):
 
     brownout_timestamps = []
     prev_browned_out = False
+    enabled = False
+
+    enabled_voltage_sum = 0
+    enabled_voltage_count = 0
 
     for field in source:
         ts = field["timestamp"] / 1e6
         if field["name"].endswith("Voltage"):
             voltages.add(ts, field["data"])
+            if enabled:
+                enabled_voltage_sum += field["data"]
+                enabled_voltage_count += 1
         if field["name"].endswith("ChannelCurrent"):
             for i, current in enumerate(field["data"]):
                 currents[i].add(ts, current)
-        if field["name"].endswith("Enabled") and field["data"] == True and start_offset == 0:
-            start_offset = ts
+        if field["name"].endswith("Enabled"):
+            enabled = field["data"]
+            if field["data"] == True and start_offset == 0:
+                start_offset = ts
         
         if field["name"].endswith("BrownedOut"):
             browned_out = field["data"]
@@ -117,29 +134,69 @@ def analyze_log(log: tuple[str, str]):
             prev_browned_out = browned_out
     
     channel_power_sums = [0 for _ in range(24)]
+    channel_amperage_sums = [0 for _ in range(24)]
 
     for i, current in enumerate(currents):
+        last_ts = current.timestamps[0] - 0.02 if current.timestamps else 0
         for ts, val in zip(current.timestamps, current.values):
+            delta_ts = ts - last_ts
+            last_ts = ts
+
             voltage = voltages.get_nearest(ts)
             if voltage is not None:
-                power = joulesToWattHours(voltage * val * 0.02)
+                power = joulesToWattHours(voltage * val * delta_ts)
                 channel_power_sums[i] += power
+                channel_amperage_sums[i] += val * delta_ts
 
         print(f"[{log[1]}] Channel {i}: Total Energy = {channel_power_sums[i]:.2f} Wh")
     
     power_integral = TimedData()
+    amperage_integral = TimedData()
 
+    last_ts = currents[0].timestamps[0] - 0.02 if current.timestamps else 0
     for ts in currents[0].timestamps:
+        delta_ts = ts - last_ts
+        last_ts = ts
+        
         total_power = 0
+        total_amperage = 0
         for i, current in enumerate(currents):
             voltage = voltages.get_nearest(ts)
             if voltage is not None:
-                total_power += joulesToWattHours(voltage * current.get_nearest(ts) * 0.02)
+                total_power += joulesToWattHours(voltage * current.get_nearest(ts) * delta_ts)
+                total_amperage += current.get_nearest(ts) * delta_ts
 
         next_power = power_integral.get_last_value(0) + total_power
         power_integral.add(ts, next_power)
-    
-    return LogResult(channel_power_sums, start_offset, power_integral, brownout_timestamps)
+        
+        next_amperage = amperage_integral.get_last_value(0) + total_amperage
+        amperage_integral.add(ts, next_amperage)
+        
+    average_voltage = enabled_voltage_sum / enabled_voltage_count if enabled_voltage_count > 0 else 0
+    return LogResult(channel_power_sums, channel_amperage_sums, start_offset, power_integral, amperage_integral, brownout_timestamps, average_voltage)
+
+def plot_integrals(ty, units):
+    # Power integral plot
+    plt.figure(figsize=(12, 6))
+
+    # Draw a light red box in the background for auto and a light green box for teleop
+    max_energy = max(result.integral(ty).get_last_value(0) for result in log_results) * 1.1
+    plt.gca().add_patch(plt.Rectangle((0, 0), 20, max_energy, facecolor="red", alpha=0.1))
+    plt.gca().add_patch(plt.Rectangle((23, 0), 140, max_energy, facecolor="green", alpha=0.1))
+
+    for log_idx, (log_path, log_name) in enumerate(logs):
+        result = log_results[log_idx]
+        timestamps = result.integral(ty).timestamps
+        energies = result.integral(ty).values
+        plt.plot([ts - result.start_offset for ts in timestamps], energies, label=f"{log_name} (Total: {energies[-1]:.2f} {units}, {len(result.brownout_timestamps)} brownouts)")
+        # Plot brownouts as red dots
+        for brownout_ts in result.brownout_timestamps:
+            plt.plot(brownout_ts - result.start_offset, [
+                result.integral(ty).get_nearest(brownout_ts) or 0
+            ], 'ro', "", markersize=2)
+
+    plt.legend()
+    plt.grid(axis="both", linestyle="--", alpha=0.7)
 
 if __name__ == '__main__':
     log_results: list[LogResult] = []
@@ -150,6 +207,8 @@ if __name__ == '__main__':
 
     ########### Plotting
 
+    print("Plotting results...")
+
     # Channel plot
     import matplotlib.pyplot as plt
     plt.figure(figsize=(12, 6))
@@ -159,36 +218,54 @@ if __name__ == '__main__':
         total_power = sum(result.power_sum_per_channel)
         plt.bar([x + log_idx * bar_width for x in range(24)], result.power_sum_per_channel, width=bar_width, label=f"{log_name} (Total: {total_power:.2f} Wh, {len(result.brownout_timestamps)} brownouts)")
     plt.xlabel("Channel")
-    plt.ylabel("Total Energy (Joules)")
+    plt.ylabel("Total Energy (Wh)")
     plt.title("Total Energy per Channel")
     plt.legend()
     plt.xticks(range(24))
     plt.grid(axis="y", linestyle="--", alpha=0.7)
 
-    # Power integral plot
+    # Per-log plot
     plt.figure(figsize=(12, 6))
-
-    # Draw a light red box in the background for auto and a light green box for teleop
-    max_energy = max(result.power_integral.get_last_value(0) for result in log_results) * 1.1
-    plt.gca().add_patch(plt.Rectangle((0, 0), 20, max_energy, facecolor="red", alpha=0.1))
-    plt.gca().add_patch(plt.Rectangle((23, 0), 140, max_energy, facecolor="green", alpha=0.1))
+    max_brownouts = max(len(result.brownout_timestamps) for result in log_results) + 1
+    ax1 = plt.gca()
+    ax2 = ax1.twinx()
+    x = range(len(logs))
+    width = 0.4
+    max_voltage = max(result.average_voltage_while_enabled for result in log_results)
+    min_voltage = min(result.average_voltage_while_enabled for result in log_results)
 
     for log_idx, (log_path, log_name) in enumerate(logs):
         result = log_results[log_idx]
-        timestamps = result.power_integral.timestamps
-        energies = result.power_integral.values
-        plt.plot([ts - result.start_offset for ts in timestamps], energies, label=f"{log_name} (Total: {energies[-1]:.2f} Wh, {len(result.brownout_timestamps)} brownouts)")
-        # Plot brownouts as red dots
-        for brownout_ts in result.brownout_timestamps:
-            plt.plot(brownout_ts - result.start_offset, [
-                result.power_integral.get_nearest(brownout_ts) or 0
-            ], 'ro', "", markersize=2)
+        total_power = sum(result.power_sum_per_channel)
+        ax1.bar(
+            x[log_idx] - width/2, total_power, width=width,
+            label=f"{log_name} (Total: {total_power:.2f} Wh, {len(result.brownout_timestamps)} brownouts)",
+            color=plt.cm.RdYlGn_r(min(len(result.brownout_timestamps) / max_brownouts, 1.0))
+        )
+        ax2.bar(
+            x[log_idx] + width/2, result.average_voltage_while_enabled, width=width*0.5,
+            color="#ffff55"
+        )
 
+    plt.xlabel("Log")
+    plt.title("Total Energy and Average Voltage per Log")
+    plt.legend()
+    ax1.set_xticks(x)
+    ax1.set_xticklabels([log_name for _, log_name in logs])
+    ax1.set_ylabel("Total Energy (Wh)")
+    ax2.set_ylabel("Average Voltage While Enabled (V)")
+    ax2.set_ylim(0, 14)
+
+    plot_integrals("power", "Wh")
     plt.xlabel("Time (s)")
     plt.ylabel("Cumulative Energy (Wh)")
     plt.yscale("linear")
     plt.title("Cumulative Energy over Time")
-    plt.legend()
-    plt.grid(axis="both", linestyle="--", alpha=0.7)
-
+    
+    # plot_integrals("amperage", "As")
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Cumulative Amperage (As)")
+    # plt.yscale("linear")
+    # plt.title("Cumulative Amperage over Time")
+    
     plt.show()
