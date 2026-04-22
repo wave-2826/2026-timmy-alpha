@@ -49,6 +49,8 @@ def extract_name(log_file: str):
         name = "Quals " + name[1:]
     elif name.startswith("p"):
         name = "Practice " + name[1:]
+    elif name.startswith("e"):
+        name = "Elims " + name[1:]
     return name
 
 def enumerate_logs(base_path: str = LOGS_BASE):
