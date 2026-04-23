@@ -9,6 +9,8 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
+// TODO: fix FMS running slow (???)
+
 public class ShiftHelpers {
     private static ShiftHelpers instance;
     public static ShiftHelpers getInstance() {

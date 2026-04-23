@@ -8,6 +8,7 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
@@ -35,7 +36,7 @@ public class SpindexerIOReal implements SpindexerIO {
         spinnerConfig
             .encoder
             .positionConversionFactor(2.0 * Math.PI / spinnerMotorReduction) // Rotor Rotations -> Radians
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0 / spinnerCurrentLimit)
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0 / spinnerMotorReduction)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
         spinnerConfig.inverted(true);
@@ -46,7 +47,7 @@ public class SpindexerIOReal implements SpindexerIO {
         tranferConfig
             .encoder
             .positionConversionFactor(2.0 * Math.PI / transferMotorReduction) // Rotor Rotations -> Radians
-            .velocityConversionFactor((2.0 * Math.PI) / 60.0 / transferCurrentLimit)
+            .velocityConversionFactor((2.0 * Math.PI) / 60.0 / transferMotorReduction)
             .uvwMeasurementPeriod(10)
             .uvwAverageDepth(2);
 
@@ -71,12 +72,12 @@ public class SpindexerIOReal implements SpindexerIO {
     }
   
     @Override
-    public void setSpinnerVoltage(double voltage) {
-        spinnerMotor.setVoltage(voltage);
+    public void setSpinnerPower(double power) {
+        spinnerMotor.getClosedLoopController().setSetpoint(power, ControlType.kDutyCycle);
     }
 
     @Override
-    public void setTransferVoltage(double voltage) {
-        transferMotor.setVoltage(voltage);
+    public void setTransferPower(double power) {
+        transferMotor.getClosedLoopController().setSetpoint(power, ControlType.kDutyCycle);
     }
 }

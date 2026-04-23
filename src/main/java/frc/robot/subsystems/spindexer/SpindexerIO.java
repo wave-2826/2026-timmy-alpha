@@ -29,6 +29,6 @@ public interface SpindexerIO {
     /** Update the set of loggable inputs. */
     public default void updateInputs(SpindexerIOInputs inputs) {}
     
-    public default void setSpinnerVoltage(double volts) {}
-    public default void setTransferVoltage(double volts) {}
+    public default void setSpinnerPower(double percent) {}
+    public default void setTransferPower(double percent) {}
 }

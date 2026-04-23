@@ -28,12 +28,12 @@ public class SpindexerIOSim implements SpindexerIO {
     }
 
     @Override
-    public void setSpinnerVoltage(double volts) {
+    public void setSpinnerPower(double volts) {
         spinnerVoltage = volts;
     }
 
     @Override
-    public void setTransferVoltage(double volts) {
+    public void setTransferPower(double volts) {
         transportVoltage = volts;
     }
 
