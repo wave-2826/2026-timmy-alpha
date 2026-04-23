@@ -390,6 +390,20 @@
               "period": 0.06,
               "data_type": "string"
             }
+          },
+          {
+            "title": "Follower Wait Time",
+            "x": 0.0,
+            "y": 512.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "SmartDashboard/Follower Wait Time",
+              "period": 0.06,
+              "data_type": "double",
+              "show_submit_button": false
+            }
           }
         ]
       }
