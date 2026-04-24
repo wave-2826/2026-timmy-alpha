@@ -2,14 +2,12 @@ package frc.robot.subsystems.turret;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -123,7 +121,7 @@ public class Turret extends SubsystemBase {
 
         TurretTuning.init();
 
-        RobotModeTriggers.autonomous().onTrue(reset());
+        RobotModeTriggers.autonomous().onTrue(reset().onlyIf(() -> !hasZeroed));
     }
 
     private boolean zeroing = false;
@@ -306,7 +304,7 @@ public class Turret extends SubsystemBase {
     public Command reset() {
         return Commands.runOnce(() -> {
             io.resetAzimuth(TurretConstants.azimuthResetAngle);
-            io.resetHoodTo(TurretConstants.hoodMaxAngle);
+            io.resetHoodTo(TurretConstants.hoodMinAngle);
             manualControlAzimuthOffset = 0.0;
             manualHoodOffset.set(0.0);
         });
@@ -368,7 +366,7 @@ public class Turret extends SubsystemBase {
             })),
 
             runOnce(() -> {
-                io.resetHoodTo(TurretConstants.hoodMaxAngle);
+                io.resetHoodTo(TurretConstants.hoodMinAngle);
                 manualControlAzimuthOffset = 0;
                 manualHoodOffset.set(0.0);
                 hasZeroed = true;
@@ -379,8 +377,8 @@ public class Turret extends SubsystemBase {
     }
 
     private Command zeroHood(DoubleConsumer setHoodVelocity) {
-        LinearFilter hoodCurrentFilter = LinearFilter.movingAverage((int)(0.3 / 0.02));
-        double hoodRunVelocity = Units.rotationsPerMinuteToRadiansPerSecond(-400);
+        Debouncer hoodDebounce = new Debouncer(0.2, DebounceType.kRising);
+        double hoodRunVelocity = Units.rotationsPerMinuteToRadiansPerSecond(400);
 
         Container<Double> hoodStartPos = new Container<>(0.);
         double zeroRangeRad = TurretConstants.hoodMaxAngle - TurretConstants.hoodMinAngle;
@@ -389,13 +387,13 @@ public class Turret extends SubsystemBase {
         return Commands.sequence(
             Commands.runOnce(() -> {
                 hoodStartPos.value = inputs.getHoodAngleRad();
-                hoodCurrentFilter.reset();
+                hoodDebounce.calculate(false);
             }),
             Commands.run(() -> {
                 setHoodVelocity.accept(hoodRunVelocity);
             }).until(() -> {
-                return Math.abs(inputs.getHoodAngleRad() - hoodStartPos.value) > zeroRangeRad;
-                //  || hoodCurrentFilter.calculate(inputs.hood.currentAmps()) > TurretConstants.hoodResetCurrent;
+                return Math.abs(inputs.getHoodAngleRad() - hoodStartPos.value) > zeroRangeRad
+                 || hoodDebounce.calculate(inputs.hood.currentAmps() > TurretConstants.hoodResetCurrent);
             }),
             Commands.runOnce(() -> {
                 setHoodVelocity.accept(0);

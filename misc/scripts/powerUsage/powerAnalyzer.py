@@ -86,6 +86,7 @@ class LogResult:
     amperage_integral: TimedData
     brownout_timestamps: list[float]
     average_voltage_while_enabled: float
+    average_current_while_enabled: float
 
     def integral(self, ty: str) -> TimedData:
         if ty == "power":
@@ -114,6 +115,9 @@ def analyze_log(log: tuple[str, str]):
     enabled_voltage_sum = 0
     enabled_voltage_count = 0
 
+    enabled_current_sum = 0
+    enabled_current_count = 0
+
     for field in source:
         ts = field["timestamp"] / 1e6
         if field["name"].endswith("Voltage"):
@@ -121,6 +125,9 @@ def analyze_log(log: tuple[str, str]):
             if enabled:
                 enabled_voltage_sum += field["data"]
                 enabled_voltage_count += 1
+        if field["name"].endswith("TotalCurrent") and enabled:
+            enabled_current_sum += field["data"]
+            enabled_current_count += 1
         if field["name"].endswith("ChannelCurrent"):
             for i, current in enumerate(field["data"]):
                 currents[i].add(ts, current)
@@ -175,7 +182,10 @@ def analyze_log(log: tuple[str, str]):
         amperage_integral.add(ts, next_amperage)
         
     average_voltage = enabled_voltage_sum / enabled_voltage_count if enabled_voltage_count > 0 else 0
-    return LogResult(channel_power_sums, channel_amperage_sums, start_offset, power_integral, amperage_integral, brownout_timestamps, average_voltage)
+    average_current = enabled_current_sum / enabled_current_count if enabled_current_count > 0 else 0
+    return LogResult(
+        channel_power_sums, channel_amperage_sums, start_offset, power_integral, amperage_integral, brownout_timestamps,
+        average_voltage, average_current)
 
 def plot_integrals(ty, units):
     # Power integral plot
@@ -233,8 +243,8 @@ if __name__ == '__main__':
     ax2 = ax1.twinx()
     x = range(len(logs))
     width = 0.4
-    max_voltage = max(result.average_voltage_while_enabled for result in log_results)
-    min_voltage = min(result.average_voltage_while_enabled for result in log_results)
+    max_current = max(result.average_current_while_enabled for result in log_results)
+    min_current = min(result.average_current_while_enabled for result in log_results)
 
     for log_idx, (log_path, log_name) in enumerate(logs):
         result = log_results[log_idx]
@@ -245,18 +255,18 @@ if __name__ == '__main__':
             color=plt.cm.RdYlGn_r(min(len(result.brownout_timestamps) / max_brownouts, 1.0))
         )
         ax2.bar(
-            x[log_idx] + width/2, result.average_voltage_while_enabled, width=width*0.5,
+            x[log_idx] + width/2, result.average_current_while_enabled, width=width*0.5,
             color="#ffff55"
         )
 
     plt.xlabel("Log")
-    plt.title("Total Energy and Average Voltage per Log")
+    plt.title("Total Energy and Average Current per Log")
     plt.legend()
     ax1.set_xticks(x)
     ax1.set_xticklabels([log_name for _, log_name in logs])
     ax1.set_ylabel("Total Energy (Wh)")
-    ax2.set_ylabel("Average Voltage While Enabled (V)")
-    ax2.set_ylim(0, 14)
+    ax2.set_ylabel("Average Current While Enabled (A)")
+    # ax2.set_ylim(0, 14)
 
     plot_integrals("power", "Wh")
     plt.xlabel("Time (s)")

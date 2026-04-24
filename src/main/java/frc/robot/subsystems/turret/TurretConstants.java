@@ -48,8 +48,8 @@ public class TurretConstants {
     public static final double azimuthHoodCoupling = TurretConstants.totalAzimuthGearing * TurretConstants.hoodRingToHoodReduction;
 
     // Constraints
-    public static final double hoodMinAngle = Units.degreesToRadians(20);
-    public static final double hoodMaxAngle = Units.degreesToRadians(45);
+    public static final double hoodMinAngle = Units.degreesToRadians(23);
+    public static final double hoodMaxAngle = Units.degreesToRadians(63);
 
     public static final double flywheelRadius = Units.inchesToMeters(2);
 

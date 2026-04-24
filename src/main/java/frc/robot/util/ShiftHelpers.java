@@ -9,9 +9,11 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
-// TODO: fix FMS running slow (???)
-
 public class ShiftHelpers {
+    // The FMS runs slow (???) by this amount
+    private static final double slowFMSTimeScale = 141.5 / 140;
+    private static final double shiftOffset = 0.5;
+
     private static ShiftHelpers instance;
     public static ShiftHelpers getInstance() {
         if(instance == null) {
@@ -42,8 +44,8 @@ public class ShiftHelpers {
     public enum Shift {
         // Order matters here!
         DISABLED(false, false, 0., false, "Disabled"),
-        AUTO(true, true, 20., false, "Autonomous"),
-        TRANSITION(true, true, 10., "Transition - WON AUTO", "Transition - LOST AUTO"),
+        AUTO(true, true, 20. + shiftOffset, false, "Autonomous"),
+        TRANSITION(true, true, 10. + shiftOffset, "Transition - WON AUTO", "Transition - LOST AUTO"),
         SHIFT1(true, false, 25., "Shift 1"),
         SHIFT2(false, true, 25., "Shift 2"),
         SHIFT3(true, false, 25., "Shift 3"),
@@ -61,7 +63,7 @@ public class ShiftHelpers {
         private Shift(boolean winnerCanScore, boolean loserCanScore, double duration, String winName, String loseName) {
             this.winnerCanScore = winnerCanScore;
             this.loserCanScore = loserCanScore;
-            this.duration = duration;
+            this.duration = duration * slowFMSTimeScale;
             this.winText = winName;
             this.loseText = loseName;
         }

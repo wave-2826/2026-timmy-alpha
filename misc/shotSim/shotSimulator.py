@@ -196,7 +196,7 @@ def simulate_and_save(
             args=(d, target_height, extra_cost),
             bounds=[
                 (0.1, 15.0), # Velocity bounds
-                (np.radians(24), np.radians(60)) # Hood angle bounds
+                (np.radians(24), np.radians(62)) # Hood angle bounds
             ],
             method="SLSQP"
         )
