@@ -7,11 +7,14 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Robot;
 import frc.robot.RobotContainer;
 import frc.robot.commands.drive.DriveTuningCommands;
+import frc.robot.subsystems.leds.LEDs.LEDState;
 
 public class TuningCommands {
     public static LoggedDashboardChooser<Command> constructTuningChooser(RobotContainer robotContainer) {
         LoggedDashboardChooser<Command> testChooser = new LoggedDashboardChooser<>("Test Command");
         testChooser.addDefaultOption("Nothing", Commands.none());
+        testChooser.addDefaultOption("LEDs: Scoring", robotContainer.leds.runStateCommand(LEDState.Scoring));
+        testChooser.addDefaultOption("LEDs: Auto", robotContainer.leds.runStateCommand(LEDState.Autonomous));
         testChooser.addOption("Turret: Auto tune", robotContainer.turret.runTuning());
         testChooser.addOption("Turret: Oscillation test", robotContainer.turret.runOscillationTest());
 

@@ -33,7 +33,7 @@ public class LEDs extends VirtualSubsystem {
     /** The WAVE Blue color. */
     private static final Color WAVE_BLUE = new Color("#00A0C3");
     /** The WAVE Green color. */
-    private static final Color WAVE_GREEN = new Color("#45bf4d");
+    private static final Color WAVE_GREEN = new Color("#3bff36");
 
     /** The maximum speed multiplier for when the robot is going its maximum speed. */
     private static final double maximumSpeedMultiplier = 2.5;
@@ -119,8 +119,8 @@ public class LEDs extends VirtualSubsystem {
         Disabled((leds) -> leds.gradient(leds.allianceDark(), leds.allianceLight(), 5.0)), // Active when the robot is disabled
 
         Teleop((leds) -> leds.gradient(leds.allianceDark(), leds.allianceLight(), 2.0)), // Active when the robot is in teleop
+        Autonomous((leds) -> leds.gradient(WAVE_BLUE, WAVE_GREEN, 1.5, 4.0)), // Active when the robot is in autonomous
         Test((leds) -> leds.gradient(Color.kYellow, Color.kOrange, 5.0)), // Active when the robot is in test mode
-        Autonomous((leds) -> leds.gradient(WAVE_BLUE, WAVE_GREEN, 1.5)), // Active when the robot is in autonomous
 
         Default((leds) -> leds.gradient(WAVE_BLUE, Color.kWhite, 2.0)); // Active when no other state is active
 
@@ -351,8 +351,15 @@ public class LEDs extends VirtualSubsystem {
      * A rotating circular gradient effect.
      */
     public void gradient(Color color1, Color color2, double period) {
+        gradient(color1, color2, period, 1.);
+    }
+
+    /**
+     * A rotating circular gradient effect.
+     */
+    public void gradient(Color color1, Color color2, double period, double repetitions) {
         for(int i = 0; i < LEDConstants.ledCount; i++) {
-            double t = 0.5 + 0.5 * Math.sin(2 * Math.PI * (time / period + i / (double) LEDConstants.ledCount));
+            double t = 0.5 + 0.5 * Math.sin(2 * Math.PI * (time / period + i / (double) LEDConstants.ledCount * repetitions));
             setLEDColor(i, Color.lerpRGB(color1, color2, t));
         }
     }
