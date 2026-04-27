@@ -181,6 +181,7 @@ public class FieldConstants {
         public static final Translation3d oppOpeningTopRight = new Translation3d(LinesVertical.oppHubCenter, fieldWidthY - openingWidth, openingHeight);
     
         public static final Translation2d center = new Translation2d(LinesVertical.hubCenter, fieldWidthY - (openingWidth / 2.0));
+        public static final Translation2d oppCenter = new Translation2d(LinesVertical.oppHubCenter, fieldWidthY - (openingWidth / 2.0));
     }
     
     public static class RightTrench {
@@ -200,6 +201,7 @@ public class FieldConstants {
         public static final Translation3d oppOpeningTopRight = new Translation3d(LinesVertical.oppHubCenter, 0, openingHeight);
 
         public static final Translation2d center = new Translation2d(LinesVertical.hubCenter, openingWidth / 2.0);
+        public static final Translation2d oppCenter = new Translation2d(LinesVertical.oppHubCenter, openingWidth / 2.0);
     }
     
     /** Tower related constants */
@@ -275,6 +277,11 @@ public class FieldConstants {
         public static final Translation2d centerPoint = new Translation2d(0, AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
     }
 
+    public static final FieldBounds noPassZone = new FieldBounds(Hub.farRightCorner, Hub.oppNearLeftCorner);
+    public static final FieldBounds leftTrenchLowerZone = new FieldBounds(LeftTrench.center, Units.inchesToMeters(30), LeftTrench.width);
+    public static final FieldBounds rightTrenchLowerZone = new FieldBounds(RightTrench.center, Units.inchesToMeters(30), RightTrench.width);
+    public static final FieldBounds oppLeftTrenchLowerZone = new FieldBounds(LeftTrench.oppCenter, Units.inchesToMeters(30), LeftTrench.width);
+    public static final FieldBounds oppRightTrenchLowerZone = new FieldBounds(RightTrench.oppCenter, Units.inchesToMeters(30), RightTrench.width);
     public static final FieldBounds zoneSeparatorBounds = new FieldBounds(LinesVertical.hubCenter - LeftTrench.depth / 2, LinesVertical.hubCenter + LeftTrench.depth / 2, 0, FieldConstants.fieldWidthY);
     public static final FieldBounds oppZoneSeparatorBounds = new FieldBounds(LinesVertical.oppHubCenter - LeftTrench.depth / 2, LinesVertical.oppHubCenter + LeftTrench.depth / 2, 0, FieldConstants.fieldWidthY);
     

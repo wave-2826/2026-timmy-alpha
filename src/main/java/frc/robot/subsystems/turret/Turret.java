@@ -2,6 +2,7 @@ package frc.robot.subsystems.turret;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.util.Units;
@@ -71,6 +72,10 @@ public class Turret extends SubsystemBase {
             this.azimuthFeedforwardRadPerSec = azimuthFeedforwardRadPerSec;
             this.hoodAngleRad = hoodAngleRad;
         }
+
+        public TurretTarget clone() {
+            return new TurretTarget(flywheelSpeedRadPerSec, azimuthAngleRad, azimuthFeedforwardRadPerSec, hoodAngleRad);
+        }
     }
 
     public static enum ControlMode {
@@ -128,6 +133,8 @@ public class Turret extends SubsystemBase {
 
     private boolean atSetpoint = false;
 
+    private TurretTarget lastTarget = null;
+
     @Override
     public void periodic() {
         var controlMode = controlModeChooser.get();
@@ -164,17 +171,28 @@ public class Turret extends SubsystemBase {
             Logger.recordOutput("Turret/Target/Flywheel", 0.0, RadiansPerSecond);
         } else {
             TurretTarget calculatedTarget = null;
+            double toleranceScalar = 1; // Can be zero
             if(target instanceof ControlTarget.Manual) {
                 calculatedTarget = ((ControlTarget.Manual)target).target;
             } else if(target instanceof ControlTarget.ShotCalculator) {
                 ControlTarget.ShotCalculator shotTarget = (ControlTarget.ShotCalculator)target;
-                calculatedTarget = ShotCalculator.getInstance().calculate().target();
+                var calculation = ShotCalculator.getInstance().calculate();
+                calculatedTarget = calculation.target();
+                if(calculatedTarget == null) {
+                    if(lastTarget == null) return;
+                    calculatedTarget = lastTarget;
+                    calculatedTarget.azimuthFeedforwardRadPerSec = 0;
+                }
+                lastTarget = calculatedTarget.clone();
+                
                 calculatedTarget.flywheelSpeedRadPerSec += shotTarget.flyOffsetRadPerSec;
                 calculatedTarget.flywheelSpeedRadPerSec = Math.min(shotTarget.maxFlyVelocityRadPerSec, calculatedTarget.flywheelSpeedRadPerSec);
                 
                 calculatedTarget.azimuthAngleRad += shotTarget.azimuthOffsetRad;
-                calculatedTarget.hoodAngleRad += shotTarget.hoodOffsetRad;
                 calculatedTarget.hoodAngleRad = MathUtil.clamp(calculatedTarget.hoodAngleRad, TurretConstants.hoodMinAngle, TurretConstants.hoodMaxAngle);
+                calculatedTarget.hoodAngleRad += shotTarget.hoodOffsetRad;
+
+                toleranceScalar = calculation.shotType().setpointToleranceScalar;
             }
 
             if(calculatedTarget == null) return;
@@ -188,9 +206,11 @@ public class Turret extends SubsystemBase {
             Logger.recordOutput("Turret/Errors/Azimuth", azimuthError, Radians);
             Logger.recordOutput("Turret/Errors/Hood", hoodError, Radians);
     
-            boolean hoodAzimuthAtSetpoint = azimuthError < TurretConstants.azimuthToleranceRad && hoodError < TurretConstants.hoodToleranceRad;
-            boolean withinEnterSetpoint = flywheelError < TurretConstants.flywheelToleranceRadPerSecEnter && hoodAzimuthAtSetpoint;
-            boolean withinExitSetpoint = flywheelError < TurretConstants.flywheelToleranceRadPerSecExit && hoodAzimuthAtSetpoint;
+            boolean hoodAzimuthAtSetpoint =
+                azimuthError < TurretConstants.azimuthToleranceRad * toleranceScalar &&
+                hoodError < TurretConstants.hoodToleranceRad * toleranceScalar;
+            boolean withinEnterSetpoint = flywheelError < TurretConstants.flywheelToleranceRadPerSecEnter * toleranceScalar && hoodAzimuthAtSetpoint;
+            boolean withinExitSetpoint = flywheelError < TurretConstants.flywheelToleranceRadPerSecExit * toleranceScalar && hoodAzimuthAtSetpoint;
     
             if(atSetpoint && !withinExitSetpoint) {
                 atSetpoint = false;
@@ -204,18 +224,11 @@ public class Turret extends SubsystemBase {
                 case PID: {
                     TurretIOPIDOutputs outputs = new TurretIOPIDOutputs(
                         MathUtil.clamp(
-                            calculatedTarget.flywheelSpeedRadPerSec,
-                            // DriverStation.isFMSAttached() ? Units.rotationsPerMinuteToRadiansPerSecond(2000) : 0.,
-                            0.,
-                            Units.rotationsPerMinuteToRadiansPerSecond(5500)
+                            calculatedTarget.flywheelSpeedRadPerSec, 0., Units.rotationsPerMinuteToRadiansPerSecond(5500)
                         ),
                         calculatedTarget.azimuthAngleRad % (Math.PI * 2),
                         calculatedTarget.azimuthFeedforwardRadPerSec,
-                        MathUtil.clamp(
-                            calculatedTarget.hoodAngleRad,
-                            TurretConstants.hoodMinAngle,
-                            TurretConstants.hoodMaxAngle - Units.degreesToRadians(0.5)
-                        ) - TurretConstants.hoodMinAngle
+                        calculatedTarget.hoodAngleRad - TurretConstants.hoodMinAngle
                     );
                     io.setPIDOutputs(outputs);
                     break;
@@ -253,14 +266,14 @@ public class Turret extends SubsystemBase {
     
     public static LoggedTunableNumber manualFlywheelSpeed = new LoggedTunableNumber("Turret/ManualFlywheelSpeed", 0.0);
     public static LoggedTunableNumber manualHoodOffset = new LoggedTunableNumber("Turret/ManualHoodAngleOffset", 0.0);
+    public static LoggedTunableNumber manualAzimuthOffset = new LoggedTunableNumber("Turret/ManualAzimuthOffset", 0.0); // Radians
+
     public Command adjustManualVelocity(double change) {
         return Commands.runOnce(() -> manualFlywheelSpeed.set(manualFlywheelSpeed.get() + change));
     }
     public Command adjustManualAngle(double changeDegrees) {
         return Commands.runOnce(() -> manualHoodOffset.set(manualHoodOffset.get() + Units.degreesToRadians(changeDegrees)));
     }
-
-    double manualControlAzimuthOffset = 0.0;
 
     public Command runManual(
         DoubleSupplier flywheelScalar,
@@ -272,8 +285,7 @@ public class Turret extends SubsystemBase {
         return Commands.runEnd(() -> {
             target = ControlTarget.SHOT_CALCULATOR;
             
-            manualControlAzimuthOffset -= MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.005;
-            Logger.recordOutput("Turret/ManualControlAzimuthOffsetDeg", Units.radiansToDegrees(manualControlAzimuthOffset));
+            manualAzimuthOffset.set(manualAzimuthOffset.get() - MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.003);
 
             ControlTarget.ShotCalculator shotTarget = (ControlTarget.ShotCalculator)target;
 
@@ -291,7 +303,7 @@ public class Turret extends SubsystemBase {
             leds.setStateActive(LEDState.ScoringRecovering, runFly && !atSetpoint);
             leds.setStateActive(LEDState.Scoring, runFly);
 
-            shotTarget.azimuthOffsetRad = manualControlAzimuthOffset;
+            shotTarget.azimuthOffsetRad = manualAzimuthOffset.get();
             shotTarget.hoodOffsetRad = manualHoodOffset.get();
         }, () -> {
             target = ControlTarget.NONE;
@@ -305,8 +317,8 @@ public class Turret extends SubsystemBase {
         return Commands.runOnce(() -> {
             io.resetAzimuth(TurretConstants.azimuthResetAngle);
             io.resetHoodTo(TurretConstants.hoodMinAngle);
-            manualControlAzimuthOffset = 0.0;
             manualHoodOffset.set(0.0);
+            manualAzimuthOffset.set(0.0);
         });
     }
 
@@ -360,40 +372,52 @@ public class Turret extends SubsystemBase {
                 zeroHood((v) -> hoodVelocity.value = v)
             ).raceWith(run(() -> {
                 target = null;
-                Logger.recordOutput("Turret/Reset/Azimuth", azimuthVelocity.value);
-                Logger.recordOutput("Turret/Reset/Hood", hoodVelocity.value);
+                Logger.recordOutput("Turret/Reset/Azimuth", azimuthVelocity.value, RadiansPerSecond);
+                Logger.recordOutput("Turret/Reset/Hood", hoodVelocity.value, RadiansPerSecond);
                 io.setVelocityOutputs(0, azimuthVelocity.value, hoodVelocity.value);
-            })),
-
-            runOnce(() -> {
-                io.resetHoodTo(TurretConstants.hoodMinAngle);
-                manualControlAzimuthOffset = 0;
-                manualHoodOffset.set(0.0);
-                hasZeroed = true;
-            })
+            }))
         ).finallyDo(() -> {
+            io.resetHoodTo(TurretConstants.hoodMinAngle);
+            manualAzimuthOffset.set(0.0);
+            manualHoodOffset.set(0.0);
+            hasZeroed = true;
             zeroing = false;
-        }).withName("TurretZero");
+        });
     }
 
+    private LoggedTunableNumber hoodVelocityThreshold = new LoggedTunableNumber("Turret/Reset/HoodVelocityThreshold", 0.2);
     private Command zeroHood(DoubleConsumer setHoodVelocity) {
-        Debouncer hoodDebounce = new Debouncer(0.2, DebounceType.kRising);
-        double hoodRunVelocity = Units.rotationsPerMinuteToRadiansPerSecond(400);
+        LinearFilter hoodVelocityFilter = LinearFilter.movingAverage(5);
+        Debouncer hoodVelocityDebouncer = new Debouncer(0.1);
+        double hoodRunVelocity = Units.rotationsPerMinuteToRadiansPerSecond(60);
 
         Container<Double> hoodStartPos = new Container<>(0.);
+        Container<Boolean> outsideThreshold = new Container<>(false);
         double zeroRangeRad = TurretConstants.hoodMaxAngle - TurretConstants.hoodMinAngle;
         
-        // Run velocity until EITHER the hood has gone its full range or it hits the zero current
+        // Run velocity until either the hood has traveled its full range or the filtered velocity has gone above and later dropped below the threshold
         return Commands.sequence(
             Commands.runOnce(() -> {
+                hoodVelocityFilter.reset();
+                hoodVelocityDebouncer.setDebounceTime(0);
+                hoodVelocityDebouncer.calculate(false);
+                hoodVelocityDebouncer.setDebounceTime(0.1);
+
                 hoodStartPos.value = inputs.getHoodAngleRad();
-                hoodDebounce.calculate(false);
+                outsideThreshold.value = false;
             }),
             Commands.run(() -> {
                 setHoodVelocity.accept(hoodRunVelocity);
+                double hoodVelocity = hoodVelocityFilter.calculate(Math.abs(inputs.getHoodVelocityRadPerSec()));
+                Logger.recordOutput("Turret/Reset/FilteredVelocity", hoodVelocity, RadiansPerSecond);
+                boolean hoodVelocityOverThreshold = hoodVelocity > Units.rotationsPerMinuteToRadiansPerSecond(hoodVelocityThreshold.get());
+                if(!outsideThreshold.value && hoodVelocityDebouncer.calculate(hoodVelocityOverThreshold)) {
+                    outsideThreshold.value = true;
+                }
             }).until(() -> {
-                return Math.abs(inputs.getHoodAngleRad() - hoodStartPos.value) > zeroRangeRad
-                 || hoodDebounce.calculate(inputs.hood.currentAmps() > TurretConstants.hoodResetCurrent);
+                boolean hoodVelocityOverThreshold = hoodVelocityFilter.lastValue() > Units.rotationsPerMinuteToRadiansPerSecond(hoodVelocityThreshold.get());
+                return Math.abs(inputs.getHoodAngleRad() - hoodStartPos.value) > zeroRangeRad ||
+                    (outsideThreshold.value && !hoodVelocityDebouncer.calculate(hoodVelocityOverThreshold));
             }),
             Commands.runOnce(() -> {
                 setHoodVelocity.accept(0);
@@ -405,9 +429,9 @@ public class Turret extends SubsystemBase {
 
     private Command zeroAzimuth(DoubleConsumer setAzimuthVelocity) {
         Container<Boolean> previousZeroTriggered = new Container<>(false);
-        double triggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(15);
-        double detriggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(-4);
-        Debouncer negativeVelocityDebouncer = new Debouncer(0.3, DebounceType.kFalling);
+        double triggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(40);
+        double detriggerSpeed = Units.rotationsPerMinuteToRadiansPerSecond(-8);
+        Debouncer negativeVelocityDebouncer = new Debouncer(0.2, DebounceType.kFalling);
         return Commands.sequence(
             Commands.runOnce(() -> {
                 previousZeroTriggered.value = inputs.azimuthZeroTriggered;
@@ -428,11 +452,12 @@ public class Turret extends SubsystemBase {
                 setAzimuthVelocity.accept(detriggerSpeed);
             }).until(() -> {
                 boolean fallingEdge = previousZeroTriggered.value && !inputs.azimuthZeroTriggered;
-                boolean negativeVelocity = negativeVelocityDebouncer.calculate(inputs.azimuth.internalEncoderVelocity() < detriggerSpeed / 3.);
+                boolean negativeVelocity = negativeVelocityDebouncer.calculate(
+                    inputs.azimuth.internalEncoderVelocity() * Math.signum(detriggerSpeed) > detriggerSpeed / 3.
+                );
                 previousZeroTriggered.value = inputs.azimuthZeroTriggered;
                 return fallingEdge && negativeVelocity;
-            })
-                .withTimeout(1),
+            }).withTimeout(3),
             
             Commands.runOnce(() -> {
                 io.resetAzimuth(TurretConstants.azimuthResetAngle);

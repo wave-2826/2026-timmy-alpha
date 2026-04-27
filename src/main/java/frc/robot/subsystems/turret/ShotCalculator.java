@@ -53,11 +53,14 @@ public class ShotCalculator {
 
     private static class ShotMapData {
         /** Distance (m)-hood angle (deg) map */
-        InterpolatingDoubleTreeMap hoodAngleMap;
+        public InterpolatingDoubleTreeMap hoodAngleMap;
         /** Distance (m)-flywheel speed (rpm) map */
-        InterpolatingDoubleTreeMap flywheelSpeedMap;
+        public InterpolatingDoubleTreeMap flywheelSpeedMap;
         /** Distance (m)-ToF map (at the interpolated turret state) */
-        InterpolatingDoubleTreeMap timeOfFlightMap;
+        public InterpolatingDoubleTreeMap timeOfFlightMap;
+
+        public double maxDistance = 0.;
+        public double minDistance = 100;
 
         public ShotMapData() {
             hoodAngleMap = new InterpolatingDoubleTreeMap();
@@ -99,6 +102,9 @@ public class ShotCalculator {
                     flywheelSpeedMap.put(distance, getFlywheelVelocityRPM(Double.parseDouble(parts[1])));
                     hoodAngleMap.put(distance, Double.parseDouble(parts[2]));
                     timeOfFlightMap.put(distance, Double.parseDouble(parts[3]));
+
+                    maxDistance = Math.max(maxDistance, distance);
+                    minDistance = Math.min(minDistance, distance);
                 }
             } catch (Exception e) {
                 DriverStation.reportError("Failed to load shot map!", false);
@@ -131,19 +137,24 @@ public class ShotCalculator {
     }
 
     public enum ShotType {
-        NONE(null),
-        HUB(hubShots),
-        PASS_LEFT(passShots),
-        PASS_RIGHT(passShots);
+        NONE(null, 0.),
+        HUB(hubShots, 1.),
+        PASS_LEFT(passShots, 1.5),
+        PASS_RIGHT(passShots, 1.5),
+        TRENCH_HOOD_STOW(hubShots, 0.);
 
         private ShotMapData shotMapData;
-        ShotType(ShotMapData shotMapData) {
+        // If 0, no shots can be made
+        public double setpointToleranceScalar;
+        ShotType(ShotMapData shotMapData, double accuracyRequired) {
             this.shotMapData = shotMapData;
+            this.setpointToleranceScalar = accuracyRequired;
         }
     }
 
     public record ShotParameters(
         ShotType shotType,
+        /** The target or null if the turret should maintain its current target. */
         TurretTarget target
     ) {}
 
@@ -163,9 +174,9 @@ public class ShotCalculator {
     private Translation2d getTargetPosition(ShotType type, Translation2d turretPosition) {
         switch(type) {
             case PASS_LEFT:
-                return AllianceFlipUtil.apply(new Translation2d(3.47, FieldConstants.fieldWidthY - 2.47));
+                return AllianceFlipUtil.apply(new Translation2d(3.2, FieldConstants.fieldWidthY - 2.47));
             case PASS_RIGHT:
-                return AllianceFlipUtil.apply(new Translation2d(3.47, 2.47));
+                return AllianceFlipUtil.apply(new Translation2d(3.2, 2.47));
             default: // Hub shot
                 Translation2d hubCenter = AllianceFlipUtil.apply(FieldConstants.Hub.topCenterPoint.toTranslation2d());
                 return hubCenter.plus(
@@ -218,7 +229,16 @@ public class ShotCalculator {
 
         Pose2d zoneCheckPosition = AllianceFlipUtil.apply(turretPose);
         ShotType type = ShotType.HUB;
-        if(FieldConstants.Tower.bounds.contains(zoneCheckPosition)) {
+        if(
+            FieldConstants.leftTrenchLowerZone.contains(zoneCheckPosition) ||
+            FieldConstants.rightTrenchLowerZone.contains(zoneCheckPosition) ||
+            FieldConstants.oppLeftTrenchLowerZone.contains(zoneCheckPosition) ||
+            FieldConstants.oppRightTrenchLowerZone.contains(zoneCheckPosition)
+        ) {
+            type = ShotType.TRENCH_HOOD_STOW;
+        } else if(FieldConstants.Tower.bounds.contains(zoneCheckPosition)) {
+            type = ShotType.NONE;
+        } else if(FieldConstants.noPassZone.contains(zoneCheckPosition)) {
             type = ShotType.NONE;
         } else if(FieldConstants.zoneSeparatorBounds.contains(zoneCheckPosition) || FieldConstants.oppZoneSeparatorBounds.contains(zoneCheckPosition)) {
             type = ShotType.NONE;
@@ -231,8 +251,8 @@ public class ShotCalculator {
         }
 
         Logger.recordOutput("LaunchCalculator/ShotType", type);
-        if(type == ShotType.NONE) {
-            return new ShotParameters(ShotType.NONE, new TurretTarget(0, 0, 0));
+        if(type == ShotType.NONE || type.shotMapData == null) {
+            return new ShotParameters(type, null);
         }
 
         ChassisSpeeds robotRelativeVelocity = RobotState.getInstance().getRobotVelocity();
@@ -313,6 +333,11 @@ public class ShotCalculator {
         Logger.recordOutput("LaunchCalculator/TurretPosition", turretPose);
         Logger.recordOutput("LaunchCalculator/TurretToTargetDistance", lookaheadTurretToTargetDistance);
 
+        if(lookaheadTurretToTargetDistance > type.shotMapData.maxDistance || lookaheadTurretToTargetDistance < type.shotMapData.minDistance) {
+            // Target is out of range of our shot map, so we won't be accurate. Don't even try to shoot.
+            return new ShotParameters(ShotType.NONE, null);
+        }
+
         var shotDirection = virtualTarget.minus(turretPose.getTranslation());
         Rotation2d turretAngleAbsolute = shotDirection.getAngle().plus(
             Rotation2d.fromDegrees(fudgeAzimuthOffsetDegCCW.get())
@@ -348,6 +373,10 @@ public class ShotCalculator {
         Logger.recordOutput("LaunchCalculator/Calculated/HoodAngle", hoodAngleRad);
         Logger.recordOutput("LaunchCalculator/Calculated/AzimuthVelocity", azimuthVelocity);
         Logger.recordOutput("LaunchCalculator/Calculated/Azimuth", turretAngleRobotRelative);
+
+        if(type == ShotType.TRENCH_HOOD_STOW) {
+            hoodAngleRad = Math.min(hoodAngleRad, TurretConstants.maxTrenchHoodAngle);
+        }
 
         latestResult = new ShotParameters(
             type,

@@ -14,6 +14,15 @@ public record FieldBounds(double minX, double maxX, double minY, double maxY) {
         );
     }
 
+    public FieldBounds(Translation2d from, Translation2d to) {
+        this(
+            Math.min(from.getX(), to.getX()),
+            Math.max(from.getX(), to.getX()),
+            Math.min(from.getY(), to.getY()),
+            Math.max(from.getY(), to.getY())
+        );
+    }
+
     /** Whether the translation is contained within the bounds. */
     public boolean contains(Translation2d translation) {
         return translation.getX() >= minX()

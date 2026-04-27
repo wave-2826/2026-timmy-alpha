@@ -21,7 +21,7 @@ public class TurretConstants {
     public static final int azimuthCancoderID = 55;
 
     public static final int azimuthZeroDIOPort = 1;
-    public static final Rotation2d azimuthResetAngle = Rotation2d.fromDegrees(180. - 24.);
+    public static final Rotation2d azimuthResetAngle = Rotation2d.fromDegrees(151.5); // clockwise relative to turret forward
 
     public static final CANBus CANBus = DriveConstants.CANBus;
 
@@ -35,7 +35,7 @@ public class TurretConstants {
     public static final double hoodPlanetReduction = 213.0 / 25.0;
     
     public static final double flywheelRingToFlyReduction = 10.0 / 18.0 * TurretConstants.flywheelPlanetReduction;
-    public static final double hoodRingToHoodReduction = 1.0 / 202.0 * TurretConstants.hoodPlanetReduction;
+    public static final double hoodRingToHoodReduction = 1.0 / 172 * TurretConstants.hoodPlanetReduction;
 
     // Calculated reductions
     // Total gearings; these are a ratio between output and input, so should be less than 1.
@@ -48,8 +48,10 @@ public class TurretConstants {
     public static final double azimuthHoodCoupling = TurretConstants.totalAzimuthGearing * TurretConstants.hoodRingToHoodReduction;
 
     // Constraints
-    public static final double hoodMinAngle = Units.degreesToRadians(23);
+    public static final double hoodMinAngle = Units.degreesToRadians(26);
     public static final double hoodMaxAngle = Units.degreesToRadians(63);
+
+    public static final double maxTrenchHoodAngle = Units.degreesToRadians(40);
 
     public static final double flywheelRadius = Units.inchesToMeters(2);
 
@@ -113,9 +115,7 @@ public class TurretConstants {
     // Current limits
     public static final int flywheelCurrentLimit = 70; // amps each
     public static final int azimuthCurrentLimit = 50; // amps
-    public static final int hoodCurrentLimit = 45; // amps
-
-    public static final int hoodResetCurrent = 30; // amps
+    public static final int hoodCurrentLimit = 40; // amps
 
     // PIDs
     public static final TunableSimpleMotorFF flywheelMotorFF = new TunableSimpleMotorFF("Turret/FlywheelFF")
@@ -133,7 +133,7 @@ public class TurretConstants {
     
     public static final TunablePID hoodMotorPID = new TunablePID("Turret/Hood")
         .addRealRobotGains(new GenericPIDConstants(60, 1, 0)) // position voltage
-    .addRealRobotGains(new GenericPIDConstants(0.1, 0, 0, 0.2, PIDSlot.Slot1))
+        .addRealRobotGains(new GenericPIDConstants(1.0, 0, 0, 1.0, PIDSlot.Slot1))
         .addSimGains(new GenericPIDConstants(0.5, 0, 0));
     
     // Control tolerances
