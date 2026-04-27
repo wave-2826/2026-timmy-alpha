@@ -20,12 +20,12 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
-import frc.robot.subsystems.turret.TurretConstants;
 import frc.robot.subsystems.turret.Turret.ControlTarget;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.leds.LEDs;
+import frc.robot.util.Container;
 import frc.robot.util.Elastic;
 import frc.robot.util.simUtils.Simulation;
 import frc.robot.util.tunables.LoggedTunableNumber;
@@ -49,6 +49,19 @@ public class Controls {
     private final Trigger normalCodriver;
     private final Trigger turretControlCodriver;
     private CodriverMode codriverMode = CodriverMode.Normal;
+    // Silly hacky fix for not using default commands; e.g. when we schedule a turret reset, the turret "main" control command
+    // won't restart. This fixes that.
+    private Command restartOperatorMode() {
+        Container<CodriverMode> oldMode = new Container<>(CodriverMode.Normal);
+        return Commands.sequence(
+            Commands.runOnce(() -> {
+                oldMode.value = codriverMode;
+                codriverMode = CodriverMode.Normal;
+            }),
+            Commands.none(),
+            Commands.runOnce(() -> codriverMode = oldMode.value)
+        ).withName("RestartOperatorMode");
+    }
 
     public static Controls getInstance() {
         return instance;
@@ -102,15 +115,15 @@ public class Controls {
             turret::atSetpoint
         ));
         turretControlCodriver.and(coDriver.start()).onTrue(turret.reset());
-        turretControlCodriver.and(coDriver.leftBumper()).onTrue(turret.zeroRoutine());
+        turretControlCodriver.and(coDriver.leftBumper()).onTrue(turret.zeroRoutine().andThen(restartOperatorMode()).withName("TurretZero"));
         // RobotModeTriggers.teleop().onTrue(turret.zeroRoutine().unless(turret::zeroed));
 
         normalCodriver.and(coDriver.x()).onTrue(turret.runOnce(() -> {
             // Shoot into ourself lol
             turret.target = new ControlTarget.Manual(new Turret.TurretTarget(
-                Units.rotationsPerMinuteToRadiansPerSecond(1000),
+                Units.rotationsPerMinuteToRadiansPerSecond(500),
                 Units.degreesToRadians(100.),
-                TurretConstants.hoodMaxAngle - Units.degreesToRadians(5)
+                Units.degreesToRadians(40)
             ));
         }));
         normalCodriver.and(coDriver.y()).onTrue(turret.runOnce(() -> {
