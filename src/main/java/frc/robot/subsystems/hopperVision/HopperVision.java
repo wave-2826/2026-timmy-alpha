@@ -23,10 +23,10 @@ public class HopperVision extends SubsystemBase {
 
     public Command waitForFewerThanNPieces(int pieces, double waitAfter, double fallbackWait, double timeout) {
         Container<Double> startTime = new Container<Double>(0.);
-        Debouncer hasPiecesDebouncer = new Debouncer(1.0, DebounceType.kFalling);
+        Debouncer ranOutDebouncer = new Debouncer(1.0, DebounceType.kRising);
         return Commands.sequence(
             Commands.runOnce(() -> {
-                hasPiecesDebouncer.calculate(true);
+                ranOutDebouncer.calculate(false);
                 startTime.value = Timer.getFPGATimestamp();
             }),
             Commands.waitUntil(() -> {
@@ -35,7 +35,7 @@ public class HopperVision extends SubsystemBase {
                     return Timer.getFPGATimestamp() - startTime.value > fallbackWait;
                 } else {
                     // If we're connected, wait until we see no targets
-                    return !hasPiecesDebouncer.calculate(inputs.targets < pieces);
+                    return ranOutDebouncer.calculate(inputs.targets < pieces);
                 }
             }),
             Commands.waitSeconds(waitAfter)

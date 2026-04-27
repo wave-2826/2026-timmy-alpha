@@ -1,7 +1,6 @@
 package frc.robot;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -64,7 +63,6 @@ public class RobotContainer {
     // Dashboard inputs
     public final AutoRoutines routines;
     public final LoggedAutoChooser autoChooser;
-    public final LoggedNetworkNumber autoWaitTime;
     private final LoggedDashboardChooser<Command> testChooser;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -142,10 +140,9 @@ public class RobotContainer {
 
         // Set up auto routines
         autoChooser = new LoggedAutoChooser("Auto Choices");
-        autoWaitTime = new LoggedNetworkNumber("SmartDashboard/Follower Wait Time", 4);
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
 
-        routines = new AutoRoutines(this, autoChooser, autoWaitTime);
+        routines = new AutoRoutines(this, autoChooser);
 
         Controls.getInstance().configureControls(this);
         testChooser = TuningCommands.constructTuningChooser(this);

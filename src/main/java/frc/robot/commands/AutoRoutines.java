@@ -1,6 +1,6 @@
 package frc.robot.commands;
 
-import java.nio.file.WatchEvent;
+import java.util.Set;
 
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
@@ -51,7 +51,9 @@ public class AutoRoutines {
     private PIDController yController = new PIDController(0, 0, 0);
     private PIDController thetaController = new PIDController(0, 0, 0);
 
-    public AutoRoutines(RobotContainer rc, LoggedAutoChooser autoChooser, LoggedNetworkNumber autoWaitTime) {
+    public final LoggedNetworkNumber autoWaitTime = new LoggedNetworkNumber("SmartDashboard/Follower Wait Time", 4);
+
+    public AutoRoutines(RobotContainer rc, LoggedAutoChooser autoChooser) {
         DriveConstants.autoLinearPID.configureController(xController, PIDSlot.Slot0);
         DriveConstants.autoLinearPID.configureController(yController, PIDSlot.Slot0);
         DriveConstants.autoAngularPID.configureController(thetaController, PIDSlot.Slot0);
@@ -83,12 +85,11 @@ public class AutoRoutines {
         autoChooser.addRoutine("RTRRB Left Danger Sweep Swipe", () -> this.getDangerSweepSwipe(false));
         autoChooser.addRoutine("RTRRB Right Danger Sweep Swipe", () -> this.getDangerSweepSwipe(true));
 
-        autoChooser.addRoutine("Left Follower Trench", () -> this.getFollowerTrench(false, autoWaitTime.getAsDouble()));
-        autoChooser.addRoutine("Right Follower Trench", () -> this.getFollowerTrench(true, autoWaitTime.getAsDouble()));
+        autoChooser.addRoutine("Left Follower Trench", () -> this.getFollowerTrench(false));
+        autoChooser.addRoutine("Right Follower Trench", () -> this.getFollowerTrench(true));
 
-        autoChooser.addRoutine("Left Follower Bump", () -> this.getFollowerBump(false, autoWaitTime.getAsDouble()));
-        autoChooser.addRoutine("Right Follower Bump", () -> this.getFollowerBump(true, autoWaitTime.getAsDouble()));
-
+        autoChooser.addRoutine("Left Follower Bump", () -> this.getFollowerBump(false));
+        autoChooser.addRoutine("Right Follower Bump", () -> this.getFollowerBump(true));
 
         autoChooser.addRoutine("Center Preload", () -> this.getCenterPreload());
         autoChooser.addRoutine("Center Depot", () -> this.getCenterDepot(), true);
@@ -251,7 +252,7 @@ public class AutoRoutines {
             ScoringCommands.prep(turret),
             traj.cmd(),
             stopDrive(),
-            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds)
+            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds, false)
         ));
 
         return routine;
@@ -264,7 +265,7 @@ public class AutoRoutines {
 
         traj1.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
         traj2.atTime("Score").onTrue(
-            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds)
+            ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds, false)
         );
 
         routine.active().onTrue(Commands.sequence(
@@ -278,7 +279,7 @@ public class AutoRoutines {
         return routine;
     }
 
-        private AutoRoutine getFollowerTrench(boolean right, double waitTime) {
+        private AutoRoutine getFollowerTrench(boolean right) {
         var routine = autoFactory.newRoutine((right ? "Right" : "Left") + "FollowerTrench");
         
         AutoTrajectory traj0 = flipIf(right, ChoreoTraj.LeftFollowerTrench$0.asAutoTraj(routine));
@@ -287,29 +288,21 @@ public class AutoRoutines {
         traj0.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
         traj0.atTime("Intake Stop").onTrue(intake.disable());
         
-        if (right) {
+        
         routine.active().onTrue(Commands.sequence(
             traj0.resetOdometry(),
             ScoringCommands.prep(turret),
-            Commands.waitSeconds(waitTime),
+            Commands.defer(() -> Commands.waitSeconds(autoWaitTime.get()), Set.of()),
             traj0.cmd(),
+            // Don't follow through to the outpost if on the right
+            right ? Commands.none() : traj1.cmd(),
             stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds))
         ));
-        } else {
-        routine.active().onTrue(Commands.sequence(
-            traj0.resetOdometry(),
-            ScoringCommands.prep(turret),
-            Commands.waitSeconds(4),
-            traj0.cmd(),
-            traj1.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds))
-        ));
-        }
 
         return routine;
     }
 
-    private AutoRoutine getFollowerBump(boolean right, double waitTime) {
+    private AutoRoutine getFollowerBump(boolean right) {
         var routine = autoFactory.newRoutine((right ? "Right" : "Left") + "FollowerBump");
         
         AutoTrajectory traj0 = flipIf(right, ChoreoTraj.LeftFollowerBump$0.asAutoTraj(routine));
@@ -319,24 +312,14 @@ public class AutoRoutines {
         traj0.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
         traj0.atTime("Intake Stop").onTrue(intake.disable());
         
-        if (right) {
         routine.active().onTrue(Commands.sequence(
             traj0.resetOdometry(),
             ScoringCommands.prep(turret),
-            Commands.waitSeconds(waitTime),
-            traj0.cmd(),
+            Commands.defer(() -> Commands.waitSeconds(autoWaitTime.get()), Set.of()),
+            // Don't follow through to the outpost if on the right
+            right ? Commands.none() : traj1.cmd(),
             stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds))
         ));
-        } else {
-        routine.active().onTrue(Commands.sequence(
-            traj0.resetOdometry(),
-            ScoringCommands.prep(turret),
-            Commands.waitSeconds(4),
-            traj0.cmd(),
-            traj1.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds))
-        ));
-        }
 
         return routine;
     }

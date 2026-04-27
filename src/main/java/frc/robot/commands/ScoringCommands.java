@@ -61,6 +61,12 @@ public class ScoringCommands {
     }
 
     public static Command autoScoreHopper(Turret turret, Spindexer spindexer, Intake intake, HopperVision hopperVision, LEDs leds) {
+        return autoScoreHopper(turret, spindexer, intake, hopperVision, leds, true);
+    }
+    public static Command autoScoreHopper(
+        Turret turret, Spindexer spindexer, Intake intake, HopperVision hopperVision, LEDs leds,
+        boolean stopWhenHopperEmpty
+    ) {
         return Commands.sequence(
             Commands.waitUntil(turret::atSetpoint).withTimeout(3.0),
             
@@ -69,7 +75,8 @@ public class ScoringCommands {
                 spindexer.setPower(1.0, turret.atSetpoint() ? 1.0 : 0.0);
             }).alongWith(
                 intake.setIntakePositionNormalized(() -> Math.sin(Timer.getFPGATimestamp() * 1.5) * 0.5 + 0.5)
-            ).alongWith(leds.runStateCommand(LEDState.Scoring)).raceWith(hopperVision.waitForFewerThanNPieces(2, 1.0, 8.0, 10.0))
+            ).alongWith(leds.runStateCommand(LEDState.Scoring))
+            .raceWith(stopWhenHopperEmpty ? hopperVision.waitForFewerThanNPieces(2, 1.0, 8.0, 10.0) : Commands.idle())
         ).raceWith(
             turret.run(() -> { turret.target = ControlTarget.SHOT_CALCULATOR_DEFAULT; })
         ).andThen(

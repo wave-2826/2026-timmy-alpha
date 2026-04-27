@@ -271,7 +271,7 @@ public class Robot extends LoggedRobot {
     }
 
     public static boolean tuningMode() {
-        return Constants.tuningMode; // && !DriverStation.isFMSAttached();
+        return Constants.tuningMode && !DriverStation.isFMSAttached();
     }
 
     /** This function is called once when the robot is disabled. */
