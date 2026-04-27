@@ -44,7 +44,7 @@ def rpm_to_rad_per_sec(rpm: float) -> float:
 
 def hood_angle_to_theta(hood_angle_rad: float) -> float:
     """Convert hood angle (0 = horizontal/straight up shot) to launch angle theta."""
-    return np.radians(90) - hood_angle_rad + np.radians(5)
+    return np.radians(90) - hood_angle_rad # + np.radians(2)
 
 def magnus_cl_from_spin(v_mag: float, spin_rad_s: float) -> float:
     """Very simple lift-coefficient model using spin parameter S = (w*r)/v.
@@ -52,7 +52,8 @@ def magnus_cl_from_spin(v_mag: float, spin_rad_s: float) -> float:
     if v_mag < 1e-6:
         return 0.0
     S = (spin_rad_s * fuel_radius_m) / v_mag
-    return 1.2 * (S / (0.25 + S))
+    # return 1.2 * (S / (0.25 + S))
+    return 1.0 * (S / (0.25 + S))
 
 def simulate_shot(v0: float, theta: float, target_distance_m: float, *,
     max_time_s: float = 4.0,
