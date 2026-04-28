@@ -4,7 +4,7 @@ from .subsystems import SubsystemMap
 from .analyze import LogResult, analyze_log
 from .plot import plot
 
-LOGS_BASE = "../../dlogs/"
+LOGS_BASE = os.path.join(os.path.dirname(__file__), "../../../dlogs/")
 
 def extract_name(log_file: str):
     name = log_file[:-7].split('_')[-1]
@@ -43,14 +43,16 @@ subsystem_maps = [
         "turret": [4, 5, 6, 7],
         "coprocessors/leds": [9],
         "intake": [10, 11, 14, 15],
-        "spindexer": [12, 13]
+        "spindexer": [12, 13],
+        "rio/radio": [20, 22]
     })),
     (None, SubsystemMap({
         "drivetrain": [0, 1, 5, 6, 16, 17, 18, 19],
         "turret": [4, 2, 3, 7],
         "coprocessors/leds": [9],
         "intake": [10, 11, 14, 15],
-        "spindexer": [12, 13]
+        "spindexer": [12, 13],
+        "rio/radio": [20, 22]
     }))
 ]
 

@@ -1,5 +1,7 @@
 
 from dataclasses import dataclass
+import os
+import pickle
 from .subsystems import SubsystemMap
 import vlogger
 from .timed_data import TimedBooleanData, TimedNumericData
@@ -15,6 +17,8 @@ class SubsystemResult:
 @dataclass
 class LogResult:
     name: str
+    file_last_modified: float
+    version: float
 
     power_sum_per_channel: list[float]
     amperage_sum_per_channel: list[float]
@@ -35,12 +39,38 @@ class LogResult:
 def joulesToWattHours(j: float):
     return j / 3600
 
+########### Cache
+
+CACHE_VER = 1
+CACHE_DIR = "cache/"
+def find_cache_result(original_log_path: str) -> LogResult | None:
+    log_modified_time = os.path.getmtime(original_log_path)
+
+    cache_path = CACHE_DIR + original_log_path.split('/')[-1] + ".cache"
+    if os.path.exists(cache_path):
+        with open(cache_path, "rb") as f:
+            result = pickle.load(f)
+            if result.file_last_modified == log_modified_time and result.version == CACHE_VER:
+                print(f"Cache hit for {original_log_path}")
+                return result
+    return None
+
+def save_cache_result(log_path: str, result: LogResult):
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    cache_path = CACHE_DIR + log_path.split('/')[-1] + ".cache"
+    with open(cache_path, "wb") as f:
+        pickle.dump(result, f)
+
 ########### Analysis
 
 def analyze_log(log: tuple[str, str, SubsystemMap]):
     print(f"Analyzing log {log[0]}")
+
+    if cached_result := find_cache_result(log[0]):
+        return cached_result
     
-    source = vlogger.get_source(f"wpilog://../{log[0]}", "/PowerDistribution|/DriverStation/Enabled|/DriverStation/Autonomous|/SystemStats/BrownedOut")
+    log_modified_time = os.path.getmtime(log[0])
+    source = vlogger.get_source(f"wpilog://{log[0]}", "/PowerDistribution|/DriverStation/Enabled|/DriverStation/Autonomous|/SystemStats/BrownedOut")
 
     voltages = TimedNumericData()
     currents = [TimedNumericData() for _ in range(24)]
@@ -127,8 +157,10 @@ def analyze_log(log: tuple[str, str, SubsystemMap]):
             percentage_total_power=amperage_sum / sum(channel_amperage_sums) if sum(channel_amperage_sums) > 0 else 0
         )
     
-    return LogResult(
+    result = LogResult(
         name=log[1],
+        version=CACHE_VER,
+        file_last_modified=log_modified_time,
         power_sum_per_channel=channel_power_sums,
         amperage_sum_per_channel=channel_amperage_sums,
         start_offset=start_offset,
@@ -139,3 +171,5 @@ def analyze_log(log: tuple[str, str, SubsystemMap]):
         average_current_while_enabled=total_current.average_filtered(enabled),
         subsystem_results=subsystem_results
     )
+    save_cache_result(log[0], result)
+    return result
