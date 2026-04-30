@@ -404,7 +404,7 @@ public class ShotCalculator {
         Logger.recordOutput("LaunchCalculator/Calculated/AzimuthVelocity", azimuthVelocity);
         Logger.recordOutput("LaunchCalculator/Calculated/Azimuth", turretAngleRobotRelative);
 
-        if(type == ShotType.HUB_TRENCH_STOW) {
+        if(type.stowHood) {
             hoodAngleRad = Math.min(hoodAngleRad, TurretConstants.maxTrenchHoodAngle);
         }
 

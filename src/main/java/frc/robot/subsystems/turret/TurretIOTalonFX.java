@@ -2,6 +2,7 @@ package frc.robot.subsystems.turret;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.Follower;
@@ -21,6 +22,7 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.Robot;
+import frc.robot.util.tunables.LoggedTunableNumber;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -99,6 +101,8 @@ public class TurretIOTalonFX implements TurretIO {
         config.CurrentLimits.StatorCurrentLimitEnable = true;
     }
 
+    private LoggedTunableNumber timeFilterConstant = new LoggedTunableNumber("Turret/Flywheel/TimeFilterConstant", 0.05);
+
     public TurretIOTalonFX() {
         var baseConfig = new TalonFXConfiguration();
         baseConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
@@ -108,7 +112,8 @@ public class TurretIOTalonFX implements TurretIO {
         var flywheelConfig = baseConfig.clone();
         flywheelConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.totalFlywheelGearing;
         flywheelConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
-        flywheelConfig.Feedback.VelocityFilterTimeConstant = 0.005;
+        flywheelConfig.Feedback.VelocityFilterTimeConstant = timeFilterConstant.get();
+        timeFilterConstant.hasChanged(hashCode());
         applyTorqueCurrentLimit(flywheelConfig, TurretConstants.flywheelCurrentLimit);
 
         TurretConstants.flywheelMotorPID.applyConfigAndRegister(flywheelConfig, flywheel1Talon, flywheel2Talon);
@@ -247,6 +252,14 @@ public class TurretIOTalonFX implements TurretIO {
 
     @Override
     public void updateInputs(TurretIOInputs inputs) {
+        if(timeFilterConstant.hasChanged(hashCode())) {
+            FeedbackConfigs config = new FeedbackConfigs();
+            flywheel1Talon.getConfigurator().refresh(config, 1.0);
+            config.VelocityFilterTimeConstant = timeFilterConstant.get();
+            flywheel1Talon.getConfigurator().apply(config);
+            flywheel2Talon.getConfigurator().apply(config);
+        }
+
         var flywheel1Status = BaseStatusSignal.refreshAll(flywheel1Velocity, flywheel1Current, flywheel1Temperature);
         var flywheel2Status = BaseStatusSignal.refreshAll(flywheel2Velocity, flywheel2Current, flywheel2Temperature);
         // var azimuthEncoderStatus = BaseStatusSignal.refreshAll(azimuthAbsAngle, azimuthAbsVelocity);
