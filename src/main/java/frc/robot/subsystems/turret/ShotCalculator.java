@@ -139,8 +139,8 @@ public class ShotCalculator {
     public enum ShotType {
         NONE(null, 0., false),
         HUB(hubShots, 1., false),
-        PASS_LEFT(passShots, 1.5, false),
-        PASS_RIGHT(passShots, 1.5, false),
+        PASS_LEFT(passShots, 2.5, false),
+        PASS_RIGHT(passShots, 2.5, false),
         HUB_TRENCH_STOW(hubShots, 0., true),
         PASS_LEFT_TRENCH_STOW(passShots, 0., true),
         PASS_RIGHT_TRENCH_STOW(passShots, 0., true);
