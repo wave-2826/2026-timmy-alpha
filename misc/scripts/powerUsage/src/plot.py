@@ -195,6 +195,30 @@ def plot(log_results: list[LogResult]):
     plt.ylabel("Cumulative Energy (Wh)")
     plt.yscale("linear")
     plt.title("Cumulative Energy over Time")
+
+    # Power plot
+    # plt.figure(figsize=(12, 6))
+
+    # lines = []
+    # for result in log_results:
+    #     timestamps = result.integral(ty).timestamps
+    #     energies = result.integral(ty).values
+    #     lines.extend(
+    #         plt.plot([ts - result.start_offset for ts in timestamps], energies, label=f"{result.name}")
+    #     )
+    #     # Plot brownouts as red dots
+    #     for brownout_ts in result.brownout_timestamps:
+    #         plt.plot(brownout_ts - result.start_offset, [
+    #             result.integral(ty).get_nearest(brownout_ts) or 0
+    #         ], 'ro', "", markersize=2)
+    # add_value_tooltip_to_lines(plt.gca(), lines)
+
+    # interactive_legend(plt.legend(fancybox=True, shadow=True))
+    # plt.grid(axis="both", linestyle="--", alpha=0.7)
+    # plt.xlabel("Time (s)")
+    # plt.ylabel("Power (W)")
+    # plt.yscale("linear")
+    # plt.title("Power over Time")
     
     # plot_integrals("amperage", "As")
     # plt.xlabel("Time (s)")

@@ -44,6 +44,9 @@ class TimedNumericData:
                 total += val
         return total
 
+    def sum(self):
+        return sum(self.values)
+
     def average_filtered(self, filtered_by: TimedBooleanData):
         total = 0
         count = 0
@@ -52,6 +55,59 @@ class TimedNumericData:
                 total += val
                 count += 1
         return total / count if count > 0 else 0
+
+    def __mul__(self, other: TimedNumericData | int | float):
+        if isinstance(other, (int, float)):
+            new = TimedNumericData()
+            for ts, val in zip(self.timestamps, self.values):
+                new.add(ts, val * other)
+            return new
+
+        new = TimedNumericData()
+        for ts, val in zip(self.timestamps, self.values):
+            new.add(ts, val * other.get_nearest(ts))
+        return new
+
+    def map(self, func):
+        new = TimedNumericData()
+        for ts, val in zip(self.timestamps, self.values):
+            new.add(ts, func(val))
+        return new
+
+    def integral(self):
+        new = TimedNumericData()
+        total = 0
+        last_ts = self.timestamps[0] if self.timestamps else 0
+        for ts, val in zip(self.timestamps, self.values):
+            delta_ts = ts - last_ts
+            total += val * delta_ts
+            new.add(ts, total)
+            last_ts = ts
+        return new
+    
+    def integrate(self):
+        total = 0
+        last_ts = self.timestamps[0] if self.timestamps else 0
+        for ts, val in zip(self.timestamps, self.values):
+            delta_ts = ts - last_ts
+            total += val * delta_ts
+            last_ts = ts
+        return total
+
+    def differentiate(self):
+        new = TimedNumericData()
+        last_val = self.values[0] if self.values else 0
+        last_ts = self.timestamps[0] if self.timestamps else 0
+        for ts, val in zip(self.timestamps, self.values):
+            delta_ts = ts - last_ts
+            if delta_ts > 0:
+                derivative = (val - last_val) / delta_ts
+                new.add(ts, derivative)
+            else:
+                new.add(ts, 0)
+            last_val = val
+            last_ts = ts
+        return new
 
 class TimedBooleanData:
     timestamps: list[float]

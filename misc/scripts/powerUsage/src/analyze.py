@@ -6,6 +6,8 @@ from .subsystems import SubsystemMap
 import vlogger
 from .timed_data import TimedBooleanData, TimedNumericData
 
+CACHE_VER = 2
+
 @dataclass
 class SubsystemResult:
     power_sum: float
@@ -41,7 +43,6 @@ def joulesToWattHours(j: float):
 
 ########### Cache
 
-CACHE_VER = 1
 CACHE_DIR = "cache/"
 def find_cache_result(original_log_path: str) -> LogResult | None:
     log_modified_time = os.path.getmtime(original_log_path)
@@ -75,6 +76,7 @@ def analyze_log(log: tuple[str, str, SubsystemMap]):
     voltages = TimedNumericData()
     currents = [TimedNumericData() for _ in range(24)]
     total_current = TimedNumericData()
+
     enabled = TimedBooleanData()
 
     start_offset = 0
@@ -105,45 +107,19 @@ def analyze_log(log: tuple[str, str, SubsystemMap]):
                 brownout_timestamps.append(ts)
             prev_browned_out = browned_out
 
+    total_power = total_current * voltages
     channel_power_sums = [0 for _ in range(24)]
     channel_amperage_sums = [0 for _ in range(24)]
 
     for i, current in enumerate(currents):
-        last_ts = current.timestamps[0] - 0.02 if current.timestamps else 0
-        for ts, val in zip(current.timestamps, current.values):
-            delta_ts = ts - last_ts
-            last_ts = ts
+        channel_power_sums[i] = joulesToWattHours((current * voltages).integrate())
+        channel_amperage_sums[i] = current.integrate()
 
-            voltage = voltages.get_nearest(ts)
-            if voltage is not None:
-                power = joulesToWattHours(voltage * val * delta_ts)
-                channel_power_sums[i] += power
-                channel_amperage_sums[i] += val * delta_ts
-        
         print(f"[{log[1]}] Channel {i}: Total Energy = {channel_power_sums[i]:.2f} Wh")
     
-    power_integral = TimedNumericData()
-    amperage_integral = TimedNumericData()
+    power_integral = total_power.integral().map(joulesToWattHours)
+    amperage_integral = total_current.integral()
 
-    last_ts = currents[0].timestamps[0] - 0.02 if current.timestamps else 0
-    for ts in currents[0].timestamps:
-        delta_ts = ts - last_ts
-        last_ts = ts
-        
-        total_power = 0
-        total_amperage = 0
-        for i, current in enumerate(currents):
-            voltage = voltages.get_nearest(ts)
-            if voltage is not None:
-                total_power += joulesToWattHours(voltage * current.get_nearest(ts) * delta_ts)
-                total_amperage += current.get_nearest(ts) * delta_ts
-
-        next_power = power_integral.last_or(0) + total_power
-        power_integral.add(ts, next_power)
-        
-        next_amperage = amperage_integral.last_or(0) + total_amperage
-        amperage_integral.add(ts, next_amperage)
-    
     subsystem_results: dict[str, SubsystemResult] = {}
     for subsystem, ports in log[2].subsystems.items():
         power_sum = sum(channel_power_sums[port] for port in ports)
