@@ -32,7 +32,7 @@ public class Spindexer extends SubsystemBase {
     public double getBallsPerSecond() {
         return SpindexerConstants.ballsInSpin * inputs.spinner.velocityRadPerSec() / (2 * Math.PI)
             / 2.0 // half of the ball is spun
-            * 0.1; // 10% efficiency oops
+            * 0.3; // 30% efficiency in moving balls through?
     }
 
     @Override

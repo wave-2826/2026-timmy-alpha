@@ -27,7 +27,7 @@ public class TurretSim {
 
         /** Get the hood position in radians */
         public double hoodPosRad() {
-            return -hoodMotorPosRad * TurretConstants.totalHoodGearing -
+            return hoodMotorPosRad * TurretConstants.totalHoodGearing -
                 azimuthMotorPosRad * TurretConstants.azimuthHoodCoupling +
                 TurretConstants.hoodMinAngle;
         }

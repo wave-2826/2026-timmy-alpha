@@ -76,72 +76,30 @@ public record ChoreoTraj(
     public static final ChoreoTraj LeftDoubleSwipe = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.empty(),
-        9.87276,
+        11.36384,
         new Pose2d(4.50402, 7.34015, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(3.1335, 5.35427, Rotation2d.fromRadians(-0.12314))
+        new Pose2d(2.37225, 6.55929, Rotation2d.fromRadians(-0.22302))
     );
     public static final ChoreoTraj LeftDoubleSwipe$0 = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.of(0),
-        5.72522,
+        5.72523,
         new Pose2d(4.50402, 7.34015, Rotation2d.fromRadians(1.5708)),
         new Pose2d(3.31398, 7.42481, Rotation2d.fromRadians(3.12666))
     );
     public static final ChoreoTraj LeftDoubleSwipe$1 = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.of(1),
-        3.6335700000000006,
+        3.6777300000000004,
         new Pose2d(3.31398, 7.42481, Rotation2d.fromRadians(3.12666)),
-        new Pose2d(3.82339, 5.37826, Rotation2d.fromRadians(-0.12246))
+        new Pose2d(3.82339, 5.37826, Rotation2d.fromRadians(-0.15786))
     );
     public static final ChoreoTraj LeftDoubleSwipe$2 = new ChoreoTraj(
         "LeftDoubleSwipe",
         OptionalInt.of(2),
-        0.5139699999999987,
-        new Pose2d(3.82339, 5.37826, Rotation2d.fromRadians(-0.12246)),
-        new Pose2d(3.1335, 5.35427, Rotation2d.fromRadians(-0.12314))
-    );
-    public static final ChoreoTraj LeftSweepSwipe = new ChoreoTraj(
-        "LeftSweepSwipe",
-        OptionalInt.empty(),
-        9.83005,
-        new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
-    );
-    public static final ChoreoTraj LeftSweepSwipe$0 = new ChoreoTraj(
-        "LeftSweepSwipe",
-        OptionalInt.of(0),
-        4.26923,
-        new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(3.81092, 0.64037, Rotation2d.fromRadians(0))
-    );
-    public static final ChoreoTraj LeftSweepSwipe$1 = new ChoreoTraj(
-        "LeftSweepSwipe",
-        OptionalInt.of(1),
-        5.56082,
-        new Pose2d(3.81092, 0.64037, Rotation2d.fromRadians(0)),
-        new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
-    );
-    public static final ChoreoTraj LeftFollowerTrench = new ChoreoTraj(
-        "LeftFollowerTrench",
-        OptionalInt.empty(),
-        8.151,
-        new Pose2d(3.49664, 6.61297, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(1.6533, 5.96983, Rotation2d.fromRadians(0))
-    );
-    public static final ChoreoTraj LeftFollowerTrench$0 = new ChoreoTraj(
-        "LeftFollowerTrench",
-        OptionalInt.of(0),
-        6.52824,
-        new Pose2d(3.49664, 6.61297, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(1.72866, 5.96983, Rotation2d.fromRadians(0))
-    );
-    public static final ChoreoTraj LeftFollowerTrench$1 = new ChoreoTraj(
-        "LeftFollowerTrench",
-        OptionalInt.of(1),
-        1.6227599999999995,
-        new Pose2d(1.72866, 5.96983, Rotation2d.fromRadians(0)),
-        new Pose2d(1.6533, 5.96983, Rotation2d.fromRadians(0))
+        1.9608799999999995,
+        new Pose2d(3.82339, 5.37826, Rotation2d.fromRadians(-0.15786)),
+        new Pose2d(2.37225, 6.55929, Rotation2d.fromRadians(-0.22302))
     );
     public static final ChoreoTraj LeftFollowerBump = new ChoreoTraj(
         "LeftFollowerBump",
@@ -164,6 +122,48 @@ public record ChoreoTraj(
         new Pose2d(1.72866, 5.96983, Rotation2d.fromRadians(0)),
         new Pose2d(1.6533, 5.96983, Rotation2d.fromRadians(0))
     );
+    public static final ChoreoTraj LeftFollowerTrench = new ChoreoTraj(
+        "LeftFollowerTrench",
+        OptionalInt.empty(),
+        8.151,
+        new Pose2d(3.49664, 6.61297, Rotation2d.fromRadians(1.5708)),
+        new Pose2d(1.6533, 5.96983, Rotation2d.fromRadians(0))
+    );
+    public static final ChoreoTraj LeftFollowerTrench$0 = new ChoreoTraj(
+        "LeftFollowerTrench",
+        OptionalInt.of(0),
+        6.52824,
+        new Pose2d(3.49664, 6.61297, Rotation2d.fromRadians(1.5708)),
+        new Pose2d(1.72866, 5.96983, Rotation2d.fromRadians(0))
+    );
+    public static final ChoreoTraj LeftFollowerTrench$1 = new ChoreoTraj(
+        "LeftFollowerTrench",
+        OptionalInt.of(1),
+        1.6227599999999995,
+        new Pose2d(1.72866, 5.96983, Rotation2d.fromRadians(0)),
+        new Pose2d(1.6533, 5.96983, Rotation2d.fromRadians(0))
+    );
+    public static final ChoreoTraj LeftSweepSwipe = new ChoreoTraj(
+        "LeftSweepSwipe",
+        OptionalInt.empty(),
+        9.83005,
+        new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
+        new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
+    );
+    public static final ChoreoTraj LeftSweepSwipe$0 = new ChoreoTraj(
+        "LeftSweepSwipe",
+        OptionalInt.of(0),
+        4.26923,
+        new Pose2d(4.47674, 7.53381, Rotation2d.fromRadians(1.5708)),
+        new Pose2d(3.81092, 0.64037, Rotation2d.fromRadians(0))
+    );
+    public static final ChoreoTraj LeftSweepSwipe$1 = new ChoreoTraj(
+        "LeftSweepSwipe",
+        OptionalInt.of(1),
+        5.56082,
+        new Pose2d(3.81092, 0.64037, Rotation2d.fromRadians(0)),
+        new Pose2d(3.398, 0.65688, Rotation2d.fromRadians(1.5708))
+    );
 
     /**
      * A map between trajectory names and their corresponding data.
@@ -181,15 +181,15 @@ public record ChoreoTraj(
         Map.entry("LeftDoubleSwipe$0", LeftDoubleSwipe$0),
         Map.entry("LeftDoubleSwipe$1", LeftDoubleSwipe$1),
         Map.entry("LeftDoubleSwipe$2", LeftDoubleSwipe$2),
-        Map.entry("LeftSweepSwipe", LeftSweepSwipe),
-        Map.entry("LeftSweepSwipe$0", LeftSweepSwipe$0),
-        Map.entry("LeftSweepSwipe$1", LeftSweepSwipe$1),
+        Map.entry("LeftFollowerBump", LeftFollowerBump),
+        Map.entry("LeftFollowerBump$0", LeftFollowerBump$0),
+        Map.entry("LeftFollowerBump$1", LeftFollowerBump$1),
         Map.entry("LeftFollowerTrench", LeftFollowerTrench),
         Map.entry("LeftFollowerTrench$0", LeftFollowerTrench$0),
         Map.entry("LeftFollowerTrench$1", LeftFollowerTrench$1),
-        Map.entry("LeftFollowerBump", LeftFollowerBump),
-        Map.entry("LeftFollowerBump$0", LeftFollowerBump$0),
-        Map.entry("LeftFollowerBump$1", LeftFollowerBump$1)
+        Map.entry("LeftSweepSwipe", LeftSweepSwipe),
+        Map.entry("LeftSweepSwipe$0", LeftSweepSwipe$0),
+        Map.entry("LeftSweepSwipe$1", LeftSweepSwipe$1)
     );
 
     /**

@@ -166,6 +166,7 @@ public class AutoRoutines {
         var routine = autoFactory.newRoutine((right ? "Right" : "Left") + "DoubleSwipe");
         AutoTrajectory traj0 = flipIf(right, ChoreoTraj.LeftDoubleSwipe$0.asAutoTraj(routine));
         AutoTrajectory traj1 = flipIf(right, ChoreoTraj.LeftDoubleSwipe$1.asAutoTraj(routine));
+        AutoTrajectory sotmEndTraj = flipIf(right, ChoreoTraj.LeftDoubleSwipe$2.asAutoTraj(routine));
 
         traj0.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
         traj1.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
@@ -176,7 +177,10 @@ public class AutoRoutines {
             traj0.cmd(),
             stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds)),
             traj1.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds))
+            Commands.parallel(
+                sotmEndTraj.cmd().andThen(stopDrive()),
+                ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds, false)
+            )
         ));
 
         return routine;
@@ -193,7 +197,7 @@ public class AutoRoutines {
             traj.resetOdometry(),
             ScoringCommands.prep(turret),
             traj.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds))
+            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds, false))
         ));
 
         return routine;
