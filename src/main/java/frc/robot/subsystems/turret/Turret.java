@@ -325,12 +325,12 @@ public class Turret extends SubsystemBase {
     public Command runOscillationTest() {
         return Commands.runEnd(() -> {
             target = new ControlTarget.Manual(new TurretTarget(
-                Units.rotationsPerMinuteToRadiansPerSecond(2000),
-                Math.sin(Timer.getFPGATimestamp() * 0.5) * Math.PI,
+                Units.rotationsPerMinuteToRadiansPerSecond(3500),
+                Math.sin(Timer.getFPGATimestamp() * 0.15) * Math.PI * 5,
                 MathUtil.interpolate(
                     TurretConstants.hoodMinAngle + Units.degreesToRadians(5),
                     TurretConstants.hoodMaxAngle - Units.degreesToRadians(5),
-                    Math.sin(Timer.getFPGATimestamp() * 2) * 0.5 + 0.5
+                    Math.sin(Timer.getFPGATimestamp() * 3) * 0.5 + 0.5
                 )
             ));
         }, () -> {
@@ -385,7 +385,7 @@ public class Turret extends SubsystemBase {
         });
     }
 
-    private LoggedTunableNumber hoodVelocityThreshold = new LoggedTunableNumber("Turret/Reset/HoodVelocityThreshold", 0.2);
+    private LoggedTunableNumber hoodVelocityThreshold = new LoggedTunableNumber("Turret/Reset/HoodVelocityThreshold", 0.1);
     private Command zeroHood(DoubleConsumer setHoodVelocity) {
         LinearFilter hoodVelocityFilter = LinearFilter.movingAverage(5);
         Debouncer hoodVelocityDebouncer = new Debouncer(0.1);

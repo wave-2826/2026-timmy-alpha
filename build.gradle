@@ -167,7 +167,7 @@ tasks.named("createVersionFile").configure {
     enabled = !isSim
 }
 
-// Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
+// Setting up the Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib
 // knows where to look for our Robot Class.
 jar {

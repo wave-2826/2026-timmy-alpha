@@ -32,7 +32,7 @@ public class Spindexer extends SubsystemBase {
     public double getBallsPerSecond() {
         return SpindexerConstants.ballsInSpin * inputs.spinner.velocityRadPerSec() / (2 * Math.PI)
             / 2.0 // half of the ball is spun
-            / 5.0; // 400% loss oops
+            * 0.1; // 10% efficiency oops
     }
 
     @Override
@@ -56,7 +56,7 @@ public class Spindexer extends SubsystemBase {
     public Command runPercent(DoubleSupplier spinPercent, DoubleSupplier transferPercent) {
         return runEnd(() -> {
             double spin = spinPercent.getAsDouble();
-            if(spin > 0 && Math.abs(inputs.transfer.velocityRadPerSec()) < 1) spin = 0;
+            // if(spin > 0 && Math.abs(inputs.transfer.velocityRadPerSec()) < 1) spin = 0;
             setPower(spin, transferPercent.getAsDouble());
         }, () -> {
             setPower(0.0, 0.0);

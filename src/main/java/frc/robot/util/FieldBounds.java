@@ -23,12 +23,16 @@ public record FieldBounds(double minX, double maxX, double minY, double maxY) {
         );
     }
 
+    public FieldBounds expandBy(double amount) {
+        return new FieldBounds(minX - amount, maxX + amount, minY - amount, maxY + amount);
+    }
+
     /** Whether the translation is contained within the bounds. */
     public boolean contains(Translation2d translation) {
-        return translation.getX() >= minX()
-            && translation.getX() <= maxX()
-            && translation.getY() >= minY()
-            && translation.getY() <= maxY();
+        return translation.getX() >= minX
+            && translation.getX() <= maxX
+            && translation.getY() >= minY
+            && translation.getY() <= maxY;
     }
 
     /** Whether the pose is contained within the bounds. */
@@ -39,23 +43,32 @@ public record FieldBounds(double minX, double maxX, double minY, double maxY) {
     /** Clamps the translation to the bounds. */
     public Translation2d clamp(Translation2d translation) {
         return new Translation2d(
-            MathUtil.clamp(translation.getX(), minX(), maxX()),
-            MathUtil.clamp(translation.getY(), minY(), maxY()));
+            MathUtil.clamp(translation.getX(), minX, maxX),
+            MathUtil.clamp(translation.getY(), minY, maxY));
     }
 
-    private FieldBounds canonicalize() {
-        double newMinX = Math.min(minX(), maxX());
-        double newMaxX = Math.max(minX(), maxX());
-        double newMinY = Math.min(minY(), maxY());
-        double newMaxY = Math.max(minY(), maxY());
+    public FieldBounds canonicalize() {
+        double newMinX = Math.min(minX, maxX);
+        double newMaxX = Math.max(minX, maxX);
+        double newMinY = Math.min(minY, maxY);
+        double newMaxY = Math.max(minY, maxY);
         return new FieldBounds(newMinX, newMaxX, newMinY, newMaxY);
     }
-    public FieldBounds flipped() {
+    public FieldBounds allianceFlipped() {
         return new FieldBounds(
-            AllianceFlipUtil.flipX(minX()),
-            AllianceFlipUtil.flipX(maxX()),
-            AllianceFlipUtil.flipY(minY()),
-            AllianceFlipUtil.flipY(maxY())
+            AllianceFlipUtil.flipX(minX),
+            AllianceFlipUtil.flipX(maxX),
+            AllianceFlipUtil.flipY(minY),
+            AllianceFlipUtil.flipY(maxY)
+        ).canonicalize();
+    }
+    public FieldBounds sideFlipped() {
+        return new FieldBounds(
+            // Hacky but whatever
+            minX,
+            maxX,
+            AllianceFlipUtil.flipY(minY),
+            AllianceFlipUtil.flipY(maxY)
         ).canonicalize();
     }
 }
