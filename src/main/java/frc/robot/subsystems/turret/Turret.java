@@ -327,7 +327,7 @@ public class Turret extends SubsystemBase {
         );
     }
     public Angle getShotAngle() {
-        return Radians.of(Math.PI / 2 - inputs.getHoodAngleRad() + Units.degreesToRadians(1));
+        return Radians.of(Math.PI / 2 - inputs.getHoodAngleRad() + Units.degreesToRadians(10));
     }
     public Angle getRobotRelativeYaw() {
         return Radians.of(inputs.getAzimuthAngleRad());
