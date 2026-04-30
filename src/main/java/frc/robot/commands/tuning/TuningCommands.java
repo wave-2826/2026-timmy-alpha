@@ -17,6 +17,7 @@ public class TuningCommands {
         testChooser.addDefaultOption("LEDs: Auto", robotContainer.leds.runStateCommand(LEDState.Autonomous));
         testChooser.addOption("Turret: Auto tune", robotContainer.turret.runTuning());
         testChooser.addOption("Turret: Oscillation test", robotContainer.turret.runOscillationTest());
+        testChooser.addOption("Turret: Azimuth jump test", robotContainer.turret.runAzimuthJumpTest());
 
         testChooser.addOption("Orchestra", Commands.startEnd(() -> {
             Robot.orchestra.loadMusic("spin.chrp");
