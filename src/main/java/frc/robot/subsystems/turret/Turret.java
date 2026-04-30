@@ -19,6 +19,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
+import java.util.Set;
 import java.util.function.DoubleConsumer;
 
 import org.littletonrobotics.junction.Logger;
@@ -302,10 +303,14 @@ public class Turret extends SubsystemBase {
     public Command runAzimuthJumpTest() {
         return Commands.repeatingSequence(
             Commands.runOnce(() -> {
+                target = new ControlTarget.Manual(new TurretTarget(0, 0, TurretConstants.hoodMinAngle + Units.degreesToRadians(10)));
+            }),
+            Commands.waitUntil(this::atSetpoint),
+            Commands.runOnce(() -> {
                 double randomAzimuth = MathUtil.angleModulus(Math.random() * Math.PI * 2);
                 target = new ControlTarget.Manual(new TurretTarget(0, randomAzimuth, TurretConstants.hoodMinAngle + Units.degreesToRadians(10)));
             }),
-            Commands.waitSeconds(1.0)
+            Commands.defer(() -> Commands.waitSeconds(Math.random() * 0.5 + 0.3), Set.of())
         );
     }
 
