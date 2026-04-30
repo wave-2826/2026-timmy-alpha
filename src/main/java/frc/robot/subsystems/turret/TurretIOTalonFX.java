@@ -101,7 +101,7 @@ public class TurretIOTalonFX implements TurretIO {
         config.CurrentLimits.StatorCurrentLimitEnable = true;
     }
 
-    private LoggedTunableNumber timeFilterConstant = new LoggedTunableNumber("Turret/Flywheel/TimeFilterConstant", 0.05);
+    private LoggedTunableNumber timeFilterConstant = new LoggedTunableNumber("Turret/Flywheel/TimeFilterConstant", 0.05).executeOnFirstChange(false);
 
     public TurretIOTalonFX() {
         var baseConfig = new TalonFXConfiguration();
@@ -113,7 +113,6 @@ public class TurretIOTalonFX implements TurretIO {
         flywheelConfig.Feedback.SensorToMechanismRatio = 1. / TurretConstants.totalFlywheelGearing;
         flywheelConfig.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive;
         flywheelConfig.Feedback.VelocityFilterTimeConstant = timeFilterConstant.get();
-        timeFilterConstant.hasChanged(hashCode());
         applyTorqueCurrentLimit(flywheelConfig, TurretConstants.flywheelCurrentLimit);
 
         TurretConstants.flywheelMotorPID.applyConfigAndRegister(flywheelConfig, flywheel1Talon, flywheel2Talon);

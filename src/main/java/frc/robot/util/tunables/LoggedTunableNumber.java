@@ -23,6 +23,7 @@ public class LoggedTunableNumber implements DoubleSupplier {
 
     private final String key;
     private boolean hasDefault = false;
+    private boolean executeOnFirstChange = true;
     private double defaultValue;
     private LoggedNetworkNumber dashboardNumber;
     private Map<Integer, Double> lastHasChangedValues = new HashMap<>();
@@ -45,6 +46,16 @@ public class LoggedTunableNumber implements DoubleSupplier {
     public LoggedTunableNumber(String dashboardKey, double defaultValue) {
         this(dashboardKey);
         initDefault(defaultValue);
+    }
+
+    /**
+     * Set if `hasChanged` and `ifChanged` will execute on their first call for an ID.
+     * @param changedFirstCall
+     * @return
+     */
+    public LoggedTunableNumber executeOnFirstChange(boolean changedFirstCall) {
+        this.executeOnFirstChange = changedFirstCall;
+        return this;
     }
 
     /**
@@ -100,7 +111,7 @@ public class LoggedTunableNumber implements DoubleSupplier {
         Double lastValue = lastHasChangedValues.get(id);
         if(lastValue == null || currentValue != lastValue) {
             lastHasChangedValues.put(id, currentValue);
-            return true;
+            return executeOnFirstChange ? true : lastValue != null;
         }
 
         return false;

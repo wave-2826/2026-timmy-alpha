@@ -114,7 +114,7 @@ public class TurretConstants {
 
     // Current limits
     public static final int flywheelCurrentLimit = 70; // amps each
-    public static final int azimuthCurrentLimit = 50; // amps
+    public static final int azimuthCurrentLimit = 45; // amps
     public static final int hoodCurrentLimit = 40; // amps
 
     // PIDs

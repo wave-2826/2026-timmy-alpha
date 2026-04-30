@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.util.simUtils.Simulation;
+import frc.robot.util.tunables.LoggedTunableNumber;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -25,6 +26,8 @@ public class Vision extends SubsystemBase {
     private final VisionIO[] io;
     private final VisionIOInputsAutoLogged[] inputs;
     private final Alert[] disconnectedAlerts;
+
+    public static LoggedTunableNumber overrideFPSLimit = new LoggedTunableNumber("Vision/DisabledFPSLimit", VisionConstants.disabledFPSLimit).executeOnFirstChange(false);
 
     public Vision(VisionIO... io) {
         this.io = io;
@@ -44,7 +47,7 @@ public class Vision extends SubsystemBase {
 
         setFPSLimit(VisionConstants.disabledFPSLimit);
         RobotModeTriggers.disabled().onChange(Commands.runOnce(() -> {
-            setFPSLimit(DriverStation.isEnabled() ? -1 : VisionConstants.disabledFPSLimit);
+            setFPSLimit(DriverStation.isEnabled() ? -1 : (int)overrideFPSLimit.get());
         }).ignoringDisable(true));
     }
 
@@ -61,6 +64,10 @@ public class Vision extends SubsystemBase {
     @Override
     @SuppressWarnings("unused")
     public void periodic() {
+        if(overrideFPSLimit.hasChanged(hashCode())) {
+            setFPSLimit(DriverStation.isEnabled() ? -1 : (int)overrideFPSLimit.get());
+        }
+
         if(Constants.isSim && !VisionConstants.enableVisionSimulation) {
             RobotState.getInstance().addVisionMeasurement(
                 Simulation.getInstance().driveSimulation.getSimulatedDriveTrainPose(),
