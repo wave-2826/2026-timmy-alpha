@@ -306,6 +306,7 @@ public class Turret extends SubsystemBase {
                 target = new ControlTarget.Manual(new TurretTarget(0, 0, TurretConstants.hoodMinAngle + Units.degreesToRadians(10)));
             }),
             Commands.waitUntil(this::atSetpoint),
+            Commands.waitSeconds(0.5),
             Commands.runOnce(() -> {
                 double randomAzimuth = MathUtil.angleModulus(Math.random() * Math.PI * 2);
                 target = new ControlTarget.Manual(new TurretTarget(0, randomAzimuth, TurretConstants.hoodMinAngle + Units.degreesToRadians(10)));
