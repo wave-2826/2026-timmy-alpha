@@ -240,9 +240,9 @@ public class ShotCalculator {
             FieldConstants.oppHubNoShotZone.contains(pos)
         ) {
             type = ShotType.NONE;
-        } else if(leftPassBounds.contains(pos)) {
+        } else if(leftPassBounds.contains(pos) && !DriverStation.isAutonomous()) {
             type = ShotType.PASS_LEFT;
-        } else if(rightPassBounds.contains(pos)) {
+        } else if(rightPassBounds.contains(pos) && !DriverStation.isAutonomous()) {
             type = ShotType.PASS_RIGHT;
         }
 

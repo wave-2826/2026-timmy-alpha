@@ -51,3 +51,4 @@ upload-tags *params:
 
 visualvm:
     C:\Users\Public\wpilib\visualvm_2110\bin\visualvm --jdkhome "C:\Users\Public\wpilib\2026\jdk"
+    start https://www.speedscope.app/
