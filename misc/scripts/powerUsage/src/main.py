@@ -7,6 +7,7 @@ from .plot import plot
 LOGS_BASE = os.path.join(os.path.dirname(__file__), "../../../dlogs/")
 
 def extract_name(log_file: str):
+    # e.g. "xxx_wicmp_e1.wpilog" -> "Wicmp Elims 1"
     name = log_file[:-7].split('_')[-1]
     if name.startswith("q"):
         name = "Quals " + name[1:]
@@ -14,7 +15,8 @@ def extract_name(log_file: str):
         name = "Practice " + name[1:]
     elif name.startswith("e"):
         name = "Elims " + name[1:]
-    return name
+    event = log_file[:-7].split('_')[-2]
+    return event.capitalize() + " " + name
 
 def enumerate_logs(base_path: str = LOGS_BASE):
     logs: list[tuple[str, str]] = []

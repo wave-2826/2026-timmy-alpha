@@ -6,7 +6,7 @@ from .subsystems import SubsystemMap
 import vlogger
 from .timed_data import TimedBooleanData, TimedNumericData
 
-CACHE_VER = 2
+CACHE_VER = 3
 
 @dataclass
 class SubsystemResult:
