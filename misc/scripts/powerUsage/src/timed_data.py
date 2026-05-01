@@ -173,7 +173,19 @@ class TimedBooleanData:
         
         return min(candidates, key=lambda x: x[0])[1]
     
-    # def get_nearest(self, ts: float, default: bool = False):
+    def get(self, ts: float, default: bool = False, threshold_to_next: float = 0.01):
+        # Binary search for nearest timestamp
+        left, right = 0, len(self.timestamps) - 1
+        while left <= right:
+            mid = (left + right) // 2
+            if self.timestamps[mid] < ts:
+                left = mid + 1
+            else:
+                right = mid - 1
+        
+        if right >= 0 and self.timestamps[right] - ts < threshold_to_next:
+            return self.values[right]
+        return self.values[left] if left < len(self.timestamps) else default
 
     def last_or(self, default: bool):
         if self.values:
