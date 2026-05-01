@@ -283,15 +283,13 @@ public class AutoRoutines {
         return routine;
     }
 
-        private AutoRoutine getFollowerTrench(boolean right) {
+    private AutoRoutine getFollowerTrench(boolean right) {
         var routine = autoFactory.newRoutine((right ? "Right" : "Left") + "FollowerTrench");
         
         AutoTrajectory traj0 = flipIf(right, ChoreoTraj.LeftFollowerTrench$0.asAutoTraj(routine));
         AutoTrajectory traj1 = flipIf(right, ChoreoTraj.LeftFollowerTrench$1.asAutoTraj(routine));
 
         traj0.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
-        traj0.atTime("Intake Stop").onTrue(intake.disable());
-        
         
         routine.active().onTrue(Commands.sequence(
             traj0.resetOdometry(),
@@ -299,8 +297,10 @@ public class AutoRoutines {
             Commands.defer(() -> Commands.waitSeconds(autoWaitTime.get()), Set.of()),
             traj0.cmd(),
             // Don't follow through to the outpost if on the right
-            right ? Commands.none() : traj1.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds))
+            Commands.parallel(
+                right ? stopDrive() : traj1.cmd().andThen(stopDrive()),
+                ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds)
+            )
         ));
 
         return routine;
@@ -312,17 +312,18 @@ public class AutoRoutines {
         AutoTrajectory traj0 = flipIf(right, ChoreoTraj.LeftFollowerBump$0.asAutoTraj(routine));
         AutoTrajectory traj1 = flipIf(right, ChoreoTraj.LeftFollowerBump$1.asAutoTraj(routine));
 
-
         traj0.atTime("Intake").onTrue(Commands.sequence(intake.deployIntake(), intake.enable()));
-        traj0.atTime("Intake Stop").onTrue(intake.disable());
         
         routine.active().onTrue(Commands.sequence(
             traj0.resetOdometry(),
             ScoringCommands.prep(turret),
             Commands.defer(() -> Commands.waitSeconds(autoWaitTime.get()), Set.of()),
+            traj0.cmd(),
             // Don't follow through to the outpost if on the right
-            right ? Commands.none() : traj1.cmd(),
-            stopDrive().alongWith(ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds))
+            Commands.parallel(
+                right ? stopDrive() : traj1.cmd().andThen(stopDrive()),
+                ScoringCommands.autoScoreHopper(turret, spindexer, intake, hopperVision, leds)
+            )
         ));
 
         return routine;

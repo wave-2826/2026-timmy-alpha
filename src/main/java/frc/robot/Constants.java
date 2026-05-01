@@ -12,7 +12,7 @@ public final class Constants {
      * value of "simMode" to switch between "sim" (physics sim) and "replay" (log replay from a file).  
      * This is automatically updated by Justfile commands if they are used.
      */
-    public static final Mode simMode = Mode.REPLAY;
+    public static final Mode simMode = Mode.SIM;
     /** If the robot should log data to files in simulation. */
     public static final boolean logInSimulation = false;
 

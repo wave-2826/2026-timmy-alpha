@@ -104,43 +104,43 @@ public record ChoreoTraj(
     public static final ChoreoTraj LeftFollowerBump = new ChoreoTraj(
         "LeftFollowerBump",
         OptionalInt.empty(),
-        8.85565,
+        9.53996,
         new Pose2d(3.49664, 6.61297, Rotation2d.fromRadians(1.5708)),
         new Pose2d(1.6533, 5.96983, Rotation2d.fromRadians(0))
     );
     public static final ChoreoTraj LeftFollowerBump$0 = new ChoreoTraj(
         "LeftFollowerBump",
         OptionalInt.of(0),
-        7.34012,
+        6.20219,
         new Pose2d(3.49664, 6.61297, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(1.72866, 5.96983, Rotation2d.fromRadians(0))
+        new Pose2d(3.32949, 5.66824, Rotation2d.fromRadians(-0.01299))
     );
     public static final ChoreoTraj LeftFollowerBump$1 = new ChoreoTraj(
         "LeftFollowerBump",
         OptionalInt.of(1),
-        1.515530000000001,
-        new Pose2d(1.72866, 5.96983, Rotation2d.fromRadians(0)),
+        3.337770000000001,
+        new Pose2d(3.32949, 5.66824, Rotation2d.fromRadians(-0.01299)),
         new Pose2d(1.6533, 5.96983, Rotation2d.fromRadians(0))
     );
     public static final ChoreoTraj LeftFollowerTrench = new ChoreoTraj(
         "LeftFollowerTrench",
         OptionalInt.empty(),
-        8.151,
+        8.33268,
         new Pose2d(3.49664, 6.61297, Rotation2d.fromRadians(1.5708)),
         new Pose2d(1.6533, 5.96983, Rotation2d.fromRadians(0))
     );
     public static final ChoreoTraj LeftFollowerTrench$0 = new ChoreoTraj(
         "LeftFollowerTrench",
         OptionalInt.of(0),
-        6.52824,
+        5.83259,
         new Pose2d(3.49664, 6.61297, Rotation2d.fromRadians(1.5708)),
-        new Pose2d(1.72866, 5.96983, Rotation2d.fromRadians(0))
+        new Pose2d(2.92642, 6.65093, Rotation2d.fromRadians(-0.98828))
     );
     public static final ChoreoTraj LeftFollowerTrench$1 = new ChoreoTraj(
         "LeftFollowerTrench",
         OptionalInt.of(1),
-        1.6227599999999995,
-        new Pose2d(1.72866, 5.96983, Rotation2d.fromRadians(0)),
+        2.50009,
+        new Pose2d(2.92642, 6.65093, Rotation2d.fromRadians(-0.98828)),
         new Pose2d(1.6533, 5.96983, Rotation2d.fromRadians(0))
     );
     public static final ChoreoTraj LeftSweepSwipe = new ChoreoTraj(

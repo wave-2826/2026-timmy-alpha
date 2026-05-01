@@ -435,7 +435,7 @@ public class ShotCalculator {
                 azimuthVelocity,
                 hoodAngleRad
             ),
-            lookaheadTurretToTargetDistance > type.shotMapData.maxDistance || lookaheadTurretToTargetDistance < type.shotMapData.minDistance
+            lookaheadTurretToTargetDistance < type.shotMapData.maxDistance && lookaheadTurretToTargetDistance > type.shotMapData.minDistance
         );
         return latestResult;
     }
