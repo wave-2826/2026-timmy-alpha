@@ -58,14 +58,11 @@ subsystem_maps = [
     }))
 ]
 
-# logs = [
-# #     # ("../../dlogs/akit_26-04-18_15-56-45_wicmp_q2.wpilog", "Quals 2"),
-# #     ("../../dlogs/akit_26-04-18_14-59-19_wicmp_p12.wpilog", "Practice 12"),
-# #     # ("../../dlogs/akit_26-04-18_22-32-06_wicmp_q37.wpilog", "Quals 37"),
-#     find_log("q53"),
-#     find_log("q57")
-# ]
-logs = enumerate_logs()
+logs = [
+    # find_log("q53"),
+    find_log("q85")
+]
+# logs = enumerate_logs()
 
 def main():
     log_results: list[LogResult] = []

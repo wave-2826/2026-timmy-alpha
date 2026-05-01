@@ -278,5 +278,10 @@ def plot(log_results: list[LogResult]):
     plt.xlabel("Total Power (Wh)")
     plt.title("Total Power by Subsystem")
     plt.legend(loc="upper right", fancybox=True, ncol=10)
+
+    plt.figure(figsize=(10, 8))
+    for log_idx, result in enumerate(log_results):
+        plt.plot(result.total_power.timestamps, result.total_power.values, label=result.name)
+    plt.legend()
     
     plt.show()

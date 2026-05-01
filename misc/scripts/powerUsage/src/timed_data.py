@@ -31,6 +31,21 @@ class TimedNumericData:
             return None
         
         return min(candidates, key=lambda x: x[0])[1]
+    
+    def get(self, ts: float, threshold_to_next: float = 0.01):
+        # Binary search for nearest timestamp
+        left, right = 0, len(self.timestamps) - 1
+        while left <= right:
+            mid = (left + right) // 2
+            if self.timestamps[mid] < ts:
+                left = mid + 1
+            else:
+                right = mid - 1
+        
+        if right >= 0 and self.timestamps[right] - ts < threshold_to_next:
+            return self.values[right]
+        return self.values[left] if left < len(self.timestamps) else None
+
 
     def last_or(self, default: float):
         if self.values:
@@ -40,7 +55,7 @@ class TimedNumericData:
     def sum_filtered(self, filtered_by: TimedBooleanData):
         total = 0
         for ts, val in zip(self.timestamps, self.values):
-            if filtered_by.get_nearest(ts, False):
+            if filtered_by.get(ts, False):
                 total += val
         return total
 
@@ -51,10 +66,22 @@ class TimedNumericData:
         total = 0
         count = 0
         for ts, val in zip(self.timestamps, self.values):
-            if filtered_by.get_nearest(ts, False):
+            if filtered_by.get(ts, False):
                 total += val
                 count += 1
         return total / count if count > 0 else 0
+
+    def deduplicate(self, epsilon_time: float):
+        new_timestamps = []
+        new_values = []
+        last_ts = None
+        for ts, val in zip(self.timestamps, self.values):
+            if last_ts is None or ts - last_ts > epsilon_time:
+                new_timestamps.append(ts)
+                new_values.append(val)
+                last_ts = ts
+        self.timestamps = new_timestamps
+        self.values = new_values
 
     def __mul__(self, other: TimedNumericData | int | float):
         if isinstance(other, (int, float)):
@@ -65,7 +92,10 @@ class TimedNumericData:
 
         new = TimedNumericData()
         for ts, val in zip(self.timestamps, self.values):
-            new.add(ts, val * other.get_nearest(ts))
+            new.add(ts, val * other.get(ts))
+        for ts, val in zip(other.timestamps, other.values):
+            new.add(ts, val * self.get(ts))
+        new.deduplicate(0.001)
         return new
 
     def map(self, func):
@@ -142,6 +172,8 @@ class TimedBooleanData:
             return default
         
         return min(candidates, key=lambda x: x[0])[1]
+    
+    # def get_nearest(self, ts: float, default: bool = False):
 
     def last_or(self, default: bool):
         if self.values:

@@ -6,7 +6,7 @@ from .subsystems import SubsystemMap
 import vlogger
 from .timed_data import TimedBooleanData, TimedNumericData
 
-CACHE_VER = 3
+CACHE_VER = 4
 
 @dataclass
 class SubsystemResult:
@@ -27,6 +27,7 @@ class LogResult:
     start_offset: float
     power_integral: TimedNumericData
     amperage_integral: TimedNumericData
+    total_power: TimedNumericData
     brownout_timestamps: list[float]
     average_voltage_while_enabled: float
     average_current_while_enabled: float
@@ -142,6 +143,7 @@ def analyze_log(log: tuple[str, str, SubsystemMap]):
         start_offset=start_offset,
         power_integral=power_integral,
         amperage_integral=amperage_integral,
+        total_power=total_power,
         brownout_timestamps=brownout_timestamps,
         average_voltage_while_enabled=voltages.average_filtered(enabled),
         average_current_while_enabled=total_current.average_filtered(enabled),
