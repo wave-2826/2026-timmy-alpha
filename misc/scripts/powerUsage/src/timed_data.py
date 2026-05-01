@@ -10,6 +10,10 @@ class TimedNumericData:
         self.timestamps.append(ts)
         self.values.append(val)
     
+    def sort_ts(self):
+        combined = sorted(zip(self.timestamps, self.values))
+        self.timestamps, self.values = zip(*combined) if combined else ([], [])
+
     def get_nearest(self, ts: float):
         # Binary search for nearest timestamp
         left, right = 0, len(self.timestamps) - 1
@@ -95,6 +99,7 @@ class TimedNumericData:
             new.add(ts, val * other.get(ts))
         for ts, val in zip(other.timestamps, other.values):
             new.add(ts, val * self.get(ts))
+        new.sort_ts()
         new.deduplicate(0.001)
         return new
 

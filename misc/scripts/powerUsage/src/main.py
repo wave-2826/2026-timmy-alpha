@@ -58,11 +58,12 @@ subsystem_maps = [
     }))
 ]
 
-logs = [
-    # find_log("q53"),
-    find_log("q85")
-]
-# logs = enumerate_logs()
+# logs = [
+#     # find_log("q53"),
+#     find_log("q85"),
+#     find_log("q97")
+# ]
+logs = enumerate_logs()
 
 def main():
     log_results: list[LogResult] = []
