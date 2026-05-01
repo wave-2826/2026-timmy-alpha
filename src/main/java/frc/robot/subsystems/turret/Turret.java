@@ -317,6 +317,18 @@ public class Turret extends SubsystemBase {
         );
     }
 
+    public Command runFlywheelTriangleTest() {
+        double period = 1.0;
+        double ts = Timer.getFPGATimestamp() % period;
+        return Commands.run(() -> {
+            target = new ControlTarget.Manual(new TurretTarget(
+                (ts > period / 2) ? ts : Math.floor(period / 2 - ts),
+                0,
+                TurretConstants.hoodMinAngle + Units.degreesToRadians(10)
+            ));
+        });
+    }
+
     public boolean atSetpoint() {
         return atSetpoint;
     }
