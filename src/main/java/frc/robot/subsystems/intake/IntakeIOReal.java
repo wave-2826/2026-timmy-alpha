@@ -49,7 +49,7 @@ public class IntakeIOReal implements IntakeIO {
         // General configs
         var rollerConfig = new SparkMaxConfig();
         rollerConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(rollerCurrentLimit).voltageCompensation(Constants.voltageCompensation);
-        rollerConfig.closedLoopRampRate(0.25);
+        rollerConfig.closedLoopRampRate(0.2);
         rollerConfig
             .encoder
             .positionConversionFactor(

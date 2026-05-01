@@ -193,6 +193,8 @@ public class Turret extends SubsystemBase {
                 if(shotTarget.maxHoodAngleRad != 0) calculatedTarget.hoodAngleRad = Math.min(calculatedTarget.hoodAngleRad, shotTarget.maxHoodAngleRad);
 
                 toleranceScalar = calculation.shotType().setpointToleranceScalar;
+
+                if(!calculation.inRange()) toleranceScalar = 0;
             }
 
             if(calculatedTarget == null) return;

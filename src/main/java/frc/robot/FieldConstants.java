@@ -277,25 +277,6 @@ public class FieldConstants {
         // Relevant reference points on alliance side
         public static final Translation2d centerPoint = new Translation2d(0, AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
     }
-
-    public static final FieldBounds noPassZone = new FieldBounds(Hub.farRightCorner, Hub.oppNearLeftCorner).expandBy(Units.inchesToMeters(5));
-    public static final FieldBounds oppHubNoShotZone = new FieldBounds(
-        FieldConstants.LinesVertical.neutralZoneFar, FieldConstants.fieldLengthX,
-        FieldConstants.LinesHorizontal.rightBumpStart, FieldConstants.LinesHorizontal.leftBumpEnd
-    ).expandBy(Units.inchesToMeters(10));
-    public static final FieldBounds leftTrenchLowerZone = new FieldBounds(
-        LeftTrench.center.plus(new Translation2d(Units.inchesToMeters(10), 0)),
-        Units.inchesToMeters(100), LeftTrench.width + Units.inchesToMeters(40)
-    );
-    public static final FieldBounds rightTrenchLowerZone = leftTrenchLowerZone.sideFlipped();
-    public static final FieldBounds oppLeftTrenchLowerZone = leftTrenchLowerZone.allianceFlipped();
-    public static final FieldBounds oppRightTrenchLowerZone = oppLeftTrenchLowerZone.sideFlipped();
-    public static final FieldBounds zoneSeparatorBounds = new FieldBounds(
-        LinesVertical.hubCenter - LeftTrench.depth / 2 - Units.inchesToMeters(5),
-        LinesVertical.hubCenter + LeftTrench.depth / 2 + Units.inchesToMeters(5),
-        0, FieldConstants.fieldWidthY
-    );
-    public static final FieldBounds oppZoneSeparatorBounds = zoneSeparatorBounds.allianceFlipped();
     
     public enum FieldType {
         ANDYMARK("andymark"),
