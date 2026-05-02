@@ -325,7 +325,7 @@ public class Turret extends SubsystemBase {
             double ts = Timer.getFPGATimestamp() % period;
             target = new ControlTarget.Manual(new TurretTarget(
                 Units.rotationsPerMinuteToRadiansPerSecond(
-                    ((ts > period / 2) ? ts : Math.floor(period / 2 - ts)) / (period / 2) * 600 + 3000
+                    ((ts > period / 2) ? ts : period / 2 - ts) / (period / 2) * 600 + 3000
                 ),
                 0,
                 TurretConstants.hoodMinAngle + Units.degreesToRadians(10)
