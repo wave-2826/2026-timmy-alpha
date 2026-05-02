@@ -101,7 +101,7 @@ public class TurretIOTalonFX implements TurretIO {
         config.CurrentLimits.StatorCurrentLimitEnable = true;
     }
 
-    private LoggedTunableNumber timeFilterConstant = new LoggedTunableNumber("Turret/Flywheel/TimeFilterConstant", 0.05).executeOnFirstChange(false);
+    private LoggedTunableNumber timeFilterConstant = new LoggedTunableNumber("Turret/Flywheel/TimeFilterConstant", 0.03).executeOnFirstChange(false);
 
     public TurretIOTalonFX() {
         var baseConfig = new TalonFXConfiguration();
