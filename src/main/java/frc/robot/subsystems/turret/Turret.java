@@ -322,7 +322,7 @@ public class Turret extends SubsystemBase {
         double ts = Timer.getFPGATimestamp() % period;
         return Commands.run(() -> {
             target = new ControlTarget.Manual(new TurretTarget(
-                ((ts > period / 2) ? ts : Math.floor(period / 2 - ts)) / (period / 2) * 600 + 3200,
+                ((ts > period / 2) ? ts : Math.floor(period / 2 - ts)) / (period / 2) * 600 + 3000,
                 0,
                 TurretConstants.hoodMinAngle + Units.degreesToRadians(10)
             ));
@@ -380,7 +380,7 @@ public class Turret extends SubsystemBase {
         });
     }
 
-    private LoggedTunableNumber hoodVelocityThreshold = new LoggedTunableNumber("Turret/Reset/HoodVelocityThreshold", 0.05);
+    private LoggedTunableNumber hoodVelocityThreshold = new LoggedTunableNumber("Turret/Reset/HoodVelocityThreshold", 0.1);
     private Command zeroHood(DoubleConsumer setHoodVelocity) {
         LinearFilter hoodVelocityFilter = LinearFilter.movingAverage(10);
         Debouncer hoodVelocityDebouncer = new Debouncer(0.2, DebounceType.kRising);
