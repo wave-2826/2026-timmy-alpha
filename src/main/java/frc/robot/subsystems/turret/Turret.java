@@ -321,8 +321,8 @@ public class Turret extends SubsystemBase {
 
     public Command runFlywheelTriangleTest(LEDs leds) {
         double period = 1.0;
-        double ts = Timer.getFPGATimestamp() % period;
         return Commands.run(() -> {
+            double ts = Timer.getFPGATimestamp() % period;
             target = new ControlTarget.Manual(new TurretTarget(
                 Units.rotationsPerMinuteToRadiansPerSecond(
                     ((ts > period / 2) ? ts : Math.floor(period / 2 - ts)) / (period / 2) * 600 + 3000
