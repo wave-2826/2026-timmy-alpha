@@ -18,7 +18,7 @@ public class TuningCommands {
         testChooser.addOption("Turret: Auto tune", robotContainer.turret.runTuning());
         testChooser.addOption("Turret: Oscillation test", robotContainer.turret.runOscillationTest());
         testChooser.addOption("Turret: Azimuth jump test", robotContainer.turret.runAzimuthJumpTest());
-        testChooser.addOption("Turret: Flywheel triangle test", robotContainer.turret.runFlywheelTriangleTest());
+        testChooser.addOption("Turret: Flywheel triangle test", robotContainer.turret.runFlywheelTriangleTest(robotContainer.leds));
 
         testChooser.addOption("Orchestra", Commands.startEnd(() -> {
             Robot.orchestra.loadMusic("spin.chrp");
