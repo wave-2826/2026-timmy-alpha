@@ -27,6 +27,8 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import frc.robot.Controls;
 import frc.robot.commands.tuning.TurretTuning;
+import frc.robot.subsystems.leds.LEDs;
+import frc.robot.subsystems.leds.LEDs.LEDState;
 import frc.robot.subsystems.turret.TurretIO.TurretIOInputs;
 import frc.robot.subsystems.turret.TurretIO.TurretIOPIDOutputs;
 import frc.robot.util.Container;
@@ -317,16 +319,18 @@ public class Turret extends SubsystemBase {
         );
     }
 
-    public Command runFlywheelTriangleTest() {
+    public Command runFlywheelTriangleTest(LEDs leds) {
         double period = 1.0;
         double ts = Timer.getFPGATimestamp() % period;
         return Commands.run(() -> {
             target = new ControlTarget.Manual(new TurretTarget(
-                ((ts > period / 2) ? ts : Math.floor(period / 2 - ts)) / (period / 2) * 600 + 3000,
+                Units.rotationsPerMinuteToRadiansPerSecond(
+                    ((ts > period / 2) ? ts : Math.floor(period / 2 - ts)) / (period / 2) * 600 + 3000
+                ),
                 0,
                 TurretConstants.hoodMinAngle + Units.degreesToRadians(10)
             ));
-        });
+        }).alongWith(leds.runStateCommand(LEDState.Scoring));
     }
 
     public boolean atSetpoint() {
