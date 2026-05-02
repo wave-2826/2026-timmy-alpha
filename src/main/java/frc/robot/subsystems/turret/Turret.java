@@ -382,8 +382,8 @@ public class Turret extends SubsystemBase {
 
     private LoggedTunableNumber hoodVelocityThreshold = new LoggedTunableNumber("Turret/Reset/HoodVelocityThreshold", 0.05);
     private Command zeroHood(DoubleConsumer setHoodVelocity) {
-        LinearFilter hoodVelocityFilter = LinearFilter.movingAverage(5);
-        Debouncer hoodVelocityDebouncer = new Debouncer(0.1);
+        LinearFilter hoodVelocityFilter = LinearFilter.movingAverage(10);
+        Debouncer hoodVelocityDebouncer = new Debouncer(0.2, DebounceType.kRising);
         double hoodRunVelocity = Units.rotationsPerMinuteToRadiansPerSecond(60);
 
         Container<Double> hoodStartPos = new Container<>(0.);
@@ -394,7 +394,7 @@ public class Turret extends SubsystemBase {
         return Commands.sequence(
             Commands.runOnce(() -> {
                 hoodVelocityFilter.reset();
-                hoodVelocityDebouncer.setDebounceTime(0);
+                hoodVelocityDebouncer.setDebounceTime(0.0);
                 hoodVelocityDebouncer.calculate(false);
                 hoodVelocityDebouncer.setDebounceTime(0.1);
 

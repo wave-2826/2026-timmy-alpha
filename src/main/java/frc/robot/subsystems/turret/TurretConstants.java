@@ -133,7 +133,7 @@ public class TurretConstants {
     
     public static final TunablePID hoodMotorPID = new TunablePID("Turret/Hood")
         .addRealRobotGains(new GenericPIDConstants(60, 1, 0)) // position voltage
-        .addRealRobotGains(new GenericPIDConstants(4.0, 0, 0, 1.0, PIDSlot.Slot1))
+        .addRealRobotGains(new GenericPIDConstants(2.0, 0, 0, 1.0, PIDSlot.Slot1))
         .addSimGains(new GenericPIDConstants(50, 0, 0));
     
     // Control tolerances
