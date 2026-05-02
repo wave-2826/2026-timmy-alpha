@@ -322,7 +322,7 @@ public class Turret extends SubsystemBase {
         double ts = Timer.getFPGATimestamp() % period;
         return Commands.run(() -> {
             target = new ControlTarget.Manual(new TurretTarget(
-                (ts > period / 2) ? ts : Math.floor(period / 2 - ts),
+                ((ts > period / 2) ? ts : Math.floor(period / 2 - ts)) / (period / 2) * 600 + 3200,
                 0,
                 TurretConstants.hoodMinAngle + Units.degreesToRadians(10)
             ));
@@ -380,7 +380,7 @@ public class Turret extends SubsystemBase {
         });
     }
 
-    private LoggedTunableNumber hoodVelocityThreshold = new LoggedTunableNumber("Turret/Reset/HoodVelocityThreshold", 0.1);
+    private LoggedTunableNumber hoodVelocityThreshold = new LoggedTunableNumber("Turret/Reset/HoodVelocityThreshold", 0.05);
     private Command zeroHood(DoubleConsumer setHoodVelocity) {
         LinearFilter hoodVelocityFilter = LinearFilter.movingAverage(5);
         Debouncer hoodVelocityDebouncer = new Debouncer(0.1);
@@ -419,7 +419,7 @@ public class Turret extends SubsystemBase {
             }),
             // Wait for the hood motor velocity to be zero so we don't zero before we stop moving up
             Commands.waitUntil(() -> Math.abs(inputs.hood.velocityRadPerSec() / TurretConstants.hoodMotorToRingReduction) < Units.degreesToRadians(10))
-        );
+        ).withTimeout(5.);
     }
 
     private Command zeroAzimuth(DoubleConsumer setAzimuthVelocity) {
