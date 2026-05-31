@@ -71,11 +71,11 @@ public class RobotContainer {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
                 drive = new Drive(
-                    new GyroIO() {}, //(),
-                    new ModuleIO() {},//(DriveConstants.frontLeftConfig),
-                    new ModuleIO() {},//(DriveConstants.frontRightConfig),
-                    new ModuleIO() {}, //(DriveConstants.backLeftConfig),
-                    new ModuleIO() {}); //(DriveConstants.backRightConfig));
+                    new GyroIOPigeon2(),
+                    new ModuleIOTalonFXReal(DriveConstants.frontLeftConfig),
+                    new ModuleIOTalonFXReal(DriveConstants.frontRightConfig),
+                    new ModuleIOTalonFXReal(DriveConstants.backLeftConfig),
+                    new ModuleIOTalonFXReal(DriveConstants.backRightConfig));
                 vision = new Vision(
                     new VisionIOPhotonVision(VisionConstants.cameraLeftmost),
                     new VisionIOPhotonVision(VisionConstants.cameraFrontLeft),
