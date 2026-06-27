@@ -26,7 +26,7 @@ import java.nio.file.Path;
 * perspective of the blue alliance station
 */
 public class FieldConstants {
-    public static final FieldType fieldType = FieldType.ANDYMARK;
+    public static final FieldType fieldType = FieldType.WELDED;
     public static final AprilTagLayoutType defaultAprilTagType = AprilTagLayoutType.OFFICIAL;
     
     // AprilTag related constants
@@ -248,10 +248,11 @@ public class FieldConstants {
             (AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(15).get().getY())
                 - innerOpeningWidth / 2
                 - Units.inchesToMeters(0.75));
-              
+        
         public static final FieldBounds bounds = new FieldBounds(
-            0.0, frontFaceX, LinesHorizontal.center - width / 2, LinesHorizontal.center + width / 2
+            0.0, frontFaceX, oppCenterPoint.getY() - width / 2, oppCenterPoint.getY() + width / 2
         );
+        public static final FieldBounds oppBounds = bounds.allianceFlipped();
     }
     
     public static class Depot {
@@ -276,14 +277,6 @@ public class FieldConstants {
         // Relevant reference points on alliance side
         public static final Translation2d centerPoint = new Translation2d(0, AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(29).get().getY());
     }
-
-    public static final FieldBounds noPassZone = new FieldBounds(Hub.farRightCorner, Hub.oppNearLeftCorner);
-    public static final FieldBounds leftTrenchLowerZone = new FieldBounds(LeftTrench.center, Units.inchesToMeters(30), LeftTrench.width);
-    public static final FieldBounds rightTrenchLowerZone = new FieldBounds(RightTrench.center, Units.inchesToMeters(30), RightTrench.width);
-    public static final FieldBounds oppLeftTrenchLowerZone = new FieldBounds(LeftTrench.oppCenter, Units.inchesToMeters(30), LeftTrench.width);
-    public static final FieldBounds oppRightTrenchLowerZone = new FieldBounds(RightTrench.oppCenter, Units.inchesToMeters(30), RightTrench.width);
-    public static final FieldBounds zoneSeparatorBounds = new FieldBounds(LinesVertical.hubCenter - LeftTrench.depth / 2, LinesVertical.hubCenter + LeftTrench.depth / 2, 0, FieldConstants.fieldWidthY);
-    public static final FieldBounds oppZoneSeparatorBounds = new FieldBounds(LinesVertical.oppHubCenter - LeftTrench.depth / 2, LinesVertical.oppHubCenter + LeftTrench.depth / 2, 0, FieldConstants.fieldWidthY);
     
     public enum FieldType {
         ANDYMARK("andymark"),

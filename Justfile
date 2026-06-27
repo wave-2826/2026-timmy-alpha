@@ -46,5 +46,9 @@ tune-turret:
 setup-hotswap:
     python ./misc/scripts/setup-hotswap.py
 
-upload-tags TAGS:
-    python ./misc/scripts/uploadTagMap.py {{TAGS}}
+upload-tags *params:
+    python ./misc/scripts/uploadTagMap.py {{params}}
+
+visualvm:
+    C:\Users\Public\wpilib\visualvm_2110\bin\visualvm --jdkhome "C:\Users\Public\wpilib\2026\jdk"
+    start https://www.speedscope.app/

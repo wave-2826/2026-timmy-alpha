@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.util.Container;
 
@@ -47,7 +48,7 @@ public class HopperVision extends SubsystemBase {
         
         setFPSLimit(VisionConstants.disabledFPSLimit);
         RobotModeTriggers.disabled().onChange(Commands.runOnce(() -> {
-            setFPSLimit(DriverStation.isEnabled() ? -1 : VisionConstants.disabledFPSLimit);
+            setFPSLimit(DriverStation.isEnabled() ? -1 : (int)Vision.overrideFPSLimit.get());
         }).ignoringDisable(true));
     }
 
@@ -57,6 +58,10 @@ public class HopperVision extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if(Vision.overrideFPSLimit.hasChanged(hashCode())) {
+            setFPSLimit(DriverStation.isEnabled() ? -1 : (int)Vision.overrideFPSLimit.get());
+        }
+
         io.updateInputs(inputs);
         Logger.processInputs("HopperVision", inputs);
 

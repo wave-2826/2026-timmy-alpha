@@ -328,6 +328,8 @@ public class Robot extends LoggedRobot {
     @Override
     public void simulationInit() {
         Simulation.getInstance().simulationInit();
+
+        ShotCalculator.getInstance().storeShotTypeMapTelemetry();
     }
 
     /** This function is called periodically whilst in simulation. */

@@ -256,7 +256,7 @@ public class DriveCommands {
                 0.25
             );
             if(red) {
-                bounds = bounds.flipped();
+                bounds = bounds.allianceFlipped();
             }
 
             // note: leaks controller

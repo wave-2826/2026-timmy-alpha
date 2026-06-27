@@ -22,6 +22,7 @@ import frc.robot.subsystems.spindexer.Spindexer;
 import frc.robot.subsystems.turret.Turret;
 import frc.robot.subsystems.turret.Turret.ControlTarget;
 import frc.robot.commands.IntakeCommands;
+import frc.robot.commands.ScoringCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.leds.LEDs;
@@ -104,10 +105,11 @@ public class Controls {
         turretControlCodriver.and(coDriver.povLeft()).whileTrue(turret.adjustManualVelocity(-50));
         turretControlCodriver.and(coDriver.povUp()).onTrue(turret.adjustManualAngle(1));
         turretControlCodriver.and(coDriver.povDown()).onTrue(turret.adjustManualAngle(-1));
-        turretControlCodriver.whileTrue(turret.runManual(
+        turretControlCodriver.whileTrue(ScoringCommands.teleopOverrideScoring(
             coDriver::getRightTriggerAxis,
             coDriver::getLeftX,
-            leds
+            coDriver.b()::getAsBoolean,
+            turret, leds
         ));
         spindexer.setDefaultCommand(spindexer.runManual(
             coDriver::getLeftTriggerAxis,

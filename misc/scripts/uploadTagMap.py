@@ -1,5 +1,3 @@
-FIELD_TYPE = "andymark"
-
 PHOTON_IPS = [
     "10.28.26.203:5800",
     "10.28.26.204:5800"
@@ -8,12 +6,14 @@ PHOTON_IPS = [
 import sys
 
 if len(sys.argv) < 2:
-    print("Usage: uploadTagMap.py <name>")
+    print("Usage: uploadTagMap.py <name> [field type = 'andymark']")
     sys.exit(1)
 
 name = sys.argv[1]
 
-tag_map_path = f"src/main/deploy/apriltags/{FIELD_TYPE}/{name}.json"
+field_type = sys.argv[2] if len(sys.argv) > 2 else "andymark"
+
+tag_map_path = f"src/main/deploy/apriltags/{field_type}/{name}.json"
 
 # Content-Disposition: form-data; name="data"; filename="tags.json"
 # Content-Type: application/json

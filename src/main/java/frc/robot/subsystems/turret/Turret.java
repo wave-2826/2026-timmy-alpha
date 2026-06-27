@@ -3,7 +3,6 @@ package frc.robot.subsystems.turret;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
@@ -20,8 +19,8 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 
+import java.util.Set;
 import java.util.function.DoubleConsumer;
-import java.util.function.DoubleSupplier;
 
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -98,6 +97,8 @@ public class Turret extends SubsystemBase {
             public double maxFlyVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(6000);
             public double azimuthOffsetRad = 0;
             public double hoodOffsetRad = 0;
+            // If 0, no restriction is applied.
+            public double maxHoodAngleRad = 0;
             public double flyOffsetRadPerSec = 0;
         }
     }
@@ -191,8 +192,11 @@ public class Turret extends SubsystemBase {
                 calculatedTarget.azimuthAngleRad += shotTarget.azimuthOffsetRad;
                 calculatedTarget.hoodAngleRad = MathUtil.clamp(calculatedTarget.hoodAngleRad, TurretConstants.hoodMinAngle, TurretConstants.hoodMaxAngle);
                 calculatedTarget.hoodAngleRad += shotTarget.hoodOffsetRad;
+                if(shotTarget.maxHoodAngleRad != 0) calculatedTarget.hoodAngleRad = Math.min(calculatedTarget.hoodAngleRad, shotTarget.maxHoodAngleRad);
 
                 toleranceScalar = calculation.shotType().setpointToleranceScalar;
+
+                if(!calculation.inRange()) toleranceScalar = 0;
             }
 
             if(calculatedTarget == null) return;
@@ -275,44 +279,6 @@ public class Turret extends SubsystemBase {
         return Commands.runOnce(() -> manualHoodOffset.set(manualHoodOffset.get() + Units.degreesToRadians(changeDegrees)));
     }
 
-    public Command runManual(
-        DoubleSupplier flywheelScalar,
-        DoubleSupplier azimuthSpeed,
-        LEDs leds
-    ) {
-        SlewRateLimiter flyLimiter = new SlewRateLimiter(5000);
-        Container<Boolean> flyRampEdgeActive = new Container<>(false);
-        return Commands.runEnd(() -> {
-            target = ControlTarget.SHOT_CALCULATOR;
-            
-            manualAzimuthOffset.set(manualAzimuthOffset.get() - MathUtil.applyDeadband(azimuthSpeed.getAsDouble(), 0.2) * Math.PI * 0.003);
-
-            ControlTarget.ShotCalculator shotTarget = (ControlTarget.ShotCalculator)target;
-
-            double flySpeed = MathUtil.applyDeadband(flywheelScalar.getAsDouble(), 0.15);
-            boolean runFly = flySpeed > 0.;
-            if(flyRampEdgeActive.value != runFly) flyLimiter.reset(
-                Units.radiansPerSecondToRotationsPerMinute(inputs.getFlywheelVelocityRadPerSecond())
-            );
-            flyRampEdgeActive.value = runFly;
-            shotTarget.maxFlyVelocityRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(flyLimiter.calculate(runFly ? 6000 : 0.));
-            shotTarget.flyOffsetRadPerSec = Units.rotationsPerMinuteToRadiansPerSecond(
-                manualFlywheelSpeed.get() - (1.0 - flySpeed) * 200
-            );
-
-            leds.setStateActive(LEDState.ScoringRecovering, runFly && !atSetpoint);
-            leds.setStateActive(LEDState.Scoring, runFly);
-
-            shotTarget.azimuthOffsetRad = manualAzimuthOffset.get();
-            shotTarget.hoodOffsetRad = manualHoodOffset.get();
-        }, () -> {
-            target = ControlTarget.NONE;
-            
-            leds.setStateActive(LEDState.ScoringRecovering, false);
-            leds.setStateActive(LEDState.Scoring, false);
-        }, this);
-    }
-
     public Command reset() {
         return Commands.runOnce(() -> {
             io.resetAzimuth(TurretConstants.azimuthResetAngle);
@@ -325,17 +291,46 @@ public class Turret extends SubsystemBase {
     public Command runOscillationTest() {
         return Commands.runEnd(() -> {
             target = new ControlTarget.Manual(new TurretTarget(
-                Units.rotationsPerMinuteToRadiansPerSecond(2000),
-                Math.sin(Timer.getFPGATimestamp() * 0.5) * Math.PI,
+                Units.rotationsPerMinuteToRadiansPerSecond(3500),
+                Math.sin(Timer.getFPGATimestamp() * 0.15) * Math.PI * 5,
                 MathUtil.interpolate(
                     TurretConstants.hoodMinAngle + Units.degreesToRadians(5),
                     TurretConstants.hoodMaxAngle - Units.degreesToRadians(5),
-                    Math.sin(Timer.getFPGATimestamp() * 2) * 0.5 + 0.5
+                    Math.sin(Timer.getFPGATimestamp() * 3) * 0.5 + 0.5
                 )
             ));
         }, () -> {
             target = null;
         }, this);
+    }
+
+    public Command runAzimuthJumpTest() {
+        return Commands.repeatingSequence(
+            Commands.runOnce(() -> {
+                target = new ControlTarget.Manual(new TurretTarget(0, 0, TurretConstants.hoodMinAngle + Units.degreesToRadians(10)));
+            }),
+            Commands.waitUntil(this::atSetpoint),
+            Commands.waitSeconds(0.5),
+            Commands.runOnce(() -> {
+                double randomAzimuth = MathUtil.angleModulus(Math.random() * Math.PI * 2);
+                target = new ControlTarget.Manual(new TurretTarget(0, randomAzimuth, TurretConstants.hoodMinAngle + Units.degreesToRadians(10)));
+            }),
+            Commands.defer(() -> Commands.waitSeconds(Math.random() * 0.5 + 0.3), Set.of())
+        );
+    }
+
+    public Command runFlywheelTriangleTest(LEDs leds) {
+        double period = 1.0;
+        return Commands.run(() -> {
+            double ts = Timer.getFPGATimestamp() % period;
+            target = new ControlTarget.Manual(new TurretTarget(
+                Units.rotationsPerMinuteToRadiansPerSecond(
+                    ((ts > period / 2) ? ts : period - ts) / (period / 2) * 800 + 2800
+                ),
+                0,
+                TurretConstants.hoodMinAngle + Units.degreesToRadians(10)
+            ));
+        }).alongWith(leds.runStateCommand(LEDState.Scoring));
     }
 
     public boolean atSetpoint() {
@@ -346,14 +341,18 @@ public class Turret extends SubsystemBase {
         return MetersPerSecond.of(
             inputs.getFlywheelVelocityRadPerSecond() * TurretConstants.flywheelRadius
                 * 0.5 // one fixed side
-                / 1.2
+                * 0.75 // efficiency
         );
     }
     public Angle getShotAngle() {
-        return Radians.of(Math.PI / 2 - inputs.getHoodAngleRad() + Units.degreesToRadians(1));
+        return Radians.of(Math.PI / 2 - inputs.getHoodAngleRad() + Units.degreesToRadians(10));
     }
     public Angle getRobotRelativeYaw() {
         return Radians.of(inputs.getAzimuthAngleRad());
+    }
+
+    public double getFlywheelVelocityRadPerSecond() {
+        return inputs.getFlywheelVelocityRadPerSecond();
     }
 
     private boolean hasZeroed = false;
@@ -385,10 +384,10 @@ public class Turret extends SubsystemBase {
         });
     }
 
-    private LoggedTunableNumber hoodVelocityThreshold = new LoggedTunableNumber("Turret/Reset/HoodVelocityThreshold", 0.2);
+    private LoggedTunableNumber hoodVelocityThreshold = new LoggedTunableNumber("Turret/Reset/HoodVelocityThreshold", 0.1);
     private Command zeroHood(DoubleConsumer setHoodVelocity) {
-        LinearFilter hoodVelocityFilter = LinearFilter.movingAverage(5);
-        Debouncer hoodVelocityDebouncer = new Debouncer(0.1);
+        LinearFilter hoodVelocityFilter = LinearFilter.movingAverage(10);
+        Debouncer hoodVelocityDebouncer = new Debouncer(0.2, DebounceType.kRising);
         double hoodRunVelocity = Units.rotationsPerMinuteToRadiansPerSecond(60);
 
         Container<Double> hoodStartPos = new Container<>(0.);
@@ -399,7 +398,7 @@ public class Turret extends SubsystemBase {
         return Commands.sequence(
             Commands.runOnce(() -> {
                 hoodVelocityFilter.reset();
-                hoodVelocityDebouncer.setDebounceTime(0);
+                hoodVelocityDebouncer.setDebounceTime(0.0);
                 hoodVelocityDebouncer.calculate(false);
                 hoodVelocityDebouncer.setDebounceTime(0.1);
 
@@ -424,7 +423,7 @@ public class Turret extends SubsystemBase {
             }),
             // Wait for the hood motor velocity to be zero so we don't zero before we stop moving up
             Commands.waitUntil(() -> Math.abs(inputs.hood.velocityRadPerSec() / TurretConstants.hoodMotorToRingReduction) < Units.degreesToRadians(10))
-        );
+        ).withTimeout(5.);
     }
 
     private Command zeroAzimuth(DoubleConsumer setAzimuthVelocity) {

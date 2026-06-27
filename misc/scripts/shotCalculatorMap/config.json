@@ -1,0 +1,16 @@
+{
+  "name": "2026 Field",
+  "isFTC": false,
+  "coordinateSystem": "wall-blue",
+  "sourceUrl": "https://www.chiefdelphi.com/t/2026-rebuilt-high-resolution-field-image/510611",
+  "topLeft": [
+    524,
+    95
+  ],
+  "bottomRight": [
+    3378,
+    1489
+  ],
+  "widthInches": 651.220,
+  "heightInches": 317.677
+}
