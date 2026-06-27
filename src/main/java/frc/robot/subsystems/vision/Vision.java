@@ -28,8 +28,8 @@ public class Vision extends SubsystemBase {
     private final VisionIOInputsAutoLogged[] inputs;
     private final Alert[] disconnectedAlerts;
 
-    private final LoggedNetworkBoolean overrideFPSLimitField = new LoggedNetworkBoolean("Tuning/Vision/OverrideFPSLimit", false);
-    private final Trigger overrideFPSLimit = new Trigger(overrideFPSLimitField::getAsBoolean);
+    private final static LoggedNetworkBoolean overrideFPSLimitField = new LoggedNetworkBoolean("Tuning/Vision/OverrideFPSLimit", false);
+    public final static Trigger overrideFPSLimit = new Trigger(overrideFPSLimitField::getAsBoolean);
 
     public Vision(VisionIO... io) {
         this.io = io;

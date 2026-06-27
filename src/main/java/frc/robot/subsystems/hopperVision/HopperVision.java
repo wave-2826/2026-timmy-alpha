@@ -47,8 +47,8 @@ public class HopperVision extends SubsystemBase {
         this.io = io;
         
         setFPSLimit(VisionConstants.disabledFPSLimit);
-        RobotModeTriggers.disabled().onChange(Commands.runOnce(() -> {
-            setFPSLimit(DriverStation.isEnabled() ? -1 : (int)Vision.overrideFPSLimit.get());
+        RobotModeTriggers.disabled().or(Vision.overrideFPSLimit).onChange(Commands.runOnce(() -> {
+            setFPSLimit(DriverStation.isEnabled() || Vision.overrideFPSLimit.getAsBoolean() ? -1 : VisionConstants.disabledFPSLimit);
         }).ignoringDisable(true));
     }
 
@@ -58,10 +58,6 @@ public class HopperVision extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if(Vision.overrideFPSLimit.hasChanged(hashCode())) {
-            setFPSLimit(DriverStation.isEnabled() ? -1 : (int)Vision.overrideFPSLimit.get());
-        }
-
         io.updateInputs(inputs);
         Logger.processInputs("HopperVision", inputs);
 
