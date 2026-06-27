@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.RobotState;
 import frc.robot.util.simUtils.Simulation;
@@ -20,11 +21,15 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkBoolean;
 
 public class Vision extends SubsystemBase {
     private final VisionIO[] io;
     private final VisionIOInputsAutoLogged[] inputs;
     private final Alert[] disconnectedAlerts;
+
+    private final LoggedNetworkBoolean overrideFPSLimitField = new LoggedNetworkBoolean("Tuning/Vision/OverrideFPSLimit", false);
+    private final Trigger overrideFPSLimit = new Trigger(overrideFPSLimitField::getAsBoolean);
 
     public Vision(VisionIO... io) {
         this.io = io;
@@ -43,8 +48,8 @@ public class Vision extends SubsystemBase {
         }
 
         setFPSLimit(VisionConstants.disabledFPSLimit);
-        RobotModeTriggers.disabled().onChange(Commands.runOnce(() -> {
-            setFPSLimit(DriverStation.isEnabled() ? -1 : VisionConstants.disabledFPSLimit);
+        RobotModeTriggers.disabled().or(overrideFPSLimit).onChange(Commands.runOnce(() -> {
+            setFPSLimit(DriverStation.isEnabled() || overrideFPSLimit.getAsBoolean() ? -1 : VisionConstants.disabledFPSLimit);
         }).ignoringDisable(true));
     }
 
